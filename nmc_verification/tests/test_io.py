@@ -63,15 +63,17 @@ def test_read_m3():
     path = r"H:\task\develop\python\git\nmc_met_class\nmc_met_class\tests\test_data\评分站点.txt"
     station = nmb.io.rs.read_from_micaps3(path)
     print(station)
-    station['data0'] = np.NaN
+    station['data0'] = 0
     path = r"H:\task\develop\python\git\nmc_met_class\nmc_met_class\tests\test_data\rain_without0.txt"
     sta = nmb.io.rs.read_from_micaps3(path,station= station,reserve_time_dtime_level=True)
     print(sta)
-    sta_drop = nmb.fun.sta_sta.drop_nan(sta)
-    print(sta_drop)
+    grid0 = nmb.bd.grid([70,140,0.5],[10,60,0.5])
+    background = nmb.bd.grid_data(grid0)
+    grd = nmb.fun.sta_gxy.sta_to_grid_oa2(sta,background=background)
 
-    sta1 = nmb.fun.sta_sta.add_on_id(station,sta,how="inner")
-    print(sta1)
-#test_read_m3()
+    nmb.io.wg.write_to_micaps4(grd)
+    print(grd)
 
-test_read_write_micaps4()
+test_read_m3()
+
+#test_read_write_micaps4()

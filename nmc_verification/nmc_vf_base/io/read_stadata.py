@@ -36,7 +36,7 @@ def read_from_micaps3(filename,station = None,reserve_time_dtime_level = False):
             sta1 = pd.read_csv(file_sta, skiprows=skip_num, sep="\s+", header=None, usecols=[0, 1, 2,3,4])
             sta1.columns = ['id','lon','lat','alt','data0']
             sta1.drop_duplicates(keep='first', inplace=True)
-            sta = bd.sta_data.sta_data(sta1)
+            sta = bd.sta_data(sta1)
             #print(sta)
             if(reserve_time_dtime_level):
                 y2 = ""

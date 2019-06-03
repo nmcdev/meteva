@@ -35,7 +35,7 @@ def set_coords(grd,level = None,time = None,dtime = None, member = None):
                 print("输入日期有误，请检查！")
             ttime = datetime.datetime.strptime(time1[0], '%Y%m%d%H%M%S')
         else:
-            ttime = time1[0]
+            ttime = time
         grd.coords["time"] = [ttime]
     if (dtime != None) and (ndt == 1):
         if type(dtime) == str:

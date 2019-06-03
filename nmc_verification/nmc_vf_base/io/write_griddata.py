@@ -9,7 +9,7 @@ def write_to_micaps4(da,path = "a.txt",effectiveNum = 6):
     :param micaps_abspath:生成文件绝对路径
     :param grid_data:网格数据
     """
-    grid = bd.grid.get_grid_of_data(da)
+    grid = bd.get_grid_of_data(da)
     nlon = grid.nlon
     nlat = grid.nlat
     slon = grid.slon

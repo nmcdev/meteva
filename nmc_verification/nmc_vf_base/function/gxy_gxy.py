@@ -10,9 +10,9 @@ def interpolation_linear(grd, grid, reserve_other_dim=False):
     dat0 = grd.values
     dat = np.squeeze(dat0)
 
-    grd0 = bd.grid.get_grid_of_data(grd)
+    grd0 = bd.get_grid_of_data(grd)
     if (grd0.dlon * grd0.nlon >= 360):
-        grd1 = bd.grid.grid([grd0.slon, grd0.dlon, grd0.elon + grd0.dlon],[grd0.slat, grd0.dlat, grd0.elat])
+        grd1 = bd.grid([grd0.slon, grd0.dlon, grd0.elon + grd0.dlon],[grd0.slat, grd0.dlat, grd0.elat])
         dat1 = np.zeros((grd1.nlat,grd1.nlon))
         dat1[:,0:-1] = dat[:,:]
         dat1[:, -1] = dat[:, 0]
@@ -20,7 +20,7 @@ def interpolation_linear(grd, grid, reserve_other_dim=False):
         dat1 = dat
         grd1 = grd0
     if reserve_other_dim:
-        grd2 = bd.grid.grid(grid.glon,grid.glat,grd0.gtime,grd0.gdtime,grd0.levels,grd0.nmember)
+        grd2 = bd.grid(grid.glon,grid.glat,grd0.gtime,grd0.gdtime,grd0.levels,grd0.nmember)
     else:
         grd2 = grid.copy()
 
@@ -47,6 +47,6 @@ def interpolation_linear(grd, grid, reserve_other_dim=False):
 
     print(grd2.tostring())
     print(dat2)
-    grd_new = bd.grid_data.grid_data(grd2,dat2)
+    grd_new = bd.grid_data(grd2,dat2)
 
     return grd_new

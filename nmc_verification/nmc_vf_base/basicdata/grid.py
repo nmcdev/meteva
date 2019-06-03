@@ -153,7 +153,11 @@ class grid:
                     self.edtimedelta = np.timedelta64(self.edt_int, 'm')
                     self.ddtimedelta = np.timedelta64(self.edt_int, 'm')
             else:
-                seconds = gdtime[0].astype('timedelta64[s]')/np.timedelta64(1, 's')
+                if isinstance(gdtime[0],datetime.timedelta):
+                    seconds = gdtime[0].total_seconds()
+                else:
+                    seconds = gdtime[0].astype('timedelta64[s]')/np.timedelta64(1, 's')
+
                 if seconds % 3600 == 0:
                     self.sdt_int = int(seconds / 3600)
                     self.edt_int = int(seconds / 3600)
