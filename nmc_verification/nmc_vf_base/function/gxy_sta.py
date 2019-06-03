@@ -46,3 +46,38 @@ def interpolation_linear(grd,sta):
     sta1['level'] = grid.levels[0]
 
     return sta1
+
+
+
+def cubicInterpolation(grd,sta):
+    grid = nmc.bd.grid.get_grid_of_data(grd)
+    sta1 = nmc.fun.sta_sta.get_sta_in_grid(sta,grid)
+    dat0 = grd.values
+    dat = np.squeeze(dat0)
+    ig = ((sta1['lon'] - grid.slon) // grid.dlon).astype(dtype = 'int16')
+    jg = ((sta1['lat'] - grid.slat) // grid.dlat).astype(dtype = 'int16')
+    dx = (sta1['lon'] - grid.slon) / grid.dlon - ig
+    dy = (sta1['lat'] - grid.slat) / grid.dlat - jg
+
+    for p in range(-1,3,1):
+        iip = np.minimum(np.maximum(ig+p,0),grid.nlon-1)
+        fdx = cubic_f(p, dx)
+        for q in range(-1,3,1):
+            jjq = np.minimum(np.maximum(jg+q,0),grid.nlat-1)
+            fdy = cubic_f(q,dy)
+            fdxy = fdx * fdy
+            sta1['data0'] +=  fdxy * dat[jjq,iip]
+    sta1['time'] = grid.stime
+    sta1['dtime'] = grid.sdtimedelta
+    sta1['level'] = grid.levels[0]
+    return sta1
+
+def cubic_f(n, dx):
+    if (n == -1):
+        return -dx * (dx - 1) * (dx - 2) / 6
+    elif (n == 0):
+        return (dx + 1) * (dx - 1) * (dx - 2) / 2
+    elif (n == 1):
+        return -(dx + 1) * dx * (dx - 2) / 2
+    else:
+        return (dx + 1) * dx * (dx - 1) / 6

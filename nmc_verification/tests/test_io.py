@@ -42,7 +42,7 @@ def interpolation():
     grd = nmb.io.rg.read_from_micaps4(path)
     #grid0 = nmc.bd.get_grid_of_data(grd)
     print(grd)
-    grid0 = nmb.bd.grid.grid([80,130,0.125],[20,40,0.125])
+    grid0 = nmb.bd.grid([80,130,0.125],[20,40,0.125])
     print(grid0.tostring())
     grd1 = nmb.fun.gxy_gxy.interpolation_linear(grd,grid0,reserve_other_dim=True)
     print(grd1)
@@ -51,13 +51,13 @@ def interpolation():
     path = r"H:\task\develop\python\git\nmc_met_class\nmc_met_class\tests\test_data\评分站点.txt"
     station = nmb.io.rs.read_from_micaps3(path)
     print(station)
-    sta1 = nmb.fun.gxy_sta.interpolation_linear(grd1,station)
+    sta1 = nmb.fun.gxy_sta.cubicInterpolation(grd1,station)
     nmb.io.ws.write_to_micaps3(sta1)
     print(sta1.style.applymap(color_negative_red))
 
     pass
 
-#interpolation()
+interpolation()
 
 def test_read_m3():
     path = r"H:\task\develop\python\git\nmc_met_class\nmc_met_class\tests\test_data\评分站点.txt"
@@ -74,6 +74,6 @@ def test_read_m3():
     nmb.io.wg.write_to_micaps4(grd)
     print(grd)
 
-test_read_m3()
+#test_read_m3()
 
 #test_read_write_micaps4()
