@@ -2,7 +2,7 @@ import numpy as np
 import nmc_verification.nmc_vf_base.basicdata as bd
 
 #格点到格点插值
-def interpolation_linear(grd, grid, reserve_other_dim=False):
+def interpolation_linear(grd, grid, other_info='left'):
     if (grd is None):
         return None
 
@@ -19,8 +19,8 @@ def interpolation_linear(grd, grid, reserve_other_dim=False):
     else:
         dat1 = dat
         grd1 = grd0
-    if reserve_other_dim:
-        grd2 = bd.grid(grid.glon,grid.glat,grd0.gtime,grd0.gdtime,grd0.levels,grd0.nmember)
+    if other_info=='left':
+        grd2 = bd.grid(grid.glon,grid.glat,grd0.gtime,grd0.gdtime,grd0.levels,grd0.members)
     else:
         grd2 = grid.copy()
 

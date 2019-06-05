@@ -81,7 +81,7 @@ def read_from_micaps4(filename,grid=None):
             #times = pd.date_range(dates, periods=1)
             dtimes = datetime.timedelta(hours = dts)
             #print(levels,times,dts)
-            da = xr.DataArray(dat, coords={'member': [0], 'level': [levels], 'time': [dates], 'dtime': [dtimes],
+            da = xr.DataArray(dat, coords={'member': ['data0'], 'level': [levels], 'time': [dates], 'dtime': [dtimes],
                                            'lat': lat, 'lon': lon},
                               dims=['member', 'level', 'time', 'dtime', 'lat', 'lon'])
             if grid is None:

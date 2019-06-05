@@ -31,15 +31,19 @@ def transform(sta,dlon = None,dlat = None):
     jg = ((sta.ix[:,'lat'] - slat) // dlat).astype(dtype = 'int16')
     grid0 = bd.grid([slon,elon,dlon],[slat,elat,dlat])
     dat = np.zeros((grid0.nlat,grid0.nlon))
-    #print(sta.ix[:,'data0'])
-    dat[jg,ig] = sta.ix[:,'data0']
+    data_name = bd.get_data_names(sta)[0]
+    dat[jg,ig] = sta.ix[:,data_name]
     grd = bd.grid_data(grid0,dat)
     return grd
 
 
 
-def sta_to_grid_idw(sta, grid0,background = None,effectR = 1000,nearNum = 16):
-    grid = bd.grid(grid0.glon,grid0.glat,[sta.ix[0,'time']],[sta.ix[0,'dtime']],[sta.ix[0,'level']])
+def sta_to_grid_idw(sta, grid0,background = None,effectR = 1000,nearNum = 16,other_info='left'):
+    data_name = bd.get_data_names(sta)
+    if other_info=='left':
+        grid = bd.grid(grid0.glon,grid0.glat,[sta.ix[0,'time']],[sta.ix[0,'dtime']],[sta.ix[0,'level']],data_name)
+    else:
+        grid = grid0
     xyz_sta =  lon_lat_to_cartesian(sta.ix[:,'lon'], sta.ix[:,'lat'],R = bd.const.ER)
     lon = np.arange(grid.nlon) * grid.dlon + grid.slon
     lat = np.arange(grid.nlat) * grid.dlat + grid.slat
@@ -61,11 +65,10 @@ def sta_to_grid_idw(sta, grid0,background = None,effectR = 1000,nearNum = 16):
 
 
 
-def sta_to_grid_oa2(sta0,background,sm = 1,effect_R = 1000,rate_of_model = 0):
-    sta = fun.sta_sta.drop_nan(sta0)
+def sta_to_grid_oa2(sta0,background,sm = 1,effect_R = 1000,rate_of_model = 0,other_info='left'):
+    sta = fun.sxy_sxy.drop_nan(sta0)
     grid = bd.get_grid_of_data(background)
-
-    sta = fun.sta_sta.get_sta_in_grid(sta,grid)
+    sta = fun.sxy_sxy.get_sta_in_grid(sta, grid)
     grd = background.copy()
     dat = np.squeeze(grd.values)
     ig = ((sta.ix[:,'lon'] - grid.slon) // grid.dlon).astype(dtype = 'int16')

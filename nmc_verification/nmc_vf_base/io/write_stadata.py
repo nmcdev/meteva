@@ -5,6 +5,7 @@ import traceback
 import pandas as pd
 import datetime
 import nmc_verification.nmc_vf_base.method as method
+import nmc_verification.nmc_vf_base.basicdata as bd
 
 def write_to_micaps3(sta0,filename = "a.txt", type = 1,effectiveNum = 4):
     try:
@@ -29,8 +30,8 @@ def write_to_micaps3(sta0,filename = "a.txt", type = 1,effectiveNum = 4):
             str1=("diamond 3 " + filename[start:end] + "\n"+ time_str + str(level) +" 0 0 0 0\n1 " + str(nsta) + "\n")
             br.write(str1)
             br.close()
-
-            df = sta[['id','lon','lat','alt','data0']]
+            data_name = bd.get_data_names(sta)[0]
+            df = sta[['id','lon','lat','alt',data_name]]
             effectiveNum_str = "%." + '%d'% effectiveNum + "f"
             df.to_csv(filename,mode='a',header=None,sep = "\t",float_format=effectiveNum_str,index = None)
 

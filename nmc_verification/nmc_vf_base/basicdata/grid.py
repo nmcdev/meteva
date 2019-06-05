@@ -16,9 +16,13 @@ import numpy as np
 
 
 class grid:
-    def __init__(self,glon, glat, gtime=None, gdtime=None,levels=None,nmember = 1):
+    def __init__(self,glon, glat, gtime=None, gdtime=None,levels=None,members = None):
 
-        self.nmember = nmember
+        #提取成员维度信息
+        if(members == None):
+            self.members =[0]
+        else:
+            self.members = members
         ############################################################################
         #提取层次维度信息
         if(levels == None):
@@ -279,7 +283,7 @@ class grid:
     # tostring 的作用是重置系统自动的函数，在print(grid) 的时候可以很整齐的看到所有信息
     def tostring(self):
         grid_str = ""
-        grid_str += "member count:" + str(self.nmember) +"\n"
+        grid_str += "members:" + str(self.members) +"\n"
         grid_str += "levels:" + str(self.levels) + "\n"
         grid_str += "gtime:" + str([self.stime_str,self.etime_str,self.dtime_str]) + "\n"
         grid_str += "gdtime:" + str(self.gdtime)  +"\n"
@@ -288,7 +292,7 @@ class grid:
         return grid_str
 def get_grid_of_data(grid_data0):
     #print(grid_data0)
-    nmember = len(grid_data0['member'].values)
+    members = grid_data0['member'].values
     levels = grid_data0['level'].values
     times = grid_data0['time'].values
     print(times)
@@ -311,6 +315,6 @@ def get_grid_of_data(grid_data0):
     glon = [lons[0],lons[-1],lons[1]-lons[0]]
     lats = grid_data0['lat'].values
     glat = [lats[0],lats[-1],lats[1]-lats[0]]
-    grid01 = grid(glon, glat, gtime, gdt, levels, nmember)
+    grid01 = grid(glon, glat, gtime, gdt, levels, members)
     return grid01
 

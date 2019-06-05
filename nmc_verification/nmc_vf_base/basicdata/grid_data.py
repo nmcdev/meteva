@@ -15,6 +15,8 @@ def set_coords(grd,level = None,time = None,dtime = None, member = None):
     ndt = int(len(grd.coords.variables.get(grd.coords.dims[3])))
     if (level != None) and (nlevel == 1):
         grd.coords["level"] = [level]
+    if(member != None) and (nmember ==1):
+        grd.coords["member"] = [member]
     #time和dtime的时候兼容一下datetime 和str两种格式
     if (time != None) and (ntime == 1):
         time1 = []
@@ -76,13 +78,13 @@ def grid_data(grid,data=None):
 
     levels = grid.levels
     nlevels = len(levels)
-
-    nmember = grid.nmember
+    members = grid.members
+    nmember = len(members)
     if np.all(data == None):
         data = np.zeros((nmember, nlevels, ntime, ndt, nlat, nlon))
     else:
         data = data.reshape(nmember, nlevels, ntime, ndt, nlat, nlon)
-    return (xr.DataArray(data, coords={'member': np.arange(nmember),'level': levels,'time': times,'dtime':gdt_list,
+    return (xr.DataArray(data, coords={'member': members,'level': levels,'time': times,'dtime':gdt_list,
                                'lat': lat, 'lon': lon},
                          dims=['member', 'level','time', 'dtime','lat', 'lon']))
 
