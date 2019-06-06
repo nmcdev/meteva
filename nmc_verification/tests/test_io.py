@@ -57,12 +57,14 @@ def interpolation():
 
     pass
 
-interpolation()
+#interpolation()
 
 def test_read_m3():
     path = r"H:\task\develop\python\git\nmc_met_class\nmc_met_class\tests\test_data\评分站点.txt"
     station = nmb.io.rs.read_from_micaps3(path)
-    print(station)
+    #print(station)
+    sta4 = nmb.fun.get_from_sta_data.get_by_id_list(station, [59954, 59981])
+    print(sta4)
     station['data0'] = 0
     path = r"H:\task\develop\python\git\nmc_met_class\nmc_met_class\tests\test_data\rain_without0.txt"
     sta = nmb.io.rs.read_from_micaps3(path,station= station,reserve_time_dtime_level=True)
@@ -74,6 +76,6 @@ def test_read_m3():
     nmb.io.wg.write_to_micaps4(grd)
     print(grd)
 
-#test_read_m3()
+test_read_m3()
 
 #test_read_write_micaps4()

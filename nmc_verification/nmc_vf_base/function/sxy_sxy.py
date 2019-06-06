@@ -2,10 +2,9 @@ import pandas as pd
 import numpy as np
 import copy
 
-def set_data_to(sta,station,other_info = 'left'):
+def set_data_to(sta,station):
     #先将数据合并
     df = pd.merge(station,sta, on='id', how='left')
-
     #如果合并后sta对应的数据是缺省，则用station里的data0列补充
     columns = list(sta.columns)
     len_c1 = len(columns)
@@ -15,47 +14,39 @@ def set_data_to(sta,station,other_info = 'left'):
         name1 = columns_m[i]
         name2 = columns_m[7]
         df.loc[df[name1].isnull(), name1] = df[df[name1].isnull()][name2]
-    if other_info == 'left':
-        #时间，时效和层次，采用sta的
-        columns = list(station.columns)
-        len_s = len(columns)
-        df.iloc[:, 0] = df.iloc[0, len_s]
-        df.iloc[:, 1] = df.iloc[0, len_s+1]
-        df.iloc[:, 2] = df.iloc[0, len_s+2]
-        #删除合并后多余的时空信息列
-        drop_col = list(df.columns[7:len_s+6])
-        df.drop(drop_col, axis=1, inplace=True)
-        #重新命名列名称
-        df.columns = sta.columns
-    else:
-        #时间，时效和层次，采用sta的
-        columns = list(station.columns)
-        len_s = len(columns)
-        #删除合并后多余的时空信息列
-        drop_col = list(df.columns[7:len_s+6])
-        df.drop(drop_col, axis=1, inplace=True)
-        #重新命名列名称
-        df.columns = station.columns
+
+    #时间，时效和层次，采用sta的
+    columns = list(station.columns)
+    len_s = len(columns)
+    df.iloc[:, 0] = df.iloc[0, len_s]
+    df.iloc[:, 1] = df.iloc[0, len_s+1]
+    df.iloc[:, 2] = df.iloc[0, len_s+2]
+    #删除合并后多余的时空信息列
+    drop_col = list(df.columns[7:len_s+6])
+    df.drop(drop_col, axis=1, inplace=True)
+    #重新命名列名称
+    df.columns = sta.columns
+
     return df
 
-def set_default_value(df1,default):
-    columns = list(df1.columns)
+def set_default_value(sta,default):
+    columns = list(sta.columns)
     len_c = len(columns)
     for i in range(7,len_c):
         name1 = columns[i]
-        df1.loc[df1[name1].isnull(), name1] = default
+        sta.loc[sta[name1].isnull(), name1] = default
 
 
-def drop_nan(df1):
-    columns = list(df1.columns)
+def drop_nan(sta):
+    columns = list(sta.columns)
     columns_data = columns[7:]
-    df = df1.dropna(subset = columns_data)
+    df = sta.dropna(subset = columns_data)
     return df
 
-def add_on_id(df1, df2, how="left", default=None):
+def add_on_id(sta1, sta2, how="left", default=None):
 
     #将两个df1 合并在一起
-    df = pd.merge(df1, df2, on='id', how=how)
+    df = pd.merge(sta1, sta2, on='id', how=how)
 
     #时间，时效和层次，采用df1的
     df.iloc[:, 0] = df.iloc[0, 0]
@@ -63,7 +54,7 @@ def add_on_id(df1, df2, how="left", default=None):
     df.iloc[:, 2] = df.iloc[0, 2]
 
     #站点取df1，df2中非缺省的
-    columns = list(df1.columns)
+    columns = list(sta1.columns)
     len_c1 = len(columns)
     columns_m = list(df.columns)
     for i in range(4,7):
@@ -96,10 +87,10 @@ def add_on_id(df1, df2, how="left", default=None):
 
     return df
 
-def minus_on_id(df1, df2, how="left", default=None):
+def minus_on_id(sta1, sta2, how="left", default=None):
 
     #将两个df1 合并在一起
-    df = pd.merge(df1, df2, on='id', how=how)
+    df = pd.merge(sta1, sta2, on='id', how=how)
 
     #时间，时效和层次，采用df1的
     df.iloc[:, 0] = df.iloc[0, 0]
@@ -107,7 +98,7 @@ def minus_on_id(df1, df2, how="left", default=None):
     df.iloc[:, 2] = df.iloc[0, 2]
 
     #站点取df1，df2中非缺省的
-    columns = list(df1.columns)
+    columns = list(sta1.columns)
     len_c1 = len(columns)
     columns_m = list(df.columns)
     for i in range(4,7):
@@ -140,10 +131,10 @@ def minus_on_id(df1, df2, how="left", default=None):
 
     return df
 
-def multiply_on_id(df1, df2, how="left", default=None):
+def multiply_on_id(sta1, sta2, how="left", default=None):
 
     #将两个df1 合并在一起
-    df = pd.merge(df1, df2, on='id', how=how)
+    df = pd.merge(sta1, sta2, on='id', how=how)
 
     #时间，时效和层次，采用df1的
     df.iloc[:, 0] = df.iloc[0, 0]
@@ -151,7 +142,7 @@ def multiply_on_id(df1, df2, how="left", default=None):
     df.iloc[:, 2] = df.iloc[0, 2]
 
     #站点取df1，df2中非缺省的
-    columns = list(df1.columns)
+    columns = list(sta1.columns)
     len_c1 = len(columns)
     columns_m = list(df.columns)
     for i in range(4,7):
@@ -184,9 +175,9 @@ def multiply_on_id(df1, df2, how="left", default=None):
 
     return df
 
-def get_sta_in_grid(df0,grid):
+def get_sta_in_grid(sta,grid):
 
-    df1 = copy.deepcopy(df0)
+    df1 = copy.deepcopy(sta)
     df1.loc[df1['lon'] > grid.elon, 'data0'] = np.NaN
     df1.loc[df1['lon'] < grid.slon, 'data0'] = np.NaN
     df1.loc[df1['lat'] > grid.elat, 'data0'] = np.NaN
