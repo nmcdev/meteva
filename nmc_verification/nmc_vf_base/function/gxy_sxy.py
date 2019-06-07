@@ -75,8 +75,8 @@ def interpolation_linear(grd,sta,other_info='left'):
 
 
 def cubicInterpolation(grd,sta,other_info = 'left'):
-    grid = bd.grid.get_grid_of_data(grd)
-    sta1 = fun.sxy_sxy.get_sta_in_grid(sta, grid)
+    grid = bd.get_grid_of_data(grd)
+    sta1 = fun.get_from_sta_data.sta_in_grid_xy(sta, grid)
     dat0 = grd.values
     dat = np.squeeze(dat0)
     ig = ((sta1['lon'] - grid.slon) // grid.dlon).astype(dtype = 'int16')

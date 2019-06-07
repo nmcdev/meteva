@@ -5,6 +5,3 @@ import nmc_verification.nmc_vf_base as nvb
 import nmc_verification.nmc_vf_method as nvm
 import nmc_verification.nmc_vf_product as nvp
 import nmc_verification.nmc_vf_report as nvr
-from nmc_verification.nmc_vf_base.basicdata.grid import grid
-from nmc_verification.nmc_vf_base.basicdata.grid_data import grid_data
-from nmc_verification.nmc_vf_base.basicdata.sta_data import sta_data
