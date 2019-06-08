@@ -2,6 +2,9 @@ import copy
 import nmc_verification.nmc_vf_base.method.time_tools as time_tools
 import pandas as pd
 import numpy as np
+import math
+import collections
+
 class plot_group:
     picture = "picture"
     subplot = "subplot"
@@ -22,6 +25,7 @@ class data_para:
         self.dtime = "fold"
         self.dhour = "fold"
         self.dday = "fold"
+        self.dminute = "fold"
         self.id = "fold"
         self.lon = "fold"
         self.lat = "fold"
@@ -65,6 +69,9 @@ class data_para:
 
     def set_month_unfold(self,month_list_list = None):
         self.time = "fold"
+        self.xun = "fold"
+        self.hou = "fold"
+        self.day = "fold"
         if month_list_list is None:
             self.month = "unfold"
         else:
@@ -72,6 +79,9 @@ class data_para:
 
     def set_xun_unfold(self,xun_list_list = None):
         self.time = "fold"
+        self.month = "fold"
+        self.hou = "fold"
+        self.day = "fold"
         if xun_list_list is None:
             self.xun = "unfold"
         else:
@@ -79,6 +89,9 @@ class data_para:
 
     def set_hou_unfold(self,hou_list_list = None):
         self.time = "fold"
+        self.month = "fold"
+        self.xun = "fold"
+        self.day = "fold"
         if hou_list_list is None:
             self.hou = "unfold"
         else:
@@ -86,6 +99,9 @@ class data_para:
 
     def set_day_unfold(self,day_list_list = None):
         self.time = "fold"
+        self.month = "fold"
+        self.xun = "fold"
+        self.hou = "fold"
         if day_list_list is None:
             self.day = "unfold"
         else:
@@ -101,7 +117,7 @@ class data_para:
 
     def set_dtime_unfold(self,dtime_list_list = None,dtime_range_list = None):
         self.dday = "fold"
-        self.dhou = "fold"
+        self.dhour = "fold"
         if dtime_list_list is not None:
             self.dtime = copy.deepcopy(dtime_list_list)
         elif dtime_range_list is not None:
@@ -124,10 +140,20 @@ class data_para:
 
     def set_dhour_unfold(self,dhour_list_list = None):
         self.dtime = "fold"
+        self.dminute = "fold"
         if dhour_list_list is None:
             self.dhour = "unfold"
         else:
             self.dhour = copy.deepcopy(dhour_list_list)
+
+    def set_dminute_unfold(self,dminute_list_list = None):
+        self.dtime = "fold"
+        self.dhour = "fold"
+        if dminute_list_list is None:
+            self.dminute = "unfold"
+        else:
+            self.dminute = copy.deepcopy(dminute_list_list)
+
 
     def set_dday_unfold(self,dday_list_list = None):
         self.dtime = "fold"
@@ -179,11 +205,12 @@ class data_para:
                 list_list.append([slat1, elat1])
                 slat1 += dlat
                 elat1 += dlat
-            self.lon = list_list
+            self.lat = list_list
         elif lat_range_list is not None:
-            self.alt = copy.deepcopy(lat_range_list)
+            self.lat = copy.deepcopy(lat_range_list)
         else:
             self.lat = "unfold"
+
     def set_alt_unfold(self,alt_range = None,alt_range_list = None):
         if alt_range is not None:
             salt = alt_range[0]
@@ -207,9 +234,9 @@ class data_para:
 
 
 
-    def get_dict_list_list(self,sta):
+    def get_para_array(self,sta):
 
-        para_dict = {}
+        para_array = collections.OrderedDict()
         #
         if self.level == "fold":
             pass
@@ -219,9 +246,9 @@ class data_para:
             level_list2 = []
             for level in level_list:
                 level_list2.append([level])
-            para_dict['level'] = level_list2
+            para_array['level'] = level_list2
         else:
-            para_dict['level'] = copy.deepcopy(self.level)
+            para_array['level'] = copy.deepcopy(self.level)
 
         #
         if self.time == 'fold':
@@ -232,9 +259,9 @@ class data_para:
             time_list2 = []
             for time in time_list:
                 time_list2.append([time])
-            para_dict['time'] = time_list2
+            para_array['time'] = time_list2
         else:
-            para_dict['time'] = copy.deepcopy(self.time)
+            para_array['time'] = copy.deepcopy(self.time)
 
         #
         if self.year == "fold":
@@ -245,11 +272,11 @@ class data_para:
             for time in time_list:
                 year_list.append(time.year)
             year_list.sort()
-            para_dict['year'] = []
+            para_array['year'] = []
             for year in year_list:
-                para_dict['year'].append([year])
+                para_array['year'].append([year])
         else:
-            para_dict['year'] = copy.deepcopy(self.year)
+            para_array['year'] = copy.deepcopy(self.year)
 
         #
         if self.month == "fold":
@@ -260,11 +287,80 @@ class data_para:
             for time in time_list:
                 month_list.append(time.month)
             month_list.sort()
-            para_dict['month'] = []
+            para_array['month'] = []
             for month in month_list:
-                para_dict['month'].append([month])
+                para_array['month'].append([month])
         else:
-            para_dict['month'] = copy.deepcopy(self.month)
+            para_array['month'] = copy.deepcopy(self.month)
+
+
+        #
+        if self.month == "fold":
+            pass
+        elif self.month =="unfold":
+            time_list = list(set(sta['time'].tolist()))
+            month_list = []
+            for time in time_list:
+                month_list.append(time.month)
+            month_list.sort()
+            para_array['month'] = []
+            for month in month_list:
+                para_array['month'].append([month])
+        else:
+            para_array['month'] = copy.deepcopy(self.month)
+
+
+        #
+        if self.xun == "fold":
+            pass
+        elif self.xun =="unfold":
+            time_list = list(set(sta['time'].tolist()))
+            xun_list = []
+            for time in time_list:
+                month = time.month
+                day = time.day
+                xun1 = (month-1) * 3 + min(int(math.ceil(day / 10)),3)
+                xun_list.append(xun1)
+            xun_list.sort()
+            para_array['xun'] = []
+            for xun1 in xun_list:
+                para_array['xun'].append([xun1])
+        else:
+            para_array['xun'] = copy.deepcopy(self.xun)
+
+        #
+        if self.hou == "fold":
+            pass
+        elif self.hou=="unfold":
+            time_list = list(set(sta['time'].tolist()))
+            hou_list = []
+            for time in time_list:
+                month = time.month
+                day = time.day
+                hou1 = (month-1) * 6 + min(int(math.ceil(day / 5)),6)
+                hou_list.append(hou1)
+            hou_list.sort()
+            para_array['hou'] = []
+            for hou1 in hou_list:
+                para_array['hou'].append([hou1])
+        else:
+            para_array['hou'] = copy.deepcopy(self.hou)
+
+        if self.day == "fold":
+            pass
+        elif self.day == "unfold":
+            time_list = list(set(sta['time'].tolist()))
+            day_list = []
+            for time in time_list:
+                day_list.append(time.dayofyear)
+            day_list.sort()
+            para_array['day'] = []
+            for day1 in day_list:
+                para_array['day'].append([day1])
+        else:
+            para_array['day'] = copy.deepcopy(self.day)
+
+
 
         #
         if self.dtime == 'fold':
@@ -275,10 +371,52 @@ class data_para:
             dtime_list2 = []
             for dtime in dtime_list:
                 dtime_list2.append([dtime])
-            para_dict['dtime'] = dtime_list2
+            para_array['dtime'] = dtime_list2
         else:
-            para_dict['dtime'] = copy.deepcopy(self.dtime)
+            para_array['dtime'] = copy.deepcopy(self.dtime)
 
+        if self.dday == 'fold':
+            pass
+        elif self.dday == 'unfold':
+            dtime_list = list(set(sta['dtime'].tolist()))
+            dtime_list.sort()
+            dtime_list2 = []
+            for dtime in dtime_list:
+                seconds = dtime.seconds
+                days = math.ceil(seconds/(24*3600))
+                dtime_list2.append([days])
+            para_array['dday'] = dtime_list2
+        else:
+            para_array['dday'] = copy.deepcopy(self.dday)
+
+        if self.dhour == 'fold':
+            pass
+        elif self.dhour == 'unfold':
+            dtime_list = list(set(sta['dtime'].tolist()))
+            dtime_list.sort()
+            dtime_list2 = []
+            for dtime in dtime_list:
+                seconds = dtime.seconds
+                hours = math.ceil(seconds/(3600))
+                dtime_list2.append([hours])
+            para_array['dhour'] = dtime_list2
+        else:
+            para_array['dhour'] = copy.deepcopy(self.dhour)
+
+        if self.dminute == 'fold':
+            pass
+        elif self.dminute == 'unfold':
+            dtime_list = list(set(sta['dtime'].tolist()))
+            dtime_list.sort()
+            dtime_list2 = []
+            for dtime in dtime_list:
+                seconds = dtime.seconds
+                minutes = math.ceil(seconds/(60))
+                dtime_list2.append([minutes])
+            para_array['dminute'] = dtime_list2
+        else:
+            para_array['dminute'] = copy.deepcopy(self.dminute)
+        #
         if self.id == 'fold':
             pass
         elif self.id == 'unfold':
@@ -287,9 +425,9 @@ class data_para:
             id_list2 = []
             for id in id_list:
                 id_list2.append([id])
-            para_dict['id'] = id_list2
+            para_array['id'] = id_list2
         else:
-            para_dict['id'] = copy.deepcopy(self.dtime)
+            para_array['id'] = copy.deepcopy(self.dtime)
 
         if self.lon == "fold":
             pass
@@ -305,9 +443,9 @@ class data_para:
                 list_list.append([slon1, elon1])
                 slon1 += dlon
                 elon1 += dlon
-            para_dict['lon'] = list_list
+            para_array['lon'] = list_list
         else:
-            para_dict['lon'] = copy.deepcopy(self.lon)
+            para_array['lon'] = copy.deepcopy(self.lon)
 
         #
         if self.lat == "fold":
@@ -324,9 +462,9 @@ class data_para:
                 list_list.append([slat1, elat1])
                 slat1 += dlat
                 elat1 += dlat
-            para_dict['lat'] = list_list
+            para_array['lat'] = list_list
         else:
-            para_dict['lat'] = copy.deepcopy(self.lat)
+            para_array['lat'] = copy.deepcopy(self.lat)
 
         #
         if self.alt == "fold":
@@ -343,9 +481,10 @@ class data_para:
                 list_list.append([salt1, ealt1])
                 salt1 += dalt
                 ealt1 += dalt
-            para_dict['alt'] = list_list
+            para_array['alt'] = list_list
         else:
-            para_dict['alt'] = copy.deepcopy(self.alt)
+            para_array['alt'] = copy.deepcopy(self.alt)
 
 
-        return para_dict
+        return para_array
+
