@@ -60,75 +60,123 @@ def sta_to_grid_idw(sta, grid0,background = None,effectR = 1000,nearNum = 16,oth
     grd = bd.grid_data(grid,dat)
     return grd
 
-def sta_to_grid_oa2(sta0,background,sm = 1.0,effect_R = 1000,rate_of_model = 0,other_info='left'):
+def sta_to_grid_oa2(sta0,background,sm = 1,effect_R = 1000,rate_of_model = 0):
+
     sta = fun.sxy_sxy.drop_nan(sta0)
     data_name = bd.get_data_names(sta)[0]
     grid = bd.get_grid_of_data(background)
-    sta = fun.get_from_sta.get_sta_in_grid_xy(sta, grid)
+    sta = fun.get_from_sta.sta_in_grid_xy(sta, grid)
     #print(sta)
     grd = background.copy()
     dat = np.squeeze(grd.values)
+
+
     ig = ((sta.ix[:,'lon'] - grid.slon) // grid.dlon).astype(dtype = 'int16')
+
     jg = ((sta.ix[:,'lat'] - grid.slat) // grid.dlat).astype(dtype = 'int16')
-    ig1 = np.minimum(ig + 1, grid.nlon - 1)
-    jg1 = np.minimum(jg + 1, grid.nlat - 1)
 
     dx = (sta.ix[:,'lon'] - grid.slon) / grid.dlon - ig
+
     dy = (sta.ix[:,'lat'] - grid.slat) / grid.dlat - jg
+
     c00 = (1 - dx) * (1 - dy)
+
     c01 = dx * (1 - dy)
+
     c10 = (1-dx) * dy
+
     c11 = dx * dy
+
     lat = np.arange(grid.nlat) * grid.dlat + grid.slat
+
     sr = 1/np.power(np.cos(lat*math.pi/180),4)
 
-
     def targe(x):
+
         grdv =  x.reshape(grid.nlat,grid.nlon)
+
         dx = grdv[:,:-2] + grdv[:,2:] - 2 * grdv[:,1:-1]
+
         cost1 = np.sum(dx * dx)
+
         dy = grdv[:-2,:] + grdv[2:,:] - 2 * grdv[1:-1,:]
+
         dy2 = dy * dy
+
         sum_dy = np.sum(dy2,axis=1)
+
         cost1 = cost1 + np.dot(sum_dy,sr[1:-1])
 
-        sta_g = c00 * dat[jg, ig] + c01 * dat[jg, ig1] + c10 * dat[jg1, ig] + c11 * dat[jg1, ig1]
-        error = sta.ix[:,data_name] - sta_g
+
+
+        sta_g = c00 * dat[jg, ig] + c01 * dat[jg, ig + 1] + c10 * dat[jg + 1, ig] + c11 * dat[
+
+            jg + 1, ig + 1]
+
+        error = sta.ix[:,7] - sta_g
+
         cost2 = np.sum(error * error)
+
         cost = sm * cost1 + cost2
+
         return cost
 
+
+
     def grads(x):
+
         grdv = x.reshape(grid.nlat,grid.nlon)
+
         g1 = np.zeros(grdv.shape)
+
         dx = 2 * (grdv[:,:-2] + grdv[:,2:] - 2 * grdv[:,1:-1])
+
         g1[:,:-2] = dx
+
         g1[:,2:] += dx
+
         g1[:,1:-1] -= 2*dx
 
+
+
         sr_expend = np.tile(sr[1:-1],[grid.nlon,1]).T
+
         dy = 2 *(grdv[:-2,:] + grdv[2:,:] - 2 * grdv[1:-1,:])
+
         dy_sr = dy * sr_expend
+
         g1[:-2,:] += dy_sr
+
         g1[2:,:] += dy_sr
+
         g1[1:-1,:] -= 2 * dy_sr
 
+
+
         g2 = np.zeros(grdv.shape)
-        sta_g = c00 * dat[jg, ig] + c01 * dat[jg, ig1] + c10 * dat[jg1, ig] + c11 * dat[jg1, ig1]
-        d = 2 * (sta_g - sta.ix[:,data_name])
+
+        sta_g = c00 * dat[jg, ig] + c01 * dat[jg, ig + 1] + c10 * dat[jg + 1, ig] + c11 * dat[jg + 1, ig + 1]
+
+        d = 2 * (sta_g - sta.ix[:,7])
+
         g2[jg,ig] += d * c00
-        g2[jg,ig1]  += d * c01
-        g2[jg1,ig] += d * c10
-        g2[jg1,ig1] += d * c11
+
+        g2[jg,ig + 1]  += d * c01
+
+        g2[jg+1,ig] += d * c10
+
+        g2[jg+1,ig+1] += d * c11
+
         g = sm * g1 + g2
+
         return g.reshape(-1)
 
-    x = dat.reshape(-1)
+
+
+    x = grd.values.reshape(-1)
+
     x_oa = frprmn2(x, targe, grads)
-    dat = x_oa.reshape(grid.nlat,grid.nlon)
-    grd = bd.grid_data(grid,dat)
-    print(sta)
-    if(other_info == 'left'):
-        bd.set_coords(grd,time = sta['time'].values[0],dtime=sta['dtime'].values[0],level = sta['level'].values[0])
+
+    grd.values = x_oa.reshape(1,1,1,1,grid.nlat,grid.nlon)
 
     return grd

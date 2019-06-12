@@ -16,8 +16,8 @@ def transform(grd):
     dat[:,3] = grd.values.reshape(-1)
     member = grd['member'][0]
     df = pd.DataFrame(dat,columns=['id','lon','lat',member])
-    sta = bd.sta_data.sta_data(df)
-    grid = bd.grid.get_grid_of_data(grd)
+    sta = bd.sta_data(df)
+    grid = bd.get_grid_of_data(grd)
     sta['time'] = grid.stime
     sta['dtime'] = grid.sdtimedelta
     sta['level'] = grid.levels[0]
@@ -25,10 +25,9 @@ def transform(grd):
     return sta
 
 
-
 def interpolation_nearest(grd,sta,other_info='left'):
-    grid = bd.grid.get_grid_of_data(grd)
-    sta1 = fun.sxy_sxy.get_sta_in_grid(sta, grid)
+    grid = bd.get_grid_of_data(grd)
+    sta1 = fun.get_from_sta.sta_in_grid_xy(sta, grid)
     dat0 = grd.values
     dat = np.squeeze(dat0)
 
@@ -76,8 +75,8 @@ def interpolation_linear(grd,sta,other_info='left'):
 
 
 def cubicInterpolation(grd,sta,other_info = 'left'):
-    grid = bd.grid.get_grid_of_data(grd)
-    sta1 = fun.sxy_sxy.get_sta_in_grid(sta, grid)
+    grid = bd.get_grid_of_data(grd)
+    sta1 = fun.get_from_sta_data.sta_in_grid_xy(sta, grid)
     dat0 = grd.values
     dat = np.squeeze(dat0)
     ig = ((sta1['lon'] - grid.slon) // grid.dlon).astype(dtype = 'int16')

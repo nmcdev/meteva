@@ -3,7 +3,7 @@ import nmc_verification.nmc_vf_base.function as fun
 import numpy as np
 import pandas as pd
 
-
+print(1)
 def transform(grd):
     x = grd['lon']
     y = grd['lat']

@@ -65,7 +65,7 @@ def sta_to_grid_oa2(sta0,background,sm = 1,effect_R = 1000,rate_of_model = 0):
     sta = fun.sxy_sxy.drop_nan(sta0)
     data_name = bd.get_data_names(sta)[0]
     grid = bd.get_grid_of_data(background)
-    sta = fun.get_from_sta.sta_in_grid_xy(sta, grid)
+    sta = fun.get_from_sta_data.sta_in_grid_xy(sta, grid)
     #print(sta)
     grd = background.copy()
     dat = np.squeeze(grd.values)

@@ -34,9 +34,9 @@ nmc_verification/nmc_vf_base/method/frprmn2.py
 nmc_verification/nmc_vf_base/method/math.py
 nmc_verification/nmc_vf_base/method/path_tools.py
 nmc_verification/nmc_vf_base/method/time_tools.py
-nmc_verification/nmc_vf_base/perspective/Screen1.py
 nmc_verification/nmc_vf_base/perspective/__init__.py
-nmc_verification/nmc_vf_base/perspective/condition.py
+nmc_verification/nmc_vf_base/perspective/para_dealing.py
+nmc_verification/nmc_vf_base/perspective/sta_perspective.py
 nmc_verification/nmc_vf_method/__init__.py
 nmc_verification/nmc_vf_method/continuous/__init__.py
 nmc_verification/nmc_vf_method/continuous/score.py
@@ -46,7 +46,7 @@ nmc_verification/nmc_vf_method/yes_or_no/__init__.py
 nmc_verification/nmc_vf_method/yes_or_no/threshold_list.py
 nmc_verification/nmc_vf_method/yes_or_no/threshold_one.py
 nmc_verification/nmc_vf_product/__init__.py
+nmc_verification/nmc_vf_product/score/__init__.py
+nmc_verification/nmc_vf_product/score/yes_or_no/__init__.py
+nmc_verification/nmc_vf_product/score/yes_or_no/threshold_one.py
 nmc_verification/nmc_vf_report/__init__.py
-nmc_verification/tests/__init__.py
-nmc_verification/tests/test_io.py
-nmc_verification/tests/ts_test.py
