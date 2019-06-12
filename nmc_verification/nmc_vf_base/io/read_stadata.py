@@ -65,3 +65,37 @@ def read_from_micaps3(filename,station = None,reserve_time_dtime_level = True,da
         print(exstr)
         return None
 
+
+
+
+def read_station(filename,columns,skiprows = 0):
+    if os.path.exists(filename):
+        file_sta = open(filename)
+        sta0 = pd.read_csv(file_sta, skiprows=skiprows, sep="\s+", header=None)
+        sta0.columns = columns
+        station_column = ['id','lon','lat','alt']
+        colums1 = []
+        for name in station_column:
+            if name in columns:
+                colums1.append(name)
+        sta1 = sta0[colums1]
+        nsta = len(sta1.index)
+        for i in range(nsta):
+            if sta1.loc[i,'lon'] >1000:
+                a = sta1.loc[i,'lon']// 100 + (a % 100) /60
+                sta1.loc[i, 'lon'] = a
+            if sta1.loc[i,'lat'] >1000:
+                a = sta1.loc[i,'lat']// 100 + (a % 100) /60
+                sta1.loc[i, 'lat'] = a
+        sta = bd.sta_data(sta1)
+
+        sta['time'] = method.time_tools.str_to_time64("2099010108")
+        sta['level'] = 0
+        sta['dtime'] = np.timedelta64(0, 'h')
+        sta.coloumns = ['level','time','dtime','id','lon','lat','alt','data0']
+        sta['data0'] = 0
+        return sta
+    else:
+        print(filename +" not exist")
+        return None
+
