@@ -46,6 +46,11 @@ def read_from_micaps3(filename,station = None,reserve_time_dtime_level = True,da
                         y2 = '19'
                     else:
                         y2 = '20'
+                if len(strs[3]) == 1: strs[3] = "0"+ strs[3]
+                if len(strs[4]) == 1: strs[4] = "0" + strs[4]
+                if len(strs[5]) == 1: strs[5] = "0" + strs[5]
+                if len(strs[6]) == 1: strs[6] = "0" + strs[6]
+
                 time_str = y2 + strs[3] + strs[4] + strs[5] + strs[6]
                 #time64 = method.time_tools.str_to_time64(time_str)
                 time64 = nmc_verification.nmc_vf_base.method.time_tools.str_to_time64(time_str)

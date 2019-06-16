@@ -41,5 +41,7 @@ setup(
     install_requires=['numpy>=1.12.1',
                       'scipy>=0.19.0',
                       'pandas>=0.20.0',
-                      'xarray>=0.11.0']
+                      'xarray>=0.11.0',
+                      'sklearn>=0.21.2',
+                      'matplotlib>=3.1.0']
 )
