@@ -2,17 +2,19 @@ import pandas as pd
 import numpy as np
 import copy
 
-def set_data_to(sta,station):
-    #先将数据合并
-    df = pd.merge(station,sta, on='id', how='left')
 
+def set_data_to(sta,station):
+    #删除重复行
+    sta1 = sta.drop_duplicates(['id'])
+    #先将数据合并
+    df = pd.merge(station,sta1, on='id', how='left')
     #时间，时效和层次，采用sta的
-    df.iloc[:, 0] = sta.iloc[0, 0]
-    df.iloc[:, 1] = sta.iloc[0, 1]
-    df.iloc[:, 2] = sta.iloc[0, 2]
+    df.iloc[:, 0] = sta1.iloc[0, 0]
+    df.iloc[:, 1] = sta1.iloc[0, 1]
+    df.iloc[:, 2] = sta1.iloc[0, 2]
 
     #如果合并后sta对应的数据是缺省，则用station里的data0列补充
-    columns = list(sta.columns)
+    columns = list(sta1.columns)
     len_c1 = len(columns)
     columns_m = list(df.columns)
     len_m = len(columns_m)
@@ -27,7 +29,7 @@ def set_data_to(sta,station):
     drop_col = list(df.columns[7:len_s+6])
     df.drop(drop_col, axis=1, inplace=True)
     #重新命名列名称
-    df.columns = sta.columns
+    df.columns = sta1.columns
 
     return df
 
@@ -45,15 +47,21 @@ def drop_nan(sta):
     df = sta.dropna(subset = columns_data)
     return df
 
-def add_on_id(sta1, sta2, how="left", default=None):
-    if sta1 is None:
-        return sta2
-    elif sta2 is None:
-        return sta1
+def add_on_id(sta1_0, sta2_0, how="left", default=None):
+    if sta1_0 is None:
+        return sta2_0
+    elif sta2_0 is None:
+        return sta1_0
     else:
         #将两个df1 合并在一起
-        df = pd.merge(sta1, sta2, on='id', how=how)
+        # 删除重复行
+        sta2 = sta2_0.drop_duplicates(['id'])
+        sta1 = sta1_0.drop_duplicates(['id'])
 
+        df = pd.merge(sta1, sta2, on='id', how=how)
+        print(len(sta1.index))
+        print(len(sta2.index))
+        print(len(df.index))
         #时间，时效和层次，采用df1的
         df.iloc[:, 0] = df.iloc[0, 0]
         df.iloc[:, 1] = df.iloc[0, 1]
@@ -92,9 +100,11 @@ def add_on_id(sta1, sta2, how="left", default=None):
         df.columns = columns
 
         return df
+def minus_on_id(sta1_0, sta2_0, how="left", default=None):
 
-def minus_on_id(sta1, sta2, how="left", default=None):
-
+    # 删除重复行
+    sta2 = sta2_0.drop_duplicates(['id'])
+    sta1 = sta1_0.drop_duplicates(['id'])
     #将两个df1 合并在一起
     df = pd.merge(sta1, sta2, on='id', how=how)
 
@@ -137,7 +147,10 @@ def minus_on_id(sta1, sta2, how="left", default=None):
 
     return df
 
-def multiply_on_id(sta1, sta2, how="left", default=None):
+def multiply_on_id(sta1_0, sta2_0, how="left", default=None):
+    # 删除重复行
+    sta2 = sta2_0.drop_duplicates(['id'])
+    sta1 = sta1_0.drop_duplicates(['id'])
 
     #将两个df1 合并在一起
     df = pd.merge(sta1, sta2, on='id', how=how)
