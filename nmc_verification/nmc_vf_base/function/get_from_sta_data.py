@@ -1,4 +1,4 @@
-import nmc_verification.nmc_vf_base.method.time_tools as time_tools
+import nmc_verification
 import copy
 import pandas as pd
 import numpy as np
@@ -29,14 +29,14 @@ def sta_in_id_list(sta,id_list):
     return sta1
 
 def sta_of_time(sta,time):
-    time1= time_tools.all_type_time_to_time64(time)
+    time1= nmc_verification.nmc_vf_base.method.time_tools.all_type_time_to_time64(time)
     sta1 = sta.loc[sta['time'] == time1]
     return sta1
 
 def sta_in_time_list(sta,time_list):
     time_list1 = []
     for time0 in time_list:
-        time_list1.append(time_tools.all_type_time_to_time64(time0))
+        time_list1.append(nmc_verification.nmc_vf_base.method.time_tools.all_type_time_to_time64(time0))
     sta1 = sta.loc[sta['time'].isin(time_list1)]
     return sta1
 
@@ -86,14 +86,14 @@ def sta_between_time_range(sta,start_time,end_time,dtime = None):
     return sta
 
 def sta_of_dtime(sta,dtime):
-    dtime1 = time_tools.all_type_time_to_time64(dtime)
+    dtime1 = nmc_verification.nmc_vf_base.method.time_tools.all_type_time_to_time64(dtime)
     sta1 = sta.loc[sta['dtime']==dtime1]
     return sta1
 
 def sta_in_dtime_list(sta,dtime_list):
     dtime_list1 = []
     for time0 in dtime_list:
-        dtime_list1.append(time_tools.all_type_timedelta_to_timedelta64(time0))
+        dtime_list1.append(nmc_verification.nmc_vf_base.method.time_tools.all_type_timedelta_to_timedelta64(time0))
     sta1 = sta.loc[sta['dtime'].isin(dtime_list1)]
     return sta1
 

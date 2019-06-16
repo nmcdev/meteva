@@ -1,9 +1,7 @@
-import nmc_verification.nmc_vf_base.basicdata as bd
-import nmc_verification.nmc_vf_base.function as fun
+import nmc_verification
 import numpy as np
 import pandas as pd
 
-print(1)
 def transform(grd):
     x = grd['lon']
     y = grd['lat']
@@ -16,8 +14,8 @@ def transform(grd):
     dat[:,3] = grd.values.reshape(-1)
     member = grd['member'][0]
     df = pd.DataFrame(dat,columns=['id','lon','lat',member])
-    sta = bd.sta_data(df)
-    grid = bd.get_grid_of_data(grd)
+    sta = nmc_verification.nmc_vf_base.basicdata.sta_data(df)
+    grid = nmc_verification.nmc_vf_base.basicdata.get_grid_of_data(grd)
     sta['time'] = grid.stime
     sta['dtime'] = grid.sdtimedelta
     sta['level'] = grid.levels[0]
@@ -26,8 +24,8 @@ def transform(grd):
 
 
 def interpolation_nearest(grd,sta,other_info='left'):
-    grid = bd.get_grid_of_data(grd)
-    sta1 = fun.get_from_sta.sta_in_grid_xy(sta, grid)
+    grid = nmc_verification.nmc_vf_base.basicdata.get_grid_of_data(grd)
+    sta1 = nmc_verification.nmc_vf_base.function.get_from_sta.sta_in_grid_xy(sta, grid)
     dat0 = grd.values
     dat = np.squeeze(dat0)
 
@@ -35,19 +33,19 @@ def interpolation_nearest(grd,sta,other_info='left'):
     jg = np.round((sta1['lat'] - grid.slat) // grid.dlat).astype(dtype = 'int16')
 
     dat_sta= dat[jg,ig]
-    data_name = bd.get_data_names(sta)[0]
+    data_name = nmc_verification.nmc_vf_base.basicdata.get_data_names(sta)[0]
     sta1.loc[:, data_name] = dat_sta[:]
     if other_info == 'left':
         sta1['time'] = grid.stime
         sta1['dtime'] = grid.sdtimedelta
         sta1['level'] = grid.levels[0]
-        bd.set_data_name(sta1,grid.members[0])
+        nmc_verification.nmc_vf_base.basicdata.set_data_name(sta1,grid.members[0])
     return sta1
 
 
 def interpolation_linear(grd,sta,other_info='left'):
-    grid = bd.get_grid_of_data(grd)
-    sta1 = fun.get_from_sta.sta_in_grid_xy(sta, grid)
+    grid = nmc_verification.nmc_vf_base.basicdata.get_grid_of_data(grd)
+    sta1 = nmc_verification.nmc_vf_base.function.get_from_sta.sta_in_grid_xy(sta, grid)
     dat0 = grd.values
     dat = np.squeeze(dat0)
 
@@ -63,27 +61,27 @@ def interpolation_linear(grd,sta,other_info='left'):
     ig1 = np.minimum(ig + 1, grid.nlon - 1)
     jg1 = np.minimum(jg + 1, grid.nlat - 1)
     dat_sta= c00 * dat[jg,ig] + c01 * dat[jg,ig1] + c10 * dat[jg1,ig] + c11 * dat[jg1,ig1]
-    data_name = bd.get_data_names(sta)[0]
+    data_name = nmc_verification.nmc_vf_base.basicdata.get_data_names(sta)[0]
     sta1.loc[:, data_name] = dat_sta[:]
     if other_info == 'left':
         sta1['time'] = grid.stime
         sta1['dtime'] = grid.sdtimedelta
         sta1['level'] = grid.levels[0]
-        bd.set_data_name(sta1,grid.members[0])
+        nmc_verification.nmc_vf_base.basicdata.set_data_name(sta1,grid.members[0])
     return sta1
 
 
 
 def cubicInterpolation(grd,sta,other_info = 'left'):
-    grid = bd.get_grid_of_data(grd)
-    sta1 = fun.get_from_sta_data.sta_in_grid_xy(sta, grid)
+    grid = nmc_verification.nmc_vf_base.basicdata.get_grid_of_data(grd)
+    sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_grid_xy(sta, grid)
     dat0 = grd.values
     dat = np.squeeze(dat0)
     ig = ((sta1['lon'] - grid.slon) // grid.dlon).astype(dtype = 'int16')
     jg = ((sta1['lat'] - grid.slat) // grid.dlat).astype(dtype = 'int16')
     dx = (sta1['lon'] - grid.slon) / grid.dlon - ig
     dy = (sta1['lat'] - grid.slat) / grid.dlat - jg
-    data_name = bd.get_data_names(sta1)[0]
+    data_name = nmc_verification.nmc_vf_base.basicdata.get_data_names(sta1)[0]
     for p in range(-1,3,1):
         iip = np.minimum(np.maximum(ig+p,0),grid.nlon-1)
         fdx = cubic_f(p, dx)
@@ -96,7 +94,7 @@ def cubicInterpolation(grd,sta,other_info = 'left'):
         sta1['time'] = grid.stime
         sta1['dtime'] = grid.sdtimedelta
         sta1['level'] = grid.levels[0]
-        bd.set_data_name(sta1, grid.members[0])
+        nmc_verification.nmc_vf_base.basicdata.set_data_name(sta1, grid.members[0])
     return sta1
 
 def cubic_f(n, dx):

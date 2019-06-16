@@ -1,11 +1,7 @@
 import numpy as np
 import math
-from nmc_verification.nmc_vf_base.method.math import lon_lat_to_cartesian
+import nmc_verification
 from scipy.spatial import cKDTree
-import nmc_verification.nmc_vf_base.basicdata as bd
-import nmc_verification.nmc_vf_base.function as fun
-from nmc_verification.nmc_vf_base.method.frprmn2 import frprmn2
-
 def transform(sta,dlon = None,dlat = None):
     #将站点形式的规则网格的数据转化为格点数据
     slon = np.min(sta['lon'])
@@ -28,44 +24,44 @@ def transform(sta,dlon = None,dlat = None):
 
     ig = ((sta.ix[:,'lon'] - slon) // dlon).astype(dtype = 'int16')
     jg = ((sta.ix[:,'lat'] - slat) // dlat).astype(dtype = 'int16')
-    grid0 = bd.grid([slon,elon,dlon],[slat,elat,dlat])
+    grid0 = nmc_verification.nmc_vf_base.basicdata.grid([slon,elon,dlon],[slat,elat,dlat])
     dat = np.zeros((grid0.nlat,grid0.nlon))
-    data_name = bd.get_data_names(sta)[0]
+    data_name = nmc_verification.nmc_vf_base.basicdata.get_data_names(sta)[0]
     dat[jg,ig] = sta.ix[:,data_name]
-    grd = bd.grid_data(grid0,dat)
+    grd = nmc_verification.nmc_vf_base.basicdata.grid_data(grid0,dat)
     return grd
 
 def sta_to_grid_idw(sta, grid0,background = None,effectR = 1000,nearNum = 16,other_info='left'):
-    data_name = bd.get_data_names(sta)
+    data_name = nmc_verification.nmc_vf_base.basicdata.get_data_names(sta)
     if other_info=='left':
-        grid = bd.grid(grid0.glon,grid0.glat,[sta.ix[0,'time']],[sta.ix[0,'dtime']],[sta.ix[0,'level']],data_name)
+        grid = nmc_verification.nmc_vf_base.basicdata.grid(grid0.glon,grid0.glat,[sta.ix[0,'time']],[sta.ix[0,'dtime']],[sta.ix[0,'level']],data_name)
     else:
         grid = grid0
-    xyz_sta =  lon_lat_to_cartesian(sta.ix[:,'lon'], sta.ix[:,'lat'],R = bd.const.ER)
+    xyz_sta =  nmc_verification.nmc_vf_base.method.math.lon_lat_to_cartesian(sta.ix[:,'lon'], sta.ix[:,'lat'],R = bd.const.ER)
     lon = np.arange(grid.nlon) * grid.dlon + grid.slon
     lat = np.arange(grid.nlat) * grid.dlat + grid.slat
     grid_lon,grid_lat = np.meshgrid(lon,lat)
-    xyz_grid = lon_lat_to_cartesian(grid_lon.flatten(), grid_lat.flatten(),R = bd.const.ER)
+    xyz_grid = nmc_verification.nmc_vf_base.method.math.lon_lat_to_cartesian(grid_lon.flatten(), grid_lat.flatten(),R = bd.const.ER)
     tree = cKDTree(xyz_sta)
     d, inds = tree.query(xyz_grid, k=nearNum)
     d += 1e-6
     w = 1.0 / d ** 2
     input_dat = sta.ix[:,'data0'].values
     dat = np.sum(w * input_dat[inds], axis=1) / np.sum(w, axis=1)
-    bg = bd.grid_data(grid)
+    bg = nmc_verification.nmc_vf_base.basicdata.grid_data(grid)
     if(background is not None):
-        bg = fun.gxy_gxy.linearInterpolation(background,grid)
+        bg = nmc_verification.nmc_vf_base.function.gxy_gxy.linearInterpolation(background,grid)
     bg_dat = bg.values.flatten()
     dat = np.where(d[:,0] > effectR,bg_dat,dat)
-    grd = bd.grid_data(grid,dat)
+    grd = nmc_verification.nmc_vf_base.basicdata.grid_data(grid,dat)
     return grd
 
 def sta_to_grid_oa2(sta0,background,sm = 1,effect_R = 1000,rate_of_model = 0):
 
-    sta = fun.sxy_sxy.drop_nan(sta0)
-    data_name = bd.get_data_names(sta)[0]
-    grid = bd.get_grid_of_data(background)
-    sta = fun.get_from_sta_data.sta_in_grid_xy(sta, grid)
+    sta = nmc_verification.nmc_vf_base.function.sxy_sxy.drop_nan(sta0)
+    data_name = nmc_verification.nmc_vf_base.basicdata.get_data_names(sta)[0]
+    grid = nmc_verification.nmc_vf_base.basicdata.get_grid_of_data(background)
+    sta = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_grid_xy(sta, grid)
     #print(sta)
     grd = background.copy()
     dat = np.squeeze(grd.values)
@@ -175,7 +171,7 @@ def sta_to_grid_oa2(sta0,background,sm = 1,effect_R = 1000,rate_of_model = 0):
 
     x = grd.values.reshape(-1)
 
-    x_oa = frprmn2(x, targe, grads)
+    x_oa = nmc_verification.nmc_vf_base.method.frprmn2(x, targe, grads)
 
     grd.values = x_oa.reshape(1,1,1,1,grid.nlat,grid.nlon)
 

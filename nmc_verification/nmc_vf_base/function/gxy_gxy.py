@@ -1,5 +1,5 @@
 import numpy as np
-import nmc_verification.nmc_vf_base.basicdata as bd
+import nmc_verification
 import math
 #格点到格点插值
 def interpolation_linear(grd, grid, other_info='left'):
@@ -10,9 +10,9 @@ def interpolation_linear(grd, grid, other_info='left'):
     dat0 = grd.values
     dat = np.squeeze(dat0)
 
-    grd0 = bd.get_grid_of_data(grd)
+    grd0 = nmc_verification.nmc_vf_base.basicdata.get_grid_of_data(grd)
     if (grd0.dlon * grd0.nlon >= 360):
-        grd1 = bd.grid([grd0.slon, grd0.dlon, grd0.elon + grd0.dlon],[grd0.slat, grd0.dlat, grd0.elat])
+        grd1 = nmc_verification.nmc_vf_base.basicdata.grid([grd0.slon, grd0.dlon, grd0.elon + grd0.dlon],[grd0.slat, grd0.dlat, grd0.elat])
         dat1 = np.zeros((grd1.nlat,grd1.nlon))
         dat1[:,0:-1] = dat[:,:]
         dat1[:, -1] = dat[:, 0]
@@ -20,7 +20,7 @@ def interpolation_linear(grd, grid, other_info='left'):
         dat1 = dat
         grd1 = grd0
     if other_info=='left':
-        grd2 = bd.grid(grid.glon,grid.glat,grd0.gtime,grd0.gdtime,grd0.levels,grd0.members)
+        grd2 = nmc_verification.nmc_vf_base.basicdata.grid(grid.glon,grid.glat,grd0.gtime,grd0.gdtime,grd0.levels,grd0.members)
     else:
         grd2 = grid.copy()
 
@@ -47,7 +47,7 @@ def interpolation_linear(grd, grid, other_info='left'):
 
     #print(grd2.tostring())
     #print(dat2)
-    grd_new = bd.grid_data(grd2,dat2)
+    grd_new = nmc_verification.nmc_vf_base.basicdata.grid_data(grd2,dat2)
 
     return grd_new
 
@@ -57,18 +57,18 @@ def add(grd1,grd2,other_info = 'left'):
     elif(grd2 is None):
         return grd1
     else:
-        grid1 = bd.get_grid_of_data(grd1)
-        grid2 = bd.get_grid_of_data(grd2)
+        grid1 = nmc_verification.nmc_vf_base.basicdata.get_grid_of_data(grd1)
+        grid2 = nmc_verification.nmc_vf_base.basicdata.get_grid_of_data(grd2)
         slon = max(grid1.slon,grid2.slon)
         elon = min(grid1.elon,grid2.elon)
         slat = max(grid1.slat,grid2.slat)
         elat = min(grid1.elat,grid2.elat)
         if other_info == 'left':
-            grid_in = bd.grid([slon,elon,grid1.dlon],[slat,elat,grid1.dlat],grid1.gtime,grid1.gdtime,grid1.levels,grid1.members)
+            grid_in = nmc_verification.nmc_vf_base.basicdata.grid([slon,elon,grid1.dlon],[slat,elat,grid1.dlat],grid1.gtime,grid1.gdtime,grid1.levels,grid1.members)
         else:
-            grid_in = bd.grid([slon, elon, grid2.dlon], [slat, elat, grid2.dlat], grid2.gtime, grid2.gdtime, grid2.levels,
+            grid_in = nmc_verification.nmc_vf_base.basicdata.grid([slon, elon, grid2.dlon], [slat, elat, grid2.dlat], grid2.gtime, grid2.gdtime, grid2.levels,
                               grid2.members)
         grd1_in = interpolation_linear(grd1, grid_in)
         grd2_in = interpolation_linear(grd2, grid_in)
-        grd = bd.grid_data(grid_in,grd1_in.values + grd2_in.values)
+        grd = nmc_verification.nmc_vf_base.basicdata.grid_data(grid_in,grd1_in.values + grd2_in.values)
         return grd
