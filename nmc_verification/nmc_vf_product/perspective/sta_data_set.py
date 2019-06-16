@@ -559,13 +559,10 @@ class sta_data_set:
 
     def get_sta_list(self):
         para_array = self.get_para_array()
-
         para_list = para_array_to_list(0, para_array)
         sta_list = []
         for para in para_list:
             sta1 = get_sta_by_para(self.sta_data, para)
-            print(para)
-            print(sta1)
             sta_list.append(sta1)
         return sta_list
 
