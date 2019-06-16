@@ -98,21 +98,26 @@ def sta_in_dtime_list(sta,dtime_list):
     return sta1
 
 def sta_in_dday_list(sta,dday_list):
-    seconds = sta['dtime'].map(lambda x: x.seconds).values
+    seconds = sta['dtime'].map(lambda x: x/np.timedelta64(1, 's')).values
     days = np.ceil(seconds/(24*3600))
     days = pd.Series(days)
     sta1 = sta.loc[days.isin(dday_list)]
     return sta1
 
 def sta_in_dhour_list(sta,dhour_list):
-    seconds = sta['dtime'].map(lambda x: x.seconds).values
-    hours = np.ceil(seconds/(3600))
+    seconds = sta['dtime'].map(lambda x: x/np.timedelta64(1, 's')).values
+    hours = np.ceil(seconds/(3600)).astype(np.int16)
     hours = pd.Series(hours)
+    print(hours)
+    a = hours.isin(dhour_list)
+    print(a)
+    print(len(sta.index))
     sta1 = sta.loc[hours.isin(dhour_list)]
+    print(len(sta1.index))
     return sta1
 
 def sta_in_dminute_list(sta,dminute_list):
-    seconds = sta['dtime'].map(lambda x: x.seconds).values
+    seconds = sta['dtime'].map(lambda x: x/np.timedelta64(1, 's')).values
     minutes = np.ceil(seconds/(60))
     minutes = pd.Series(minutes)
     sta1 = sta.loc[minutes.isin(dminute_list)]

@@ -5,15 +5,82 @@ import numpy as np
 import math
 import collections
 
-class plot_group:
-    picture = "picture"
-    subplot = "subplot"
-    legend = "legend"
-    axis_x = "axis_x"
+
+def para_array_to_list(key_num,para_array):
+
+    key_list = []
+    for key in para_array.keys():
+        key_list.append(key)
+    key_count = len(key_list)
+
+    if(key_num ==key_count-1):
+        key = key_list[key_num]
+        para_list = []
+        list1 = para_array[key]
+        for para in list1:
+            dict1 = {}
+            dict1[key] = para
+            para_list.append(dict1)
+    else:
+        key = key_list[key_num]
+        list1 = para_array[key]
+        para_list0 = para_array_to_list(key_num+1,para_array)
+        para_list = []
+        for para in list1:
+            for dict0 in para_list0:
+                dict1 = {}
+                dict1[key] = para
+                for key0 in dict0.keys():
+                    dict1[key0] = copy.deepcopy(dict0[key0])
+                #print(dict1)
+                para_list.append(dict1)
+
+    return para_list
 
 
-class data_para:
-    def __init__(self):
+def get_sta_by_para(sta,para):
+    sta1 = copy.deepcopy(sta)
+    for key in para.keys():
+        if key == "level":
+            sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_level_list(sta1,para[key])
+        elif key == "time":
+            sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_time_list(sta1,para[key])
+        elif key == "year":
+            sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_year_list(sta1,para[key])
+        elif key == "month":
+            sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_month_list(sta1,para[key])
+        elif key == "xun":
+            sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_xun_list(sta1,para[key])
+        elif key == "hou":
+            sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_hou_list(sta1,para[key])
+        elif key == "day":
+            sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_day_list(sta1,para[key])
+        elif key == "hour":
+            sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_hour_list(sta1,para[key])
+        elif key == "dtime":
+            sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_dtime_list(sta1,para[key])
+        elif key == "dday":
+            sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_dday_list(sta1,para[key])
+        elif key == "dhour":
+            sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_dhour_list(sta1,para[key])
+        elif key == "dminute":
+            sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_dminute_list(sta1,para[key])
+        elif key == "id":
+            sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_id_list(sta1,para[key])
+        elif key == 'lon':
+            sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_between_lon_range(sta1,para[key][0],para[key][1])
+        elif key == 'lat':
+            sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_between_lat_range(sta1, para[key][0], para[key][1])
+        elif key == "alt":
+            sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_between_alt_range(sta1, para[key][0], para[key][1])
+        else:
+            print("参数关键词不支持")
+    return sta1
+
+
+
+class sta_data_set:
+    def __init__(self,sta):
         self.level = "fold"
         self.time = "fold"
         self.year = "fold"
@@ -30,6 +97,7 @@ class data_para:
         self.lon = "fold"
         self.lat = "fold"
         self.alt = "fold"
+        self.sta_data = sta
 
     def set_level_unfold(self,level_list_list = None):
         if(level_list_list is None):
@@ -233,9 +301,8 @@ class data_para:
             self.alt = "unfold"
 
 
-
-    def get_para_array(self,sta):
-
+    def get_para_array(self):
+        sta = self.sta_data
         para_array = collections.OrderedDict()
         #
         if self.level == "fold":
@@ -363,6 +430,7 @@ class data_para:
 
 
         #
+
         if self.dtime == 'fold':
             pass
         elif self.dtime == 'unfold':
@@ -382,7 +450,7 @@ class data_para:
             dtime_list.sort()
             dtime_list2 = []
             for dtime in dtime_list:
-                seconds = dtime.seconds
+                seconds = dtime/np.timedelta64(1, 's')
                 days = math.ceil(seconds/(24*3600))
                 dtime_list2.append([days])
             para_array['dday'] = dtime_list2
@@ -396,7 +464,8 @@ class data_para:
             dtime_list.sort()
             dtime_list2 = []
             for dtime in dtime_list:
-                seconds = dtime.seconds
+                dtime = nmc_verification.nmc_vf_base.method.time_tools.all_type_timedelta_to_timedelta64(dtime)
+                seconds = dtime/np.timedelta64(1, 's')
                 hours = math.ceil(seconds/(3600))
                 dtime_list2.append([hours])
             para_array['dhour'] = dtime_list2
@@ -410,7 +479,7 @@ class data_para:
             dtime_list.sort()
             dtime_list2 = []
             for dtime in dtime_list:
-                seconds = dtime.seconds
+                seconds = dtime/np.timedelta64(1, 's')
                 minutes = math.ceil(seconds/(60))
                 dtime_list2.append([minutes])
             para_array['dminute'] = dtime_list2
@@ -487,4 +556,20 @@ class data_para:
 
 
         return para_array
+
+    def get_sta_list(self):
+        para_array = self.get_para_array()
+
+        para_list = para_array_to_list(0, para_array)
+        sta_list = []
+        for para in para_list:
+            sta1 = get_sta_by_para(self.sta_data, para)
+            print(para)
+            print(sta1)
+            sta_list.append(sta1)
+        return sta_list
+
+
+
+
 

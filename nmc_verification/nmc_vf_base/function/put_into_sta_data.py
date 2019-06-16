@@ -18,7 +18,7 @@ def merge(sta,sta1):
     # 删除合并后第二组时空坐标信息
     drop_col = list(df.columns[len_sta:len_sta + 6])
     df.drop(drop_col, axis=1, inplace=True)
-    columns_dim = list(sta.columns)[0:-1]
+    columns_dim = list(sta.columns)[0:7]
     columns_data = list(df.columns)[7:]
     columns = columns_dim + columns_data
     df.columns = columns
