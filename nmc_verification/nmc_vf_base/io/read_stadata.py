@@ -3,9 +3,7 @@
 import numpy as np
 import os
 import pandas as pd
-import nmc_verification.nmc_vf_base.basicdata as bd
-import nmc_verification.nmc_vf_base.function as fun
-import nmc_verification.nmc_vf_base.method as method
+import nmc_verification
 import traceback
 
 def read_from_micaps3(filename,station = None,reserve_time_dtime_level = True,data_name = 'data0'):
@@ -37,7 +35,8 @@ def read_from_micaps3(filename,station = None,reserve_time_dtime_level = True,da
 
             sta1.columns = ['id','lon','lat','alt',data_name]
             sta1.drop_duplicates(keep='first', inplace=True)
-            sta = bd.sta_data(sta1)
+            #sta = bd.sta_data(sta1)
+            sta = nmc_verification.nmc_vf_base.basicdata.sta_data(sta1)
             #print(sta)
             if(reserve_time_dtime_level):
                 y2 = ""
@@ -48,7 +47,8 @@ def read_from_micaps3(filename,station = None,reserve_time_dtime_level = True,da
                     else:
                         y2 = '20'
                 time_str = y2 + strs[3] + strs[4] + strs[5] + strs[6]
-                time64 = method.time_tools.str_to_time64(time_str)
+                #time64 = method.time_tools.str_to_time64(time_str)
+                time64 = nmc_verification.nmc_vf_base.method.time_tools.str_to_time64(time_str)
                 level = int(strs[7])
                 if level < 0: level = 0
                 sta['time'] = time64
@@ -56,7 +56,8 @@ def read_from_micaps3(filename,station = None,reserve_time_dtime_level = True,da
                 sta['dtime'] = np.timedelta64(0,'h')
             if(station is not None):
                 #print(sta)
-                sta = fun.sxy_sxy.set_data_to(sta, station)
+                #sta = fun.sxy_sxy.set_data_to(sta, station)
+                sta = nmc_verification.nmc_vf_base.function.sxy_sxy.set_data_to(sta, station)
             return sta
         else:
             return None
@@ -87,9 +88,10 @@ def read_station(filename,columns,skiprows = 0):
             if sta1.loc[i,'lat'] >1000:
                 a = sta1.loc[i,'lat']// 100 + (a % 100) /60
                 sta1.loc[i, 'lat'] = a
-        sta = bd.sta_data(sta1)
-
-        sta['time'] = method.time_tools.str_to_time64("2099010108")
+        #sta = bd.sta_data(sta1)
+        sta = nmc_verification.nmc_vf_base.basicdata.sta_data(sta1)
+        #sta['time'] = method.time_tools.str_to_time64("2099010108")
+        sta['time'] = nmc_verification.nmc_vf_base.method.time_tools.str_to_time64("2099010108")
         sta['level'] = 0
         sta['dtime'] = np.timedelta64(0, 'h')
         sta.coloumns = ['level','time','dtime','id','lon','lat','alt','data0']

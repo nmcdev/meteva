@@ -7,8 +7,7 @@ import xarray as xr
 import datetime
 import pandas as pd
 import traceback
-import nmc_verification.nmc_vf_base.function as fun
-
+import nmc_verification
 
 #规范化格点（起始经纬度，间隔经度，格点数）
 def grid_ragular(slon,dlon,elon,slat,dlat,elat):
@@ -88,7 +87,7 @@ def read_from_micaps4(filename,grid=None):
                 return da
             else:
                 #导包需要确认一下
-                da1 = fun.gxy_gxy.interpolation_linear(da, grid)
+                da1 = nmc_verification.nmc_vf_base.function.gxy_gxy.interpolation_linear(da, grid)
                 return da1
         else:
             return None
