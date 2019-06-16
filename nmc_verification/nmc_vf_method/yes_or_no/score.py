@@ -77,4 +77,3 @@ def hmfn(Ob,Fo,threshold_list):
         fal[i] = fal_threshold.sum()
         cn[i] = cn_threshold.sum()
     return hit,mis,fal,cn
-
