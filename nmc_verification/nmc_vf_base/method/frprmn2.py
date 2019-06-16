@@ -2,7 +2,6 @@ import math
 import numpy as np
 import time
 def frprmn2(x,targe,grads,tol = 0.001,caculate_time = 60):
-
     x0 = x
     n = len(x0)
     x_min = math.sqrt(1.0/n)
