@@ -8,7 +8,10 @@ import copy
 def contingency_table(ob, fo,threshold_list = None,save_path = None, figsize=(9, 4), x_label=None, y_label=None, title='contingency table', fontsize=20,
 
                       fontproperties='KaiTi', col_labels=['yes', 'no', 'Total'], row_labels=['yes', 'no', 'Total']):
-    #
+    # 扩展一下该函数的功能
+    # 当threshold_list 为None时，ob和fo里的取值默认是只为0或1的，否则根据threshold_list 里的阈值判断ob和fo里的元素是0或1，进一步绘图
+    #threshold_list 有多个取值时，每个表的title 需要显示等级的内容
+
     if threshold_list is None:
         cm = confusion_matrix(ob, fo)
         tn, fp, fn, tp = cm.ravel()
@@ -26,7 +29,9 @@ def contingency_table(ob, fo,threshold_list = None,save_path = None, figsize=(9,
         #plt.show()
     else:
         tn = len(threshold_list)
-        # 绘制子图 plot.subplot(tn,1)
+        # threshold_list 有1各阈值时，表titile不变
+        
+        # threshold_list 有多个取值时，每个表的title 需要显示等级的内容
 
         for i in range(len(threshold_list)):
             ob1 = copy.deepcopy(ob)
@@ -42,5 +47,5 @@ def contingency_table(ob, fo,threshold_list = None,save_path = None, figsize=(9,
         plt.show()
     else:
         plt.savefig(save_path)
-    
+
     #print("success")
