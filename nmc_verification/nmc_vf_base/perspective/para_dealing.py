@@ -1,5 +1,5 @@
 import copy
-import nmc_verification.nmc_vf_base.method.time_tools as time_tools
+import nmc_verification
 import pandas as pd
 import numpy as np
 import math
@@ -49,9 +49,9 @@ class data_para:
         elif time_range_list is not None:
             list_list = []
             for time_range in time_range_list:
-                time_start = time_tools.all_type_time_to_time64(time_range[0])
-                time_end = time_tools.all_type_time_to_time64(time_range[1])
-                dtime = time_tools.all_type_timedelta_to_timedelta64(time_range[2])
+                time_start = nmc_verification.nmc_vf_base.method.time_tools.all_type_time_to_time64(time_range[0])
+                time_end = nmc_verification.nmc_vf_base.method.time_tools.all_type_time_to_time64(time_range[1])
+                dtime = nmc_verification.nmc_vf_base.method.time_tools.all_type_timedelta_to_timedelta64(time_range[2])
                 time_list = pd.date_range(time_start, time_end, freq=dtime).to_list()
                 list_list.append(time_list)
             self.time = list_list
@@ -123,9 +123,9 @@ class data_para:
         elif dtime_range_list is not None:
             list_list = []
             for dtime_range in dtime_range_list:
-                sdtime = time_tools.all_type_timedelta_to_timedelta64(dtime_range_list[0])
-                edtime = time_tools.all_type_timedelta_to_timedelta64(dtime_range_list[1])
-                ddtime = time_tools.all_type_timedelta_to_timedelta64(dtime_range_list[2])
+                sdtime = nmc_verification.nmc_vf_base.method.time_tools.all_type_timedelta_to_timedelta64(dtime_range_list[0])
+                edtime = nmc_verification.nmc_vf_base.method.time_tools.all_type_timedelta_to_timedelta64(dtime_range_list[1])
+                ddtime = nmc_verification.nmc_vf_base.method.time_tools.all_type_timedelta_to_timedelta64(dtime_range_list[2])
 
                 ndt = int((edtime - sdtime) / ddtime) + 1
                 dt_list = []

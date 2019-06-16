@@ -1,5 +1,5 @@
 import copy
-import nmc_verification.nmc_vf_base.function as fun
+import nmc_verification
 
 def para_array_to_list(key_num,para_array):
 
@@ -47,37 +47,37 @@ def get_sta_by_para(sta,para):
     sta1 = copy.deepcopy(sta)
     for key in para.keys():
         if key == "level":
-            sta1 = fun.get_from_sta_data.sta_in_level_list(sta1,para[key])
+            sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_level_list(sta1,para[key])
         elif key == "time":
-            sta1 = fun.get_from_sta_data.sta_in_time_list(sta1,para[key])
+            sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_time_list(sta1,para[key])
         elif key == "year":
-            sta1 = fun.get_from_sta_data.sta_in_year_list(sta1,para[key])
+            sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_year_list(sta1,para[key])
         elif key == "month":
-            sta1 = fun.get_from_sta_data.sta_in_month_list(sta1,para[key])
+            sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_month_list(sta1,para[key])
         elif key == "xun":
-            sta1 = fun.get_from_sta_data.sta_in_xun_list(sta1,para[key])
+            sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_xun_list(sta1,para[key])
         elif key == "hou":
-            sta1 = fun.get_from_sta_data.sta_in_hou_list(sta1,para[key])
+            sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_hou_list(sta1,para[key])
         elif key == "day":
-            sta1 = fun.get_from_sta_data.sta_in_day_list(sta1,para[key])
+            sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_day_list(sta1,para[key])
         elif key == "hour":
-            sta1 = fun.get_from_sta_data.sta_in_hour_list(sta1,para[key])
+            sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_hour_list(sta1,para[key])
         elif key == "dtime":
-            sta1 = fun.get_from_sta_data.sta_in_dtime_list(sta1,para[key])
+            sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_dtime_list(sta1,para[key])
         elif key == "dday":
-            sta1 = fun.get_from_sta_data.sta_in_dday_list(sta1,para[key])
+            sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_dday_list(sta1,para[key])
         elif key == "dhour":
-            sta1 = fun.get_from_sta_data.sta_in_dhour_list(sta1,para[key])
+            sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_dhour_list(sta1,para[key])
         elif key == "dminute":
-            sta1 = fun.get_from_sta_data.sta_in_dminute_list(sta1,para[key])
+            sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_dminute_list(sta1,para[key])
         elif key == "id":
-            sta1 = fun.get_from_sta_data.sta_in_id_list(sta1,para[key])
+            sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_id_list(sta1,para[key])
         elif key == 'lon':
-            sta1 = fun.get_from_sta_data.sta_between_lon_range(sta1,para[key][0],para[key][1])
+            sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_between_lon_range(sta1,para[key][0],para[key][1])
         elif key == 'lat':
-            sta1 = fun.get_from_sta_data.sta_between_lat_range(sta1, para[key][0], para[key][1])
+            sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_between_lat_range(sta1, para[key][0], para[key][1])
         elif key == "alt":
-            sta1 = fun.get_from_sta_data.sta_between_alt_range(sta1, para[key][0], para[key][1])
+            sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_between_alt_range(sta1, para[key][0], para[key][1])
         else:
             print("参数关键词不支持")
     return sta1
