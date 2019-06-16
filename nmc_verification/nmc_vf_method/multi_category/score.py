@@ -15,7 +15,7 @@ def accuracy(ob,fo,threshold_list = None):
     ob_len = len(ob1)
     true_num = 0
 
-    #此处修改为不用循环
+    #为了提交计算效率，此处需修改为不用循环的方式实现计算，后续其他开发也需要如此
     for i in range(ob_len):
         if ob1[i] == fo1[i]:
             true_num += 1
@@ -36,7 +36,7 @@ def hss(ob,fo,threshold_list = None):
 
 
     f_mult_o_sum = 0
-    # 此处修改为不用循环
+
     for result in results:
         NF = np.sum(ob1 == result)
         NO = np.sum(fo1 == result )
@@ -60,7 +60,7 @@ def hk(ob,fo,threshold_list = None):
     results = list(ob2 | fo2)
     f_mult_o_sum = 0
     No_2_sum = 0
-    # 此处修改为不用循环
+
     for result in results:
         NO = np.sum(ob1 == result)
         NF = np.sum(fo1 == result)
