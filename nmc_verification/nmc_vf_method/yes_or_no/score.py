@@ -4,29 +4,29 @@
 import numpy as np
 
 
-def hit_rate(Ob,Fo,threshold_list = None):
+def hit_rate(Ob,Fo,grade_list = None):
     #输入观测Ob和预报Fo的预报数据（1维的numpy数组），以及判断事件是否发生的阈值threshold，
     # 返回一维命中率评分值数组，数组中的每个值对应一个等级
     #如果threshold_list ==None，则说明Ob,Fo是0或1组成的数组
 
-    hit,mis,fal,_ = hmfn(Ob,Fo,threshold_list)
+    hit,mis,fal,_ = hmfn(Ob,Fo,grade_list)
     return hit/(hit + mis + 0.0000001)
 
-def fal_rate(Ob,Fo,threshold_list= None):
+def fal_rate(Ob,Fo,grade_list= None):
     #输入观测Ob和预报Fo的预报数据（1维的numpy数组），以及判断事件是否发生的阈值threshold，
     # 返回一维空报率评分值数组，数组中的每个值对应一个等级
     # 如果threshold_list ==None，则说明Ob,Fo是0或1组成的数组
 
-    hit,mis,fal,_ = hmfn(Ob,Fo,threshold_list)
+    hit,mis,fal,_ = hmfn(Ob,Fo,grade_list)
     return fal/(hit + fal + 0.0000001)
 
 
-def mis_rate(Ob,Fo,threshold_list=None):
+def mis_rate(Ob,Fo,grade_list=None):
     #输入观测Ob和预报Fo的预报数据（1维的numpy数组），以及判断事件是否发生的阈值threshold，
     # 返回一维漏报率评分值数组，数组中的每个值对应一个等级
     # 如果threshold_list ==None，则说明Ob,Fo是0或1组成的数组
 
-    hit,mis,fal,_ = hmfn(Ob,Fo,threshold_list)
+    hit,mis,fal,_ = hmfn(Ob,Fo,grade_list)
     return mis/(hit + mis + 0.0000001)
 
 def bias(Ob,Fo,threshold_list=None):
@@ -37,12 +37,12 @@ def bias(Ob,Fo,threshold_list=None):
     hit, mis, fal, _ = hmfn(Ob, Fo, threshold_list)
     return (hit + fal) / (hit + mis + 0.0000001)
 
-def ts(Ob,Fo,threshold_list =None):
+def ts(Ob,Fo,grade_list =None):
     #输入观测Ob和预报Fo的预报数据（1维的numpy数组），以及判断事件是否发生的阈值value，
     # 返回一维ts评分值数组，数组中的每个值对应一个等级
     # 如果threshold_list ==None，则说明Ob,Fo是0或1组成的数组
 
-    hit,mis,fal,_ = hmfn(Ob,Fo,threshold_list)
+    hit,mis,fal,_ = hmfn(Ob,Fo,grade_list)
     return ts_hmfn(hit,mis,fal)
 
 def ts_hmfn(hit,mis,fal):
@@ -50,12 +50,12 @@ def ts_hmfn(hit,mis,fal):
     # 返回一维ts评分值数组，数组中的每个值对应一个等级
     return hit/(hit+mis+fal+0.000001)
 
-def ets(Ob,Fo,threshold_list =None):
+def ets(Ob,Fo,grade_list =None):
     #输入观测Ob和预报Fo的预报数据（1维的numpy数组），以及判断事件是否发生的阈值value，
     # 返回一维ets评分值数组，数组中的每个值对应一个等级
     # 如果threshold_list ==None，则说明Ob,Fo是0或1组成的数组
 
-    hit,mis,fal,cn = hmfn(Ob,Fo,threshold_list)
+    hit,mis,fal,cn = hmfn(Ob,Fo,grade_list)
     return ets_hmfn(hit,mis,fal,cn)
 
 def ets_hmfn(hit,mis,fal,cn):

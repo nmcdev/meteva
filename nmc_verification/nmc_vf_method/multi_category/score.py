@@ -1,8 +1,8 @@
 import numpy as np
 
-def accuracy(ob,fo,threshold_list = None):
+def accuracy(ob,fo,grade_list = None):
     #多分类预报准确率
-    if threshold_list is None:
+    if grade_list is None:
         #ob 和fo是n×1的numpy数组，其中每个值是代表分类的类别，如果能够兼容字符型更
 
         ob1 = ob.reshape((-1))
@@ -22,11 +22,11 @@ def accuracy(ob,fo,threshold_list = None):
     accuracy_score = true_num / ob_len
     return accuracy_score
 
-def hss(ob,fo,threshold_list = None):
+def hss(ob,fo,grade_list = None):
 
     #参考accuracy 做扩展修改
 
-    accuracy_score = accuracy(ob,fo,threshold_list)
+    accuracy_score = accuracy(ob,fo,grade_list)
     ob_len = len(ob)
     ob1 = ob.reshape((-1))
     fo1 = fo.reshape((-1))
@@ -46,7 +46,7 @@ def hss(ob,fo,threshold_list = None):
     HSS = (accuracy_score - (f_mult_o_sum/n_2))/(1-f_mult_o_sum/n_2)
     return  HSS
 
-def hk(ob,fo,threshold_list = None):
+def hk(ob,fo,grade_list = None):
     # 多分类预报hss技巧评分
 
     # 参考accuracy 做扩展修改

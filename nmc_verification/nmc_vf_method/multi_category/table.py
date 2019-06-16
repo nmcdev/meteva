@@ -13,13 +13,13 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 
 
-def multi_category_contingency_table(ob0, fo0,threshold_list = None,save_path = None, figsize=(20, 10), x_label=None, y_label=None,
+def multi_category_contingency_table(ob0, fo0,grade_list = None,save_path = None, figsize=(20, 10), x_label=None, y_label=None,
 
                                      title='multi category contingency table', text_fontsize=20, title_fontsize=25,
 
                                      fontproperties='KaiTi', col_labels=None, row_labels=None):
 
-    if threshold_list is None:
+    if grade_list is None:
         ob = ob0
         fo = fo0
     else:
