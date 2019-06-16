@@ -18,9 +18,13 @@ def contingency_table(ob, fo,threshold_list = None,save_path = None, figsize=(9,
         fig = plt.figure(figsize=figsize)
         ax = fig.add_subplot(111, frameon=True, xticks=[], yticks=[])
         table_vals = [[tn, fn, tn + fn], [fp, tp, fp + tp], [tn + fp, fn + tp, tn + fp + fn + tp]]
+
+        # 表格左上角需标明行和列哪个是预报，哪个是实况
         my_table = plt.table(cellText=table_vals,
                              rowLabels=row_labels, colLabels=col_labels,
                              loc='center')
+
+
         my_table.set_fontsize(10)
         my_table.scale(0.7, 3.5)
         plt.text(0.05, 0.5, y_label, fontsize=fontsize, rotation=90)
@@ -30,7 +34,7 @@ def contingency_table(ob, fo,threshold_list = None,save_path = None, figsize=(9,
     else:
         tn = len(threshold_list)
         # threshold_list 有1各阈值时，表titile不变
-        
+
         # threshold_list 有多个取值时，每个表的title 需要显示等级的内容
 
         for i in range(len(threshold_list)):
