@@ -80,7 +80,7 @@ def get_sta_by_para(sta,para):
 
 
 class sta_data_set:
-    def __init__(self,sta):
+    def __init__(self,sta = None):
         self.level = "fold"
         self.time = "fold"
         self.year = "fold"
@@ -97,6 +97,9 @@ class sta_data_set:
         self.lon = "fold"
         self.lat = "fold"
         self.alt = "fold"
+        self.sta_data = sta
+
+    def set_sta(self,sta):
         self.sta_data = sta
 
     def set_level_unfold(self,level_list_list = None):
@@ -301,7 +304,7 @@ class sta_data_set:
             self.alt = "unfold"
 
 
-    def get_para_array(self):
+    def set_para_dict_list_list(self):
         sta = self.sta_data
         para_array = collections.OrderedDict()
         #
@@ -553,18 +556,44 @@ class sta_data_set:
             para_array['alt'] = list_list
         else:
             para_array['alt'] = copy.deepcopy(self.alt)
+        self.para_dict_list_list = para_array
 
-
-        return para_array
+    def set_para_dict_list_string(self):
+        # para_array 里 para_array[key] 里是一个[[]]结构，为了后续绘图等需求，需将内层[] 转换成string，
+        # 例如 para_array['month'] = [[1,2,3],[4,5,6],[7,8,9],[10,11,12]] 需将[1,2,3] 转换为"1,2,3月"
+        para_dict_list_string = {}
+        for key in self.para_dict_list_list.keys():
+            para_dict_list_string[key] = []
+            list_list = self.para_dict_list_list[key]
+            for list in list_list:
+                if key == "dhour":
+                    str1 = ""
+                    for i in range(len(list)-1):
+                        str1 += str(list[i]) + ","
+                    str1 += str(list[-1])+"小时时效"
+                elif key == "":
+                    pass
+                else:
+                    pass
+                para_dict_list_string[key].append(str1)
+        self.para_dict_list_string = para_dict_list_string
 
     def get_sta_list(self):
-        para_array = self.get_para_array()
-        para_list = para_array_to_list(0, para_array)
+        self.set_para_dict_list_list()
+        self.set_para_dict_list_string()
+        para_list = para_array_to_list(0, self.para_dict_list_list)
         sta_list = []
         for para in para_list:
             sta1 = get_sta_by_para(self.sta_data, para)
+            #print(para)
+            #print(sta1)
             sta_list.append(sta1)
-        return sta_list
+        self.sta_list = sta_list
+        return sta_list,self.para_dict_list_list,self.para_dict_list_string
+
+
+
+
 
 
 
