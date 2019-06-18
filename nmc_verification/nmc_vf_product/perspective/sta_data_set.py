@@ -578,6 +578,16 @@ class sta_data_set:
                 para_dict_list_string[key].append(str1)
         self.para_dict_list_string = para_dict_list_string
 
+
+    def get_para_dict_list_list(self):
+        self.set_para_dict_list_list()
+        return self.para_dict_list_list
+
+    def get_para_dict_list_string(self):
+        self.set_para_dict_list_list()
+        self.set_para_dict_list_string()
+        return self.para_dict_list_string
+
     def get_sta_list(self):
         self.set_para_dict_list_list()
         self.set_para_dict_list_string()
