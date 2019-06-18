@@ -108,12 +108,7 @@ def sta_in_dhour_list(sta,dhour_list):
     seconds = sta['dtime'].map(lambda x: x/np.timedelta64(1, 's')).values
     hours = np.ceil(seconds/(3600)).astype(np.int16)
     hours = pd.Series(hours)
-    print(hours)
-    a = hours.isin(dhour_list)
-    print(a)
-    print(len(sta.index))
     sta1 = sta.loc[hours.isin(dhour_list)]
-    print(len(sta1.index))
     return sta1
 
 def sta_in_dminute_list(sta,dminute_list):

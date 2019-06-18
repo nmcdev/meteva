@@ -4,8 +4,8 @@ import numpy as np
 import xarray as xr
 
 class veri_result_set:
-    def __init__(self,method_list, grade_list = None,sta_data_set = None,save_dir = None):
-        self.method_list = method_list
+    def __init__(self,vmethod_list, grade_list = None,sta_data_set = None,save_dir = None):
+        self.vmethod_list = vmethod_list
         self.grade_list = grade_list
         self.sta_data_set = sta_data_set
         self.save_dir = save_dir
@@ -15,23 +15,33 @@ class veri_result_set:
         result = []
         data_names = nmc_verification.nmc_vf_base.get_data_names(self.sta_data_set.sta_data)
         sta_list, para_dict_list_list,para_dict_list_string = self.sta_data_set.get_sta_list()
-        for method in self.method_list:
-            if method.lower() == "ts":
+        for vmethod in self.vmethod_list:
+            if vmethod.lower() == "ts":
                 for sta in sta_list:
                     _,ts_list = nmc_verification.nmc_vf_product.yes_or_no.ts(sta,self.grade_list)
                     result.append(ts_list)
-            elif method.lower() == "bias":
+            elif vmethod.lower() == "bias":
 
                 for sta in sta_list:
                     _,ts_list = nmc_verification.nmc_vf_product.yes_or_no.bias(sta,self.grade_list)
                     result.append(ts_list)
+            elif vmethod.lower() == "mis_rate":
+
+                for sta in sta_list:
+                    _,ts_list = nmc_verification.nmc_vf_product.yes_or_no.mis_rate(sta,self.grade_list)
+                    result.append(ts_list)
+            elif vmethod.lower() == "fal_rate":
+
+                for sta in sta_list:
+                    _,ts_list = nmc_verification.nmc_vf_product.yes_or_no.fal_rate(sta,self.grade_list)
+                    result.append(ts_list)
             else:
                 pass
 
-        shape = [len(self.method_list)]
+        shape = [len(self.vmethod_list)]
         coords = {}
-        coords['method'] = self.method_list
-        dims = ["method"]
+        coords['vmethod'] = self.vmethod_list
+        dims = ["vmethod"]
 
         for key in para_dict_list_list.keys():
             shape.append(len(para_dict_list_list[key]))

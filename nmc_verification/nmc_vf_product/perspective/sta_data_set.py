@@ -570,7 +570,7 @@ class sta_data_set:
                     str1 = ""
                     for i in range(len(list)-1):
                         str1 += str(list[i]) + ","
-                    str1 += str(list[-1])+"小时时效"
+                    str1 += str(list[-1])+"H"
                 elif key == "":
                     pass
                 else:
