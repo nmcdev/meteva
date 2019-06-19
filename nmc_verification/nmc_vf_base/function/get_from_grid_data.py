@@ -2,8 +2,13 @@ import  numpy as np
 import pandas as pd
 def get_from(grd_from, grd_to):
     '''
+    格点网格的切分、分片
+    :param grd_from:源网格信息
+    :param grd_to:需要映射的目标网格信息
+    :return:两个网格的重合部分，并赋值返回。
     # 首先根据grid_to定一个初始的网格场grd_to，并且将取值都设为缺省
     # 然后从grd_from里面找到两个网格重合的区域的那部分取值，将其赋值到grd_to
+    
     '''
     gf = grd_from.to_dataframe(name="")
     fslat = float(gf.index.get_level_values(4)[0])
