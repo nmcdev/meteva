@@ -2,6 +2,7 @@
 # -*- coding:UTF-8 -*-
 import math
 from copy import deepcopy
+#创建一个类ctl,并初始化一些变量。
 class ctl:
     def __init__(self):
         self.slon = 0
