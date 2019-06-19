@@ -7,7 +7,13 @@ import nmc_verification
 import traceback
 
 def read_from_micaps3(filename,station = None,reserve_time_dtime_level = True,data_name = 'data0'):
-    print(filename)
+    """
+    读取micaps3格式文件转换为pandas中dataframe结构的数据
+    :param station:站号，默认：None
+    :param reserve_time_dtime_level:保留时间，时效和层次，默认为rue
+    :param data_name:dataframe中数值的values列的名称
+    :return:返回一个dataframe结构的多列站点数据。
+    """
     try:
         if os.path.exists(filename):
             file = open(filename,'r')
@@ -75,6 +81,13 @@ def read_from_micaps3(filename,station = None,reserve_time_dtime_level = True,da
 
 
 def read_station(filename,columns,skiprows = 0):
+    """
+    读取站点数据
+    :param filename:带有站点信息的路径已经文件名
+    :param columns 列数
+    ：skiprows:读取时跳过的行数，默认为：0
+    :return:返回带有'level','time','dtime','id','lon','lat','alt','data0'列的dataframe站点信息。
+    """
     if os.path.exists(filename):
         file_sta = open(filename)
         sta0 = pd.read_csv(file_sta, skiprows=skiprows, sep="\s+", header=None)
