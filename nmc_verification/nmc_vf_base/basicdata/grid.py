@@ -290,7 +290,7 @@ class grid:
         return grid_str
 def get_grid_of_data(grid_data0):
     '''
-    获取grid的数据values值
+     获取grid的数据values值
     :param grid_data0:初始化之后的网格数据
     :return:返回grid数据。
     '''
