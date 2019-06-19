@@ -1,3 +1,4 @@
+#一些功能性的模块依次是格点到站点插值，格点到格点插值，获取格点数据，获取站点数据
 from . import gxy_sxy
 from . import gxy_gxy
 from . import get_from_grid_data
