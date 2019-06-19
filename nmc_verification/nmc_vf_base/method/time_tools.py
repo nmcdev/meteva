@@ -2,9 +2,7 @@ import datetime
 import numpy as np
 import re
 
-
-
-
+#所有类型的时间转换为time64
 def all_type_time_to_time64(time0):
     if isinstance(time0,np.datetime64):
         return time0
@@ -16,6 +14,7 @@ def all_type_time_to_time64(time0):
         print("时间类型不识别")
         return None
 
+#所有的timedelta类型的数据转为timedelta64类型的时间格式
 def all_type_timedelta_to_timedelta64(timedelta0):
     if isinstance(timedelta0,np.timedelta64):
         return timedelta0
@@ -27,6 +26,7 @@ def all_type_timedelta_to_timedelta64(timedelta0):
         print("时效类型不识别")
         return None
 
+#str类型的时间转换为timedelta64类型的时间
 def str_to_timedelta64(timedalta_str):
     num_str = ''.join([x for x in timedalta_str if x.isdigit()])
     num = int(num_str)
@@ -42,6 +42,7 @@ def str_to_timedelta64(timedalta_str):
         print("输入的时效格式不识别")
         return None
 
+#str类型的时间转换为time64类型的时间
 def str_to_time64(time_str):
     str1 = ''.join([x for x in time_str if x.isdigit()])
     # 用户输入2019041910十位字符，后面补全加0000，为14位统一处理
@@ -63,6 +64,7 @@ def str_to_time64(time_str):
     time64 = np.datetime64(time)
     return time64
 
+#datetime64类型的数据转换为str类型
 def time_to_str(time):
     if isinstance(time,np.datetime64):
         str1 = str(time).replace("-", "").replace(" ", "").replace(":", "").replace("T", "")[0:14]
