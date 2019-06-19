@@ -2,6 +2,7 @@ import nmc_verification
 import numpy as np
 import pandas as pd
 
+#格点转换为站点
 def transform(grd):
     x = grd['lon']
     y = grd['lat']
@@ -22,7 +23,7 @@ def transform(grd):
     sta['alt'] = 9999
     return sta
 
-
+#格点到站点的插值
 def interpolation_nearest(grd,sta,other_info='left'):
     grid = nmc_verification.nmc_vf_base.basicdata.get_grid_of_data(grd)
     sta1 = nmc_verification.nmc_vf_base.function.get_from_sta.sta_in_grid_xy(sta, grid)
@@ -42,7 +43,7 @@ def interpolation_nearest(grd,sta,other_info='left'):
         nmc_verification.nmc_vf_base.basicdata.set_data_name(sta1,grid.members[0])
     return sta1
 
-
+#双线性格点到站点的插值
 def interpolation_linear(grd,sta,other_info='left'):
     grid = nmc_verification.nmc_vf_base.basicdata.get_grid_of_data(grd)
     sta1 = nmc_verification.nmc_vf_base.function.get_from_sta.sta_in_grid_xy(sta, grid)
@@ -71,7 +72,7 @@ def interpolation_linear(grd,sta,other_info='left'):
     return sta1
 
 
-
+#三维格点到站点的插值
 def cubicInterpolation(grd,sta,other_info = 'left'):
     grid = nmc_verification.nmc_vf_base.basicdata.get_grid_of_data(grd)
     sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_grid_xy(sta, grid)
