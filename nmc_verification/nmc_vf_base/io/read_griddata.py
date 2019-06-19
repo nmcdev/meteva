@@ -9,8 +9,18 @@ import pandas as pd
 import traceback
 import nmc_verification
 
-#规范化格点（起始经纬度，间隔经度，格点数）
 def grid_ragular(slon,dlon,elon,slat,dlat,elat):
+    """
+    规范化格点（起始经纬度，间隔经度，格点数）
+    :param slon:起始经度
+    :param dlon:经度的精度
+    :param 
+    :param
+    :param
+    :param
+    :param
+    :return:
+    """
     slon1 = slon
     dlon1 = dlon
     elon1 = elon
