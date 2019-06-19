@@ -6,8 +6,10 @@ import nmc_verification
 def write_to_micaps4(da,path = "a.txt",effectiveNum = 6):
     """
     输出micaps4格式文件
-    :param micaps_abspath:生成文件绝对路径
-    :param grid_data:网格数据
+    :param da:xarray多维数据信息
+    :param path:存储路径
+    :param effectiveNum 有效数字 默认：6
+    :return 最终按照需要保存的路径，将da数据保存为m4格式
     """
     grid = nmc_verification.nmc_vf_base.basicdata.get_grid_of_data(da)
     nlon = grid.nlon
