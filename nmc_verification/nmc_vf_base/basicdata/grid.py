@@ -9,13 +9,11 @@ import time
 import pandas as pd
 import numpy as np
 
-'''
-约定坐标顺序为: member, time,ddtime, level, lat,lon
-添加一个grid类来存储网格的范围包括（起始经纬度、格距、起止时间，时间间隔，起止时效，时效间隔，层次列表，数据成员）
-'''
-
-
 class grid:
+    '''
+        定义一个格点的类grid，来存储网格的范围包括（起始经纬度、格距、起止时间，时间间隔，起止时效，时效间隔，层次列表，数据成员）
+        约定坐标顺序为: member, time,ddtime, level, lat,lon
+    '''
     def __init__(self,glon, glat, gtime=None, gdtime=None,levels=None,members = None):
 
         #提取成员维度信息
@@ -245,7 +243,7 @@ class grid:
         self.glon = [self.slon,self.elon,self.dlon]
 
         ############################################################################
-        #提取经度信息
+        #提取纬度信息
         self.slat = glat[0]
         self.elat = glat[1]
         self.dlat = glat[2]
@@ -260,7 +258,7 @@ class grid:
 
 
 
-
+    #对原有的格点数据进行一次深拷贝，不改变原有的值和结构。
     def copy(self):
         return deepcopy(self)
 
@@ -291,7 +289,11 @@ class grid:
         grid_str += "glat:" + str(self.glat) + "\n"
         return grid_str
 def get_grid_of_data(grid_data0):
-    #print(grid_data0)
+    '''
+    获取grid的数据values值
+    :param grid_data0:初始化之后的网格数据
+    :return:返回grid数据。
+    '''
     members = grid_data0['member'].values
     levels = grid_data0['level'].values
     times = grid_data0['time'].values
@@ -310,7 +312,6 @@ def get_grid_of_data(grid_data0):
         gdt = dtimes
     else:
         gdt = None
-    #print(grid_data0)
     lons = grid_data0['lon'].values
     glon = [lons[0],lons[-1],lons[1]-lons[0]]
     lats = grid_data0['lat'].values
