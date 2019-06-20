@@ -50,6 +50,7 @@ def sta_to_grid_idw(sta, grid0,background = None,effectR = 1000,nearNum = 16,oth
     grid_lon,grid_lat = np.meshgrid(lon,lat)
     xyz_grid = nmc_verification.nmc_vf_base.method.math.lon_lat_to_cartesian(grid_lon.flatten(), grid_lat.flatten(),R = bd.const.ER)
     tree = cKDTree(xyz_sta)
+    #d,inds 分别是站点到格点的距离和id
     d, inds = tree.query(xyz_grid, k=nearNum)
     d += 1e-6
     w = 1.0 / d ** 2
