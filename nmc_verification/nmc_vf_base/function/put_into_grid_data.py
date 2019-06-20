@@ -4,6 +4,10 @@ import xarray as xr
 
 def put_into(grd_from, grd_to):
     '''
+    两个格点网格信息的切片
+    :param ged_from:源网格信息
+    :param grd_to:目标网格信息
+    :return:返回一个带有grd_to信息的多维xarray数据结构的网格信息
     比如grd_from 的网格范围是 10-20,110-150,
     grd_to的网格范围是 0-30,70-120，这时后者的网格范围就不能覆盖前者，
     如果后者范围是 0-30,70-150，则后者就能够覆盖前者。
@@ -12,7 +16,7 @@ def put_into(grd_from, grd_to):
     如果原来就能包含，就直接把那一块区域的值用grd_from代替
     根据grd_form中的坐标信息,判断grd_to 的坐标系能否覆盖前者
     如果能：
-    吧 grd_from 中的数据覆盖掉grd_to 中相同的网格部分
+    把grd_from 中的数据覆盖掉grd_to中相同的网格部分
     如果不能：
     在grd_to中将坐标范围扩展成能覆盖前者，扩展出来的网格区域先设置为9999
     再将grd_from中的值覆盖掉grd_to中相同的网格部分
