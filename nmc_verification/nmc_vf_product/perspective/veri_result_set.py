@@ -3,14 +3,17 @@ import nmc_verification
 import numpy as np
 import xarray as xr
 
+#检验结果设置类
 class veri_result_set:
+    #类初始化一些默认参数
     def __init__(self,vmethod_list, grade_list = None,sta_data_set = None,save_dir = None):
         self.vmethod_list = vmethod_list
         self.grade_list = grade_list
         self.sta_data_set = sta_data_set
         self.save_dir = save_dir
         self.result = None
-
+    
+    #获取检验结果
     def get_veri_result(self):
         result = []
         data_names = nmc_verification.nmc_vf_base.get_data_names(self.sta_data_set.sta_data)
@@ -66,10 +69,11 @@ class veri_result_set:
         self.result = result_xr
         return result_xr
 
-
+    #保存检验结果
     def save_veri_result(self):
         pass
-
+    
+    #下载检验结果
     def load_veri_result(self):
         pass
 
