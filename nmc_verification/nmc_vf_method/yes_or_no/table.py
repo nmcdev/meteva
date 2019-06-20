@@ -8,6 +8,23 @@ import copy
 def contingency_table(ob, fo,threshold_list = None,save_path = None, figsize=(9, 4), x_label=None, y_label=None, title='contingency table', fontsize=20,
 
                       fontproperties='KaiTi', col_labels=['yes', 'no', 'Total'], row_labels=['yes', 'no', 'Total']):
+    '''
+    contingency_table 用来画一张二分类预测列联表
+    -------------------------------------
+    :param ob: 实况数据
+    :param fo: 预测数据
+    :param threshold_list: 阈值列表
+    :param save_path: 保存路径
+    :param figsize:
+    :param x_label: x方向标签
+    :param y_label: y方向标签
+    :param title: 标题
+    :param fontsize: 字体大小
+    :param fontproperties: 字体
+    :param col_labels: 列标签
+    :param row_labels: 行标签
+    :return:
+    '''
     # 扩展一下该函数的功能
     # 当threshold_list 为None时，ob和fo里的取值默认是只为0或1的，否则根据threshold_list 里的阈值判断ob和fo里的元素是0或1，进一步绘图
     #threshold_list 有多个取值时，每个表的title 需要显示等级的内容

@@ -18,7 +18,23 @@ def multi_category_contingency_table(ob0, fo0,grade_list = None,save_path = None
                                      title='multi category contingency table', text_fontsize=20, title_fontsize=25,
 
                                      fontproperties='KaiTi', col_labels=None, row_labels=None):
-
+    '''
+    multi_category_contingency_table 多分类预测列联表
+    :param ob: 实况数据 一维numpy
+    :param fo: 预测数据 一维numpy
+    :param grade_list: 等级
+    :param save_path: 保存地址
+    :param figsize:
+    :param x_label: x轴标签
+    :param y_label: y轴标签
+    :param title: 标题
+    :param text_fontsize:
+    :param title_fontsize: 标题文字大小
+    :param fontproperties: 字体
+    :param col_labels: 行标签
+    :param row_labels: 列标签
+    :return:
+    '''
     if grade_list is None:
         ob = ob0
         fo = fo0

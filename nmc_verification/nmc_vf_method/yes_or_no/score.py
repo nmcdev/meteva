@@ -5,6 +5,14 @@ import numpy as np
 
 
 def hit_rate(Ob,Fo,grade_list = None):
+    '''
+    hit_rate 求出命中率
+    ----------------------
+    :param Ob: 实况数据 一维numpy
+    :param Fo: 预测数据 一维numpy
+    :param grade_list: 等级
+    :return:
+    '''
     #输入观测Ob和预报Fo的预报数据（1维的numpy数组），以及判断事件是否发生的阈值threshold，
     # 返回一维命中率评分值数组，数组中的每个值对应一个等级
     #如果threshold_list ==None，则说明Ob,Fo是0或1组成的数组
@@ -13,6 +21,14 @@ def hit_rate(Ob,Fo,grade_list = None):
     return hit/(hit + mis + 0.0000001)
 
 def fal_rate(Ob,Fo,grade_list= None):
+    '''
+    fal-rate  求出误报率
+    ------------------
+    :param Ob: 实况数据 一维numpy
+    :param Fo: 预测数据 一维numpy
+    :param grade_list: 等级
+    :return:
+    '''
     #输入观测Ob和预报Fo的预报数据（1维的numpy数组），以及判断事件是否发生的阈值threshold，
     # 返回一维空报率评分值数组，数组中的每个值对应一个等级
     # 如果threshold_list ==None，则说明Ob,Fo是0或1组成的数组
@@ -22,6 +38,14 @@ def fal_rate(Ob,Fo,grade_list= None):
 
 
 def mis_rate(Ob,Fo,grade_list=None):
+    '''
+    mis_rate 漏报率评分
+    --------------------------
+    :param Ob: 实况数据 一维numpy
+    :param Fo: 预测数据 一维numpy
+    :param grade_list: 等级
+    :return:
+    '''
     #输入观测Ob和预报Fo的预报数据（1维的numpy数组），以及判断事件是否发生的阈值threshold，
     # 返回一维漏报率评分值数组，数组中的每个值对应一个等级
     # 如果threshold_list ==None，则说明Ob,Fo是0或1组成的数组
@@ -30,6 +54,13 @@ def mis_rate(Ob,Fo,grade_list=None):
     return mis/(hit + mis + 0.0000001)
 
 def bias(Ob,Fo,threshold_list=None):
+    '''
+    bias   bias评分
+    ----------------
+    :param Ob: 实况数据 一维numpy
+    :param Fo: 预测数据 一维numpy
+    :param grade_list: 等级
+    :return: '''
     #输入观测Ob和预报Fo的预报数据（1维的numpy数组），以及判断事件是否发生的阈值threshold，
     # 返回一维bias评分值数组，数组中的每个值对应一个等级
     # 如果threshold_list ==None，则说明Ob,Fo是0或1组成的数组
@@ -38,6 +69,14 @@ def bias(Ob,Fo,threshold_list=None):
     return (hit + fal) / (hit + mis + 0.0000001)
 
 def ts(Ob,Fo,grade_list =None):
+    '''
+    ts ts评分
+    ---------------
+    :param Ob: 实况数据 一维numpy
+    :param Fo: 预测数据 一维numpy
+    :param grade_list: 等级
+    :return:
+    '''
     #输入观测Ob和预报Fo的预报数据（1维的numpy数组），以及判断事件是否发生的阈值value，
     # 返回一维ts评分值数组，数组中的每个值对应一个等级
     # 如果threshold_list ==None，则说明Ob,Fo是0或1组成的数组
@@ -46,11 +85,27 @@ def ts(Ob,Fo,grade_list =None):
     return ts_hmfn(hit,mis,fal)
 
 def ts_hmfn(hit,mis,fal):
+    '''
+    ts  hmfn评分
+    ----------------
+    :param hit: 命中数
+    :param mis: 空报数
+    :param fal: 漏报数
+    :return:
+    '''
     # 输入命中、空报、漏报数
     # 返回一维ts评分值数组，数组中的每个值对应一个等级
     return hit/(hit+mis+fal+0.000001)
 
 def ets(Ob,Fo,grade_list =None):
+    '''
+    ets ets评分
+    ----------------
+    :param Ob: 实况数据 一维numpy
+    :param Fo: 预测数据 一维numpy
+    :param grade_list: 等级
+    :return:
+    '''
     #输入观测Ob和预报Fo的预报数据（1维的numpy数组），以及判断事件是否发生的阈值value，
     # 返回一维ets评分值数组，数组中的每个值对应一个等级
     # 如果threshold_list ==None，则说明Ob,Fo是0或1组成的数组
@@ -59,6 +114,15 @@ def ets(Ob,Fo,grade_list =None):
     return ets_hmfn(hit,mis,fal,cn)
 
 def ets_hmfn(hit,mis,fal,cn):
+    '''
+    ets_hmfn ets_hmfn评分
+    -----------------
+    :param hit: 命中数
+    :param mis: 空报数
+    :param fal: 漏报数
+    :param cn: 正确否定数
+    :return:
+    '''
     # 输入命中数、空报数、漏报数、正确否定数
     # 返回一维ets评分值数组，数组中的每个值对应一个等级
     total = hit + mis + fal + cn + 0.000001  # 加0.0000001 为防止出现除0情况
@@ -66,6 +130,14 @@ def ets_hmfn(hit,mis,fal,cn):
     return (hit - hit_random)/(hit + mis + fal - hit_random + 0.000001)
 
 def hmfn(Ob,Fo,threshold_list = None):
+    '''
+    hmfn hmfn评分
+    ----------------
+    :param Ob: 实况数据
+    :param Fo: 预测数据
+    :param threshold_list:阈值列表
+    :return:
+    '''
     # 输入观测Ob和预报Fo的预报数据（1维的numpy数组）
     #返回命中数、空报数、漏报数、正确否定数共4个数组，数组中的每个值对应一个等级
     # 如果threshold_list ==None，则说明Ob,Fo是0或1组成的数组
@@ -102,3 +174,4 @@ def hmfn(Ob,Fo,threshold_list = None):
             fal[i] = fal_threshold.sum()
             cn[i] = cn_threshold.sum()
         return hit,mis,fal,cn
+C:\Users\wbl\Downloads\nmc_verification-master (1)\nmc_verification-master\nmc_verification
