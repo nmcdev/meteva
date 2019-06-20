@@ -5,9 +5,8 @@ import numpy as np
 import math
 import collections
 
-
+#将参数数组转换为列表
 def para_array_to_list(key_num,para_array):
-
     key_list = []
     for key in para_array.keys():
         key_list.append(key)
@@ -37,7 +36,7 @@ def para_array_to_list(key_num,para_array):
 
     return para_list
 
-
+#通过指定参数获取站点信息
 def get_sta_by_para(sta,para):
     sta1 = copy.deepcopy(sta)
     for key in para.keys():
@@ -78,9 +77,10 @@ def get_sta_by_para(sta,para):
     return sta1
 
 
-
+#站点数据参数设置类
 class sta_data_set:
     def __init__(self,sta = None):
+        #默认参数为fold,折叠。
         self.level = "fold"
         self.time = "fold"
         self.year = "fold"
@@ -98,16 +98,19 @@ class sta_data_set:
         self.lat = "fold"
         self.alt = "fold"
         self.sta_data = sta
-
+    
+    #设置站点数据
     def set_sta(self,sta):
         self.sta_data = sta
-
+   
+    #设置level层折叠方式
     def set_level_unfold(self,level_list_list = None):
         if(level_list_list is None):
             self.level = "unfold"
         else:
             self.level = copy.deepcopy((level_list_list))
-
+    
+    #设置time层折叠方式
     def set_time_unfold(self,time_list_list = None,time_range_list = None):
         self.month = "fold"
         self.xun = "fold"
@@ -129,7 +132,7 @@ class sta_data_set:
         else:
             self.time = "unfold"
 
-
+    #设置year折叠方式
     def set_year_unfold(self,year_list_list = None):
         self.time = "fold"
         if year_list_list is None:
@@ -137,7 +140,7 @@ class sta_data_set:
         else:
             self.year = copy.deepcopy(year_list_list)
 
-
+    #设置month折叠方式
     def set_month_unfold(self,month_list_list = None):
         self.time = "fold"
         self.xun = "fold"
@@ -147,7 +150,8 @@ class sta_data_set:
             self.month = "unfold"
         else:
             self.month = copy.deepcopy(month_list_list)
-
+    
+    #设置xun折叠方式
     def set_xun_unfold(self,xun_list_list = None):
         self.time = "fold"
         self.month = "fold"
@@ -157,7 +161,8 @@ class sta_data_set:
             self.xun = "unfold"
         else:
             self.xun = copy.deepcopy(xun_list_list)
-
+    
+    #设置hou折叠方式
     def set_hou_unfold(self,hou_list_list = None):
         self.time = "fold"
         self.month = "fold"
@@ -167,7 +172,8 @@ class sta_data_set:
             self.hou = "unfold"
         else:
             self.hou = copy.deepcopy(hou_list_list)
-
+    
+    #设置day折叠方式
     def set_day_unfold(self,day_list_list = None):
         self.time = "fold"
         self.month = "fold"
@@ -178,14 +184,15 @@ class sta_data_set:
         else:
             self.day = copy.deepcopy(day_list_list)
 
-
+    #设置hour折叠方式
     def set_hour_unfold(self,hour_list_list = None):
         self.time = "fold"
         if hour_list_list is None:
             self.hour = "unfold"
         else:
             self.hour = copy.deepcopy(hour_list_list)
-
+    
+    #设置dtime层折叠方式
     def set_dtime_unfold(self,dtime_list_list = None,dtime_range_list = None):
         self.dday = "fold"
         self.dhour = "fold"
@@ -208,7 +215,7 @@ class sta_data_set:
             self.dtime = "unfold"
 
 
-
+    #设置dhour折叠方式
     def set_dhour_unfold(self,dhour_list_list = None):
         self.dtime = "fold"
         self.dminute = "fold"
@@ -216,7 +223,8 @@ class sta_data_set:
             self.dhour = "unfold"
         else:
             self.dhour = copy.deepcopy(dhour_list_list)
-
+    
+    #设置dminute折叠方式
     def set_dminute_unfold(self,dminute_list_list = None):
         self.dtime = "fold"
         self.dhour = "fold"
@@ -225,7 +233,7 @@ class sta_data_set:
         else:
             self.dminute = copy.deepcopy(dminute_list_list)
 
-
+    #设置dday层折叠方式
     def set_dday_unfold(self,dday_list_list = None):
         self.dtime = "fold"
         if dday_list_list is None:
@@ -233,13 +241,14 @@ class sta_data_set:
         else:
             self.dday = copy.deepcopy(dday_list_list)
 
-
+    #设置id层折叠方式
     def set_id_unfold(self,id_list_list = None):
         if id_list_list is None:
             self.id = "unfold"
         else:
             self.id = copy.deepcopy(id_list_list)
-
+    
+    #设置lon层折叠方式
     def set_lon_unfold(self,lon_range = None,lon_range_list = None):
         if lon_range is not None:
             slon = lon_range[0]
@@ -260,7 +269,7 @@ class sta_data_set:
             self.lon = copy.deepcopy(lon_range_list)
         else:
             self.lon = "unfold"
-
+    #设置lat层折叠方式
     def set_lat_unfold(self,lat_range = None,lat_range_list = None):
         if lat_range is not None:
             slat = lat_range[0]
@@ -281,7 +290,8 @@ class sta_data_set:
             self.lat = copy.deepcopy(lat_range_list)
         else:
             self.lat = "unfold"
-
+    
+    #设置alt层折叠方式
     def set_alt_unfold(self,alt_range = None,alt_range_list = None):
         if alt_range is not None:
             salt = alt_range[0]
@@ -303,7 +313,7 @@ class sta_data_set:
         else:
             self.alt = "unfold"
 
-
+    #设置参数字典为双重列表
     def set_para_dict_list_list(self):
         sta = self.sta_data
         para_array = collections.OrderedDict()
@@ -557,7 +567,8 @@ class sta_data_set:
         else:
             para_array['alt'] = copy.deepcopy(self.alt)
         self.para_dict_list_list = para_array
-
+   
+    #设置参数字典列表转换为string字符
     def set_para_dict_list_string(self):
         # para_array 里 para_array[key] 里是一个[[]]结构，为了后续绘图等需求，需将内层[] 转换成string，
         # 例如 para_array['month'] = [[1,2,3],[4,5,6],[7,8,9],[10,11,12]] 需将[1,2,3] 转换为"1,2,3月"
@@ -578,16 +589,18 @@ class sta_data_set:
                 para_dict_list_string[key].append(str1)
         self.para_dict_list_string = para_dict_list_string
 
-
+    #获取参数字典双重列表
     def get_para_dict_list_list(self):
         self.set_para_dict_list_list()
         return self.para_dict_list_list
-
+    
+    #获取参数字典字符列表
     def get_para_dict_list_string(self):
         self.set_para_dict_list_list()
         self.set_para_dict_list_string()
         return self.para_dict_list_string
-
+    
+    #获取站点信息列表
     def get_sta_list(self):
         self.set_para_dict_list_list()
         self.set_para_dict_list_string()
