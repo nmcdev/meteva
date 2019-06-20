@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import copy
 
+#两个站点信息合并为一个，在原有的dataframe的基础上增加行数
 def join(sta,sta1):
     if(sta is None):
         return sta1
@@ -10,9 +11,8 @@ def join(sta,sta1):
     sta = sta.reset_index(drop = True)
     return sta
 
-
+#两个站点信息合并为一个，以站号为公共部分，在原有的dataframe的基础上增加列数
 def merge(sta,sta1):
-
     df = pd.merge(sta, sta1, on='id', how='left')
     columns = list(sta.columns)
     len_sta = len(columns)
