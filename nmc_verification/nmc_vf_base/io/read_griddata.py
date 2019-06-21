@@ -9,8 +9,18 @@ import pandas as pd
 import traceback
 import nmc_verification
 
-#规范化格点（起始经纬度，间隔经度，格点数）
 def grid_ragular(slon,dlon,elon,slat,dlat,elat):
+    """
+    规范化格点（起始经纬度，间隔经度，格点数）
+    :param slon:起始经度
+    :param dlon:经度的精度
+    :param elon:结束经度
+    :param slat:起始纬度
+    :param dlat:纬度的精度
+    :param elat:结束纬度
+    :return:slon1,dlon1,elon1,slat1,dlat1,elat1,nlon1,nlat1
+    返回规范化后的格点信息。
+    """
     slon1 = slon
     dlon1 = dlon
     elon1 = elon
@@ -31,8 +41,14 @@ def grid_ragular(slon,dlon,elon,slat,dlat,elat):
         nlat1 = int(round(nlat))
     return slon1,dlon1,elon1,slat1,dlat1,elat1,nlon1,nlat1
 
-#读取micaps4格式的格点数据
+
 def read_from_micaps4(filename,grid=None):
+    '''
+    读取micaps4格式的格点数据，并将其保存为xarray中DataArray结构的六维数据信息
+    :param filename:Micaps4格式的文件路径和文件名
+    :param grid:格点的经纬度信息，默认为：None,如果有传入grid信息，需要使用双线性插值进行提取。
+    :return:返回一个DataArray结构的六维数据信息da
+    '''
     try:
         if not os.path.exists(filename):
             print(filename + " is not exist")
@@ -86,7 +102,7 @@ def read_from_micaps4(filename,grid=None):
             if grid is None:
                 return da
             else:
-                #导包需要确认一下
+                #如果传入函数有grid信息，就需要进行一次双线性插值，按照grid信息进行提取网格信息。
                 da1 = nmc_verification.nmc_vf_base.function.gxy_gxy.interpolation_linear(da, grid)
                 return da1
         else:
@@ -99,6 +115,18 @@ def read_from_micaps4(filename,grid=None):
 
 #读取nc数据
 def read_from_nc(filename,value_name = None,member = None,level = None,time = None,dt = None,lat = None,lon = None):
+    """
+    读取NC文件，并将其保存为xarray中DataArray结构的六维数据信息
+    :param filename:NC格式的文件路径和文件名
+    :param value_name:nc文件中要素name的值,默认：None
+    :param member:要素名,默认：None
+    :param level:层次,默认：None
+    :param time:时间,默认：None
+    :param dt:时效,默认：None
+    :param lat:纬度,默认：None
+    :param lon:经度,默认：None
+    :return:返回一个DataArray结构的六维数据信息da1
+    """
     ds0 = xr.open_dataset(filename)
     drop_list = []
     ds = xr.Dataset()

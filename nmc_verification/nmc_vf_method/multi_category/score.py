@@ -1,6 +1,13 @@
 import numpy as np
 
 def accuracy(ob,fo,grade_list = None):
+    '''
+    accuracy 求多分类预报准确率
+    :param ob: 实况数据 一维numpy
+    :param fo:  预测数据 一维numpy
+    :param grade_list:等级
+    :return:
+    '''
     #多分类预报准确率
     if grade_list is None:
         #ob 和fo是n×1的numpy数组，其中每个值是代表分类的类别，如果能够兼容字符型更
@@ -23,7 +30,13 @@ def accuracy(ob,fo,grade_list = None):
     return accuracy_score
 
 def hss(ob,fo,grade_list = None):
-
+    '''
+    hss heidke技能得分
+    :param ob: 实况数据 一维numpy
+    :param fo: 预测数据 一维numpy
+    :param grade_list: 等级
+    :return:
+    '''
     #参考accuracy 做扩展修改
 
     accuracy_score = accuracy(ob,fo,grade_list)
@@ -47,6 +60,13 @@ def hss(ob,fo,grade_list = None):
     return  HSS
 
 def hk(ob,fo,grade_list = None):
+    '''
+    hk Hanssen和Kuipers判别
+    :param ob: 实况数据 一维numpy
+    :param fo: 预测数据 一维numpy
+    :param grade_list: 等级
+    :return:
+    '''
     # 多分类预报hss技巧评分
 
     # 参考accuracy 做扩展修改

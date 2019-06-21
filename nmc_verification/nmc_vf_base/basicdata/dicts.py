@@ -1,6 +1,6 @@
 #!/usr/bin/python3.6
 # -*- coding:UTF-8 -*-
-
+#格点和站点的数据要素名字使用字典的方式映射为相应的数字
 gds_station_data_element_name_id = {
     "经度":1,
     "纬度":2,
@@ -204,7 +204,7 @@ gds_station_data_element_name_id = {
     "仪器测量浪高":3039,
     "浪级代码(short)":3041
 }
-
+#MICAPS1的要素值使用相应的数字映射
 class m1_value_column:
     站号 = 0
     经度 = 1
@@ -233,6 +233,7 @@ class m1_value_column:
     日变温 = 24
     日变压 =25
 
+#MICAPS2的要素值使用相应的数字映射
 class m2_value_column:
     站号 = 0
     经度 = 1
@@ -244,6 +245,7 @@ class m2_value_column:
     风向 = 7
     风速 = 8
 
+#MICAPS8的要素值使用相对的数字映射
 class m8_value_column:
     站号 = 0
     经度 = 1

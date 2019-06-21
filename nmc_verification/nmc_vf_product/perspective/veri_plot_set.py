@@ -6,6 +6,7 @@ plt.rcParams['font.sans-serif']=['SimHei'] #用来正常显示中文标签
 plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
 import numpy as np
 
+#参数数组转换为列表
 def para_array_to_list(key_num,para_array):
     key_list = []
     for key in para_array.keys():
@@ -37,7 +38,7 @@ def para_array_to_list(key_num,para_array):
 
 #自动布局模块
 def layout(subplot_num,legend_num,axis_num):
-        # 设置一个子图的一些基本参数
+    #设置一个子图的一些基本参数
     up_low_edge_width = 0.2
     left_right_edge_width = 0.3
     min_width_bar = 0.02  #bar的最小宽度
@@ -45,7 +46,6 @@ def layout(subplot_num,legend_num,axis_num):
     max_height_fig = 12 #图像的最大高度
     common_legend_height = 1 # 如果子图较多，需要将legend 放在整个fig的顶部共用
     min_subplot_height = 2
-
     fit_width_bar = 0.15
     fit_suplot_h = 4
     fit_suplot_w = 6
@@ -98,14 +98,16 @@ def layout(subplot_num,legend_num,axis_num):
     return fig_w, fig_h, row_num, column_num, com_legend
 
 
-
+#透视表参数设置类
 class veri_plot_set:
+    #初始化设置画图的默认参数
     def __init__(self,subplot = None,legend = None,axis = None,save_dir = ""):
         self.subplot = subplot
         self.legend = legend
         self.axis = axis
         self.save_dir = save_dir
-
+    
+    #柱状图参数设置
     def bar(self,veri_result):
         coords = veri_result.coords
         dims = veri_result.dims

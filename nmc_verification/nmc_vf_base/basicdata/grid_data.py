@@ -7,8 +7,16 @@ import datetime
 import re
 
 def set_coords(grd,level = None,time = None,dtime = None, member = None):
-    #如果level 不为None，并且grd0 的level维度上size = 1，则将level方向的坐标统一设置为传入的参数level
-    #其它参数类似处理
+    """
+    设置xarray的coords的一些属性
+    :param grd:初始化之后的xarry结构的多维格点网格
+    :param level:层次，默认为None
+    :param time：时间，默认为None
+    :param dtime:时效，默认为None
+    :param member：要素，默认为None
+    如果level不为None，并且grd的level维度上size = 1，则将level方向的坐标统一设置为传入的参数level,time,dtime,member一样类似处理。
+    :return:grd:返回一个设置好的coords的格点网格信息。
+    """
     nmember = int(len(grd.coords.variables.get(grd.coords.dims[0])))
     nlevel = int(len(grd.coords.variables.get(grd.coords.dims[1])))
     ntime = int(len(grd.coords.variables.get(grd.coords.dims[2])))

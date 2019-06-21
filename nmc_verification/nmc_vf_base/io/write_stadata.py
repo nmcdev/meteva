@@ -7,6 +7,14 @@ import datetime
 import nmc_verification
 
 def write_to_micaps3(sta0,filename = "a.txt", type = 1,effectiveNum = 4):
+    """
+    生成micaps3格式的文件
+    :param sta0:站点数据信息
+    :param filename 需要保存的文件路径和名称
+    :param type 类型：默认：1
+    :param effectiveNum 有效数字 默认为：4
+    :return:保存为micaps3格式的文件
+    """
     try:
         sta = copy.deepcopy(sta0)
         dir = os.path.split(os.path.abspath(filename))[0]

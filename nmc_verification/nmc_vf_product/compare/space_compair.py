@@ -8,6 +8,8 @@ from nmc_met_graphics.plot.china_map import add_china_map_2cartopy
 import nmc_met_class.basicdatatrans as bt
 from sklearn.linear_model import LinearRegression
 import nmc_vf_base as nvb
+
+#绘制24小时格点站点降水检验图
 def draw_veri_rain_24(grid_fo,sta_ob,filename = None):
     fig = plt.figure(figsize=(10,7))
     # 平面对比图
@@ -180,6 +182,7 @@ def draw_veri_rain_24(grid_fo,sta_ob,filename = None):
     plt.close()
     return
 
+#绘制24小时降水实况与预报对比图
 def show_obfo_rain_24(grid_fo,sta_ob,filename = None):
     fig = plt.figure(figsize=(6,3.6))
     # 平面对比图

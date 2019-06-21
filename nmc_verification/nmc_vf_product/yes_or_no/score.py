@@ -1,6 +1,7 @@
 import nmc_verification
 import numpy as np
 
+#TS评分
 def ts(sta,grade_list):
     data_names = nmc_verification.nmc_vf_base.basicdata.get_data_names(sta)
     ob = sta[data_names[0]].values
@@ -14,7 +15,7 @@ def ts(sta,grade_list):
     ts_array = ts_array.reshape((fo_num,len(grade_list)))
     return ts_array,ts_list
 
-
+#计算偏差值
 def bias(sta,grade_list):
     data_names = nmc_verification.nmc_vf_base.basicdata.get_data_names(sta)
     ob = sta[data_names[0]].values
@@ -28,7 +29,7 @@ def bias(sta,grade_list):
     ts_array = ts_array.reshape((fo_num,len(grade_list)))
     return ts_array,ts_list
 
-
+#漏报率
 def mis_rate(sta,grade_list):
     data_names = nmc_verification.nmc_vf_base.basicdata.get_data_names(sta)
     ob = sta[data_names[0]].values
@@ -42,6 +43,7 @@ def mis_rate(sta,grade_list):
     ts_array = ts_array.reshape((fo_num,len(grade_list)))
     return ts_array,ts_list
 
+#失败率
 def fal_rate(sta,grade_list):
     data_names = nmc_verification.nmc_vf_base.basicdata.get_data_names(sta)
     ob = sta[data_names[0]].values

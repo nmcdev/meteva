@@ -1,5 +1,6 @@
 import nmc_verification
 
+#TS评分
 def ts(sta,threshold):
     data_names = nmc_verification.nmc_vf_base.basicdata.get_data_names(sta)
     ob = sta[data_names[0]].values

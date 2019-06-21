@@ -1,8 +1,17 @@
 import numpy as np
 import nmc_verification
 import math
-#格点到格点插值
+
 def interpolation_linear(grd, grid, other_info='left'):
+    '''
+    格点到格点插值
+    :param grd:左边的网格数据信息
+    :param grid :右边的网格数据信息
+    :other_info:网格数据除了xy方向的数值之外，还有time,dtime，leve member 等维度的值，如果other_info= 'left’则返回结果中这些维度的值就采用grd里的值，
+    否则采用grid里的值，默认为：left
+    :return:双线性插值之后的结果
+    
+    '''
     if (grd is None):
         return None
 
@@ -44,14 +53,17 @@ def interpolation_linear(grd, grid, other_info='left'):
     c10 = (1 - ddx) * ddy
     c11 = ddx * ddy
     dat2 = (c00 *dat1[jj, ii] + c10 * dat1[jj1, ii] + c01 * dat1[jj, ii1] + c11 * dat1[jj1, ii1])
-
-    #print(grd2.tostring())
-    #print(dat2)
     grd_new = nmc_verification.nmc_vf_base.basicdata.grid_data(grd2,dat2)
-
     return grd_new
 
 def add(grd1,grd2,other_info = 'left'):
+    '''
+    将插值之后的多个结果在原有存储数据结构的基础上进行追加。
+    :param grd1:左边的网格数据信息
+    :param grd1 :右边的网格数据信息
+    :other_info:网格数据除了xy方向的数值之外，还有time,dtime，leve member 等维度的值，如果other_info= 'left’则返回结果中这些维度的值就采用grd里的值，
+    否则采用grid里的值，默认为：left
+    :return:多个网格数据双线性插值之后的结果的追加
     if(grd1 is None):
         return grd2
     elif(grd2 is None):

@@ -6,7 +6,7 @@ from codecs import open
 
 name = "nmc_verification"
 author ="liucouhua,zhanglianyi,wangbaoli"
-version ="1.0.6"
+version ="1.0.8"
 
 here = path.abspath(path.dirname(__file__))
 
@@ -43,5 +43,5 @@ setup(
                       'pandas>=0.20.0',
                       'xarray>=0.11.0',
                       'sklearn>=0.21.2',
-                      'matplotlib>=3.1.0']
+                      'matplotlib>=3.0.1']
 )

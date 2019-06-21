@@ -5,6 +5,7 @@ from scipy.spatial import cKDTree
 import nmc_verification
 
 
+#将两个站点数据信息进行合并，并去重。
 def set_data_to(sta,station):
     #删除重复行
     sta1 = sta.drop_duplicates(['id'])
@@ -35,6 +36,7 @@ def set_data_to(sta,station):
 
     return df
 
+#给站点信息的dataframe中的列名重新设置默认值
 def set_default_value(sta,default):
     columns = list(sta.columns)
     len_c = len(columns)
@@ -42,20 +44,20 @@ def set_default_value(sta,default):
         name1 = columns[i]
         sta.loc[sta[name1].isnull(), name1] = default
 
-
+#删除dataframe的nan值
 def drop_nan(sta):
     columns = list(sta.columns)
     columns_data = columns[7:]
     df = sta.dropna(subset = columns_data)
     return df
 
+#将两个站点dataframe相加在一起
 def add_on_id(sta1_0, sta2_0, how="left", default=None):
     if sta1_0 is None:
         return sta2_0
     elif sta2_0 is None:
         return sta1_0
     else:
-        #将两个df1 合并在一起
         # 删除重复行
         sta2 = sta2_0.drop_duplicates(['id'])
         sta1 = sta1_0.drop_duplicates(['id'])
@@ -100,8 +102,9 @@ def add_on_id(sta1_0, sta2_0, how="left", default=None):
 
         #重新命名列名称
         df.columns = columns
-
         return df
+    
+#两个站点dataframe相减
 def minus_on_id(sta1_0, sta2_0, how="left", default=None):
 
     # 删除重复行
@@ -149,6 +152,7 @@ def minus_on_id(sta1_0, sta2_0, how="left", default=None):
 
     return df
 
+#两个dataframe相乘
 def multiply_on_id(sta1_0, sta2_0, how="left", default=None):
     # 删除重复行
     sta2 = sta2_0.drop_duplicates(['id'])

@@ -3,7 +3,13 @@ import math
 import nmc_verification
 from scipy.spatial import cKDTree
 def transform(sta,dlon = None,dlat = None):
-    #将站点形式的规则网格的数据转化为格点数据
+    """
+    将站点形式的规则网格的数据转化为格点数据
+    :param sta:站点数据
+    :param dlon 经度精度
+    :param dlat 纬度经度
+    :return:返回格点网格数据
+    """
     slon = np.min(sta['lon'])
     elon = np.max(sta['lon'])
     slat = np.min(sta['lat'])
@@ -31,6 +37,7 @@ def transform(sta,dlon = None,dlat = None):
     grd = nmc_verification.nmc_vf_base.basicdata.grid_data(grid0,dat)
     return grd
 
+#站点到格点的反距离插值，对每个格点，获取其最近的几个站点编号、距离, 然后计算权重和。
 def sta_to_grid_idw(sta, grid0,background = None,effectR = 1000,nearNum = 16,other_info='left'):
     data_name = nmc_verification.nmc_vf_base.basicdata.get_data_names(sta)
     if other_info=='left':
@@ -43,6 +50,7 @@ def sta_to_grid_idw(sta, grid0,background = None,effectR = 1000,nearNum = 16,oth
     grid_lon,grid_lat = np.meshgrid(lon,lat)
     xyz_grid = nmc_verification.nmc_vf_base.method.math_tools.lon_lat_to_cartesian(grid_lon.flatten(), grid_lat.flatten(), R = nmc_verification.nmc_vf_base.basicdata.const.ER)
     tree = cKDTree(xyz_sta)
+    #d,inds 分别是站点到格点的距离和id
     d, inds = tree.query(xyz_grid, k=nearNum)
     d += 1e-6
     w = 1.0 / d ** 2
@@ -56,6 +64,7 @@ def sta_to_grid_idw(sta, grid0,background = None,effectR = 1000,nearNum = 16,oth
     grd = nmc_verification.nmc_vf_base.basicdata.grid_data(grid,dat)
     return grd
 
+#站点到格点转换
 def sta_to_grid_oa2(sta0,background,sm = 1,effect_R = 1000,rate_of_model = 0):
 
     sta = nmc_verification.nmc_vf_base.function.sxy_sxy.drop_nan(sta0)

@@ -4,6 +4,7 @@ import datetime as datetime
 import os as os
 import numpy as np
 
+#获取最新的路径
 def get_latest_path(dir,time,dt,dt_cell = "hour",dt_step = 1, farthest = 240):
     for ddt in range(0,240,dt_step):
         path = get_path(dir,time,dt - ddt,dt_cell)
@@ -11,7 +12,7 @@ def get_latest_path(dir,time,dt,dt_cell = "hour",dt_step = 1, farthest = 240):
             return path
     return None
 
-
+#获取路径
 def get_path(dir,time,dt = None,dt_cell = "hour"):
     if(dt is not None):
         if(not type(dt) == type(1)):
@@ -39,15 +40,17 @@ def get_path(dir,time,dt = None,dt_cell = "hour"):
     dir1 = dir1.replace("YYYY",y4).replace("YY",y2).replace("MM",mo).replace("DD",dd).replace("HH",hh).replace("FF",mi).replace("SS",ss)
     return dir1
 
-
+#创建路径
 def creat_path(path):
     [dir,filename] = os.path.split(path)
     if(not os.path.exists(dir)):
         os.makedirs(dir)
 
+#字符转换为datetime
 def str_to_time(str0):
     return datetime.datetime.strptime(str0, '%Y%m%d%H%M')
 
+#获取预报时效路径
 def get_forecat_hour_of_path(path_model,path):
     ttt_index = path_model.find("TTT")
     if (ttt_index >= 0):
@@ -55,6 +58,8 @@ def get_forecat_hour_of_path(path_model,path):
     else:
         ttt = 0
     return ttt
+
+#获取时间命名的路径
 def get_time_of_path(path_model,path):
 
     yy_index = path_model.find("YYYY")
@@ -95,10 +100,12 @@ def get_time_of_path(path_model,path):
         ss = 0
     return datetime.datetime(yy,mm,dd,hh,ff,ss)
 
+#获取按照时间命名的文件夹名称
 def get_dir_of_time(path_model,time):
     dir = os.path.split(get_path(path_model,time))[0]
     return dir
 
+#获取按照时间命名的文件夹名称列表
 def get_path_list_of_time(path_model,time):
     dir = get_dir_of_time(path_model,time) +"/"
     path_list = []
@@ -108,6 +115,7 @@ def get_path_list_of_time(path_model,time):
             path_list[i] = dir  + path_list[i]
     return path_list
 
+#按照最新的时间命名文件路径
 def get_time_nearest_path(path_model,time,max_seconds,path_list = None):
     if(path_list is None):
         path_list = get_path_list_of_time(path_model,time)
@@ -121,7 +129,7 @@ def get_time_nearest_path(path_model,time,max_seconds,path_list = None):
             nearest_path = path
     return nearest_path
 
-
+#按照上一个时效命名文件路径
 def get_time_before_nearest_path(path_model,time,max_seconds,path_list = None):
     if(path_list is None):
         path_list = get_path_list_of_time(path_model,time)
@@ -135,6 +143,7 @@ def get_time_before_nearest_path(path_model,time,max_seconds,path_list = None):
             nearest_path = path
     return nearest_path
 
+##按照下一个时效命名文件路径
 def get_time_after_nearest_path(path_model,time,max_seconds,path_list = None):
     if(path_list is None):
         path_list = get_path_list_of_time(path_model,time)
