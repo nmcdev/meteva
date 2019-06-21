@@ -25,7 +25,7 @@ def write_to_micaps3(sta0,filename = "a.txt", type = 1,effectiveNum = 4):
             nsta =len(sta.index)
             time = sta['time'].iloc[0]
             if isinstance(time,np.datetime64) or isinstance(time,datetime.datetime):
-                time_str = nmc_verification.nmc_vf_base.method.time_tools.time_to_str(time)
+                time_str = nmc_verification.nmc_vf_base.tool.time_tools.time_to_str(time)
                 time_str = time_str[0:4] + " " +time_str[4:6] + " " + time_str[6:8] + " " + time_str[8:10] + " "
             else:
                 time_str = "2099 01 01 0 0 "

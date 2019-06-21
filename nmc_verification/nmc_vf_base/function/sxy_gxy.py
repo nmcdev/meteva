@@ -44,11 +44,11 @@ def sta_to_grid_idw(sta, grid0,background = None,effectR = 1000,nearNum = 16,oth
         grid = nmc_verification.nmc_vf_base.basicdata.grid(grid0.glon,grid0.glat,[sta.ix[0,'time']],[sta.ix[0,'dtime']],[sta.ix[0,'level']],data_name)
     else:
         grid = grid0
-    xyz_sta =  nmc_verification.nmc_vf_base.method.math_tools.lon_lat_to_cartesian(sta.ix[:, 'lon'], sta.ix[:, 'lat'], R = nmc_verification.nmc_vf_base.basicdata.const.ER)
+    xyz_sta =  nmc_verification.nmc_vf_base.tool.math_tools.lon_lat_to_cartesian(sta.ix[:, 'lon'], sta.ix[:, 'lat'], R = nmc_verification.nmc_vf_base.basicdata.const.ER)
     lon = np.arange(grid.nlon) * grid.dlon + grid.slon
     lat = np.arange(grid.nlat) * grid.dlat + grid.slat
     grid_lon,grid_lat = np.meshgrid(lon,lat)
-    xyz_grid = nmc_verification.nmc_vf_base.method.math_tools.lon_lat_to_cartesian(grid_lon.flatten(), grid_lat.flatten(), R = nmc_verification.nmc_vf_base.basicdata.const.ER)
+    xyz_grid = nmc_verification.nmc_vf_base.tool.math_tools.lon_lat_to_cartesian(grid_lon.flatten(), grid_lat.flatten(), R = nmc_verification.nmc_vf_base.basicdata.const.ER)
     tree = cKDTree(xyz_sta)
     #d,inds 分别是站点到格点的距离和id
     d, inds = tree.query(xyz_grid, k=nearNum)
