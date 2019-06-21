@@ -22,6 +22,7 @@ def get_from(grd_from, grd_to):
     tslon = float(gt.index.get_level_values(5)[0])
     tslon2 = float(gt.index.get_level_values(5)[1])
     telon = float(gt.index.get_level_values(5)[-1])
+    #直接相减两个相邻的数为零，需要相隔lo的长度个数才能求出经度
     tdlat = tslat2 - tslat
     tdlon = tslon2 - tslon
     #根据grid_to定一个初始的网格场grd_to，并且将取值都设为缺省
