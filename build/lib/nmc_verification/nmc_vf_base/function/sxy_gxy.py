@@ -1,6 +1,6 @@
 import numpy as np
 import math
-from nmc_verification.nmc_vf_base.method.math import lon_lat_to_cartesian
+from nmc_verification.nmc_vf_base.method.math_tools import lon_lat_to_cartesian
 from scipy.spatial import cKDTree
 import nmc_verification.nmc_vf_base.basicdata as bd
 import nmc_verification.nmc_vf_base.function as fun

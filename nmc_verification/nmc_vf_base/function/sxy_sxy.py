@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 import copy
+from scipy.spatial import cKDTree
+import nmc_verification
 
 
 def set_data_to(sta,station):
@@ -59,9 +61,9 @@ def add_on_id(sta1_0, sta2_0, how="left", default=None):
         sta1 = sta1_0.drop_duplicates(['id'])
 
         df = pd.merge(sta1, sta2, on='id', how=how)
-        print(len(sta1.index))
-        print(len(sta2.index))
-        print(len(df.index))
+        #print(len(sta1.index))
+        #print(len(sta2.index))
+        #print(len(df.index))
         #时间，时效和层次，采用df1的
         df.iloc[:, 0] = df.iloc[0, 0]
         df.iloc[:, 1] = df.iloc[0, 1]
@@ -193,4 +195,21 @@ def multiply_on_id(sta1_0, sta2_0, how="left", default=None):
     df.columns = columns
 
     return df
+
+
+def idw_sta_to_sta(sta0, station,effectR = 1000,nearNum = 16):
+    sta1 = station.copy()
+    xyz_sta0 = nmc_verification.nmc_vf_base.method.math_tools.lon_lat_to_cartesian(sta0.ix[:, 'lon'], sta0.ix[:, 'lat'], R = nmc_verification.nmc_vf_base.basicdata.const.ER)
+    xyz_sta1 = nmc_verification.nmc_vf_base.method.math_tools.lon_lat_to_cartesian(sta1.ix[:, 'lon'], sta1.ix[:, 'lat'], R = nmc_verification.nmc_vf_base.basicdata.const.ER)
+    tree = cKDTree(xyz_sta0)
+    d, inds = tree.query(xyz_sta1, k=nearNum)
+    d += 1e-6
+    w = 1.0 / d ** 2
+    data_name0 = nmc_verification.nmc_vf_base.basicdata.get_data_names(sta0)[0]
+    input_dat = sta0.ix[:,data_name0]
+    dat = np.sum(w * input_dat[inds], axis=1) / np.sum(w, axis=1)
+    dat[:] = np.where(d[:,0] > effectR,0,dat[:])
+    data_name0 = nmc_verification.nmc_vf_base.basicdata.get_data_names(sta1)[0]
+    sta1.ix[:,data_name0] = dat
+    return sta1
 
