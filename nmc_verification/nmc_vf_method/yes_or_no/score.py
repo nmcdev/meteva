@@ -174,4 +174,4 @@ def hmfn(Ob,Fo,threshold_list = None):
             fal[i] = fal_threshold.sum()
             cn[i] = cn_threshold.sum()
         return hit,mis,fal,cn
-C:\Users\wbl\Downloads\nmc_verification-master (1)\nmc_verification-master\nmc_verification
+#C:\Users\wbl\Downloads\nmc_verification-master (1)\nmc_verification-master\nmc_verification

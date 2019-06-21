@@ -59,7 +59,7 @@ def read_from_micaps3(filename,station = None,reserve_time_dtime_level = True,da
 
                 time_str = y2 + strs[3] + strs[4] + strs[5] + strs[6]
                 #time64 = method.time_tools.str_to_time64(time_str)
-                time64 = nmc_verification.nmc_vf_base.method.time_tools.str_to_time64(time_str)
+                time64 = nmc_verification.nmc_vf_base.tool.time_tools.str_to_time64(time_str)
                 level = int(strs[7])
                 if level < 0: level = 0
                 sta['time'] = time64
