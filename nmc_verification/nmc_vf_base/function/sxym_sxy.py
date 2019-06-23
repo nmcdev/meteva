@@ -22,7 +22,7 @@ def var_of_sta_ensemble(sta_ensemble):
     sta_data = sta_ensemble[nmc_verification.nmc_vf_base.get_data_names(sta_ensemble)]
     value = sta_data.values
     var = np.var(value, axis=1)
-    sta_var['data0'] = var
+    sta_var['data0'] = var.tolist()
     return sta_var
 
 
