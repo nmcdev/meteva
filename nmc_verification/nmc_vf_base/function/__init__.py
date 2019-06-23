@@ -8,3 +8,5 @@ from . import put_into_grid_data
 from . import put_into_sta_data
 from . import sxy_sxy
 from . import sxy_gxy
+from . import sxy_sxym
+from . import sxym_sxy

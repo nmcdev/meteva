@@ -2,6 +2,28 @@
 import numpy as np
 import math
 
+def reset_max_min(vmax,vmin):
+    dif = (vmax - vmin) / 10.0
+    if dif ==0:
+        inte = 1
+    else:
+        inte = math.pow(10, math.floor(math.log10(dif)))
+    # 用基本间隔，将最大最小值除于间隔后小数点部分去除，最后把间隔也整数化
+    r = dif / inte
+    if r < 3 and r >= 1.5:
+        inte = inte * 2
+    elif r < 4.5 and r >= 3:
+        inte = inte * 4
+    elif r < 5.5 and r >= 4.5:
+        inte = inte * 5
+    elif r < 7 and r >= 5.5:
+        inte = inte * 6
+    elif r >= 7:
+        inte = inte * 8
+    vmin = inte * ((int)(vmin / inte) - 1)
+    vmax = inte * ((int)(vmax / inte) + 1)
+    return vmax,vmin,inte
+
 def sigmoid(inputX):
     return 1.0/(1+np.exp(-inputX))
 

@@ -54,6 +54,9 @@ def get_data_names(sta):
             data_columns.append(column)
     return data_columns
 
+def get_coord_names():
+    return ['level', 'time', 'dtime', 'id', 'lon', 'lat', 'alt']
+
 def set_data_name(sta,data_name):
     coor_columns = ['level', 'time', 'dtime', 'id', 'lon', 'lat', 'alt',data_name]
     sta.columns = coor_columns
