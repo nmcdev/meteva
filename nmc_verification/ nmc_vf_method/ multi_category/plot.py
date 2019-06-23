@@ -8,17 +8,17 @@ def frequency_histogram(ob, fo, clevs, x_lable='frequency',
                         left_color='r', right_color='b', legend_location="upper right", width=0.2):
     '''
     frequency_histogram 对比测试数据和实况数据的发生的频率
-    :param ob: 实况数据 一维numpy
-    :param fo: 预测数据 一维numpy
-    :param clevs: 阈值
-    :param x_lable: x轴标签
-    :param y_lable: y轴标签
-    :param left_label: 左柱状图标注
-    :param right_label: 右柱状图标注
-    :param left_color: 左柱颜色
-    :param right_color:右柱颜色
-    :param legend_location: 标注的位置
-    :param width: 柱的宽度
+    :param ob:
+    :param fo:
+    :param clevs:
+    :param x_lable:
+    :param y_lable:
+    :param left_label:
+    :param right_label:
+    :param left_color:
+    :param right_color:
+    :param legend_location:
+    :param width:
     :return:
     '''
     p_ob = []
@@ -46,5 +46,6 @@ def frequency_histogram(ob, fo, clevs, x_lable='frequency',
     ax3.set_ylabel(y_lable, fontsize=10)
     ax3.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(100))
     plt.show()
+
 
 
