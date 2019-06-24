@@ -46,3 +46,6 @@ def frequency_histogram(ob, fo, clevs, x_lable='frequency',
     ax3.set_ylabel(y_lable, fontsize=10)
     ax3.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(100))
     plt.show()
+
+
+
