@@ -3,6 +3,19 @@ import copy
 import pandas as pd
 import numpy as np
 
+def sta_between_value_range(sta,start_value,end_value,start_open = False,end_open = False):
+    data_name = nmc_verification.nmc_vf_base.basicdata.get_data_names(sta)[0]
+    if start_open:
+        if end_open:
+            sta1 = sta.loc[(sta[data_name] > start_value) & (sta[data_name] < end_value)]
+        else:
+            sta1 = sta.loc[(sta[data_name] > start_value) & (sta[data_name] <= end_value)]
+    else:
+        if end_open:
+            sta1 = sta.loc[(sta[data_name] >= start_value) & (sta[data_name] < end_value)]
+        else:
+            sta1 = sta.loc[(sta[data_name] >= start_value) & (sta[data_name] <= end_value)]
+    return sta1
 #为站点数据中dataframe重新赋列名
 def sta_of_name(sta,data_name):
     columns = ['level', 'time', 'dtime', 'id', 'lon', 'lat', 'alt',data_name]
