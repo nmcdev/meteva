@@ -225,16 +225,11 @@ def set_sta_lon_lat(sta0,station):
     station = station.drop_duplicates(['id'])
     # 先将数据合并
     column_num= len(sta1.columns)
-    print(station)
     df = pd.merge(sta1, station, on='id', how='inner')
-    print(df)
     sta2 = df.iloc[:,0:column_num]
-    print(sta2)
     sta2.iloc[:,4:6] = df.iloc[:,column_num+4:column_num+6]
-    print(sta2)
     # 重新命名列名称
     sta2.columns = sta1.columns
-    print(sta2)
     return sta2
 
 def set_sta_alt(sta0,station):
@@ -243,16 +238,11 @@ def set_sta_alt(sta0,station):
     station = station.drop_duplicates(['id'])
     # 先将数据合并
     column_num= len(sta1.columns)
-    print(station)
     df = pd.merge(sta1, station, on='id', how='inner')
-    print(df)
     sta2 = df.iloc[:,0:column_num]
-    print(sta2)
     sta2.iloc[:,6] = df.iloc[:,column_num+6]
-    print(sta2)
     # 重新命名列名称
     sta2.columns = sta1.columns
-    print(sta2)
     return sta2
 
 def set_sta_lon_lat_alt(sta0,station):
@@ -261,14 +251,9 @@ def set_sta_lon_lat_alt(sta0,station):
     station = station.drop_duplicates(['id'])
     # 先将数据合并
     column_num= len(sta1.columns)
-    print(station)
     df = pd.merge(sta1, station, on='id', how='inner')
-    print(df)
     sta2 = df.iloc[:,0:column_num]
-    print(sta2)
     sta2.iloc[:,4:7] = df.iloc[:,column_num+4:column_num+7]
-    print(sta2)
     # 重新命名列名称
     sta2.columns = sta1.columns
-    print(sta2)
     return sta2
