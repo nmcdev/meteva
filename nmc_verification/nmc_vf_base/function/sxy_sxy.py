@@ -51,6 +51,7 @@ def drop_nan(sta):
     df = sta.dropna(subset = columns_data)
     return df
 
+
 #将两个站点dataframe相加在一起
 def add_on_id(sta1_0, sta2_0, how="left", default=None):
     if sta1_0 is None:
@@ -217,3 +218,57 @@ def idw_sta_to_sta(sta0, station,effectR = 1000,nearNum = 16):
     sta1.ix[:,data_name0] = dat
     return sta1
 
+
+def set_sta_lon_lat(sta0,station):
+    # 删除重复行
+    sta1 = sta0.drop_duplicates(['id'])
+    station = station.drop_duplicates(['id'])
+    # 先将数据合并
+    column_num= len(sta1.columns)
+    print(station)
+    df = pd.merge(sta1, station, on='id', how='inner')
+    print(df)
+    sta2 = df.iloc[:,0:column_num]
+    print(sta2)
+    sta2.iloc[:,4:6] = df.iloc[:,column_num+4:column_num+6]
+    print(sta2)
+    # 重新命名列名称
+    sta2.columns = sta1.columns
+    print(sta2)
+    return sta2
+
+def set_sta_alt(sta0,station):
+    # 删除重复行
+    sta1 = sta0.drop_duplicates(['id'])
+    station = station.drop_duplicates(['id'])
+    # 先将数据合并
+    column_num= len(sta1.columns)
+    print(station)
+    df = pd.merge(sta1, station, on='id', how='inner')
+    print(df)
+    sta2 = df.iloc[:,0:column_num]
+    print(sta2)
+    sta2.iloc[:,6] = df.iloc[:,column_num+6]
+    print(sta2)
+    # 重新命名列名称
+    sta2.columns = sta1.columns
+    print(sta2)
+    return sta2
+
+def set_sta_lon_lat_alt(sta0,station):
+    # 删除重复行
+    sta1 = sta0.drop_duplicates(['id'])
+    station = station.drop_duplicates(['id'])
+    # 先将数据合并
+    column_num= len(sta1.columns)
+    print(station)
+    df = pd.merge(sta1, station, on='id', how='inner')
+    print(df)
+    sta2 = df.iloc[:,0:column_num]
+    print(sta2)
+    sta2.iloc[:,4:7] = df.iloc[:,column_num+4:column_num+7]
+    print(sta2)
+    # 重新命名列名称
+    sta2.columns = sta1.columns
+    print(sta2)
+    return sta2
