@@ -26,7 +26,7 @@ def transform(grd):
 #格点到站点的插值
 def interpolation_nearest(grd,sta,other_info='left'):
     grid = nmc_verification.nmc_vf_base.basicdata.get_grid_of_data(grd)
-    sta1 = nmc_verification.nmc_vf_base.function.get_from_sta.sta_in_grid_xy(sta, grid)
+    sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_grid_xy(sta, grid)
     dat0 = grd.values
     dat = np.squeeze(dat0)
 
