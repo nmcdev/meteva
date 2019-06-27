@@ -6,7 +6,7 @@ import pandas as pd
 import datetime
 import nmc_verification
 
-def write_to_micaps3(sta0,filename = "a.txt", type = 1,effectiveNum = 4):
+def write_to_micaps3(sta0,filename = "a.txt", type = -1,effectiveNum = 4):
     """
     生成micaps3格式的文件
     :param sta0:站点数据信息

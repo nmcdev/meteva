@@ -8,6 +8,7 @@ import datetime
 import pandas as pd
 import traceback
 import nmc_verification
+import struct
 
 def grid_ragular(slon,dlon,elon,slat,dlat,elat):
     """
@@ -319,3 +320,44 @@ def read_from_nc(filename,value_name = None,member = None,level = None,time = No
         da1.coords['dtime'] = [np.timedelta64(1,'h')]
 
     return da1
+
+
+
+def read_from_gds_file(filename,grid = None):
+    print("a")
+    try:
+        if not os.path.exists(filename):
+            print(filename + " is not exist")
+            return None
+        file = open(filename, 'rb')
+        byteArray = file.read()
+        discriminator = struct.unpack("4s", byteArray[:4])[0].decode("gb2312")
+        t = struct.unpack("h", byteArray[4:6])
+        mName = struct.unpack("20s", byteArray[6:26])[0].decode("gb2312")
+        eleName = struct.unpack("50s", byteArray[26:76])[0].decode("gb2312")
+        description = struct.unpack("30s", byteArray[76:106])[0].decode("gb2312")
+        level, y, m, d, h, timezone, period = struct.unpack("fiiiiii", byteArray[106:134])
+        startLon, endLon, lonInterval, lonGridCount = struct.unpack("fffi", byteArray[134:150])
+        startLat, endLat, latInterval, latGridCount = struct.unpack("fffi", byteArray[150:166])
+        isolineStartValue, isolineEndValue, isolineInterval = struct.unpack("fff", byteArray[166:178])
+        gridCount = lonGridCount * latGridCount
+        description = mName.rstrip('\x00') + '_' + eleName.rstrip('\x00') + "_" + str(
+            level) + '(' + description.rstrip('\x00') + ')' + ":" + str(period)
+        if (gridCount == (len(byteArray) - 278) / 4):
+            if (startLat > 90): startLat = 90.0
+            if (startLat < -90): startLat = -90.0
+            if (endLat > 90): endLat = 90.0
+            if (endLat < -90): endLat = -90.0
+            grid0 = nmc_verification.nmc_vf_base.grid([startLon,endLon,lonInterval],[startLat,endLat,latInterval])
+            grd = nmc_verification.nmc_vf_base.grid_data(grid0)
+            grd.values = np.frombuffer(byteArray[278:], dtype='float32').reshape(1,1,1,1,grid0.nlat, grid0.nlon)
+
+
+            if (grid is None):
+                return grd
+            else:
+                da = nmc_verification.nmc_vf_base.function.gxy_gxy.interpolation_linear(grd, grid)
+                return da
+    except Exception as e:
+        print(e)
+        return None
