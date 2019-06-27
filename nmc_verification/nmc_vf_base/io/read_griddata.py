@@ -272,17 +272,17 @@ def read_from_nc(filename,value_name = None,member = None,level = None,time = No
     for dim in dims:
         if  "member" in dim.lower():
             dim_order["member"] = dim
-        elif "time" in dim.lower():
+        elif dim.lower().find("time") ==0:
             dim_order["time"] = dim
-
-        elif "dt" in dim.lower():
+        elif dim.lower().find("dt") ==0:
             dim_order["dtime"] = dim
-        elif "lev" in dim.lower():
+        elif dim.lower().find("lev") ==0:
             dim_order["level"] = dim
-        elif "lat" in dim.lower() or 'y' in dim.lower():
+        elif dim.lower().find("lat") ==0 or 'y' == dim.lower():
             dim_order["lat"] = dim
-        elif "lon" in dim.lower() or 'x' in dim.lower():
+        elif dim.lower().find("lon") ==0 or 'x' == dim.lower():
             dim_order["lon"] = dim
+
 
     if "member" not in dim_order.keys():
         dim_order["member"] = "member"
@@ -293,7 +293,7 @@ def read_from_nc(filename,value_name = None,member = None,level = None,time = No
     if "level" not in dim_order.keys():
         dim_order["level"] = "level"
         da = da.expand_dims("level")
-    if "dt" not in dim_order.keys():
+    if "dtime" not in dim_order.keys():
         dim_order["dtime"] = "dtime"
         da = da.expand_dims("dtime")
     if "lat" not in dim_order.keys():
@@ -302,6 +302,7 @@ def read_from_nc(filename,value_name = None,member = None,level = None,time = No
     if "lon" not in dim_order.keys():
         dim_order["lon"] = "lon"
         da = da .expand_dims("lon")
+
     print(da)
     da = da.transpose(dim_order["member"],dim_order["level"],dim_order["time"],
                       dim_order["dtime"],dim_order["lat"],dim_order["lon"])
