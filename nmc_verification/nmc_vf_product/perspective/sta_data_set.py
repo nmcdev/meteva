@@ -23,7 +23,8 @@ def para_array_to_list(key_num,para_array):
     else:
         key = key_list[key_num]
         list1 = para_array[key]
-        para_list0 = para_array_to_list(key_num+1,para_array)
+        para_list0 = para_array_
+        (key_num+1,para_array)
         para_list = []
         for para in list1:
             for dict0 in para_list0:
@@ -125,8 +126,8 @@ class sta_data_set:
             for time_range in time_range_list:
                 time_start = nmc_verification.nmc_vf_base.method.time_tools.all_type_time_to_time64(time_range[0])
                 time_end = nmc_verification.nmc_vf_base.method.time_tools.all_type_time_to_time64(time_range[1])
-                dtime = nmc_verification.nmc_vf_base.method.time_tools.all_type_timedelta_to_timedelta64(time_range[2])
-                time_list = pd.date_range(time_start, time_end, freq=dtime).to_list()
+                dtime = time_range[2]
+                time_list = pd.date_range(time_start, time_end, freq=dtime).tolist()
                 list_list.append(time_list)
             self.time = list_list
         else:
