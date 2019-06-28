@@ -584,10 +584,10 @@ class sta_data_set:
                         str1 += str(list[i]) + ","
                     str1 += str(list[-1])+"H"
                 elif key == "":
-                    str =  " "
+                    str1 =  " "
                     pass
                 else:
-                    str =  " "
+                    str1 =  " "
                     pass
                 para_dict_list_string[key].append(str1)
         self.para_dict_list_string = para_dict_list_string
