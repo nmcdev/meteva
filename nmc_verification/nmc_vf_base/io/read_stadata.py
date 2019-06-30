@@ -68,8 +68,6 @@ def read_from_micaps3(filename,station = None,reserve_time_dtime_level = True,da
                 sta['level'] = level
                 sta['dtime'] = np.timedelta64(0,'h')
             if(station is not None):
-                #print(sta)
-                #sta = fun.sxy_sxy.set_data_to(sta, station)
                 sta = nmc_verification.nmc_vf_base.function.sxy_sxy.set_data_to(sta, station)
             return sta
         else:
@@ -117,11 +115,12 @@ def read_station(filename,columns,skiprows = 0):
     else:
         print(filename +" not exist")
         return None
-    
-def read_from_sevp(filename):
+   
+def read_from_sevp(filename,index=2):
     '''
     兼容多个时次的预报产品文件 txt格式
-    param：文件路径和名称
+    param：filename:文件路径和名称
+    param:index:从1到21列数据的索引。
     return：dataframe格式的站点数据
     '''
     try:
@@ -138,7 +137,7 @@ def read_from_sevp(filename):
                 file.close()
             except:
                 try:
-                    file = open(filename, 'r',encoding="UTF-8")
+                    file = open(filename, 'r', encoding="UTF-8")
                     skip_num = 6
                     line1 = file.readline()
                     line2 = file.readline()
@@ -157,27 +156,36 @@ def read_from_sevp(filename):
                 file.close()
             except:
                 try:
-                    file_sta = open(filename,'r',encoding="UTF-8")
+                    file_sta = open(filename, 'r', encoding="UTF-8")
                     sta1 = pd.read_csv(file_sta, skiprows=skip_num, sep="\s+", header=None)
                     file.close()
                 except:
                     exstr = traceback.format_exc()
                     print(exstr)
                     return None
-            
+            sta2=sta1.iloc[::,index]
+            #print(sta2,type(sta2))
+            sta1 = sta1.iloc[::,0]
+            sta1 = sta1.to_frame()
             num_list = re.findall(r"\d+", line3)
+            sta1['level'] = 99999
             sta1['time'] = num_list[0]
-            sta1['sta']=99999
+            sta1['id'] = 99999
             sta1['lat'] = 99999
             sta1['lon'] = 99999
             sta1['alt'] = 99999
+            sta1['data'] = sta2.values
             line6_list = line6.split(' ')
             sta_low_num = int(line6_list[4])
-            sta1.iloc[0: sta_low_num, -4] = line6_list[0]
-            sta1.iloc[0: sta_low_num, -3] = line6_list[1]
-            sta1.iloc[0: sta_low_num, -2] = line6_list[2]
-            sta1.iloc[0: sta_low_num, -1] = line6_list[3]
-            sta =handle_sevp_data(sta1, int(line5), line6)
+            sta1.iloc[0: sta_low_num, 3] = line6_list[0]
+            sta1.iloc[0: sta_low_num, 5] = line6_list[1]
+            sta1.iloc[0: sta_low_num, 4] = line6_list[2]
+            sta1.iloc[0: sta_low_num, 6] = line6_list[3]
+            sta1.rename(columns={0: 'dtime','data':'data'},inplace=True)
+            sta1['dtime'] = sta1['dtime'] + 'h'
+            order = ['level','time','dtime','id','lon','lat','alt','data']
+            sta1 = sta1[order]
+            sta = handle_sevp_data(sta1, int(line5), line6)
             return sta
         else:
             print("不存在此文件,即将结束！")
@@ -185,16 +193,7 @@ def read_from_sevp(filename):
         exstr = traceback.format_exc()
         print(exstr)
 
-#被read_from_sevp所调用，最终返回一个dataframe.
 def handle_sevp_data(data,sta_num,one_sta_low,station = None):
-    '''
-    处理read_from_sevp读过来的数据
-    param:data:数据部分
-    param:sta_num:多站点的个数
-    param:one_sta_low:拥有六列数据的站点信息 如：10141   10.04   50   49   28   21
-    param:station:处理指定的站点，就需要一个站点表，默认为None使用文件中的站点
-    return:返回一个dataframe结构的数据
-    '''
     sta_low_num =int(one_sta_low[26:28])
     for i in range(1, sta_num):
         next_sta_num = int(data.iloc[sta_low_num, 4])
@@ -203,8 +202,8 @@ def handle_sevp_data(data,sta_num,one_sta_low,station = None):
         data.iloc[sta_low_num + 1:sta_low_num+next_sta_num+1, -2] = data.iloc[sta_low_num + 1, 2]
         data.iloc[sta_low_num + 1:sta_low_num+next_sta_num+1, -1] = data.iloc[sta_low_num + 1, 3]
         sta_low_num += next_sta_num+1
-    a = data[(data.sta==99999)].index.tolist()
-    sta = data.drop(a)
+    a = data[(data.id==99999)].index.tolist()
+    data = data.drop(a)
     if(station is not None):
-        sta = nmc_verification.nmc_vf_base.function.sxy_sxy.set_data_to(sta, station)
+        sta = nmc_verification.nmc_vf_base.function.sxy_sxy.set_data_to(data, station)
     return sta
