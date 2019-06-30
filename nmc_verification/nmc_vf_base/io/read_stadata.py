@@ -79,9 +79,6 @@ def read_from_micaps3(filename,station = None,reserve_time_dtime_level = True,da
         print(exstr)
         return None
 
-
-
-
 def read_station(filename,columns,skiprows = 0):
     """
     读取站点数据
@@ -120,7 +117,13 @@ def read_station(filename,columns,skiprows = 0):
     else:
         print(filename +" not exist")
         return None
+    
 def read_from_sevp(filename):
+    '''
+    兼容多个时次的预报产品文件 txt格式
+    param：文件路径和名称
+    return：dataframe格式的站点数据
+    '''
     try:
         if os.path.exists(filename):
             file = open(filename, 'r')
@@ -131,15 +134,11 @@ def read_from_sevp(filename):
             line4 = file.readline()
             line5 = file.readline()
             line6 = file.readline()
-            print(line1,line2,line3,line4,line5,line6)
             file.close()
             file_sta = open(filename)
             sta1 = pd.read_csv(file_sta, skiprows=skip_num, sep="\s+", header=None)
-
             file.close()
-
             num_list = re.findall(r"\d+", line3)
-            print(num_list)
             sta1['time'] = num_list[0]
             sta1['sta']=99999
             sta1['lat'] = 99999
@@ -147,36 +146,38 @@ def read_from_sevp(filename):
             sta1['alt'] = 99999
             line6_list = line6.split('   ')
             sta_low_num = int(line6_list[4])
-
             sta1.iloc[0: sta_low_num, -4] = line6_list[0]
             sta1.iloc[0: sta_low_num, -3] = line6_list[1]
             sta1.iloc[0: sta_low_num, -2] = line6_list[2]
             sta1.iloc[0: sta_low_num, -1] = line6_list[3]
-            data = chuli(sta1, int(line5), line6)
-            return data,line5,line6
+            sta =handle_sevp_data(sta1, int(line5), line6)
+            return sta
         else:
-
             print("不存在此文件,即将结束！")
     except:
         exstr = traceback.format_exc()
         print(exstr)
 
-#
-def chuli(data,sta_num,one_sta_low):
-
+#被read_from_sevp所调用，最终返回一个dataframe.
+def handle_sevp_data(data,sta_num,one_sta_low,station = None):
+    '''
+    处理read_from_sevp读过来的数据
+    param:data:数据部分
+    param:sta_num:多站点的个数
+    param:one_sta_low:拥有六列数据的站点信息 如：10141   10.04   50   49   28   21
+    param:station:处理指定的站点，就需要一个站点表，默认为None使用文件中的站点
+    return:返回一个dataframe结构的数据
+    '''
     sta_low_num =int(one_sta_low[26:28])
-
     for i in range(1, sta_num):
         next_sta_num = int(data.iloc[sta_low_num, 4])
-
         data.iloc[sta_low_num + 1:sta_low_num+next_sta_num+1, -4] = data.iloc[sta_low_num+1, 0]
         data.iloc[sta_low_num + 1:sta_low_num+next_sta_num+1, -3] = data.iloc[sta_low_num + 1, 1]
         data.iloc[sta_low_num + 1:sta_low_num+next_sta_num+1, -2] = data.iloc[sta_low_num + 1, 2]
         data.iloc[sta_low_num + 1:sta_low_num+next_sta_num+1, -1] = data.iloc[sta_low_num + 1, 3]
         sta_low_num += next_sta_num+1
-
-
     a = data[(data.sta==99999)].index.tolist()
-    data = data.drop(a)
-
-    return data
+    sta = data.drop(a)
+    if(station is not None):
+        sta = nmc_verification.nmc_vf_base.function.sxy_sxy.set_data_to(sta, station)
+    return sta
