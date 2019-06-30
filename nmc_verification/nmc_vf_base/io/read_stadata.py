@@ -128,32 +128,43 @@ def read_from_sevp(filename):
         if os.path.exists(filename):
             try:
                 file = open(filename, 'r')
+                skip_num = 6
+                line1 = file.readline()
+                line2 = file.readline()
+                line3 = file.readline()
+                line4 = file.readline()
+                line5 = file.readline()
+                line6 = file.readline()
+                file.close()
             except:
                 try:
                     file = open(filename, 'r',encoding="UTF-8")
+                    skip_num = 6
+                    line1 = file.readline()
+                    line2 = file.readline()
+                    line3 = file.readline()
+                    line4 = file.readline()
+                    line5 = file.readline()
+                    line6 = file.readline()
+                    file.close()
                 except:
                     exstr = traceback.format_exc()
                     print(exstr)
                     return None
-            skip_num = 6
-            line1 = file.readline()
-            line2 = file.readline()
-            line3 = file.readline()
-            line4 = file.readline()
-            line5 = file.readline()
-            line6 = file.readline()
-            file.close()
             try:
                 file_sta = open(filename)
+                sta1 = pd.read_csv(file_sta, skiprows=skip_num, sep="\s+", header=None)
+                file.close()
             except:
                 try:
                     file_sta = open(filename,'r',encoding="UTF-8")
+                    sta1 = pd.read_csv(file_sta, skiprows=skip_num, sep="\s+", header=None)
+                    file.close()
                 except:
                     exstr = traceback.format_exc()
                     print(exstr)
                     return None
-            sta1 = pd.read_csv(file_sta, skiprows=skip_num, sep="\s+", header=None)
-            file.close()
+            
             num_list = re.findall(r"\d+", line3)
             sta1['time'] = num_list[0]
             sta1['sta']=99999
