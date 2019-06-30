@@ -126,7 +126,15 @@ def read_from_sevp(filename):
     '''
     try:
         if os.path.exists(filename):
-            file = open(filename, 'r')
+            try:
+                file = open(filename, 'r')
+            except:
+                try:
+                    file = open(filename, 'r',encoding="UTF-8")
+                except:
+                    exstr = traceback.format_exc()
+                    print(exstr)
+                    return None
             skip_num = 6
             line1 = file.readline()
             line2 = file.readline()
@@ -135,7 +143,15 @@ def read_from_sevp(filename):
             line5 = file.readline()
             line6 = file.readline()
             file.close()
-            file_sta = open(filename)
+            try:
+                file_sta = open(filename)
+            except:
+                try:
+                    file_sta = open(filename,'r',encoding="UTF-8")
+                except:
+                    exstr = traceback.format_exc()
+                    print(exstr)
+                    return None
             sta1 = pd.read_csv(file_sta, skiprows=skip_num, sep="\s+", header=None)
             file.close()
             num_list = re.findall(r"\d+", line3)
