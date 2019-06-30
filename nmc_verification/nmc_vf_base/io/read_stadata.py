@@ -150,8 +150,8 @@ def read_from_sevp(filename):
             sta1.iloc[0: sta_low_num, -3] = line6_list[1]
             sta1.iloc[0: sta_low_num, -2] = line6_list[2]
             sta1.iloc[0: sta_low_num, -1] = line6_list[3]
-            # print(sta1)
-            return sta1,line5,line6
+            data = chuli(ret, int(line5), line6)
+            return data,line5,line6
         else:
 
             print("不存在此文件,即将结束！")
