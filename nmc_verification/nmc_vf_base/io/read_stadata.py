@@ -144,7 +144,7 @@ def read_from_sevp(filename):
             sta1['lat'] = 99999
             sta1['lon'] = 99999
             sta1['alt'] = 99999
-            line6_list = line6.split('   ')
+            line6_list = line6.split(' ')
             sta_low_num = int(line6_list[4])
             sta1.iloc[0: sta_low_num, -4] = line6_list[0]
             sta1.iloc[0: sta_low_num, -3] = line6_list[1]
