@@ -5,6 +5,8 @@ import os
 import pandas as pd
 import nmc_verification
 import traceback
+import re
+
 
 def read_from_micaps3(filename,station = None,reserve_time_dtime_level = True,data_name = 'data0'):
     """
@@ -150,7 +152,7 @@ def read_from_sevp(filename):
             sta1.iloc[0: sta_low_num, -3] = line6_list[1]
             sta1.iloc[0: sta_low_num, -2] = line6_list[2]
             sta1.iloc[0: sta_low_num, -1] = line6_list[3]
-            data = chuli(ret, int(line5), line6)
+            data = chuli(sta1, int(line5), line6)
             return data,line5,line6
         else:
 
