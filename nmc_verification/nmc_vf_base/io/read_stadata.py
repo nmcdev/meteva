@@ -206,4 +206,6 @@ def handle_sevp_data(data,sta_num,one_sta_low,station = None):
     data = data.drop(a)
     if(station is not None):
         sta = nmc_verification.nmc_vf_base.function.sxy_sxy.set_data_to(data, station)
+    else:
+        sta = data
     return sta
