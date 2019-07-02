@@ -116,8 +116,12 @@ def read_station(filename,columns,skiprows = 0):
         print(filename +" not exist")
         return None
    
-def read_from_sevp(filename,index=2):
-    '''
+
+
+
+
+def read_from_sevp(filename, element=None):
+     '''
     兼容多个时次的预报产品文件 txt格式
     param：filename:文件路径和名称
     param:index:从1到21列数据的索引。
@@ -163,49 +167,55 @@ def read_from_sevp(filename,index=2):
                     exstr = traceback.format_exc()
                     print(exstr)
                     return None
-            sta2=sta1.iloc[::,index]
-            #print(sta2,type(sta2))
-            sta1 = sta1.iloc[::,0]
-            sta1 = sta1.to_frame()
+
             num_list = re.findall(r"\d+", line3)
-            sta1['level'] = 99999
             sta1['time'] = nmc_verification.nmc_vf_base.method.time_tools.str_to_time64(num_list[0])
             sta1['id'] = 99999
             sta1['lat'] = 99999
             sta1['lon'] = 99999
             sta1['alt'] = 99999
-            sta1['data'] = sta2.values
-            line6_list = line6.split(' ')
+
+            line6_list = re.findall(r'[0-9.]+', line6)
+
             sta_low_num = int(line6_list[4])
-            sta1.iloc[0: sta_low_num, 3] = line6_list[0]
-            sta1.iloc[0: sta_low_num, 5] = line6_list[1]
-            sta1.iloc[0: sta_low_num, 4] = line6_list[2]
-            sta1.iloc[0: sta_low_num, 6] = line6_list[3]
-            sta1.rename(columns={0: 'dtime','data':'data'},inplace=True)
-            sta1['dtime'] = sta1['dtime'] + 'h'
-            order = ['level','time','dtime','id','lon','lat','alt','data']
-            sta1 = sta1[order]
-            sta = handle_sevp_data(sta1, int(line5), line6)
-            return sta
+
+            sta1.iloc[0: sta_low_num, -4] = line6_list[0]
+            sta1.iloc[0: sta_low_num, -3] = line6_list[1]
+            sta1.iloc[0: sta_low_num, -2] = line6_list[2]
+            sta1.iloc[0: sta_low_num, -1] = line6_list[3]
+
+            sta1.rename(columns={0: 'dtime'}, inplace=True)
+
+            for i in range(1, int(line5)):
+                next_sta_num = int(sta1.iloc[sta_low_num, 4])
+                sta1.iloc[sta_low_num + 1:sta_low_num + next_sta_num + 1, -4] = sta1.iloc[sta_low_num + 1, 0]
+                sta1.iloc[sta_low_num + 1:sta_low_num + next_sta_num + 1, -3] = sta1.iloc[sta_low_num + 1, 1]
+                sta1.iloc[sta_low_num + 1:sta_low_num + next_sta_num + 1, -2] = sta1.iloc[sta_low_num + 1, 2]
+                sta1.iloc[sta_low_num + 1:sta_low_num + next_sta_num + 1, -1] = sta1.iloc[sta_low_num + 1, 3]
+                sta_low_num += next_sta_num + 1
+            drop_data = sta1[(sta1.id == 99999)].index.tolist()
+            data = sta1.drop(drop_data)
+            data = nmc_verification.nmc_vf_base.sta_data(data, ['id', 'time', 'dtime', 'lon', 'lat', 'alt'])
+
+            if element == None:
+                data = data.ix[:, ~(data == 1).all()]
+                return data
+            dframe1 = copy.deepcopy(data)
+            data = data.iloc[:, :7]
+            dframe1.drop(dframe1.columns[[1, 2, 3, 4, 5, 6]], axis=1, inplace=True)
+            line_name = dframe1.columns.tolist()[element]
+            data1 = dframe1.iloc[:, element]
+
+
+            data = pd.concat([data, data1], axis=1)
+            data.rename({line_name:'data0'},inplace=True)
+
+
+            return data
         else:
+
             print("不存在此文件,即将结束！")
     except:
         exstr = traceback.format_exc()
         print(exstr)
 
-def handle_sevp_data(data,sta_num,one_sta_low,station = None):
-    sta_low_num =int(one_sta_low[26:28])
-    for i in range(1, sta_num):
-        next_sta_num = int(data.iloc[sta_low_num, 4])
-        data.iloc[sta_low_num + 1:sta_low_num+next_sta_num+1, -4] = data.iloc[sta_low_num+1, 0]
-        data.iloc[sta_low_num + 1:sta_low_num+next_sta_num+1, -3] = data.iloc[sta_low_num + 1, 1]
-        data.iloc[sta_low_num + 1:sta_low_num+next_sta_num+1, -2] = data.iloc[sta_low_num + 1, 2]
-        data.iloc[sta_low_num + 1:sta_low_num+next_sta_num+1, -1] = data.iloc[sta_low_num + 1, 3]
-        sta_low_num += next_sta_num+1
-    a = data[(data.id==99999)].index.tolist()
-    data = data.drop(a)
-    if(station is not None):
-        sta = nmc_verification.nmc_vf_base.function.sxy_sxy.set_data_to(data, station)
-    else:
-        sta = data
-    return sta
