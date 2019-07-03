@@ -114,8 +114,8 @@ def write_to_micaps11(wind,filename = "a.txt",effectiveNum = 4):
         start = max(0, end - 16)
         title  = ("diamond 11 " + filename[start:end] + "\n"
                 +year + " "+ month + " " + day+ " " +hour +" " + str(level)+"\n"
-                + str(wind.dlon) + " " + str(wind.dlat) + " " + str(wind.slon) + " " + str(wind.elon) + " "
-                + str(wind.slat) + " " + str(wind.elat) + " " + str(wind.nlon) + " " + str(wind.nlat))
+                + str(grid0.dlon) + " " + str(grid0.dlat) + " " + str(grid0.slon) + " " + str(grid0.elon) + " "
+                + str(grid0.slat) + " " + str(grid0.elat) + " " + str(grid0.nlon) + " " + str(grid0.nlat))
 
         format_str = "%." + str(effectiveNum) + "f "
 
