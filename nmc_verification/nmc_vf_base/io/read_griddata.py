@@ -101,7 +101,7 @@ def read_from_micaps4(filename,grid=None):
                                            'lat': lat, 'lon': lon},
                               dims=['member', 'level', 'time', 'dtime', 'lat', 'lon'])
             da.attrs["dtime_type"] = "hour"
-
+            da.name = "data0"
             if grid is None:
                 return da
             else:

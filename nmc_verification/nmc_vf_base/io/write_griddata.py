@@ -3,7 +3,7 @@ import numpy as np
 import math
 import nmc_verification
 
-def write_to_micaps4(da,path = "a.txt",effectiveNum = 6):
+def write_to_micaps4(da,filename = "a.txt",effectiveNum = 6):
     """
     输出micaps4格式文件
     :param da:xarray多维数据信息
@@ -52,10 +52,10 @@ def write_to_micaps4(da,path = "a.txt",effectiveNum = 6):
     vmin = inte * ((int)(vmin / inte) - 1)
     vmax = inte * ((int)(vmax / inte) + 1)
 
-    end = len(path)
+    end = len(filename)
     start = max(0, end - 16)
 
-    title = ("diamond 4 " + path[start:end] + "\n"
+    title = ("diamond 4 " + filename[start:end] + "\n"
              +year + " "+ month + " " + day+ " " +hour+ " " + hour_range +" " + str(level)+"\n"
             + str(grid.dlon) + " " + str(grid.dlat) + " " + str(grid.slon) + " " + str(grid.elon) + " "
             + str(grid.slat) + " " + str(grid.elat) + " " + str(grid.nlon) + " " + str(grid.nlat) + " "
@@ -74,9 +74,9 @@ def write_to_micaps4(da,path = "a.txt",effectiveNum = 6):
     # 二维数组写入micaps文件
     format_str = "%." + str(effectiveNum) + "f "
 
-    np.savetxt(path, grid_values, delimiter=' ',
+    np.savetxt(filename, grid_values, delimiter=' ',
                fmt=format_str, header=title, comments='')
-    print('Create [%s] success' % path)
+    print('Create [%s] success' % filename)
 
 def write_to_nc(da,path = "a.txt",scale_factor = 0.01):
 

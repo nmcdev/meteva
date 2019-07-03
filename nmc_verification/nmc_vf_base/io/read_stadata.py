@@ -61,12 +61,12 @@ def read_from_micaps3(filename,station = None,reserve_time_dtime_level = True,da
 
                 time_str = y2 + strs[3] + strs[4] + strs[5] + strs[6]
                 #time64 = method.time_tools.str_to_time64(time_str)
-                time64 = nmc_verification.nmc_vf_base.method.time_tools.str_to_time64(time_str)
+                time64 = nmc_verification.nmc_vf_base.tool.time_tools.str_to_time64(time_str)
                 level = int(strs[7])
                 if level < 0: level = 0
                 sta['time'] = time64
                 sta['level'] = level
-                sta['dtime'] = np.timedelta64(0,'h')
+                sta['dtime'] = 0
             if(station is not None):
                 sta = nmc_verification.nmc_vf_base.function.sxy_sxy.set_data_to(sta, station)
             return sta
@@ -86,10 +86,19 @@ def read_station(filename,columns,skiprows = 0):
     :return:返回带有'level','time','dtime','id','lon','lat','alt','data0'列的dataframe站点信息。
     """
     if os.path.exists(filename):
-        file_sta = open(filename)
-        sta0 = pd.read_csv(file_sta, skiprows=skiprows, sep="\s+", header=None)
+        try:
+            file_sta = open(filename, 'r')
+            sta0 = pd.read_csv(file_sta, skiprows=skiprows, sep="\s+", header=None)
+        except:
+            try:
+                file_sta = open(filename, 'r', encoding="UTF-8")
+                sta0 = pd.read_csv(file_sta, skiprows=skiprows, sep="\s+", header=None)
+            except:
+                exstr = traceback.format_exc()
+                print(exstr)
+                return None
         sta0.columns = columns
-        station_column = ['id','lon','lat','alt']
+        station_column = ['id', 'lon', 'lat', 'alt']
         colums1 = []
         for name in station_column:
             if name in columns:
@@ -97,23 +106,26 @@ def read_station(filename,columns,skiprows = 0):
         sta1 = sta0[colums1]
         nsta = len(sta1.index)
         for i in range(nsta):
-            if sta1.loc[i,'lon'] >1000:
-                a = sta1.loc[i,'lon']// 100 + (a % 100) /60
+            if sta1.loc[i, 'lon'] > 1000:
+                a = sta1.loc[i, 'lon'] // 100 + (a % 100) / 60
                 sta1.loc[i, 'lon'] = a
-            if sta1.loc[i,'lat'] >1000:
-                a = sta1.loc[i,'lat']// 100 + (a % 100) /60
+            if sta1.loc[i, 'lat'] > 1000:
+                a = sta1.loc[i, 'lat'] // 100 + (a % 100) / 60
                 sta1.loc[i, 'lat'] = a
-        #sta = bd.sta_data(sta1)
+        # sta = bd.sta_data(sta1)
         sta = nmc_verification.nmc_vf_base.basicdata.sta_data(sta1)
-        #sta['time'] = method.time_tools.str_to_time64("2099010108")
+        if 'alt' not in columns:
+            sta['alt'] = 0
+        # sta['time'] = method.time_tools.str_to_time64("2099010108")
         sta['time'] = nmc_verification.nmc_vf_base.tool.time_tools.str_to_time64("2099010108")
         sta['level'] = 0
-        sta['dtime'] = np.timedelta64(0, 'h')
-        sta.coloumns = ['level','time','dtime','id','lon','lat','alt','data0']
+        sta['dtime'] = 0
+        sta.coloumns = ['level', 'time', 'dtime', 'id', 'lon', 'lat', 'alt', 'data0']
         sta['data0'] = 0
+        nmc_verification.nmc_vf_base.basicdata.reset_id(sta)
         return sta
     else:
-        print(filename +" not exist")
+        print(filename + " not exist")
         return None
    
 

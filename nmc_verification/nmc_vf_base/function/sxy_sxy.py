@@ -239,8 +239,8 @@ def set_sta_alt(sta0,station):
     # 先将数据合并
     column_num= len(sta1.columns)
     df = pd.merge(sta1, station, on='id', how='inner')
+    df.loc[:,"alt_x"] = df.loc[:,"alt_y"]
     sta2 = df.iloc[:,0:column_num]
-    sta2.iloc[:,6] = df.iloc[:,column_num+6]
     # 重新命名列名称
     sta2.columns = sta1.columns
     return sta2
