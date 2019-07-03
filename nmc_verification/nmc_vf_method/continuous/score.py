@@ -67,3 +67,16 @@ def corr(Ob,Fo):
     fo_f = Fo.flatten()
     corr0 = np.corrcoef(ob_f,fo_f)[0,1]
     return corr0
+
+#平均相对误差
+def are(Ob,Fo):
+    s = Ob + Fo
+    if np.sum(s) ==0:
+        return 0
+    else:
+        d = Ob - Fo
+        s1 = s[s>0]
+        d1 = d[s>0]
+
+        are0 = np.mean(np.abs(d1/s1))
+        return are0

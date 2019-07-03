@@ -4,6 +4,35 @@
 import numpy as np
 
 
+
+def pc_of_sunny_rainy(Ob, Fo):
+    # 晴雨准确率
+    hit,mis,fal,cn = abcd_of_sunny_rainy(Ob,Fo)
+    cr = (hit+cn)/(hit+mis+fal+cn)
+    return cr
+
+def abcd_of_sunny_rainy(Ob,Fo):
+    #晴雨准确率
+
+    num = np.size(Ob)
+    obhap = np.zeros(num)
+    obhap[Ob >0] = 1
+    fohap = np.zeros(num)
+    fohap[Fo >0] = 1
+    obhap01 = np.zeros(num)
+    obhap01[Ob>=0.1] = 1
+    hit_threshold = (obhap * fohap)
+    mis_threshold = (obhap01 * (1 - fohap))
+    fal_threshold = ((1 - obhap) * fohap)
+    cn_threshold = 1 - hit_threshold -mis_threshold - fal_threshold
+
+    hit = hit_threshold.sum()
+    mis = mis_threshold.sum()
+    fal = fal_threshold.sum()
+    cn = cn_threshold.sum()
+    return hit, mis, fal, cn
+
+
 def hit_rate(Ob,Fo,grade_list = None):
     '''
     hit_rate 求出命中率
@@ -67,6 +96,12 @@ def bias(Ob,Fo,threshold_list=None):
 
     hit, mis, fal, _ = hmfn(Ob, Fo, threshold_list)
     return (hit + fal) / (hit + mis + 0.0000001)
+
+
+def bias_extend(Ob,Fo,threshold_list=None):
+    bias0 = bias(Ob,Fo,threshold_list)
+    bias_extend0 = np.abs(bias0 - 1)
+    return  bias_extend0
 
 def ts(Ob,Fo,grade_list =None):
     '''

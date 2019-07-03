@@ -117,15 +117,15 @@ def read_station(filename,columns,skiprows = 0):
         return None
    
 
+def read_from_sevp(filename0, element=None):
 
-
-def read_from_sevp(filename, element=None):
-     '''
+    '''
     兼容多个时次的预报产品文件 txt格式
     param：filename:文件路径和名称
     param:index:从1到21列数据的索引。
     return：dataframe格式的站点数据
     '''
+    filename = filename0
     try:
         if os.path.exists(filename):
             try:
@@ -205,14 +205,11 @@ def read_from_sevp(filename, element=None):
             line_name = dframe1.columns.tolist()[element]
             data1 = dframe1.iloc[:, element]
 
-
             data = pd.concat([data, data1], axis=1)
             data.rename({line_name:'data0'},inplace=True)
 
-
             return data
         else:
-
             print("不存在此文件,即将结束！")
     except:
         exstr = traceback.format_exc()
