@@ -95,11 +95,13 @@ def read_from_micaps4(filename,grid=None):
             dates = pd.to_datetime(ymd, format = "%Y%m%d%H%M" )
             #print(dates)
             #times = pd.date_range(dates, periods=1)
-            dtimes = datetime.timedelta(hours = dts)
+            dtimes = dts
             #print(levels,times,dts)
             da = xr.DataArray(dat, coords={'member': ['data0'], 'level': [levels], 'time': [dates], 'dtime': [dtimes],
                                            'lat': lat, 'lon': lon},
                               dims=['member', 'level', 'time', 'dtime', 'lat', 'lon'])
+            da.attrs["dtime_type"] = "hour"
+
             if grid is None:
                 return da
             else:
@@ -320,6 +322,10 @@ def read_from_nc(filename,value_name = None,member = None,level = None,time = No
     if da1.coords['dtime'] ==0:
         da1.coords['dtime'] = [np.timedelta64(1,'h')]
 
+    attrs_name = list(da1.attrs)
+    if "dtime_type" in attrs_name:
+        da1.attrs["dtime_type"]= "hour"
+
     return da1
 
 
@@ -352,8 +358,7 @@ def read_from_gds_file(filename,grid = None):
             grid0 = nmc_verification.nmc_vf_base.grid([startLon,endLon,lonInterval],[startLat,endLat,latInterval])
             grd = nmc_verification.nmc_vf_base.grid_data(grid0)
             grd.values = np.frombuffer(byteArray[278:], dtype='float32').reshape(1,1,1,1,grid0.nlat, grid0.nlon)
-
-
+            grd.attrs["dtime_type"] = "hour"
             if (grid is None):
                 return grd
             else:

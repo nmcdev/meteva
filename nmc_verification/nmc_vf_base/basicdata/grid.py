@@ -202,13 +202,13 @@ def get_grid_of_data(grid_data0):
     else:
         gtime = None
 
-    dtimes = grid_data0['dtime'].values
-    if(len(dtimes)>1):
-        gdt = [dtimes[0],dtimes[-1],dtimes[1]-dtimes[0]]
-    elif len(dtimes) ==1:
-        gdt = dtimes
+    gdt = grid_data0['dtime'].values.tolist()
+    attrs_name = list(grid_data0.attrs)
+    if "dtime_type" in attrs_name:
+        gdt.append(grid_data0.attrs["dtime_type"])
     else:
-        gdt = None
+        gdt.append("hour")
+
     lons = grid_data0['lon'].values
     glon = [lons[0],lons[-1],lons[1]-lons[0]]
     lats = grid_data0['lat'].values

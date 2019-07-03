@@ -48,15 +48,8 @@ def set_coords(grd,level = None,time = None,dtime = None, member = None):
             ttime = time
         grd.coords["time"] = [ttime]
     if (dtime != None) and (ndt == 1):
-        if type(dtime) == str:
-            gdt_num = ''.join([x for x in dtime if x.isdigit()])
-            dt_int = int(gdt_num)
-            TIME_type = re.findall(r"\D+", dtime)[0]
-            if(TIME_type == "d"):TIME_type = "D"
-            ddtime = np.timedelta64(dt_int, TIME_type)
-        else:
-            ddtime = dtime
-        grd.coords["dtime"] = [ddtime]
+        grd.coords["dtime"] = [dtime[0]]
+        grd.attrs["dtime_type"] = dtime[-1]
     if (member != None) and (nmember == 1):
         grd.coords["member"] = [member]
     return grd
@@ -76,23 +69,23 @@ def grid_data(grid,data=None):
     times = pd.date_range(grid.stime, grid.etime, freq=grid.gdtime[2])
     ntime = len(times)
     # 根据timedelta的格式，算出ndt次数和gds时效列表
-    edtimedelta = grid.edtimedelta
-    sdtimedelta = grid.sdtimedelta
-    ddtimedelta = grid.ddtimedelta
-    ndt = int((edtimedelta - sdtimedelta) / ddtimedelta) + 1
-    gdt_list = []
-    for i in range(ndt):
-        gdt_list.append(sdtimedelta + ddtimedelta * i)
+
+    ndt = len(grid.gdtime)-1
+    gdt_list = grid.gdtime[0:-1]
 
     levels = grid.levels
     nlevels = len(levels)
+
     members = grid.members
     nmember = len(members)
     if np.all(data == None):
         data = np.zeros((nmember, nlevels, ntime, ndt, nlat, nlon))
     else:
         data = data.reshape(nmember, nlevels, ntime, ndt, nlat, nlon)
-    return (xr.DataArray(data, coords={'member': members,'level': levels,'time': times,'dtime':gdt_list,
+    grd = (xr.DataArray(data, coords={'member': members,'level': levels,'time': times,'dtime':gdt_list,
                                'lat': lat, 'lon': lon},
                          dims=['member', 'level','time', 'dtime','lat', 'lon']))
+
+    grd.attrs["dtime_type"] = grid.gdtime[-1]
+    return
 
