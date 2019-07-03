@@ -32,7 +32,7 @@ class grid:
         self.stime = np.datetime64('2099-01-01T00:00:00.000000')
         self.etime = np.datetime64('2099-01-01T00:00:00.000000')
         self.dtime_int = 1
-        self.dtime_type = "hour"
+        self.dtime_type = "h"
         self.dtimedelta = np.timedelta64(1,'h')
         if(gtime == None):gtime = []
         if len(gtime) == 1:
@@ -60,7 +60,7 @@ class grid:
                 self.stime = gtime[0]
                 self.etime = gtime[0]
             self.dtime_int = 1
-            self.dtime_type = "hour"
+            self.dtime_type = "h"
             self.dtimedelta = np.timedelta64(0,'h')
         elif len(gtime) ==3:
             num1 =[]
@@ -95,22 +95,22 @@ class grid:
                 self.dtime_int = re.findall(r"\d+", gtime[2])[0]
                 dtime_type = re.findall(r"\D+", gtime[2])[0]
                 if dtime_type == 'h':
-                    self.dtime_type ="hour"
+                    self.dtime_type ="h"
                     self.dtimedelta = np.timedelta64(self.dtime_int,'h')
                 elif dtime_type == 'd':
-                    self.dtime_type ="Day"
+                    self.dtime_type ="D"
                     self.dtimedelta = np.timedelta64(self.dtime_int, 'D')
                 elif dtime_type == 'm':
-                    self.dtime_type ="minute"
+                    self.dtime_type ="m"
                     self.dtimedelta = np.timedelta64(self.dtime_int, 'm')
             else:
                 self.dtimedelta = gtime[2]
                 seconds = gtime[2].total_seconds()
                 if seconds % 3600 == 0:
-                    self.dtime_type = "hour"
+                    self.dtime_type = "h"
                     self.dtime_int = int(seconds/3600)
                 else:
-                    self.dtime_type = "minute"
+                    self.dtime_type = "m"
                     self.dtime_int = int(seconds / 60)
         self.gtime = [self.stime,self.etime,str(self.dtime_int) + self.dtime_type]
         self.stime_str = str(self.stime).replace("-","").replace(" ","").replace(":","").replace("T","")[0:14]

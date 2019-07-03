@@ -117,7 +117,7 @@ def read_from_micaps4(filename,grid=None):
         return None
 
 #读取nc数据
-def read_from_nc(filename,value_name = None,member = None,level = None,time = None,dt = None,lat = None,lon = None):
+def read_from_nc(filename,grid = None,value_name = None,member = None,level = None,time = None,dt = None,lat = None,lon = None):
     """
     读取NC文件，并将其保存为xarray中DataArray结构的六维数据信息
     :param filename:NC格式的文件路径和文件名
@@ -326,7 +326,12 @@ def read_from_nc(filename,value_name = None,member = None,level = None,time = No
     if "dtime_type" in attrs_name:
         da1.attrs["dtime_type"]= "hour"
 
-    return da1
+    if grid is None:
+        return da1
+    else:
+        # 如果传入函数有grid信息，就需要进行一次双线性插值，按照grid信息进行提取网格信息。
+        da2 = nmc_verification.nmc_vf_base.function.gxy_gxy.interpolation_linear(da, grid)
+        return da2
 
 
 
