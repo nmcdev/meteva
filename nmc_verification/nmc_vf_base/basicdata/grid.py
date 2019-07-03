@@ -119,24 +119,10 @@ class grid:
 
         ############################################################################
         #提取预报时效维度信息
-
-        self.sdt = 0
-        self.edt = 0
-        self.ddt = 1
-        self.gdtime_type = "h"
-        if gdtime is not  None:
-            if len(gdtime)==1:
-                gdt_num = ''.join([x for x in gdtime[i] if x.isdigit()])
-                self.sdt_int = int(gdt_num)
-                self.edt_int = int(gdt_num)
-                TIME_type = re.findall(r"\D+", gdtime[0])[0]
-            elif  len(gdtime) == 3:
-                gdt_num = ''.join([x for x in gdtime[2] if x.isdigit()])
-                self.sdt = gdtime[0]
-                self.edt = gdtime[1]
-                self.ddt_int = int(gdt_num)
-                TIME_type = re.findall(r"\D+", gdtime[2])[0]
-        self.gdtime = [self.sdt,self.edt_int, str(self.ddt_int)+ self.gdtime_type[0]]
+        if gdtime is None:
+            self.gdtime = [0,"hour"]
+        else:
+            self.gdtime = gdtime
         ############################################################################
         #提取经度信息
 
