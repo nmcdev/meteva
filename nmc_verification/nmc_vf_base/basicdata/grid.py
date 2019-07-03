@@ -120,113 +120,23 @@ class grid:
         ############################################################################
         #提取预报时效维度信息
 
-        self.sdt_int = 0
-        self.edt_int = 0
-        self.ddt_int = 1
-        self.sdtimedelta = np.timedelta64(0, 'h')
-        self.edtimedelta = np.timedelta64(0, 'h')
-        self.ddtimedelta = np.timedelta64(1, 'h')
-        self.gdtime_type = "hour"
-        if (gdtime == None): gdtime = []
-        if len(gdtime)==1:
-            num2 = []
-            if type(gdtime[0]) == str:
-                for i in range(1):
-                    gdt_num = ''.join([x for x in gdtime[i] if x.isdigit()])
-                    num2.append(gdt_num)
-                self.sdt_int = int(num2[0])
-                self.edt_int = int(num2[0])
-                self.ddt_int = 1
-                # 提取出dtime_type类型
+        self.sdt = 0
+        self.edt = 0
+        self.ddt = 1
+        self.gdtime_type = "h"
+        if gdtime is not  None:
+            if len(gdtime)==1:
+                gdt_num = ''.join([x for x in gdtime[i] if x.isdigit()])
+                self.sdt_int = int(gdt_num)
+                self.edt_int = int(gdt_num)
+                TIME_type = re.findall(r"\D+", gdtime[0])[0]
+            elif  len(gdtime) == 3:
+                gdt_num = ''.join([x for x in gdtime[2] if x.isdigit()])
+                self.sdt = gdtime[0]
+                self.edt = gdtime[1]
+                self.ddt_int = int(gdt_num)
                 TIME_type = re.findall(r"\D+", gdtime[2])[0]
-                if TIME_type == 'h':
-                    self.gdtime_type = "hour"
-                    self.sdtimedelta = np.timedelta64(self.sdt_int, 'h')
-                    self.edtimedelta = np.timedelta64(self.edt_int, 'h')
-                    self.ddtimedelta = np.timedelta64(self.ddt_int, 'h')
-                elif TIME_type == 'd':
-                    self.gdtime_type = "Day"
-                    self.sdtimedelta = np.timedelta64(self.sdt_int, 'D')
-                    self.edtimedelta = np.timedelta64(self.edt_int, 'D')
-                    self.ddtimedelta = np.timedelta64(self.edt_int, 'D')
-                elif TIME_type == 'm':
-                    self.gdtime_type = "minute"
-                    self.sdtimedelta = np.timedelta64(self.sdt_int, 'm')
-                    self.edtimedelta = np.timedelta64(self.edt_int, 'm')
-                    self.ddtimedelta = np.timedelta64(self.edt_int, 'm')
-            else:
-                if isinstance(gdtime[0],datetime.timedelta):
-                    seconds = gdtime[0].total_seconds()
-                else:
-                    seconds = gdtime[0].astype('timedelta64[s]')/np.timedelta64(1, 's')
-
-                if seconds % 3600 == 0:
-                    self.sdt_int = int(seconds / 3600)
-                    self.edt_int = int(seconds / 3600)
-                    self.ddt_int = 1
-                    self.gdtime_type = "hour"
-                    self.sdtimedelta = gdtime[0]
-                    self.edtimedelta = gdtime[0]
-
-                else:
-                    self.dtime_type = "minute"
-                    self.sdt_int = int(seconds / 60)
-                    self.edt_int = int(seconds / 60)
-                    self.ddt_int = 1
-                self.sdtimedelta = gdtime[0]
-                self.edtimedelta = gdtime[0]
-                self.ddtimedelta = np.timedelta64(1, 'h')
-        elif  len(gdtime) == 3:
-            num2 = []
-            if type(gdtime[0]) == str:
-                for i in range(0, 3):
-                    gdt_num = ''.join([x for x in gdtime[i] if x.isdigit()])
-                    num2.append(gdt_num)
-                self.sdt_int = int(num2[0])
-                self.edt_int = int(num2[1])
-                self.ddt_int = int(num2[2])
-                #提取出dtime_type类型
-                TIME_type = re.findall(r"\D+", gdtime[2])[0]
-                if TIME_type == 'h':
-                    self.gdtime_type = "hour"
-                    self.sdtimedelta = np.timedelta64(self.sdt_int, 'h')
-                    self.edtimedelta = np.timedelta64(self.edt_int, 'h')
-                    self.ddtimedelta = np.timedelta64(self.ddt_int, 'h')
-                elif TIME_type == 'd':
-                    self.gdtime_type = "Day"
-                    self.sdtimedelta = np.timedelta64(self.sdt_int, 'D')
-                    self.edtimedelta = np.timedelta64(self.edt_int, 'D')
-                    self.ddtimedelta = np.timedelta64(self.ddt_int, 'D')
-                elif TIME_type == 'm':
-                    self.gdtime_type = "minute"
-                    self.sdtimedelta = np.timedelta64(self.sdt_int, 'm')
-                    self.edtimedelta = np.timedelta64(self.edt_int, 'm')
-                    self.ddtimedelta = np.timedelta64(self.ddt_int, 'm')
-            else:
-                seconds = gdtime[2].total_seconds()
-                if seconds % 3600 == 0:
-                    seconds1 = gdtime[0].total_seconds()
-                    seconds2 = gdtime[1].total_seconds()
-                    self.sdt_int = int(seconds1 / 3600)
-                    self.edt_int = int(seconds2 / 3600)
-                    self.ddt_int = int(seconds / 3600)
-                    self.gdtime_type = "hour"
-                    self.sdtimedelta = gdtime[0]
-                    self.edtimedelta = gdtime[0]
-
-                else:
-                    self.dtime_type = "minute"
-                    seconds1 = gdtime[0].total_seconds()
-                    seconds2 = gdtime[1].total_seconds()
-                    self.sdt_int = int(seconds1 / 60)
-                    self.edt_int = int(seconds2 / 60)
-                    self.ddt_int = int(seconds / 60)
-                self.sdtimedelta = gdtime[0]
-                self.edtimedelta = gdtime[1]
-                self.ddtimedelta = gdtime[2]
-
-        self.gdtime = [str(self.sdt_int),str(self.edt_int), str(self.ddt_int)+ self.gdtime_type[0]]
-
+        self.gdtime = [self.sdt,self.edt_int, str(self.ddt_int)+ self.gdtime_type[0]]
         ############################################################################
         #提取经度信息
 
@@ -288,6 +198,7 @@ class grid:
         grid_str += "glon:" + str(self.glon) + "\n"
         grid_str += "glat:" + str(self.glat) + "\n"
         return grid_str
+
 def get_grid_of_data(grid_data0):
     '''
      获取grid的数据values值
