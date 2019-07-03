@@ -305,7 +305,7 @@ def read_from_nc(filename,grid = None,value_name = None,member = None,level = No
         dim_order["lon"] = "lon"
         da = da .expand_dims("lon")
 
-    print(da)
+    #print(da)
     da = da.transpose(dim_order["member"],dim_order["level"],dim_order["time"],
                       dim_order["dtime"],dim_order["lat"],dim_order["lon"])
     ds[name] = (("member","level","time","dtime","lat","lon"),da)
@@ -327,10 +327,12 @@ def read_from_nc(filename,grid = None,value_name = None,member = None,level = No
         da1.attrs["dtime_type"]= "hour"
 
     if grid is None:
+        da1.name = "data0"
         return da1
     else:
         # 如果传入函数有grid信息，就需要进行一次双线性插值，按照grid信息进行提取网格信息。
         da2 = nmc_verification.nmc_vf_base.function.gxy_gxy.interpolation_linear(da, grid)
+        da2.name = "data0"
         return da2
 
 
@@ -365,9 +367,11 @@ def read_from_gds_file(filename,grid = None):
             grd.values = np.frombuffer(byteArray[278:], dtype='float32').reshape(1,1,1,1,grid0.nlat, grid0.nlon)
             grd.attrs["dtime_type"] = "hour"
             if (grid is None):
+                grd.name = "data0"
                 return grd
             else:
                 da = nmc_verification.nmc_vf_base.function.gxy_gxy.interpolation_linear(grd, grid)
+                da.name = "data0"
                 return da
     except Exception as e:
         print(e)

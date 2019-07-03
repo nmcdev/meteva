@@ -87,5 +87,6 @@ def grid_data(grid,data=None):
                          dims=['member', 'level','time', 'dtime','lat', 'lon']))
 
     grd.attrs["dtime_type"] = grid.gdtime[-1]
+    grd.name = "data0"
     return grd
 
