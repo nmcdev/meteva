@@ -156,3 +156,19 @@ def get_time_after_nearest_path(path_model,time,max_seconds,path_list = None):
             dt_min = dt
             nearest_path = path
     return nearest_path
+
+
+def get_filename_list_in_dir(root_dir,all_path = None):
+    if not os.path.exists(root_dir):
+        return []
+    files = os.listdir(root_dir)
+    if all_path is None:
+        all_path = []
+    for file in files:
+        fi_d = os.path.join(root_dir,file)
+        if os.path.isdir(fi_d):
+            get_filename_list_in_dir(fi_d,all_path)
+        else:
+            all_path.append(fi_d)
+
+    return all_path
