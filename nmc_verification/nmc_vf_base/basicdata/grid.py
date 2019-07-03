@@ -14,16 +14,16 @@ class grid:
         定义一个格点的类grid，来存储网格的范围包括（起始经纬度、格距、起止时间，时间间隔，起止时效，时效间隔，层次列表，数据成员）
         约定坐标顺序为: member, time,ddtime, level, lat,lon
     '''
-    def __init__(self,glon, glat, gtime=None, gdtime=None,levels=None,members = None):
+    def __init__(self,glon, glat, gtime=None, dtimes=None,levels=None,members = None):
 
         #提取成员维度信息
-        if(members == None):
+        if(members is None):
             self.members =['data0']
         else:
             self.members = members
         ############################################################################
         #提取层次维度信息
-        if(levels == None):
+        if(levels is None):
             self.levels =[0]
         else:
             self.levels = levels
@@ -119,10 +119,10 @@ class grid:
 
         ############################################################################
         #提取预报时效维度信息
-        if gdtime is None:
-            self.gdtime = [0,"hour"]
+        if dtimes is None:
+            self.dtimes = [0,"hour"]
         else:
-            self.gdtime = gdtime
+            self.dtimes = dtimes
         ############################################################################
         #提取经度信息
 
@@ -180,7 +180,7 @@ class grid:
         grid_str += "members:" + str(self.members) +"\n"
         grid_str += "levels:" + str(self.levels) + "\n"
         grid_str += "gtime:" + str([self.stime_str,self.etime_str,self.dtime_str]) + "\n"
-        grid_str += "gdtime:" + str(self.gdtime)  +"\n"
+        grid_str += "dtimes:" + str(self.dtimes)  +"\n"
         grid_str += "glon:" + str(self.glon) + "\n"
         grid_str += "glat:" + str(self.glat) + "\n"
         return grid_str

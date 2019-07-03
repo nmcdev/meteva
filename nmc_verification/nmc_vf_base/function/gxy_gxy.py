@@ -29,7 +29,7 @@ def interpolation_linear(grd, grid, other_info='left'):
         dat1 = dat
         grd1 = grd0
     if other_info=='left':
-        grd2 = nmc_verification.nmc_vf_base.basicdata.grid(grid.glon,grid.glat,grd0.gtime,grd0.gdtime,grd0.levels,grd0.members)
+        grd2 = nmc_verification.nmc_vf_base.basicdata.grid(grid.glon,grid.glat,grd0.gtime,grd0.dtimes,grd0.levels,grd0.members)
     else:
         grd2 = grid.copy()
 
@@ -77,9 +77,9 @@ def add(grd1,grd2,other_info = 'left'):
         slat = max(grid1.slat,grid2.slat)
         elat = min(grid1.elat,grid2.elat)
         if other_info == 'left':
-            grid_in = nmc_verification.nmc_vf_base.basicdata.grid([slon,elon,grid1.dlon],[slat,elat,grid1.dlat],grid1.gtime,grid1.gdtime,grid1.levels,grid1.members)
+            grid_in = nmc_verification.nmc_vf_base.basicdata.grid([slon,elon,grid1.dlon],[slat,elat,grid1.dlat],grid1.gtime,grid1.dtimes,grid1.levels,grid1.members)
         else:
-            grid_in = nmc_verification.nmc_vf_base.basicdata.grid([slon, elon, grid2.dlon], [slat, elat, grid2.dlat], grid2.gtime, grid2.gdtime, grid2.levels,
+            grid_in = nmc_verification.nmc_vf_base.basicdata.grid([slon, elon, grid2.dlon], [slat, elat, grid2.dlat], grid2.gtime, grid2.dtimes, grid2.levels,
                               grid2.members)
         grd1_in = interpolation_linear(grd1, grid_in)
         grd2_in = interpolation_linear(grd2, grid_in)

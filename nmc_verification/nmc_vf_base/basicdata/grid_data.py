@@ -20,7 +20,7 @@ def set_coords(grd,level = None,time = None,dtime = None, member = None):
     nmember = int(len(grd.coords.variables.get(grd.coords.dims[0])))
     nlevel = int(len(grd.coords.variables.get(grd.coords.dims[1])))
     ntime = int(len(grd.coords.variables.get(grd.coords.dims[2])))
-    ndt = int(len(grd.coords.variables.get(grd.coords.dims[3])))
+    ndtime = int(len(grd.coords.variables.get(grd.coords.dims[3])))
     if (level != None) and (nlevel == 1):
         grd.coords["level"] = [level]
     if(member != None) and (nmember ==1):
@@ -47,7 +47,7 @@ def set_coords(grd,level = None,time = None,dtime = None, member = None):
         else:
             ttime = time
         grd.coords["time"] = [ttime]
-    if (dtime != None) and (ndt == 1):
+    if (dtime != None) and (ndtime == 1):
         grd.coords["dtime"] = [dtime[0]]
         grd.attrs["dtime_type"] = dtime[-1]
     if (member != None) and (nmember == 1):
@@ -70,8 +70,8 @@ def grid_data(grid,data=None):
     ntime = len(times)
     # 根据timedelta的格式，算出ndt次数和gds时效列表
 
-    ndt = len(grid.gdtime)-1
-    gdt_list = grid.gdtime[0:-1]
+    ndt = len(grid.dtimes)-1
+    gdt_list = grid.dtimes[0:-1]
 
     levels = grid.levels
     nlevels = len(levels)

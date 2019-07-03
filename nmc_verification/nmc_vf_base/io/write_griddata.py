@@ -2,6 +2,7 @@
 import numpy as np
 import math
 import nmc_verification
+import os
 
 def write_to_micaps4(da,filename = "a.txt",effectiveNum = 6):
     """
@@ -26,7 +27,7 @@ def write_to_micaps4(da,filename = "a.txt",effectiveNum = 6):
     month = stime[4:6]
     day = stime[6:8]
     hour = stime[8:10]
-    hour_range = str(grid.ddt_int)
+    hour_range = str(grid.ddt)
     values = da.values
     grid_values = np.squeeze(values)
     vmax = math.ceil(max(grid_values.flatten()))
@@ -86,3 +87,41 @@ def write_to_nc(da,filename = "a.txt",scale_factor = 0.01):
                         'zlib': True}
                     }
     da.to_netcdf(filename,encoding = encodingdict)
+
+
+def write_to_micaps11(wind,filename = "a.txt",effectiveNum = 4):
+    dir = os.path.split(os.path.abspath(filename))[0]
+    if os.path.isdir(dir):
+        grid0 = nmc_verification.nmc_vf_base.basicdata.get_grid_of_data(wind)
+        nlon = grid0.nlon
+        nlat = grid0.nlat
+        slon = grid0.slon
+        slat = grid0.slat
+        elon = grid0.elon
+        elat = grid0.elat
+        dlon = grid0.dlon
+        dlat = grid0.dlat
+        level = grid0.levels[0]
+        stime = grid0.stime_str
+        year = stime[0:4]
+        month = stime[4:6]
+        day = stime[6:8]
+        hour = stime[8:10]
+        values = wind.values
+        grid_values = np.squeeze(values).reshape(2*nlat,nlon)
+
+        end = len(filename)
+        start = max(0, end - 16)
+        title  = ("diamond 11 " + filename[start:end] + "\n"
+                +year + " "+ month + " " + day+ " " +hour +" " + str(level)+"\n"
+                + str(wind.dlon) + " " + str(wind.dlat) + " " + str(wind.slon) + " " + str(wind.elon) + " "
+                + str(wind.slat) + " " + str(wind.elat) + " " + str(wind.nlon) + " " + str(wind.nlat))
+
+        format_str = "%." + str(effectiveNum) + "f "
+
+        np.savetxt(filename, grid_values, delimiter=' ',
+                   fmt=format_str, header=title, comments='')
+        print('Create [%s] success' % filename)
+        return 0
+    else:
+        return 1
