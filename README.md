@@ -7,3 +7,4 @@
 4.本地打包项目文件,在命令行上先 cd 到存放setup.py文件的目录，然后用下面的命令:python setup.py sdist bdist_wheel  
 5.上传项目到pypi服务器,在setup.py这一级的目录下建立一个系统文件 .pypirc,命令：twine upload dist/*  
 6.下载上传的库.pip install nmc_verification  
+7.技术文档链接：http://htmlpreview.github.io/?https://github.com/nmcdev/nmc_verification/blob/master/doc/nmc_verification.html
