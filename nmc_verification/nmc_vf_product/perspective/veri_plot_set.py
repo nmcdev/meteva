@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 plt.rcParams['font.sans-serif']=['SimHei'] #用来正常显示中文标签
 plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
 import numpy as np
+import nmc_verification
 
 #参数数组转换为列表
 def para_array_to_list(key_num,para_array):
@@ -175,6 +176,7 @@ class veri_plot_set:
             for key in para_dict.keys():
                 save_path += str(key) + "="+ str(para_dict[key]) + "_"
             save_path += ".png"
+            nmc_verification.nmc_vf_base.tool.path_tools.creat_path(save_path)
             plt.savefig(save_path)
 
 

@@ -46,6 +46,16 @@ def sta_data(df,columns = None):
     # 单层索引
     return sta
 
+def get_undim_data_names(sta):
+    coor_columns = ['level', 'time', 'dtime', 'id', 'lon', 'lat', 'alt']
+    columns = sta.columns
+    data_columns = []
+    for column in columns:
+        if column not in coor_columns:
+            if column.find("dim_type")!=0:
+                data_columns.append(column)
+    return data_columns
+
 def get_data_names(sta):
     coor_columns = ['level', 'time', 'dtime', 'id', 'lon', 'lat', 'alt']
     columns = sta.columns
@@ -63,14 +73,15 @@ def set_data_name(sta,data_name):
     sta.columns = coor_columns
     return
 
-def set_time_dtime_level(sta,time = None,dtime = None,level = None):
+def set_time_dtime_level_name(sta,time = None,dtime = None,level = None,data_name = None):
     if time is not None:
         sta['time'] = time
     if dtime is not None:
         sta['dtime'] = dtime
     if level is not None:
         sta['level'] = level
-
+    if data_name is not None:
+        set_data_name(sta,data_name)
 def reset_id(sta):
     values = sta['id'].values
     if type(values[0]) == str:

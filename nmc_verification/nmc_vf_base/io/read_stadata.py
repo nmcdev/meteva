@@ -8,7 +8,7 @@ import traceback
 import re
 
 
-def read_from_micaps3(filename,station = None,reserve_time_dtime_level = True,data_name = 'data0'):
+def read_from_micaps3(filename,station = None,time = None,dtime = None,level = None,data_name = 'data0'):
     """
     读取micaps3格式文件转换为pandas中dataframe结构的数据
     :param station:站号，默认：None
@@ -46,27 +46,38 @@ def read_from_micaps3(filename,station = None,reserve_time_dtime_level = True,da
             #sta = bd.sta_data(sta1)
             sta = nmc_verification.nmc_vf_base.basicdata.sta_data(sta1)
             #print(sta)
-            if(reserve_time_dtime_level):
-                y2 = ""
-                if len(strs[3]) == 2:
-                    year = int(strs[3])
-                    if year >= 50:
-                        y2 = '19'
-                    else:
-                        y2 = '20'
-                if len(strs[3]) == 1: strs[3] = "0"+ strs[3]
-                if len(strs[4]) == 1: strs[4] = "0" + strs[4]
-                if len(strs[5]) == 1: strs[5] = "0" + strs[5]
-                if len(strs[6]) == 1: strs[6] = "0" + strs[6]
 
-                time_str = y2 + strs[3] + strs[4] + strs[5] + strs[6]
-                #time64 = method.time_tools.str_to_time64(time_str)
-                time64 = nmc_verification.nmc_vf_base.tool.time_tools.str_to_time64(time_str)
+            y2 = ""
+            if len(strs[3]) == 2:
+                year = int(strs[3])
+                if year >= 50:
+                    y2 = '19'
+                else:
+                    y2 = '20'
+            if len(strs[3]) == 1: strs[3] = "0"+ strs[3]
+            if len(strs[4]) == 1: strs[4] = "0" + strs[4]
+            if len(strs[5]) == 1: strs[5] = "0" + strs[5]
+            if len(strs[6]) == 1: strs[6] = "0" + strs[6]
+
+            time_str = y2 + strs[3] + strs[4] + strs[5] + strs[6]
+            time_file = nmc_verification.nmc_vf_base.tool.time_tools.str_to_time(time_str)
+            if(level is None):
                 level = int(strs[7])
-                if level < 0: level = 0
-                sta['time'] = time64
-                sta['level'] = level
+            if level < 0: level = 0
+            sta['level'] = level
+
+            if time is None:
+                sta['time'] = time_file
+            else:
+                sta['time'] = time
+            if dtime is None:
                 sta['dtime'] = 0
+            else:
+                if dtime[-1][0] == "h":
+                    sta['dtime'] = dtime[0]
+                else:
+                    sta['dtime'] = 10000 + dtime[0]
+
             if(station is not None):
                 sta = nmc_verification.nmc_vf_base.function.sxy_sxy.set_data_to(sta, station)
             return sta

@@ -13,7 +13,7 @@ def pc_of_sunny_rainy(Ob, Fo):
 
 def abcd_of_sunny_rainy(Ob,Fo):
     #晴雨准确率
-
+    Fo[Fo <0.1] = 0
     num = np.size(Ob)
     obhap = np.zeros(num)
     obhap[Ob >0] = 1
@@ -21,6 +21,7 @@ def abcd_of_sunny_rainy(Ob,Fo):
     fohap[Fo >0] = 1
     obhap01 = np.zeros(num)
     obhap01[Ob>=0.1] = 1
+
     hit_threshold = (obhap * fohap)
     mis_threshold = (obhap01 * (1 - fohap))
     fal_threshold = ((1 - obhap) * fohap)
@@ -30,7 +31,7 @@ def abcd_of_sunny_rainy(Ob,Fo):
     mis = mis_threshold.sum()
     fal = fal_threshold.sum()
     cn = cn_threshold.sum()
-    return hit, mis, fal, cn
+    return hit, mis,fal, cn
 
 
 def hit_rate(Ob,Fo,grade_list = None):

@@ -27,7 +27,7 @@ def write_to_micaps4(da,filename = "a.txt",effectiveNum = 6):
     month = stime[4:6]
     day = stime[6:8]
     hour = stime[8:10]
-    hour_range = str(grid.ddt)
+    hour_range = str(grid.dtimes[0])
     values = da.values
     grid_values = np.squeeze(values)
     vmax = math.ceil(max(grid_values.flatten()))

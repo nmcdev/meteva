@@ -118,6 +118,7 @@ def read_from_micaps4(filename,grid=None):
 
 #读取nc数据
 def read_from_nc(filename,grid = None,value_name = None,member = None,level = None,time = None,dt = None,lat = None,lon = None):
+
     """
     读取NC文件，并将其保存为xarray中DataArray结构的六维数据信息
     :param filename:NC格式的文件路径和文件名
@@ -130,210 +131,216 @@ def read_from_nc(filename,grid = None,value_name = None,member = None,level = No
     :param lon:经度,默认：None
     :return:返回一个DataArray结构的六维数据信息da1
     """
-    ds0 = xr.open_dataset(filename)
-    drop_list = []
-    ds = xr.Dataset()
-    #1判断要素成员member
-    if(member is None):
-        member = "member"
-    if member in list(ds0.coords) or member in list(ds0):
-        if member in ds0.coords:
-            members = ds0.coords[member]
+    try:
+        ds0 = xr.open_dataset(filename)
+        drop_list = []
+        ds = xr.Dataset()
+        #1判断要素成员member
+        if(member is None):
+            member = "member"
+        if member in list(ds0.coords) or member in list(ds0):
+            if member in ds0.coords:
+                members = ds0.coords[member]
+            else:
+                members = ds0[member]
+                drop_list.append(member)
+            ds.coords["member"] = ("member", members)
+            attrs_name = list(members.attrs)
+            for key in attrs_name:
+                ds.member.attrs[key] = members.attrs[key]
         else:
-            members = ds0[member]
-            drop_list.append(member)
-        ds.coords["member"] = ("member", members)
-        attrs_name = list(members.attrs)
+            ds.coords["member"] = ("member", [0])
+
+        #2判断层次level
+        if (level is None):
+            if "level" in list(ds0.coords) or "level" in list(ds0):
+                level = "level"
+            elif "lev" in ds0.coords or "lev" in list(ds0):
+                level = "lev"
+        if level in ds0.coords or level in list(ds0):
+            if level in ds0.coords:
+                levels = ds0.coords[level]
+            else:
+                levels = ds0[level]
+                drop_list.append(level)
+            ds.coords["level"] = ("level", levels)
+            attrs_name = list(levels.attrs)
+            for key in attrs_name:
+                ds.level.attrs[key] = levels.attrs[key]
+        else:
+            ds.coords["level"] = ("level", [0])
+
+        # 3判断时间time
+        if(time is None):
+            if "time" in ds0.coords or "time" in list(ds0):
+                time = "time"
+            elif "t" in ds0.coords:
+                time = "t"
+        if time in ds0.coords or time in list(ds0):
+            if time in ds0.coords:
+                times = ds0.coords[time]
+            else:
+                times = ds0[time]
+            ds.coords["time"] = ("time", times)
+            attrs_name = list(times.attrs)
+            for key in attrs_name:
+                ds.time.attrs[key] = times.attrs[key]
+        else:
+            ds.coords["time"] = ("time", [0])
+
+        # 4判断时效dt
+        if (dt is None):
+            dt = "dtime"
+        if dt in ds0.coords or dt in list(ds0):
+            if dt in ds0.coords:
+                dts = ds0.coords[dt]
+            else:
+                dts = ds0[dt]
+                drop_list.append(dt)
+
+            ds.coords["dtime"] = ("dtime", dts)
+            attrs_name = list(dts.attrs)
+            for key in attrs_name:
+                ds.dt.attrs[key] = dts.attrs[key]
+        else:
+            ds.coords["dtime"] = ("dtime", [0])
+
+        #5判断纬度lat
+        if(lat is None):
+            if "latitude" in ds0.coords or "latitude" in list(ds0):
+                lat = "latitude"
+            elif "lat" in ds0.coords or "lat" in list(ds0):
+                lat = "lat"
+        if lat in ds0.coords or lat in list(ds0):
+            if lat in ds0.coords:
+                lats = ds0.coords[lat]
+            else:
+                lats = ds0[lat]
+                drop_list.append(lat)
+            dims = lats.dims
+            if len(dims) == 1:
+                ds.coords["lat"] = ("lat", lats)
+            else:
+                if "lon" in dims[0].lower() or "x" in dims.lower():
+                    lats = lats.values.T
+                ds.coords["lat"] = (("lat","lon"), lats)
+            attrs_name = list(lats.attrs)
+            for key in attrs_name:
+                ds.lat.attrs[key] = lats.attrs[key]
+        else:
+            ds.coords["lat"] = ("lat",[0])
+
+        #6判断经度lon
+        if(lon is None):
+            if "longitude" in ds0.coords or "longitude" in list(ds0):
+                lon = "longitude"
+            elif "lon" in ds0.coords or "lon" in list(ds0):
+                lon = "lon"
+        if lon in ds0.coords or lon in list(ds0):
+            if lon in ds0.coords:
+                lons = ds0.coords[lon]
+            else:
+                lons = ds0[lon]
+                drop_list.append(lon)
+
+            dims = lons.dims
+            if len(dims) == 1:
+                ds.coords["lon"] = ("lon", lons)
+            else:
+                if "lon" in dims[0].lower() or "x" in dims.lower():
+                    lons = lons.values.T
+                ds.coords["lon"] = (("lat","lon"), lons)
+            attrs_name = list(lons.attrs)
+            for key in attrs_name:
+                ds.lon.attrs[key] = lons.attrs[key]
+        else:
+            ds.coords["lon"] = ("lon",[0])
+
+        da = None
+        if value_name is not None:
+            da = ds0[value_name]
+        else:
+            name_list = list((ds0))
+            for name in name_list:
+                if name in drop_list: continue
+                da = ds0[name]
+                shape = da.values.shape
+                size = 1
+                for i in range(len(shape)):
+                    size = size * shape[i]
+                if size > 1:
+                    break
+        dims = da.dims
+        dim_order = {}
+
+        for dim in dims:
+            if  "member" in dim.lower():
+                dim_order["member"] = dim
+            elif dim.lower().find("time") ==0:
+                dim_order["time"] = dim
+            elif dim.lower().find("dt") ==0:
+                dim_order["dtime"] = dim
+            elif dim.lower().find("lev") ==0:
+                dim_order["level"] = dim
+            elif dim.lower().find("lat") ==0 or 'y' == dim.lower():
+                dim_order["lat"] = dim
+            elif dim.lower().find("lon") ==0 or 'x' == dim.lower():
+                dim_order["lon"] = dim
+
+
+        if "member" not in dim_order.keys():
+            dim_order["member"] = "member"
+            da = da.expand_dims("member")
+        if "time" not in dim_order.keys():
+            dim_order["time"] = "time"
+            da = da.expand_dims("time")
+        if "level" not in dim_order.keys():
+            dim_order["level"] = "level"
+            da = da.expand_dims("level")
+        if "dtime" not in dim_order.keys():
+            dim_order["dtime"] = "dtime"
+            da = da.expand_dims("dtime")
+        if "lat" not in dim_order.keys():
+            dim_order["lat"] = "lat"
+            da = da.expand_dims("lat")
+        if "lon" not in dim_order.keys():
+            dim_order["lon"] = "lon"
+            da = da .expand_dims("lon")
+
+        #print(da)
+        da = da.transpose(dim_order["member"],dim_order["level"],dim_order["time"],
+                          dim_order["dtime"],dim_order["lat"],dim_order["lon"])
+        ds[name] = (("member","level","time","dtime","lat","lon"),da)
+        attrs_name = list(da.attrs)
         for key in attrs_name:
-            ds.member.attrs[key] = members.attrs[key]
-    else:
-        ds.coords["member"] = ("member", [0])
-
-    #2判断层次level
-    if (level is None):
-        if "level" in list(ds0.coords) or "level" in list(ds0):
-            level = "level"
-        elif "lev" in ds0.coords or "lev" in list(ds0):
-            level = "lev"
-    if level in ds0.coords or level in list(ds0):
-        if level in ds0.coords:
-            levels = ds0.coords[level]
-        else:
-            levels = ds0[level]
-            drop_list.append(level)
-        ds.coords["level"] = ("level", levels)
-        attrs_name = list(levels.attrs)
+            ds[name].attrs[key] = da.attrs[key]
+        attrs_name = list(ds0.attrs)
         for key in attrs_name:
-            ds.level.attrs[key] = levels.attrs[key]
-    else:
-        ds.coords["level"] = ("level", [0])
+            ds.attrs[key] = ds0.attrs[key]
+        da1 = ds[name]
+        da1.name = "data"
+        if da1.coords['time'] ==0:
+            da1.coords['time'] = pd.date_range("2099-1-1",periods=1)
+        if da1.coords['dtime'] ==0:
+            da1.coords['dtime'] = [0]
 
-    # 3判断时间time
-    if(time is None):
-        if "time" in ds0.coords or "time" in list(ds0):
-            time = "time"
-        elif "t" in ds0.coords:
-            time = "t"
-    if time in ds0.coords or time in list(ds0):
-        if time in ds0.coords:
-            times = ds0.coords[time]
+        attrs_name = list(da1.attrs)
+        if "dtime_type" in attrs_name:
+            da1.attrs["dtime_type"]= "hour"
+
+        if grid is None:
+            da1.name = "data0"
+            return da1
         else:
-            times = ds0[time]
-        ds.coords["time"] = ("time", times)
-        attrs_name = list(times.attrs)
-        for key in attrs_name:
-            ds.time.attrs[key] = times.attrs[key]
-    else:
-        ds.coords["time"] = ("time", [0])
-
-    # 4判断时效dt
-    if (dt is None):
-        dt = "dtime"
-    if dt in ds0.coords or dt in list(ds0):
-        if dt in ds0.coords:
-            dts = ds0.coords[dt]
-        else:
-            dts = ds0[dt]
-            drop_list.append(dt)
-
-        ds.coords["dtime"] = ("dtime", dts)
-        attrs_name = list(dts.attrs)
-        for key in attrs_name:
-            ds.dt.attrs[key] = dts.attrs[key]
-    else:
-        ds.coords["dtime"] = ("dtime", [0])
-
-    #5判断纬度lat
-    if(lat is None):
-        if "latitude" in ds0.coords or "latitude" in list(ds0):
-            lat = "latitude"
-        elif "lat" in ds0.coords or "lat" in list(ds0):
-            lat = "lat"
-    if lat in ds0.coords or lat in list(ds0):
-        if lat in ds0.coords:
-            lats = ds0.coords[lat]
-        else:
-            lats = ds0[lat]
-            drop_list.append(lat)
-        dims = lats.dims
-        if len(dims) == 1:
-            ds.coords["lat"] = ("lat", lats)
-        else:
-            if "lon" in dims[0].lower() or "x" in dims.lower():
-                lats = lats.values.T
-            ds.coords["lat"] = (("lat","lon"), lats)
-        attrs_name = list(lats.attrs)
-        for key in attrs_name:
-            ds.lat.attrs[key] = lats.attrs[key]
-    else:
-        ds.coords["lat"] = ("lat",[0])
-
-    #6判断经度lon
-    if(lon is None):
-        if "longitude" in ds0.coords or "longitude" in list(ds0):
-            lon = "longitude"
-        elif "lon" in ds0.coords or "lon" in list(ds0):
-            lon = "lon"
-    if lon in ds0.coords or lon in list(ds0):
-        if lon in ds0.coords:
-            lons = ds0.coords[lon]
-        else:
-            lons = ds0[lon]
-            drop_list.append(lon)
-
-        dims = lons.dims
-        if len(dims) == 1:
-            ds.coords["lon"] = ("lon", lons)
-        else:
-            if "lon" in dims[0].lower() or "x" in dims.lower():
-                lons = lons.values.T
-            ds.coords["lon"] = (("lat","lon"), lons)
-        attrs_name = list(lons.attrs)
-        for key in attrs_name:
-            ds.lon.attrs[key] = lons.attrs[key]
-    else:
-        ds.coords["lon"] = ("lon",[0])
-
-    da = None
-    if value_name is not None:
-        da = ds0[value_name]
-    else:
-        name_list = list((ds0))
-        for name in name_list:
-            if name in drop_list: continue
-            da = ds0[name]
-            shape = da.values.shape
-            size = 1
-            for i in range(len(shape)):
-                size = size * shape[i]
-            if size > 1:
-                break
-    dims = da.dims
-    dim_order = {}
-
-    for dim in dims:
-        if  "member" in dim.lower():
-            dim_order["member"] = dim
-        elif dim.lower().find("time") ==0:
-            dim_order["time"] = dim
-        elif dim.lower().find("dt") ==0:
-            dim_order["dtime"] = dim
-        elif dim.lower().find("lev") ==0:
-            dim_order["level"] = dim
-        elif dim.lower().find("lat") ==0 or 'y' == dim.lower():
-            dim_order["lat"] = dim
-        elif dim.lower().find("lon") ==0 or 'x' == dim.lower():
-            dim_order["lon"] = dim
-
-
-    if "member" not in dim_order.keys():
-        dim_order["member"] = "member"
-        da = da.expand_dims("member")
-    if "time" not in dim_order.keys():
-        dim_order["time"] = "time"
-        da = da.expand_dims("time")
-    if "level" not in dim_order.keys():
-        dim_order["level"] = "level"
-        da = da.expand_dims("level")
-    if "dtime" not in dim_order.keys():
-        dim_order["dtime"] = "dtime"
-        da = da.expand_dims("dtime")
-    if "lat" not in dim_order.keys():
-        dim_order["lat"] = "lat"
-        da = da.expand_dims("lat")
-    if "lon" not in dim_order.keys():
-        dim_order["lon"] = "lon"
-        da = da .expand_dims("lon")
-
-    #print(da)
-    da = da.transpose(dim_order["member"],dim_order["level"],dim_order["time"],
-                      dim_order["dtime"],dim_order["lat"],dim_order["lon"])
-    ds[name] = (("member","level","time","dtime","lat","lon"),da)
-    attrs_name = list(da.attrs)
-    for key in attrs_name:
-        ds[name].attrs[key] = da.attrs[key]
-    attrs_name = list(ds0.attrs)
-    for key in attrs_name:
-        ds.attrs[key] = ds0.attrs[key]
-    da1 = ds[name]
-    da1.name = "data"
-    if da1.coords['time'] ==0:
-        da1.coords['time'] = pd.date_range("2099-1-1",periods=1)
-    if da1.coords['dtime'] ==0:
-        da1.coords['dtime'] = [np.timedelta64(1,'h')]
-
-    attrs_name = list(da1.attrs)
-    if "dtime_type" in attrs_name:
-        da1.attrs["dtime_type"]= "hour"
-
-    if grid is None:
-        da1.name = "data0"
-        return da1
-    else:
-        # 如果传入函数有grid信息，就需要进行一次双线性插值，按照grid信息进行提取网格信息。
-        da2 = nmc_verification.nmc_vf_base.function.gxy_gxy.interpolation_linear(da, grid)
-        da2.name = "data0"
-        return da2
+            # 如果传入函数有grid信息，就需要进行一次双线性插值，按照grid信息进行提取网格信息。
+            da2 = nmc_verification.nmc_vf_base.function.gxy_gxy.interpolation_linear(da, grid)
+            da2.name = "data0"
+            return da2
+    except (Exception, BaseException) as e:
+        exstr = traceback.format_exc()
+        print(exstr)
+        print(e)
+        return None
 
 
 

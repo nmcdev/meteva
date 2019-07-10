@@ -24,3 +24,15 @@ def merge(sta,sta1):
     columns = columns_dim + columns_data
     df.columns = columns
     return df
+
+#两个站点信息合并为一个，以站号为公共部分，在原有的dataframe的基础上增加列数
+def merge_on_all_dim(sta,sta1):
+    if(sta is None):
+        return sta1
+    elif sta1 is None:
+        return sta
+    else:
+        columns = ['level', 'time', 'dtime', 'id', 'lon', 'lat', 'alt']
+        df = pd.merge(sta, sta1, on=columns, how='inner')
+        return df
+

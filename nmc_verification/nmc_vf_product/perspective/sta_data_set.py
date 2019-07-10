@@ -23,8 +23,7 @@ def para_array_to_list(key_num,para_array):
     else:
         key = key_list[key_num]
         list1 = para_array[key]
-        para_list0 = para_array_
-        (key_num+1,para_array)
+        para_list0 = para_array_to_list(key_num+1,para_array)
         para_list = []
         for para in list1:
             for dict0 in para_list0:
@@ -74,7 +73,11 @@ def get_sta_by_para(sta,para):
         elif key == "alt":
             sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_between_alt_range(sta1, para[key][0], para[key][1])
         else:
-            print("参数关键词不支持")
+            if key in sta1.columns:
+                #print(para[key])
+                sta1 = sta1.loc[sta1[key].isin(para[key])]
+            else:
+                print("参数关键词不支持")
     return sta1
 
 
@@ -98,6 +101,7 @@ class sta_data_set:
         self.lon = "fold"
         self.lat = "fold"
         self.alt = "fold"
+        self.unfold_dim_type= {}
         self.sta_data = sta
     
     #设置站点数据
@@ -248,7 +252,15 @@ class sta_data_set:
             self.id = "unfold"
         else:
             self.id = copy.deepcopy(id_list_list)
-    
+
+    #设置id层折叠方式
+    def set_dim_type_unfold(self,dim_type_name,dim_type_list_list):
+        if dim_type_name.find("dim_type") >=0:
+            if dim_type_name in self.sta_data.columns:
+                self.unfold_dim_type[dim_type_name] = dim_type_list_list
+
+
+
     #设置lon层折叠方式
     def set_lon_unfold(self,lon_range = None,lon_range_list = None):
         if lon_range is not None:
@@ -478,7 +490,7 @@ class sta_data_set:
             dtime_list.sort()
             dtime_list2 = []
             for dtime in dtime_list:
-                dtime = nmc_verification.nmc_vf_base.method.time_tools.all_type_timedelta_to_timedelta64(dtime)
+                dtime = nmc_verification.nmc_vf_base.tool.time_tools.all_type_timedelta_to_timedelta64(dtime)
                 seconds = dtime/np.timedelta64(1, 's')
                 hours = math.ceil(seconds/(3600))
                 dtime_list2.append([hours])
@@ -567,6 +579,11 @@ class sta_data_set:
             para_array['alt'] = list_list
         else:
             para_array['alt'] = copy.deepcopy(self.alt)
+
+        #添加其他辅助参数坐标
+        for key in self.unfold_dim_type:
+            para_array[key] = self.unfold_dim_type[key]
+
         self.para_dict_list_list = para_array
    
     #设置参数字典列表转换为string字符
@@ -583,9 +600,14 @@ class sta_data_set:
                     for i in range(len(list)-1):
                         str1 += str(list[i]) + ","
                     str1 += str(list[-1])+"H"
-                elif key == "":
-                    str1 =  " "
+                elif key.find("dim_type") ==0:
+                    str1 =  str(list[0])
                     pass
+                elif key =="dtime":
+                    str1 = ""
+                    for i in range(len(list) - 1):
+                        str1 += str(list[i]) + ","
+                    str1 += str(list[-1]) + "H"
                 else:
                     str1 =  " "
                     pass
@@ -607,16 +629,18 @@ class sta_data_set:
     def get_sta_list(self):
         self.set_para_dict_list_list()
         self.set_para_dict_list_string()
-        para_list = para_array_to_list(0, self.para_dict_list_list)
-        sta_list = []
-        for para in para_list:
-            sta1 = get_sta_by_para(self.sta_data, para)
-            #print(para)
-            #print(sta1)
-            sta_list.append(sta1)
-        self.sta_list = sta_list
-        return sta_list,self.para_dict_list_list,self.para_dict_list_string
-
+        if len(self.para_dict_list_list.keys())>0:
+            para_list = para_array_to_list(0, self.para_dict_list_list)
+            sta_list = []
+            for para in para_list:
+                sta1 = get_sta_by_para(self.sta_data, para)
+                #print(para)
+                #print(sta1)
+                sta_list.append(sta1)
+            self.sta_list = sta_list
+            return sta_list,self.para_dict_list_list,self.para_dict_list_string
+        else:
+            return [self.sta_data],{},{}
 
 
 

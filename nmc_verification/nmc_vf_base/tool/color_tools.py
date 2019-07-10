@@ -70,6 +70,8 @@ def get_color_map_from_picture(path,show = False):
         color_set  = set(rgb_list)
         color_type_num_x[x] = len(color_set)
 
+    plt.plot(color_type_num_x)
+    plt.show()
     max_color_type_y = np.max(color_type_num_y)
     max_color_type_x = np.max(color_type_num_x)
     max_color_type = max(max_color_type_x,max_color_type_y)
@@ -148,3 +150,4 @@ def get_color_map_from_picture(path,show = False):
         plt.show()
     cmap = colors.ListedColormap(color_list, 'indexed')
     return cmap
+

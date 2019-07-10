@@ -29,7 +29,3 @@ def copy_m4_to_nc(input_root_dir,output_root_dir,scale_factor = 0.01):
             print(path_output)
 
 
-idir = r"\\10.20.67.49\u01\data\GRAPES_GFS_MICAPS"
-#idir = r"\\10.20.67.49\u01\data\GRAPES_GFS_MICAPS\RAIN24\2018\20181231"
-odir = r"G:\grapes_gfs_nc"
-copy_m4_to_nc(idir,odir)

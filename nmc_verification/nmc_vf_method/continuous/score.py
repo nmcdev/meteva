@@ -80,3 +80,30 @@ def are(Ob,Fo):
 
         are0 = np.mean(np.abs(d1/s1))
         return are0
+
+#FSS
+def FSS(Ob,Fo,window_sizes_list = [3],threshold_list = [50],Masker = None):
+    shape = Ob.shape
+    nw = len(window_sizes_list)
+    nt = len(threshold_list)
+    fss = np.zeros((nw,nt))
+    for i in range(nw):
+        kernel = np.ones((nw,nw))
+        ws = np.sum(kernel)
+        if Masker is not None:
+            masker_sum = np.convolve(Masker, kernel,mode= "same") + 1e-10
+        else:
+            masker_sum = np.ones(shape) * ws + 1e-10
+        for j in range(nt):
+            ob_hap = np.zeros(shape)
+            ob_hap[Ob>threshold_list[j]] = 1
+            fo_hap = np.zeros(shape)
+            ob_hap[Ob>threshold_list[j]] = 1
+            ob_hap_sum = np.convolve(ob_hap,kernel,mode = "same")
+            fo_hap_sum = np.convolve(fo_hap,kernel,mode = "same")
+            ob_hap_p = ob_hap_sum/masker_sum
+            fo_hap_p = fo_hap_sum/masker_sum
+            a1 = np.sum(np.power(ob_hap_p - fo_hap_p,2))
+            a2 = np.sum(np.power(ob_hap_p,2)) + np.sum(np.power(fo_hap_p,2))
+            fss[i,j] = 1 - a1 / (a2 + 1e-10)
+    return fss

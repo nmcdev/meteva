@@ -194,7 +194,7 @@ def get_grid_of_data(grid_data0):
     members = grid_data0['member'].values
     levels = grid_data0['level'].values
     times = grid_data0['time'].values
-    print(times)
+    #print(times)
     if(len(times)>1):
         gtime = [times[0],times[-1],times[1]-times[0]]
     elif len(times) == 1:

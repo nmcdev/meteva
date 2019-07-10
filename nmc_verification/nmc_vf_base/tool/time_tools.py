@@ -71,3 +71,23 @@ def time_to_str(time):
     else:
         str1 = time.strftime("%Y%m%d%H%M%S")
     return str1
+
+
+#字符转换为datetime
+def str_to_time(str0):
+    num = ''.join([x for x in str0 if x.isdigit()])
+    # 用户输入2019041910十位字符，后面补全加0000，为14位统一处理
+    if len(num) == 4:
+        num += "0101000000"
+    elif len(num) == 6:
+        num += "01000000"
+    elif len(num) == 8:
+        num += "000000"
+    elif len(num) == 10:
+        num += "0000"
+    elif len(num) == 12:
+        num += "00"
+    else:
+        print("输入日期有误，请检查！")
+    # 统一将日期变为datetime类型
+    return datetime.datetime.strptime(num, '%Y%m%d%H%M%S')

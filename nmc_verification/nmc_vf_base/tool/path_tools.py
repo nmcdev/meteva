@@ -172,3 +172,11 @@ def get_filename_list_in_dir(root_dir,all_path = None):
             all_path.append(fi_d)
 
     return all_path
+
+
+def get_path_of_grd_nc_longname(root_dir,time,dhour,nc_Fname,fhour_add):
+    ruc_file = "{4}_IT_{0}_VT_{1}_FH_{2:0>3d}_AT_{3:0>3d}.nc".format(time.strftime("%Y%m%d%H"),
+                                                                     (time + datetime.timedelta(hours=int(dhour))).strftime(
+                                                                         "%Y%m%d%H"), dhour, fhour_add, nc_Fname)
+    file = r"{0}\{1}\{2}".format(root_dir, time.strftime("%Y%m%d"), ruc_file)
+    return file
