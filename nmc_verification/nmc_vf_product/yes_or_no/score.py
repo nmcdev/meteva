@@ -13,7 +13,7 @@ def ts(sta,grade_list):
         ts_list.append(ts.tolist())
     ts_array = np.array(ts_list)
     ts_array = ts_array.reshape((fo_num,len(grade_list)))
-    return ts_array,ts_list
+    return ts_array
 
 #计算偏差值
 def bias(sta,grade_list):
@@ -27,7 +27,7 @@ def bias(sta,grade_list):
         ts_list.append(ts.tolist())
     ts_array = np.array(ts_list)
     ts_array = ts_array.reshape((fo_num,len(grade_list)))
-    return ts_array,ts_list
+    return ts_array
 
 #漏报率
 def mis_rate(sta,grade_list):
@@ -41,7 +41,7 @@ def mis_rate(sta,grade_list):
         ts_list.append(ts.tolist())
     ts_array = np.array(ts_list)
     ts_array = ts_array.reshape((fo_num,len(grade_list)))
-    return ts_array,ts_list
+    return ts_array
 
 #失败率
 def fal_rate(sta,grade_list):
@@ -55,7 +55,7 @@ def fal_rate(sta,grade_list):
         ts_list.append(ts.tolist())
     ts_array = np.array(ts_list)
     ts_array = ts_array.reshape((fo_num,len(grade_list)))
-    return ts_array,ts_list
+    return ts_array
 
 
 #hmfc命中，漏报，空报，正确否定
@@ -71,7 +71,9 @@ def hmfn(sta,grade_list):
         re_list.append(mis.tolist())
         re_list.append(fal.tolist())
         re_list.append(cn.tolist())
-    return re_list
+    hmfn_array = np.array(re_list)
+    hmfn_array = hmfn_array.reshape(4,fo_num,len(grade_list))
+    return hmfn_array
 
 #abcd,晴雨准确率计算联立表，命中，漏报，空报，正确否定
 def abcd(sta):
@@ -86,4 +88,6 @@ def abcd(sta):
         re_list.append(mis.tolist())
         re_list.append(fal.tolist())
         re_list.append(cn.tolist())
-    return re_list
+    abcd_array = np.array(re_list)
+    abcd_array = abcd_array.reshape(4,fo_num)
+    return abcd_array

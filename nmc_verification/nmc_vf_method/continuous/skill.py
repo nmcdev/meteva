@@ -1,6 +1,6 @@
 
 
-def sare(are,are_base):
+def are_skill(are,are_base):
     if are_base ==0:
         return 9999
     else:
