@@ -3,7 +3,7 @@ import nmc_verification
 import matplotlib.colors as colors
 
 
-def copy_m4_to_nc(input_root_dir,output_root_dir,scale_factor = 0.01):
+def copy_m4_to_nc(input_root_dir,output_root_dir,scale_factor = 0.01,recover= False):
     input_root_dir = input_root_dir.replace("\\","/")
     output_root_dir = output_root_dir.replace("\\","/")
     if input_root_dir[-1] != "/":
@@ -20,7 +20,7 @@ def copy_m4_to_nc(input_root_dir,output_root_dir,scale_factor = 0.01):
         path_input = file.replace("\\","/")
         path_file = path_input[len_input:]
         path_output = output_root_dir + path_file+".nc"
-        if not os.path.exists(path_output):
+        if not os.path.exists(path_output) or recover:
             nmc_verification.nmc_vf_base.tool.path_tools.creat_path(path_output)
             grd = nmc_verification.nmc_vf_base.io.read_griddata.read_from_micaps4(path_input)
             if grd is not None:

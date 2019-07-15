@@ -85,3 +85,56 @@ def add(grd1,grd2,other_info = 'left'):
         grd2_in = interpolation_linear(grd2, grid_in)
         grd = nmc_verification.nmc_vf_base.basicdata.grid_data(grid_in,grd1_in.values + grd2_in.values)
         return grd
+
+
+
+def mean_convolve(grd, half_window_size, skip=1):
+    # 该函数计算网格点附近矩形方框内的平均值
+    # 使用同规格的场，确保网格范围和分辨率一致
+    # window_size 窗口尺度，为了避免窗口较大时计算太慢，可选择跳点取平均，再插值回到原始分辨率
+    if (skip > half_window_size):
+        print("pdf_skip is larger than half pdf_window_size")
+        return None
+    grid0 = nmc_verification.nmc_vf_base.get_grid_of_data(grd)
+
+    step_num_lon = int(math.ceil((grid0.nlon - 1) / skip)) + 1
+    dlon_skip = grid0.dlon * skip
+    elon_skip = grid0.slon + dlon_skip * (step_num_lon - 1)
+
+    step_num_lat = int(math.ceil((grid0.nlat - 1) / skip)) + 1
+    dlat_skip = grid0.dlat * skip
+    elat_skip = grid0.slat + dlat_skip * (step_num_lat - 1)
+
+    grid_skip = nmc_verification.nmc_vf_base.grid([grid0.slon, elon_skip, dlon_skip],
+                                                  [grid0.slat, elat_skip, dlat_skip])
+    dat0 = grd.values.squeeze()
+    dat = np.zeros((step_num_lat, step_num_lon))
+
+    cycle0 = step_num_lat * step_num_lon
+    cycle1 = (half_window_size * 2 + 1) * (half_window_size * 2 + 1)
+
+    if cycle0 < cycle1:
+        for j in range(step_num_lat):
+            j_start = max(0,j * skip - half_window_size)
+            j_end = min(grid0.nlat,j * skip + half_window_size)+1
+            for i in range(step_num_lon):
+                i_start = max(0, i * skip - half_window_size)
+                i_end = min(grid0.nlon, i * skip + half_window_size)+1
+                dat[j,i] = np.mean(dat0[j_start:j_end,i_start:i_end])
+    else:
+        for p in range(-half_window_size, half_window_size + 1):
+            j = np.arange(step_num_lat) * skip + p
+            j[j < 0] = 0
+            j[j > grid0.nlat - 1] = grid0.nlat - 1
+            for q in range(-half_window_size, half_window_size + 1):
+                i = np.arange(step_num_lon) * skip + q
+                i[i < 0] = 0
+                i[i > grid0.nlon - 1] = grid0.nlon - 1
+                ii, jj = np.meshgrid(i, j)
+                dat += dat0[jj, ii]
+        dat /= cycle1
+
+    grd_mean_skip = nmc_verification.nmc_vf_base.grid_data(grid_skip, dat)
+    grd_mean = nmc_verification.nmc_vf_base.function.gxy_gxy.interpolation_linear(grd_mean_skip, grid0)
+
+    return grd_mean

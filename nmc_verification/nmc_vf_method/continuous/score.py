@@ -8,7 +8,7 @@ def me(Ob,Fo):
     :param Fo:预测数据 一维numpy
     :return:
     '''
-    mean_error = np.mean(Ob - Fo)
+    mean_error = np.mean(Fo - Ob)
     return mean_error
 
 def mae(Ob,Fo):

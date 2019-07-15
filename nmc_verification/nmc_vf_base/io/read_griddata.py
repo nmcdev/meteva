@@ -333,7 +333,7 @@ def read_from_nc(filename,grid = None,value_name = None,member = None,level = No
             return da1
         else:
             # 如果传入函数有grid信息，就需要进行一次双线性插值，按照grid信息进行提取网格信息。
-            da2 = nmc_verification.nmc_vf_base.function.gxy_gxy.interpolation_linear(da, grid)
+            da2 = nmc_verification.nmc_vf_base.function.gxy_gxy.interpolation_linear(da1, grid)
             da2.name = "data0"
             return da2
     except (Exception, BaseException) as e:

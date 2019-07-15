@@ -130,9 +130,9 @@ class grid:
         self.elon = glon[1]
         self.dlon = glon[2]
         nlon = 1 + (self.elon - self.slon) / self.dlon
-        error = abs(round(nlon) - nlon)
+        error = abs(round(nlon) - nlon)/nlon
         if (error > 0.01):
-            self.nlon = math.ceil(nlon)
+            self.nlon = int(math.ceil(nlon))
         else:
             self.nlon = int(round(nlon))
         self.elon = self.slon + (nlon - 1) * self.dlon
@@ -144,9 +144,9 @@ class grid:
         self.elat = glat[1]
         self.dlat = glat[2]
         nlat = 1 + (self.elat - self.slat) / self.dlat
-        error = abs(round(nlat) - nlat)
+        error = abs(round(nlat) - nlat)/nlat
         if (error > 0.01):
-            self.nlat = math.ceil(nlat)
+            self.nlat = int(math.ceil(nlat))
         else:
             self.nlat = int(round(nlat))
         self.elat = self.slat + (nlat - 1) * self.dlat
