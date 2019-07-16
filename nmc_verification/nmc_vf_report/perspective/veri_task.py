@@ -104,7 +104,7 @@ def get_veri_from_middle_result(root_para,middle_veri):
     return veri_result
 
 def group_sta(sta,para):
-    sta_set = nmc_verification.nmc_vf_product.perspective.sta_data_set(sta)
+    sta_set = nmc_verification.nmc_vf_report.perspective.sta_data_set(sta)
     if para["dtime"] != "fold":
         sta_set.set_dtime_unfold(dtime_list_list=para["dtime"]["group"])
 
@@ -313,8 +313,8 @@ def verification_with_complite_para(para):
                     para2 = None
                     if "para2" in mpara.keys():
                         para2 = mpara["para2"]
-                    ver_set = nmc_verification.nmc_vf_product.perspective.veri_result_set(vmethod_list=mpara["method"],para1 = para1,para2= para2,sta_data_set=sta_set)
-                    middle_result_part = nmc_verification.nmc_vf_product.perspective.get_middle_veri_result(sta_set,mpara)
+                    ver_set = nmc_verification.nmc_vf_report.perspective.veri_result_set(vmethod_list=mpara["method"], para1 = para1, para2= para2, sta_data_set=sta_set)
+                    middle_result_part = nmc_verification.nmc_vf_report.perspective.get_middle_veri_result(sta_set, mpara)
                     middle_veri[key]["result"] = middle_veri_result_add(middle_veri[key]["result"],middle_result_part)
                     #print(middle_veri[key]["result"])
                 #veri_result = get_veri_from_middle_result(para,middle_veri)
@@ -331,8 +331,8 @@ def verification_with_complite_para(para):
         result = veri_result[key]
         result.to_netcdf(path)
         save_dir = para["save_dir"] + "/" + veri_name +"/"
-        plot_set = nmc_verification.nmc_vf_product.perspective.veri_plot_set(subplot=para["plot_set"]["subplot"], legend=para["plot_set"]["legend"],
-                                                 axis=para["plot_set"]["axis"], save_dir=save_dir)
+        plot_set = nmc_verification.nmc_vf_report.perspective.veri_plot_set(subplot=para["plot_set"]["subplot"], legend=para["plot_set"]["legend"],
+                                                                            axis=para["plot_set"]["axis"], save_dir=save_dir)
         plot_type = para["veri_set"][key]["plot_type"]
         if plot_type == "bar":
             plot_set.bar(result)

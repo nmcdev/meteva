@@ -2,7 +2,6 @@ import datetime
 import numpy as np
 import copy
 import nmc_verification
-import collections
 import os
 import xarray as xr
 
@@ -40,14 +39,19 @@ def para_array_to_list(key_num,para_array):
 def get_middle_veri_para(veri_para):
     nead_hmfc_methods = ["ts","bias","ets","fal_rate","hit_rate","mis_rate"]
     nead_abcd_methods = ["pc","spc"]
+
     mpara = copy.deepcopy(veri_para)
     methods = veri_para["method"]
+    middle_vm = []
     for method in methods:
         if method in nead_hmfc_methods:
-            mpara["method"] = ["hmfn"]
+            mpara["method"] = ["hit","mis","fal","cn"]
             break
         if method in nead_abcd_methods:
-            mpara["method"] = ["abcd"]
+            mpara["method"] = ["na","nb","nc","nd"]
+            break
+        if method == "FSS":
+            middle_vm = ["E2","ob2_p_fo2"]
             break
 
     return mpara
@@ -250,69 +254,69 @@ def group_sta(sta,para_group_set):
         sta_list.append(sta1)
     return sta_list
 
+
+
 def verification_with_complite_para(para):
-    #首先根据预报时效范围计算观测时效的范围,并且建立每个观测时间对应的多个起报时间和预报时效
+    station = para["station"]
+    if station is None:
+        veri_on_grid(para)
+    else:
+        veri_on_sta(para)
+def veri_on_sta(para):
+    pass
+
+def veri_on_grid(para):
+
+
     fo_start_time = nmc_verification.nmc_vf_base.tool.time_tools.str_to_time(para["fo_time_range"][0])
     fo_end_time = nmc_verification.nmc_vf_base.tool.time_tools.str_to_time(para["fo_time_range"][1])
     time_step = int(para["fo_time_range"][2][0:-1])
     time_type = para["fo_time_range"][2][-1]
-    ob_time_dict = {}
-    time1 = fo_start_time
+    ob_grid_dict = {}
     dtime_list = para["dtime"][0:-1]
-    while time1 <= fo_end_time:
-        for dh in dtime_list:
-            ob_time = time1 + datetime.timedelta(hours=dh)
-            if ob_time not in ob_time_dict.keys():
-                ob_time_dict[ob_time] = [[time1,dh]]
-            else:
-                ob_time_dict[ob_time].append([time1,dh])
-        time1 = time1 + datetime.timedelta(hours=time_step)
+    grid_set = nmc_verification.nmc_vf_base.grid(para["grid"][0],para["grid"][1])
+    masker = nmc_verification.nmc_vf_base.io.read_griddata.read_from_nc(para["masker"],grid=grid_set)
+
+    if para["dim_type"] is not None:
+        dim_type_num = len(para["dim_type"])
+    else:
+        dim_type_num = 0
 
     #设置中间检验结果
     veri_group_num = len(para["veri_set"])
     middle_veri = {}
+
     for i in range(veri_group_num):
         middle_veri[i] = {}
         middle_veri[i]["para"] = get_middle_veri_para(para["veri_set"][i])
         middle_veri[i]["result"] = None
 
     #print(middle_veri)
-    #读取站点信息：
-    station = nmc_verification.nmc_vf_base.io.read_stadata.read_from_micaps3(para["station"]["path"])
-    station["data0"] = 9999
-    #print(station)
-    time1 = fo_start_time
-    ob_sta_all = None
-    #print(dtime_list)
-    #判断每个维度类型文件是否为固定文件
-    para_dim_type = para["dim_type"]
-    dim_type_num = 0
-    dim_type_sta_all_dict = collections.OrderedDict()
-    if para_dim_type is not None:
-        dim_type_num = len(para_dim_type)
-        dim_type_sta1_list = []
-        for i in range(dim_type_num):
-            dim_type_sta1_list.append(None)
-            path = para_dim_type[i]["path"]
-            fix = True
-            if path.find("YY") >0:
-                fix = False
-            if path.find("MM") >0:
-                fix = False
-            if path.find("DD") >0:
-                fix = False
-            if path.find("HH") >0:
-                fix = False
-            para_dim_type[i]["fix"] = fix
-
-        #print(para_dim_type)
-        for i in range(dim_type_num):
-            dim_type_sta_all_dict[i] = None
-
     fo_type_num = len(para["forecasts"])
-    fo_sta_all_dict = collections.OrderedDict()
-    for i in range(fo_type_num):
-        fo_sta_all_dict[i] = None
+
+    #print(dtime_list)
+    #预执行，判断dim 和 ob文件被使用多少遍
+    time1 = fo_start_time
+    path_time_dict = {}
+    while time1 <= fo_end_time:
+        for dtime in dtime_list:
+            ob_time = time1 + datetime.timedelta(hours=dtime)
+            path = nmc_verification.nmc_vf_base.tool.path_tools.get_path(para["observation"]["path"], ob_time)
+            if path in path_time_dict.keys():
+                path_time_dict[path]["num"] += 1
+            else:
+                path_time_dict[path] = {}
+                path_time_dict[path]["num"] = 1
+                path_time_dict[path]["grd"] = None
+            for i in range(dim_type_num):
+                dir =  para["dim_type"][i]["path"]
+                path = nmc_verification.nmc_vf_base.tool.path_tools.get_path(dir, time1,dtime)
+                if path in path_time_dict.keys():
+                    path_time_dict[path]["num"] += 1
+                else:
+                    path_time_dict[path] = {}
+                    path_time_dict[path]["num"] = 1
+                    path_time_dict[path]["grd"] = None
 
     value_s = para["observation"]["valid"][0]
     value_e = para["observation"]["valid"][1]
@@ -338,10 +342,19 @@ def verification_with_complite_para(para):
     else:
         month_list= np.arange(1,13).tolist()
 
+    #设置中间检验结果
+    veri_group_num = len(para["veri_set"])
+    middle_veri = {}
+    for i in range(veri_group_num):
+        middle_veri[i] = {}
+        middle_veri[i]["para"] = get_middle_veri_para(para["veri_set"][i])
+        middle_veri[i]["result"] = None
+
     #得到预报模式列表
     data_name_list = ["ob"]
     for model in para["forecasts"]:
         data_name_list.append(model["name"])
+
     time1 = fo_start_time - datetime.timedelta(hours=time_step)
     while time1 <= fo_end_time:
         if(time_type =="h"):
@@ -351,63 +364,51 @@ def verification_with_complite_para(para):
 
         #判断时间是否在分析列表里
         if not time1.hour in hour_list:continue
-
         print(time1)
-        #读取dim_type
-        for i in range(dim_type_num):
-            sta = None
-            if para_dim_type[i]["fix"]:
-                if len(dim_type_sta1_list) >i:
-                    path = para_dim_type[i]["path"]
-                    if para_dim_type[i]["type"] =="grid_data":
-                        grd = nmc_verification.nmc_vf_base.io.read_griddata.read_from_nc(path)
-                        if grd is not None:
-                            sta = nmc_verification.nmc_vf_base.function.gxy_sxy.interpolation_nearest(grd,station)
-                    else:
-                        sta = nmc_verification.nmc_vf_base.io.read_stadata.read_from_micaps3(path,station)
-                else:
-                    sta = copy.deepcopy(dim_type_sta1_list[i])
-                    dim_type_sta1_list.append(sta)
-            else:
-                dir = para_dim_type[i]["path"]
-                path =nmc_verification.nmc_vf_base.tool.path_tools.get_path(dir,time1)
-                if para_dim_type[i]["type"] == "grid_data":
-                    grd = nmc_verification.nmc_vf_base.io.read_griddata.read_from_nc(path)
-                    sta = nmc_verification.nmc_vf_base.function.gxy_sxy.interpolation_nearest(grd, station)
-                else:
-                    sta = nmc_verification.nmc_vf_base.io.read_stadata.read_from_micaps3(path, station)
-            for dtime in dtime_list:
-                sta1 = copy.deepcopy(sta)
-                nmc_verification.nmc_vf_base.set_time_dtime_level_name(sta1,time = time1,dtime = dtime,level=0,data_name=para_dim_type[i]["name"])
-                dim_type_sta_all_dict[i] = nmc_verification.nmc_vf_base.function.put_into_sta_data.join(dim_type_sta_all_dict[i],sta1)
-
-        #print(dim_type_sta_all_dict[0])
-        #读取观测
         for dtime in dtime_list:
+            dim_grd_list = []
+            all_file = True
+            for i in range(dim_type_num):
+                dir =  para["dim_type"][i]["path"]
+                path = nmc_verification.nmc_vf_base.tool.path_tools.get_path(dir, time1,dtime)
+
+                if path_time_dict[path]["grd"] is None:
+                    grd = nmc_verification.nmc_vf_base.io.read_griddata.read_from_nc(path)
+                    path_time_dict[path]["num"] -=1
+                    if path_time_dict[path]["num"] >0:
+                        path_time_dict[path]["grd"] = grd
+                else:
+                    grd = path_time_dict[path]["grd"]
+                    path_time_dict[path]["num"] -= 1
+                    if path_time_dict[path]["num"] ==0:
+                        path_time_dict.pop(path)
+                if grd is None:
+                    all_file = False
+                    break
+                dim_grd_list.append(grd)
+            if not all_file:continue
+            #读取观测
             ob_time = time1 + datetime.timedelta(hours=dtime)
-            if ob_time in ob_time_dict.keys():
-                path = nmc_verification.nmc_vf_base.tool.path_tools.get_path(para["observation"]["path"],ob_time)
-                #print(path)
-                ob_sta = nmc_verification.nmc_vf_base.io.read_stadata.read_from_micaps3(path,station=station)
-                if ob_sta is not None:
-                    ob_sta = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_between_value_range(ob_sta,value_s,value_e)
-                    time_dtime_list = ob_time_dict[ob_time]
-                    for time_dtime in time_dtime_list:
-                        #print(time_dtime)
-                        ob_sta1 = copy.deepcopy(ob_sta)
-                        time_p = time_dtime[0]
-                        dtime = time_dtime[1]
-                        nmc_verification.nmc_vf_base.set_time_dtime_level_name(ob_sta1,time = time_p,dtime= dtime,level=0,data_name="ob")
-                        ob_sta_all = nmc_verification.nmc_vf_base.function.put_into_sta_data.join(ob_sta_all,ob_sta1)
-                ob_time_dict.pop(ob_time)
-        #print(ob_sta_all)
-        #print()
-        #读取预报
-        #print(fo_type_num)
-        for i in range(fo_type_num):
-            one_fo_para = para["forecasts"][i]
-            data_name = one_fo_para["name"]
-            for dtime in dtime_list:
+            path = nmc_verification.nmc_vf_base.tool.path_tools.get_path(para["observation"]["path"], ob_time)
+
+            if path_time_dict[path]["grd"] is None:
+                ob_grd = nmc_verification.nmc_vf_base.io.read_griddata.read_from_nc(path)
+                path_time_dict[path]["num"] -= 1
+                if path_time_dict[path]["num"] > 0:
+                    path_time_dict[path]["grd"] = ob_grd
+            else:
+                ob_grd = path_time_dict[path]["grd"]
+                path_time_dict[path]["num"] -= 1
+                if path_time_dict[path]["num"] == 0:
+                    path_time_dict.pop(path)
+            if ob_grd is None: continue
+
+            #读取预报
+            #print(fo_type_num)
+            for i in range(fo_type_num):
+                one_fo_para = para["forecasts"][i]
+                data_name = one_fo_para["name"]
+
                 range_b = one_fo_para["fo_time_move_back"]
                 fo_time_move_backs = np.arange(range_b[0],range_b[1],range_b[2]).tolist()
                 find_file = False
@@ -430,63 +431,31 @@ def verification_with_complite_para(para):
                         break
                 fo_sta = None
                 if find_file:
-                    if one_fo_para["type"] == "sta_data":
-                        fo_sta = nmc_verification.nmc_vf_base.io.read_stadata.read_from_micaps3(path, station)
-                    else:
-                        grd = nmc_verification.nmc_vf_base.io.read_griddata.read_from_nc(path)
-                        if grd is not None:
-                            fo_sta = nmc_verification.nmc_vf_base.function.gxy_sxy.interpolation_nearest(grd,station)
-                            fo_sta = nmc_verification.nmc_vf_base.function.sxy_sxy.set_data_to(fo_sta,station)
-                if fo_sta is None:
-                    fo_sta = copy.deepcopy(station)
-                fo_sta = nmc_verification.nmc_vf_base.function.sxy_sxy.set_value_out_9999(fo_sta,value_s,value_e)
-                nmc_verification.nmc_vf_base.set_time_dtime_level_name(fo_sta, level=0, time=time1, dtime=dtime,data_name=data_name)
-                #nmc_verification.nmc_vf_base.io.write_stadata.write_to_micaps3(fo_sta,filename="G:\\a.txt")
-                fo_sta_all_dict[i] = nmc_verification.nmc_vf_base.function.put_into_sta_data.join(fo_sta_all_dict[i],fo_sta)
-                # print(fo_sta_all_dict[i])
+                    grd = nmc_verification.nmc_vf_base.io.read_griddata.read_from_nc(path)
+                    if grd is None:
+                        all_file = False
+                        break
+                else:
+                    all_file = False
+                    break
 
-        #提取起报时间在现在或过期的数据部分
-        #print(len(ob_sta_all.index))
-        merge = None
-        #提取dim_type中数据
-        for key in dim_type_sta_all_dict.keys():
-            merge = nmc_verification.nmc_vf_base.function.put_into_sta_data.merge_on_all_dim(merge,dim_type_sta_all_dict[key])
 
-        #提取观测序列的数据
-        sta_before,sta_after = cut_sta_not_after(ob_sta_all,time1)
-        ob_sta_all = sta_after
-        if sta_before is None:
-            continue
-        merge = nmc_verification.nmc_vf_base.function.put_into_sta_data.merge_on_all_dim(merge, sta_before)
-        #print(merge)
-        #提取预报数据
-        for key in fo_sta_all_dict.keys():
-            merge = nmc_verification.nmc_vf_base.function.put_into_sta_data.merge_on_all_dim(merge,fo_sta_all_dict[key])
-            #print(merge)
-            #print()
 
-        sta_list = group_sta(merge,para["group_set"])
+            #开始网格检验
+            for key in middle_veri.keys():
+                # 首先根据
+                mpara = middle_veri[key]["para"]
+                mpara["sample_must_be_same"] = para["sample_must_be_same"]
+                methods = mpara["method"]
+                para1 = None
+                if "para1" in mpara.keys():
+                    para1 = mpara["para1"]
+                para2 = None
+                if "para2" in mpara.keys():
+                    para2 = mpara["para2"]
+                for i in range(fo_type_num):
+                    middle_result_part = nmc_verification.nmc_vf_report.perspective.get_middle_veri_result(grd, mpara)
 
-        #print(sta_set.get_para_dict_list_list())
-        #print(sta_list)
-        for key in middle_veri.keys():
-            mpara = middle_veri[key]["para"]
-            mpara["sample_must_be_same"] = para["sample_must_be_same"]
-            #print(mpara)
-            methods = mpara["method"]
-            para1 = None
-            if "para1" in mpara.keys():
-                para1 = mpara["para1"]
-            para2 = None
-            if "para2" in mpara.keys():
-                para2 = mpara["para2"]
-            #print(len(sta_list))
-            middle_result_part = nmc_verification.nmc_vf_product.perspective.get_middle_veri_result(sta_list,mpara,data_name_list)
-            #print(middle_result_part)
-            middle_veri[key]["result"] = middle_veri_result_add(middle_veri[key]["result"],middle_result_part,para["sample_must_be_same"])
-            #print(middle_veri[key]["result"])
-            #veri_result = get_veri_from_middle_result(para,middle_veri)
-            #print()
 
     #print(middle_veri[0]["result"])
     veri_result = get_veri_from_middle_result(para,middle_veri)
@@ -498,8 +467,8 @@ def verification_with_complite_para(para):
         result = veri_result[key]
         result.to_netcdf(path)
         save_dir = para["save_dir"] + "/" + veri_name +"/"
-        plot_set = nmc_verification.nmc_vf_product.perspective.veri_plot_set(subplot=para["plot_set"]["subplot"], legend=para["plot_set"]["legend"],
-                                                 axis=para["plot_set"]["axis"], save_dir=save_dir)
+        plot_set = nmc_verification.nmc_vf_report.perspective.veri_plot_set(subplot=para["plot_set"]["subplot"], legend=para["plot_set"]["legend"],
+                                                                            axis=para["plot_set"]["axis"], save_dir=save_dir)
         plot_type = para["veri_set"][key]["plot_type"]
         if plot_type == "bar":
             plot_set.bar(result)
