@@ -90,3 +90,15 @@ def grid_data(grid,data=None):
     grd.name = "data0"
     return grd
 
+
+def reset(grd):
+    lats = grd["lat"].values
+
+    if lats[0]>lats[1]:
+        lats = grd["lat"].values[::-1]
+        grd['lat'] = lats
+        dat = grd.values[:, :, :, :, ::-1, :]
+        grd.values = dat
+
+        print()
+    return

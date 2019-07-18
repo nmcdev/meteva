@@ -18,7 +18,25 @@ def read_from_micaps3(filename,station = None,time = None,dtime = None,level = N
     """
     try:
         if os.path.exists(filename):
-            file = open(filename,'r')
+            file_type = None
+            try:
+                file = open(filename,'r')
+                str_test = file.readline()
+                file.close()
+                file_type = "gbk"
+            except:
+                file_sta = open(filename, 'r', encoding="UTF-8")
+                str_test = file.readline()
+                file.close()
+                file_type = "utf8"
+
+            if file_type == "gbk":
+                file_sta = open(filename, 'r')
+                file = open(filename, 'r')
+            else:
+                file_sta = open(filename, 'r', encoding="UTF-8")
+                file = open(filename, 'r', encoding="UTF-8")
+
             skip_num = 0
             strs = []
             nline = 0
@@ -38,9 +56,9 @@ def read_from_micaps3(filename,station = None,time = None,dtime = None,level = N
                         break
             file.close()
 
-            file_sta = open(filename)
-            sta1 = pd.read_csv(file_sta, skiprows=skip_num, sep="\s+", header=None, usecols=[0, 1, 2,3,4])
 
+            sta1 = pd.read_csv(file_sta, skiprows=skip_num, sep="\s+", header=None, usecols=[0, 1, 2,3,4])
+            file_sta.close()
             sta1.columns = ['id','lon','lat','alt',data_name]
             sta1.drop_duplicates(keep='first', inplace=True)
             #sta = bd.sta_data(sta1)

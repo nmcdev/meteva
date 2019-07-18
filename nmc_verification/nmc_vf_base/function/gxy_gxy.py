@@ -21,7 +21,7 @@ def interpolation_linear(grd, grid, other_info='left'):
 
     grd0 = nmc_verification.nmc_vf_base.basicdata.get_grid_of_data(grd)
     if (grd0.dlon * grd0.nlon >= 360):
-        grd1 = nmc_verification.nmc_vf_base.basicdata.grid([grd0.slon, grd0.dlon, grd0.elon + grd0.dlon],[grd0.slat, grd0.dlat, grd0.elat])
+        grd1 = nmc_verification.nmc_vf_base.basicdata.grid([grd0.slon, grd0.elon + grd0.dlon,grd0.dlon],[grd0.slat, grd0.elat, grd0.dlat])
         dat1 = np.zeros((grd1.nlat,grd1.nlon))
         dat1[:,0:-1] = dat[:,:]
         dat1[:, -1] = dat[:, 0]
