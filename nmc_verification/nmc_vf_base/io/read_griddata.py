@@ -102,6 +102,7 @@ def read_from_micaps4(filename,grid=None):
                               dims=['member', 'level', 'time', 'dtime', 'lat', 'lon'])
             da.attrs["dtime_type"] = "hour"
             da.name = "data0"
+            nmc_verification.nmc_vf_base.reset(da)
             if grid is None:
                 return da
             else:
@@ -328,12 +329,15 @@ def read_from_nc(filename,grid = None,value_name = None,member = None,level = No
         if "dtime_type" in attrs_name:
             da1.attrs["dtime_type"]= "hour"
 
+        nmc_verification.nmc_vf_base.reset(da1)
         if grid is None:
             da1.name = "data0"
             return da1
         else:
             # 如果传入函数有grid信息，就需要进行一次双线性插值，按照grid信息进行提取网格信息。
+            print(da1)
             da2 = nmc_verification.nmc_vf_base.function.gxy_gxy.interpolation_linear(da1, grid)
+
             da2.name = "data0"
             return da2
     except (Exception, BaseException) as e:
@@ -353,7 +357,7 @@ def read_from_gds_file(filename,grid = None):
         file = open(filename, 'rb')
         byteArray = file.read()
         discriminator = struct.unpack("4s", byteArray[:4])[0].decode("gb2312")
-        t = struct.unpack("h", byteArray[4:6])
+        #t = struct.unpack("h", byteArray[4:6])[0]
         mName = struct.unpack("20s", byteArray[6:26])[0].decode("gb2312")
         eleName = struct.unpack("50s", byteArray[26:76])[0].decode("gb2312")
         description = struct.unpack("30s", byteArray[76:106])[0].decode("gb2312")
@@ -373,11 +377,13 @@ def read_from_gds_file(filename,grid = None):
             grd = nmc_verification.nmc_vf_base.grid_data(grid0)
             grd.values = np.frombuffer(byteArray[278:], dtype='float32').reshape(1,1,1,1,grid0.nlat, grid0.nlon)
             grd.attrs["dtime_type"] = "hour"
+            nmc_verification.nmc_vf_base.reset(grd)
             if (grid is None):
                 grd.name = "data0"
                 return grd
             else:
                 da = nmc_verification.nmc_vf_base.function.gxy_gxy.interpolation_linear(grd, grid)
+                #print(grd)
                 da.name = "data0"
                 return da
     except Exception as e:
