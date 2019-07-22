@@ -8,7 +8,12 @@ import  read
 
 
 def sta_data(dframe0,columns):
-
+    '''
+    sta_data() 对数据进行格式化成为固定格式
+    :param df: dataframe的站点数据
+    :param columns: 文件内包含的数据的列名
+    :return: 包含level', 'time', 'dtime', 'id', 'lon', 'lat', 'alt 列的一个dataframe
+    '''
 
     dframe1 = copy.deepcopy(dframe0)
     dframe1.reset_index(inplace=True)
