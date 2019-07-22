@@ -3,6 +3,12 @@ import copy
 import numpy as np
 
 def sta_data(df,columns = None):
+    '''
+    sta_data() 对数据进行格式化成为固定格式
+    :param df: dataframe的站点数据
+    :param columns: 文件内包含的数据的列名
+    :return: 包含level', 'time', 'dtime', 'id', 'lon', 'lat', 'alt 列的一个dataframe
+    '''
 
     #提取dframe0 列名称
     if columns is None:
