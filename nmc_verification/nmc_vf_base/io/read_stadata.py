@@ -18,25 +18,7 @@ def read_from_micaps3(filename,station = None,time = None,dtime = None,level = N
     """
     try:
         if os.path.exists(filename):
-            file_type = None
-            try:
-                file = open(filename,'r')
-                str_test = file.readline()
-                file.close()
-                file_type = "gbk"
-            except:
-                file_sta = open(filename, 'r', encoding="UTF-8")
-                str_test = file.readline()
-                file.close()
-                file_type = "utf8"
-
-            if file_type == "gbk":
-                file_sta = open(filename, 'r')
-                file = open(filename, 'r')
-            else:
-                file_sta = open(filename, 'r', encoding="UTF-8")
-                file = open(filename, 'r', encoding="UTF-8")
-
+            file = open(filename,'r')
             skip_num = 0
             strs = []
             nline = 0
@@ -56,9 +38,9 @@ def read_from_micaps3(filename,station = None,time = None,dtime = None,level = N
                         break
             file.close()
 
-
+            file_sta = open(filename)
             sta1 = pd.read_csv(file_sta, skiprows=skip_num, sep="\s+", header=None, usecols=[0, 1, 2,3,4])
-            file_sta.close()
+
             sta1.columns = ['id','lon','lat','alt',data_name]
             sta1.drop_duplicates(keep='first', inplace=True)
             #sta = bd.sta_data(sta1)
@@ -110,7 +92,7 @@ def read_station(filename,columns,skiprows = 0):
     """
     读取站点数据
     :param filename:带有站点信息的路径已经文件名
-    :param columns 列数
+    :param columns 列名
     ：skiprows:读取时跳过的行数，默认为：0
     :return:返回带有'level','time','dtime','id','lon','lat','alt','data0'列的dataframe站点信息。
     """
@@ -149,7 +131,7 @@ def read_station(filename,columns,skiprows = 0):
         sta['time'] = nmc_verification.nmc_vf_base.tool.time_tools.str_to_time64("2099010108")
         sta['level'] = 0
         sta['dtime'] = 0
-        sta.coloumns = ['level', 'time', 'dtime', 'id', 'lon', 'lat', 'alt', 'data0']
+        # sta.coloumns = ['level', 'time', 'dtime', 'id', 'lon', 'lat', 'alt', 'data0']
         sta['data0'] = 0
         nmc_verification.nmc_vf_base.basicdata.reset_id(sta)
         return sta
@@ -209,7 +191,7 @@ def read_from_sevp(filename0, element=None):
                     return None
 
             num_list = re.findall(r"\d+", line3)
-            sta1['time'] = nmc_verification.nmc_vf_base.method.time_tools.str_to_time64(num_list[0])
+            sta1['time'] = nmc_verification.nmc_vf_base.tool.time_tools.str_to_time64(num_list[0])
             sta1['id'] = 99999
             sta1['lat'] = 99999
             sta1['lon'] = 99999
