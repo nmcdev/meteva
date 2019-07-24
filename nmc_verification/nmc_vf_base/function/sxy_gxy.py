@@ -54,7 +54,6 @@ def sta_to_grid_idw(sta, grid0,background = None,effectR = 1000,nearNum = 8,othe
     tree = cKDTree(xyz_sta)
     #d,inds 分别是站点到格点的距离和id
     d, inds = tree.query(xyz_grid, k=nearNum)
-
     start = time.time()
     d += 1e-6
     w = 1.0 / d ** 2
@@ -62,7 +61,6 @@ def sta_to_grid_idw(sta, grid0,background = None,effectR = 1000,nearNum = 8,othe
     dat = np.sum(w * input_dat[inds], axis=1) / np.sum(w, axis=1)
     end = time.time()
     print(end- start)
-
     bg = nmc_verification.nmc_vf_base.basicdata.grid_data(grid)
     if(background is not None):
         bg = nmc_verification.nmc_vf_base.function.gxy_gxy.interpolation_linear(background,grid)

@@ -2,9 +2,6 @@
 # 提供Yes/No 类型的预报结果的检验
 
 import numpy as np
-
-
-
 def pc_of_sunny_rainy(Ob, Fo):
     # 晴雨准确率
     hit,mis,fal,cn = abcd_of_sunny_rainy(Ob,Fo)
@@ -32,7 +29,6 @@ def abcd_of_sunny_rainy(Ob,Fo):
     fal = fal_threshold.sum()
     cn = cn_threshold.sum()
     return hit, mis,fal, cn
-
 
 def hit_rate(Ob,Fo,grade_list = None):
     '''
@@ -66,7 +62,6 @@ def fal_rate(Ob,Fo,grade_list= None):
     hit,mis,fal,_ = hmfn(Ob,Fo,grade_list)
     return fal/(hit + fal + 0.0000001)
 
-
 def mis_rate(Ob,Fo,grade_list=None):
     '''
     mis_rate 漏报率评分
@@ -97,7 +92,6 @@ def bias(Ob,Fo,threshold_list=None):
 
     hit, mis, fal, _ = hmfn(Ob, Fo, threshold_list)
     return (hit + fal) / (hit + mis + 0.0000001)
-
 
 def bias_extend(Ob,Fo,threshold_list=None):
     bias0 = bias(Ob,Fo,threshold_list)
