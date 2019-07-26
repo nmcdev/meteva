@@ -42,9 +42,9 @@ def get_from(grd_from, grd_to):
         dat = np.squeeze(data)
         print(dat.shape)
         #切分出两个网格公共区域部分的值
-        fill_data = dat[fslat - slat:felat - slat,fslon - slon:felon -slon ]
+        fill_data = dat[int(fslat - slat):int(felat - slat),int(fslon - slon):int(felon -slon) ]
         #从grd_from中求出公共区域的值，并进行填充
-        gt_data = gt_data.iloc[fslat - tslat:felat - tslat, fslon - tslon:felon - tslon] = fill_data
+        gt_data = gt_data.iloc[int(fslat - tslat):int(felat - tslat), int(fslon - tslon):int(felon - tslon)] = fill_data
         gt_data.fillna(9999, inplace=True)
         grd_to.values = gt_data
         return grd_to
