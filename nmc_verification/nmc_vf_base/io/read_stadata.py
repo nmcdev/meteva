@@ -40,15 +40,6 @@ def read_from_micaps3(filename,station = None,time = None,dtime = None,level = N
 
             file_sta = open(filename)
             sta1 = pd.read_csv(file_sta, skiprows=skip_num, sep="\s+", header=None, usecols=[0, 1, 2,3,4])
-<<<<<<< HEAD
-<<<<<<< HEAD
-            file_sta
-=======
-
->>>>>>> 35d106af3dae6efed36fa56fb3cdcb36d51d33d2
-=======
-
->>>>>>> 35d106af3dae6efed36fa56fb3cdcb36d51d33d2
             sta1.columns = ['id','lon','lat','alt',data_name]
             sta1.drop_duplicates(keep='first', inplace=True)
             #sta = bd.sta_data(sta1)

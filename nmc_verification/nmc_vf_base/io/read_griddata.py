@@ -382,8 +382,6 @@ def read_from_gds_file(filename,grid = None):
                 return da
     except Exception as e:
         print(e)
-<<<<<<< HEAD
-<<<<<<< HEAD
         return None
 
 
@@ -494,9 +492,4 @@ def read_wind_from_micap11(filename,grid = None):
         print(filename + " not exists")
         return None
 
-=======
-        return None
->>>>>>> 35d106af3dae6efed36fa56fb3cdcb36d51d33d2
-=======
-        return None
->>>>>>> 35d106af3dae6efed36fa56fb3cdcb36d51d33d2
+
