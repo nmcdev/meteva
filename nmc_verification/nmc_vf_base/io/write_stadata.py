@@ -46,3 +46,4 @@ def write_to_micaps3(sta0,filename = "a.txt", type = -1,effectiveNum = 4):
         exstr = traceback.format_exc()
         print(exstr)
         return None
+

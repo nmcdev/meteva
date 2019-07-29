@@ -102,7 +102,6 @@ def read_from_micaps4(filename,grid=None):
                               dims=['member', 'level', 'time', 'dtime', 'lat', 'lon'])
             da.attrs["dtime_type"] = "hour"
             da.name = "data0"
-            nmc_verification.nmc_vf_base.reset(da)
             if grid is None:
                 return da
             else:
@@ -320,24 +319,21 @@ def read_from_nc(filename,grid = None,value_name = None,member = None,level = No
             ds.attrs[key] = ds0.attrs[key]
         da1 = ds[name]
         da1.name = "data"
-        if da1.coords['time'] ==0:
+        if da1.coords['time'] is None:
             da1.coords['time'] = pd.date_range("2099-1-1",periods=1)
-        if da1.coords['dtime'] ==0:
+        if da1.coords['dtime'] is None:
             da1.coords['dtime'] = [0]
 
         attrs_name = list(da1.attrs)
         if "dtime_type" in attrs_name:
             da1.attrs["dtime_type"]= "hour"
 
-        nmc_verification.nmc_vf_base.reset(da1)
         if grid is None:
             da1.name = "data0"
             return da1
         else:
             # 如果传入函数有grid信息，就需要进行一次双线性插值，按照grid信息进行提取网格信息。
-            print(da1)
             da2 = nmc_verification.nmc_vf_base.function.gxy_gxy.interpolation_linear(da1, grid)
-
             da2.name = "data0"
             return da2
     except (Exception, BaseException) as e:
@@ -357,7 +353,7 @@ def read_from_gds_file(filename,grid = None):
         file = open(filename, 'rb')
         byteArray = file.read()
         discriminator = struct.unpack("4s", byteArray[:4])[0].decode("gb2312")
-        #t = struct.unpack("h", byteArray[4:6])[0]
+        t = struct.unpack("h", byteArray[4:6])
         mName = struct.unpack("20s", byteArray[6:26])[0].decode("gb2312")
         eleName = struct.unpack("50s", byteArray[26:76])[0].decode("gb2312")
         description = struct.unpack("30s", byteArray[76:106])[0].decode("gb2312")
@@ -377,17 +373,17 @@ def read_from_gds_file(filename,grid = None):
             grd = nmc_verification.nmc_vf_base.grid_data(grid0)
             grd.values = np.frombuffer(byteArray[278:], dtype='float32').reshape(1,1,1,1,grid0.nlat, grid0.nlon)
             grd.attrs["dtime_type"] = "hour"
-            nmc_verification.nmc_vf_base.reset(grd)
             if (grid is None):
                 grd.name = "data0"
                 return grd
             else:
                 da = nmc_verification.nmc_vf_base.function.gxy_gxy.interpolation_linear(grd, grid)
-                #print(grd)
                 da.name = "data0"
                 return da
     except Exception as e:
         print(e)
+<<<<<<< HEAD
+<<<<<<< HEAD
         return None
 
 
@@ -436,3 +432,71 @@ def read_wind_from_gds_file(filename,grid = None):
     except Exception as e:
         print(e)
         return None
+
+def read_wind_from_micaps2(filename,grid = None):
+    if os.path.exists(filename):
+        try:
+            column = nmc_verification.nmc_vf_base.m2_value_column.风向
+            sta_angle = nmc_verification.nmc_vf_base.io.read_stadata.read_from_micaps1_2_8(filename,column)
+            column = nmc_verification.nmc_vf_base.m2_value_column.风速
+            sta_speed = nmc_verification.nmc_vf_base.io.read_stadata.read_from_micaps1_2_8(filename, column)
+            grid_angle = nmc_verification.nmc_vf_base.function.sxy_gxy.transform(sta_angle)
+            grid_angle.values = 270 - grid_angle.values
+            grid_speed = nmc_verification.nmc_vf_base.function.sxy_gxy.transform(sta_speed)
+            wind = nmc_verification.nmc_vf_base.function.gxy_gxym.get_wind_from_speed_angle(grid_speed,grid_angle)
+            nmc_verification.nmc_vf_base.reset(wind)
+            if grid is None:
+                return wind
+            else:
+                wind1 = nmc_verification.nmc_vf_base.function.gxym_gxym.interpolation_linear(wind,grid=grid)
+                return wind1
+        except (Exception, BaseException) as e:
+            exstr = traceback.format_exc()
+            print(exstr)
+            print(e)
+            return None
+    else:
+        print(filename + " not exists")
+        return None
+
+
+def read_wind_from_micap11(filename,grid = None):
+    if os.path.exists(filename):
+        file = open(filename, 'r')
+        str1 = file.read()
+        file.close()
+        strs = str1.split()
+        dlon = float(strs[8])
+        dlat = float(strs[9])
+        slon = float(strs[10])
+        elon = float(strs[11])
+        slat = float(strs[12])
+        elat = float(strs[13])
+        grid0 =nmc_verification.nmc_vf_base.grid([slon,elon,dlon],[slat,elat,dlat])
+        if len(strs) - 15 >= 2 * grid0.nlon * grid0.nlat:
+            k = 16
+            dat_u= (np.array(strs[k:(k + grid0.nlon * grid0.nlat)])).astype(float).reshape((grid0.nlat,grid0.nlon))
+            k += grid0.nlon * grid0.nlat
+            dat_v = (np.array(strs[k:(k + grid0.nlon * grid0.nlat)])).astype(float).reshape((grid0.nlat, grid0.nlon))
+            grid_u = nmc_verification.nmc_vf_base.grid_data(grid0,dat_u)
+            grid_v = nmc_verification.nmc_vf_base.grid_data(grid0,dat_v)
+            wind = nmc_verification.nmc_vf_base.function.gxy_gxym.put_uv_into_wind(grid_u,grid_v)
+            nmc_verification.nmc_vf_base.reset(wind)
+            if grid is None:
+                return wind
+            else:
+                wind1 = nmc_verification.nmc_vf_base.function.gxym_gxym.interpolation_linear(wind, grid=grid)
+                return wind1
+        else:
+            print(filename + " format wrong")
+            return None
+    else:
+        print(filename + " not exists")
+        return None
+
+=======
+        return None
+>>>>>>> 35d106af3dae6efed36fa56fb3cdcb36d51d33d2
+=======
+        return None
+>>>>>>> 35d106af3dae6efed36fa56fb3cdcb36d51d33d2
