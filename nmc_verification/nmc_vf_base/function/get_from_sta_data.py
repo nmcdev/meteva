@@ -3,6 +3,7 @@ import copy
 import pandas as pd
 import numpy as np
 
+#根据所给定的站点value值的起始范围，来筛选在这个范围内符合条件的站点信息。
 def sta_between_value_range(sta,start_value,end_value,start_open = False,end_open = False):
     data_name = nmc_verification.nmc_vf_base.basicdata.get_data_names(sta)[0]
     if start_open:
