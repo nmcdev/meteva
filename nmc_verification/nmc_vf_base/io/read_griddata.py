@@ -102,6 +102,7 @@ def read_from_micaps4(filename,grid=None):
                               dims=['member', 'level', 'time', 'dtime', 'lat', 'lon'])
             da.attrs["dtime_type"] = "hour"
             da.name = "data0"
+            nmc_verification.nmc_vf_base.reset(da)
             if grid is None:
                 return da
             else:
@@ -328,6 +329,7 @@ def read_from_nc(filename,grid = None,value_name = None,member = None,level = No
         if "dtime_type" in attrs_name:
             da1.attrs["dtime_type"]= "hour"
 
+        nmc_verification.nmc_vf_base.reset(da1)
         if grid is None:
             da1.name = "data0"
             return da1
@@ -373,6 +375,7 @@ def read_from_gds_file(filename,grid = None):
             grd = nmc_verification.nmc_vf_base.grid_data(grid0)
             grd.values = np.frombuffer(byteArray[278:], dtype='float32').reshape(1,1,1,1,grid0.nlat, grid0.nlon)
             grd.attrs["dtime_type"] = "hour"
+            nmc_verification.nmc_vf_base.reset(grd)
             if (grid is None):
                 grd.name = "data0"
                 return grd
