@@ -117,3 +117,19 @@ def set_time_dtime_level_name(sta,time = None,dtime = None,level = None,data_nam
     if data_name is not None:
         set_data_name(sta,data_name)
 
+def reset_id(sta):
+    values = sta['id'].values
+    if type(values[0]) == str:
+        int_id = np.zeros(len(values))
+        for i in range(len(values)):
+            strs = values[i]
+            strs_int = ""
+            for s in strs:
+                if s.isdigit():
+                    strs_int += s
+                else:
+                    strs_int += str(ord(s))
+            int_id[i] = int(strs_int)
+        int_id = int_id.astype(np.int32)
+        sta['id'] = int_id
+    return
