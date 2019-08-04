@@ -42,8 +42,9 @@ def transform(sta,dlon = None,dlat = None):
 #站点到格点的反距离插值，对每个格点，获取其最近的几个站点编号、距离, 然后计算权重和。
 def sta_to_grid_idw(sta, grid0,background = None,effectR = 1000,nearNum = 8,other_info='left'):
     data_name = nmc_verification.nmc_vf_base.basicdata.get_data_names(sta)
+    index0 = sta.index[0]
     if other_info=='left':
-        grid = nmc_verification.nmc_vf_base.basicdata.grid(grid0.glon,grid0.glat,[sta.ix[0,'time']],[sta.ix[0,'dtime'],"h"],[sta.ix[0,'level']],data_name)
+        grid = nmc_verification.nmc_vf_base.basicdata.grid(grid0.glon,grid0.glat,[sta.ix[index0,'time']],[sta.ix[index0,'dtime'],"h"],[sta.ix[index0,'level']],data_name)
     else:
         grid = grid0
     xyz_sta =  nmc_verification.nmc_vf_base.tool.math_tools.lon_lat_to_cartesian(sta.ix[:, 'lon'], sta.ix[:, 'lat'], R = nmc_verification.nmc_vf_base.basicdata.const.ER)
