@@ -4,6 +4,7 @@ import math
 import nmc_verification
 import os
 
+
 def write_to_micaps4(da,filename = "a.txt",effectiveNum = 6):
     """
     输出micaps4格式文件
@@ -84,7 +85,8 @@ def write_to_nc(da,filename = "a.txt",scale_factor = 0.01):
     encodingdict = {da.name:{
                         'dtype': 'int16',
                         'scale_factor': scale_factor,
-                        'zlib': True}
+                        # 'zlib': True
+                            }
                     }
     da.to_netcdf(filename,encoding = encodingdict)
 

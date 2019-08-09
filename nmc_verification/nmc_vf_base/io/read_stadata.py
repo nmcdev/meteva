@@ -92,7 +92,7 @@ def read_station(filename,columns,skiprows = 0):
     """
     读取站点数据
     :param filename:带有站点信息的路径已经文件名
-    :param columns 列数
+    :param columns 列名
     ：skiprows:读取时跳过的行数，默认为：0
     :return:返回带有'level','time','dtime','id','lon','lat','alt','data0'列的dataframe站点信息。
     """
@@ -131,7 +131,7 @@ def read_station(filename,columns,skiprows = 0):
         sta['time'] = nmc_verification.nmc_vf_base.tool.time_tools.str_to_time64("2099010108")
         sta['level'] = 0
         sta['dtime'] = 0
-        sta.coloumns = ['level', 'time', 'dtime', 'id', 'lon', 'lat', 'alt', 'data0']
+        # sta.coloumns = ['level', 'time', 'dtime', 'id', 'lon', 'lat', 'alt', 'data0']
         sta['data0'] = 0
         nmc_verification.nmc_vf_base.basicdata.reset_id(sta)
         return sta
@@ -191,7 +191,7 @@ def read_from_sevp(filename0, element=None):
                     return None
 
             num_list = re.findall(r"\d+", line3)
-            sta1['time'] = nmc_verification.nmc_vf_base.method.time_tools.str_to_time64(num_list[0])
+            sta1['time'] = nmc_verification.nmc_vf_base.tool.time_tools.str_to_time64(num_list[0])
             sta1['id'] = 99999
             sta1['lat'] = 99999
             sta1['lon'] = 99999

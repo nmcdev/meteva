@@ -319,9 +319,9 @@ def read_from_nc(filename,grid = None,value_name = None,member = None,level = No
             ds.attrs[key] = ds0.attrs[key]
         da1 = ds[name]
         da1.name = "data"
-        if da1.coords['time'] ==0:
+        if da1.coords['time'] is None:
             da1.coords['time'] = pd.date_range("2099-1-1",periods=1)
-        if da1.coords['dtime'] ==0:
+        if da1.coords['dtime'] is None:
             da1.coords['dtime'] = [0]
 
         attrs_name = list(da1.attrs)
