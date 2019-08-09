@@ -80,7 +80,7 @@ def mis_rate_muti_model(ob_sta, fo_sta_list, grade_list):
 
 def fal_rate_muti_model(ob_sta, fo_sta_list, grade_list):
     '''
-    fal_rate_muti_model 求多模式 fal_rate   漏报率
+    fal_rate_muti_model 求多模式 fal_rate   失败率
     :param ob_sta:  一个实况数据  类型  dataframe
     :param fo_sta_list: 多模式预测数据 列表  类型list  list中的类型是dataframe
     每个dataframe 中的最后一列列名不能相同，表示时空数据的列为在前，列名相同
@@ -118,7 +118,7 @@ def fal_rate_muti_model(ob_sta, fo_sta_list, grade_list):
 #     return hmfn_array
 def hmfn_muti_model(ob_sta, fo_sta_list, grade_list):
     '''
-    bias_muti_model 求多模式 hmfn
+    bias_muti_model 求多模式 hit, hit, mis, fal, cn
     :param ob_sta:  一个实况数据  类型  dataframe
     :param fo_sta_list: 多模式预测数据 列表  类型list  list中的类型是dataframe
     每个dataframe 中的最后一列列名不能相同，表示时空数据的列为在前，列名相同
@@ -159,10 +159,11 @@ def hmfn_muti_model(ob_sta, fo_sta_list, grade_list):
 #     return abcd_array
 def abcd_muti_model(ob_sta, fo_sta_list):
     '''
-    bias_muti_model 求多模式 abcd 晴雨准确率
+    bias_muti_model 求多模式 hit, mis, fal, cn  晴雨准确率
     :param ob_sta:  一个实况数据  类型  dataframe
     :param fo_sta_list: 多模式预测数据 列表  类型list  list中的类型是dataframe
     每个dataframe 中的最后一列列名不能相同，表示时空数据的列为在前，列名相同
+
     :return:
     '''
 
@@ -184,12 +185,12 @@ def abcd_muti_model(ob_sta, fo_sta_list):
 
 def pc_of_sunny_rainy_muti_model(ob_sta, fo_sta_list):
     '''
-        pc_of_sunny_rainy_muti_model 求多模式    pc晴雨准确率
-        :param ob_sta:  一个实况数据  类型  dataframe
-        :param fo_sta_list: 多模式预测数据 列表  类型list  list中的类型是dataframe
-        每个dataframe 中的最后一列列名不能相同，表示时空数据的列为在前，列名相同
-        :return:
-        '''
+    pc_of_sunny_rainy_muti_model 求多模式    pc晴雨准确率
+    :param ob_sta:  一个实况数据  类型  dataframe
+    :param fo_sta_list: 多模式预测数据 列表  类型list  list中的类型是dataframe
+    每个dataframe 中的最后一列列名不能相同，表示时空数据的列为在前，列名相同
+    :return:
+    '''
     fo_sta_list.append(ob_sta)
     intersection_of_data = nmc_verification.nmc_vf_base.function.put_into_sta_data.merge_on_id_and_obTime(fo_sta_list)
 
@@ -207,6 +208,15 @@ def pc_of_sunny_rainy_muti_model(ob_sta, fo_sta_list):
 
 
 def hit_muti_model(ob_sta, fo_sta_list, grade_list):
+    '''
+
+    hit_muti_model 求多模式    命中率
+    :param ob_sta:  一个实况数据  类型  dataframe
+    :param fo_sta_list: 多模式预测数据 列表  类型list  list中的类型是dataframe
+    每个dataframe 中的最后一列列名不能相同，表示时空数据的列为在前，列名相同
+    :param grade_list: 等级  列表list
+    :return:
+    '''
     fo_sta_list.append(ob_sta)
     intersection_of_data = nmc_verification.nmc_vf_base.function.put_into_sta_data.merge_on_id_and_obTime(fo_sta_list)
 
@@ -222,6 +232,15 @@ def hit_muti_model(ob_sta, fo_sta_list, grade_list):
 
 
 def bias_extend_muti_model(ob_sta, fo_sta_list, grade_list):
+    '''
+
+    bias_extend_muti_model 求多模式  bias_extend评分
+    :param ob_sta:  一个实况数据  类型  dataframe
+    :param fo_sta_list: 多模式预测数据 列表  类型list  list中的类型是dataframe
+    每个dataframe 中的最后一列列名不能相同，表示时空数据的列为在前，列名相同
+    :param grade_list: 等级  列表list
+    :return:
+    '''
     fo_sta_list.append(ob_sta)
     intersection_of_data = nmc_verification.nmc_vf_base.function.put_into_sta_data.merge_on_id_and_obTime(fo_sta_list)
 
@@ -236,6 +255,15 @@ def bias_extend_muti_model(ob_sta, fo_sta_list, grade_list):
 
 
 def ets_muti_model(ob_sta, fo_sta_list, grade_list):
+    '''
+
+     ets_muti_model      求多模式 ets评分
+    :param ob_sta:  一个实况数据  类型  dataframe
+    :param fo_sta_list: 多模式预测数据 列表  类型list  list中的类型是dataframe
+    每个dataframe 中的最后一列列名不能相同，表示时空数据的列为在前，列名相同
+    :param grade_list: 等级  列表list
+    :return:
+    '''
     fo_sta_list.append(ob_sta)
     intersection_of_data = nmc_verification.nmc_vf_base.function.put_into_sta_data.merge_on_id_and_obTime(fo_sta_list)
 
