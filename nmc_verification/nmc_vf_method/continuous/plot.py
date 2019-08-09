@@ -1,4 +1,3 @@
-
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
@@ -7,9 +6,9 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 
 
-def scatter_regress(ob, fo, save_path = None,scattercolor='r', scattersize=5, x_label='fo', y_label='bo', fontsize=10, line_color='r'):
-
-    #批量测试降水、温度等要素的绘图结果，获取一组最佳样式
+def scatter_regress(ob, fo, save_path=None, scattercolor='r', scattersize=5, x_label='fo', y_label='bo', fontsize=10,
+                    line_color='r'):
+    # 批量测试降水、温度等要素的绘图结果，获取一组最佳样式
     '''
     scatter_regress 画一张带有回归线的实况和预报数据的散点图，
     :param ob: 实况数据 一维的numpy
@@ -25,15 +24,10 @@ def scatter_regress(ob, fo, save_path = None,scattercolor='r', scattersize=5, x_
     '''
 
     plt.plot(ob, fo, 'o', markerfacecolor=scattercolor, markersize=scattersize)
-    plt.legend(numpoints=3, loc='right')
-    if ob.max() > fo.max():
-        num_max = ob.max()
-    else:
-        num_max = fo.max()
-    if ob.min() > fo.min():
-        num_min = fo.min()
-    else:
-        num_min = ob.min()
+
+    ob_or_fo = np.hstack((ob, fo))
+    num_max = ob_or_fo.max()
+    num_min = ob_or_fo.min()
     X = np.zeros((len(ob), 1))
     X[:, 0] = ob
     clf = LinearRegression().fit(X, fo)
@@ -43,16 +37,17 @@ def scatter_regress(ob, fo, save_path = None,scattercolor='r', scattersize=5, x_
     fo_rg = clf.predict(X)
     plt.plot(ob_line, fo_rg, line_color)
     plt.xlim(num_min - num_min / 5, num_max + num_max / 5)
-    plt.xlabel(x_label,size = fontsize)
+    plt.xlabel(x_label, size=fontsize)
 
-    plt.ylabel(y_label,size = fontsize)
+    plt.ylabel(y_label, size=fontsize)
 
     if save_path is None:
         plt.show()
     else:
         plt.savefig(save_path)
 
-def sorted_ob_fo(ob,fo,save_path = None):
+
+def sorted_ob_fo(ob, fo, save_path=None):
     '''
     sorted_ob_fo 将传入的两组数据先进行排序
     然后画出折线图
@@ -64,12 +59,13 @@ def sorted_ob_fo(ob,fo,save_path = None):
     '''
     ob_sorted = np.sort(ob)
     fo_sorted = np.sort(fo)
-    plt.plot(fo_sorted,ob_sorted)
+    plt.plot(fo_sorted, ob_sorted)
 
     if save_path is None:
         plt.show()
     else:
         plt.savefig(save_path)
+
 
 def box_plot(observed, forecast, save_path=None, x_lable='observation', y_lable='forecast', title='box-plot'):
     '''
@@ -89,7 +85,3 @@ def box_plot(observed, forecast, save_path=None, x_lable='observation', y_lable=
         plt.show()
     else:
         plt.savefig(save_path)
-
-
-
-
