@@ -7,7 +7,7 @@ from sklearn.linear_model import LinearRegression
 
 
 def multi_category_contingency_table(ob, fo, grade_list=None, save_path='multi_category_contingency_table.xls',
-                                     sheet_name = 'Sheet1'):
+                                     sheet_name='Sheet1'):
     '''
     multi_category_contingency_table 多分类预测列联表
     :param ob: 实况数据 一维numpy
@@ -18,9 +18,9 @@ def multi_category_contingency_table(ob, fo, grade_list=None, save_path='multi_c
     '''
     if grade_list is not None:
         for index in range(len(grade_list) - 2):
-            ob_index_list = np.where(grade_list[index] <= ob < grade_list[index + 1])
+            ob_index_list = np.where((grade_list[index] <= ob) & (ob < grade_list[index + 1]))
             ob[ob_index_list] = grade_list[index]
-            fo_index_list = np.where(grade_list[index] <= fo < grade_list[index + 1])
+            fo_index_list = np.where((grade_list[index] <= fo) & (fo < grade_list[index + 1]))
             fo[fo_index_list] = grade_list[index]
         # 此处需修改
 
