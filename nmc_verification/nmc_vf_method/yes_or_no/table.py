@@ -21,9 +21,9 @@ def contingency_table(ob, fo, grade_list=None, save_path='contingency_table.xls'
     #需要更改
     if grade_list is not None:
         for index in range(len(grade_list) - 2):
-            ob_index_list = np.where(grade_list[index] <= ob < grade_list[index + 1])
+            ob_index_list = np.where((grade_list[index] <= ob)& (ob< grade_list[index + 1]))
             ob[ob_index_list] = grade_list[index]
-            fo_index_list = np.where(grade_list[index] <= fo < grade_list[index + 1])
+            fo_index_list = np.where(grade_list[index] <= fo )&(fo< grade_list[index + 1])
             fo[fo_index_list] = grade_list[index]
         # 此处需修改
 
