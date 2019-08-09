@@ -1,18 +1,22 @@
 import pandas as pd
 import numpy as np
 import copy
+import nmc_verification
+import datetime
 
-#两个站点信息合并为一个，在原有的dataframe的基础上增加行数
-def join(sta,sta1):
-    if(sta is None):
+
+# 两个站点信息合并为一个，在原有的dataframe的基础上增加行数
+def join(sta, sta1):
+    if (sta is None):
         return sta1
     else:
-        sta = pd.concat([sta,sta1])
-    sta = sta.reset_index(drop = True)
+        sta = pd.concat([sta, sta1])
+    sta = sta.reset_index(drop=True)
     return sta
 
-#两个站点信息合并为一个，以站号为公共部分，在原有的dataframe的基础上增加列数
-def merge(sta,sta1):
+
+# 两个站点信息合并为一个，以站号为公共部分，在原有的dataframe的基础上增加列数
+def merge(sta, sta1):
     if sta is None:
         return sta1
     elif sta1 is None:
@@ -30,9 +34,10 @@ def merge(sta,sta1):
         df.columns = columns
         return df
 
-#两个站点信息合并为一个，以站号为公共部分，在原有的dataframe的基础上增加列数
-def merge_on_all_dim(sta,sta1):
-    if(sta is None):
+
+# 两个站点信息合并为一个，以站号为公共部分，在原有的dataframe的基础上增加列数
+def merge_on_all_dim(sta, sta1):
+    if (sta is None):
         return sta1
     elif sta1 is None:
         return sta
@@ -41,3 +46,13 @@ def merge_on_all_dim(sta,sta1):
         df = pd.merge(sta, sta1, on=columns, how='inner')
         return df
 
+
+def merge_on_id_and_obTime(sta_list):
+    intersection_of_data = None
+    for sta in sta_list:
+        sta['dtime'] = sta['dtime'].map(lambda x: datetime.timedelta(hours=x))
+        sta['time'] = sta['time'] + sta['dtime']
+        sta['dtime'] = 0
+        intersection_of_data = nmc_verification.nmc_vf_base.function.put_into_sta_data.merge_on_all_dim(
+            intersection_of_data, sta)
+    return intersection_of_data
