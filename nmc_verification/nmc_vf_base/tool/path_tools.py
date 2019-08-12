@@ -157,7 +157,7 @@ def get_time_after_nearest_path(path_model,time,max_seconds,path_list = None):
             nearest_path = path
     return nearest_path
 
-
+#以列表的形式返回根目录下所有文件的路径
 def get_filename_list_in_dir(root_dir,all_path = None):
     if not os.path.exists(root_dir):
         return []
@@ -173,7 +173,7 @@ def get_filename_list_in_dir(root_dir,all_path = None):
 
     return all_path
 
-
+#返回根目录下nc格点文件的长名字
 def get_path_of_grd_nc_longname(root_dir,time,dhour,nc_Fname,fhour_add):
     ruc_file = "{4}_IT_{0}_VT_{1}_FH_{2:0>3d}_AT_{3:0>3d}.nc".format(time.strftime("%Y%m%d%H"),
                                                                      (time + datetime.timedelta(hours=int(dhour))).strftime(
