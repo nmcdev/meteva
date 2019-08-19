@@ -6,8 +6,7 @@ import numpy as np
 import pandas as pd
 
 
-def contingency_table(ob, fo, grade_list=None, save_path='contingency_table.xls', sheet_name='sheet1'):
-
+def contingency_table(ob, fo, grade=None, save_path='contingency_table.xls', sheet_name='sheet1'):
     '''
     multi_category_contingency_table 多分类预测列联表
     :param ob: 实况数据 一维numpy
@@ -17,27 +16,29 @@ def contingency_table(ob, fo, grade_list=None, save_path='contingency_table.xls'
     :return:
     '''
 
+    # 需要更改
+    if grade is not None:
+        shape = ob.shape
+        new_ob = np.zeros(shape, dtype=np.int64)
+        new_fo = np.zeros(shape, dtype=np.int64)
 
-    #需要更改
-    if grade_list is not None:
-        for index in range(len(grade_list) - 2):
-            ob_index_list = np.where((grade_list[index] <= ob)& (ob< grade_list[index + 1]))
-            ob[ob_index_list] = grade_list[index]
-            fo_index_list = np.where(grade_list[index] <= fo )&(fo< grade_list[index + 1])
-            fo[fo_index_list] = grade_list[index]
-        # 此处需修改
-
-    # 通过threshold_list给出的等级划分标准，将ob0，fo0 划分成各个等级
-
+        ob_index_list = np.where(grade <= ob)
+        new_ob[ob_index_list] = 0
+        fo_index_list = np.where(grade <= fo)
+        new_fo[fo_index_list] = 0
+        ob_index_list = np.where(grade > ob)
+        new_ob[ob_index_list] = 1
+        fo_index_list = np.where(grade > fo)
+        new_fo[fo_index_list] = 1
+        ob = new_ob
+        fo = new_fo
     conf_mx = confusion_matrix(ob, fo)
     row_sums = conf_mx.sum(axis=1, keepdims=True)
     conf_mx = np.hstack((conf_mx, row_sums))
     line_sums = conf_mx.sum(axis=0, keepdims=True)
     conf_mx = np.vstack((conf_mx, line_sums))
-
     index = list(set(np.hstack((ob, fo))))
     index.append('sum')
-
     table_data = pd.DataFrame(conf_mx,
                               columns=pd.MultiIndex.from_product([['fo'], index]),
                               index=pd.MultiIndex.from_product([['ob'], index])
