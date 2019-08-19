@@ -76,7 +76,7 @@ def corr(Ob, Fo):
 
 
 # 平均相对误差
-def are(Ob, Fo):
+def mre(Ob, Fo):
     '''
     are  平均绝对值误差
     :param Ob: 实况数据 不定长维度的numpy

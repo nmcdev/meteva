@@ -1,6 +1,6 @@
-def are_skill(are, are_base):
-    if are_base == 0:
+def mre_skill(mre, mre_base):
+    if mre_base == 0:
         return 9999
     else:
-        sare1 = (are_base - are) / are_base
-        return sare1
+        smre1 = (mre_base - mre) / mre_base
+        return smre1
