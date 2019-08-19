@@ -6,7 +6,7 @@ import datetime
 
 # ts_array = ts_array.reshape((len(fo_sta_list), len(grade_list)))
 # TS评分
-def ts_muti_model(ob_sta, fo_sta_list, grade_list):
+def ts_muti_model(ob_sta, fo_sta_list, grade_list=None):
     '''
     求多模式 ts
     :param ob_sta: 一个实况数据  类型  dataframe
@@ -24,7 +24,7 @@ def ts_muti_model(ob_sta, fo_sta_list, grade_list):
     ob_data = ob_data.values
     ts_list = []
     for fo_of_data in intersection_of_data.iloc[:, 7:-1]:
-        fo_of_data = fo_of_data.values
+        fo_of_data = intersection_of_data[fo_of_data].values
         ts = nmc_verification.nmc_vf_method.yes_or_no.score.ts(ob_data, fo_of_data, grade_list)
         ts_list.append(ts)
     return ts_list
@@ -48,7 +48,7 @@ def bias_muti_model(ob_sta, fo_sta_list, grade_list):
     ob_data = ob_data.values
     bias_list = []
     for fo_of_data in intersection_of_data.iloc[:, 7:-1]:
-        fo_of_data = fo_of_data.values
+        fo_of_data = intersection_of_data[fo_of_data].values
         bias_score = nmc_verification.nmc_vf_method.yes_or_no.score.bias(ob_data, fo_of_data, grade_list)
         bias_list.append(bias_score)
 
@@ -71,7 +71,7 @@ def mis_rate_muti_model(ob_sta, fo_sta_list, grade_list):
     ob_data = ob_data.values
     mis_rate_list = []
     for fo_of_data in intersection_of_data.iloc[:, 7:-1]:
-        fo_of_data = fo_of_data.values
+        fo_of_data = intersection_of_data[fo_of_data].values
         mis_rate_score = nmc_verification.nmc_vf_method.yes_or_no.score.mis_rate(ob_data, fo_of_data, grade_list)
         mis_rate_list.append(mis_rate_score)
 
@@ -94,7 +94,7 @@ def fal_rate_muti_model(ob_sta, fo_sta_list, grade_list):
     ob_data = ob_data.values
     fal_rate_list = []
     for fo_of_data in intersection_of_data.iloc[:, 7:-1]:
-        fo_of_data = fo_of_data.values
+        fo_of_data = intersection_of_data[fo_of_data].values
         fal_rate_score = nmc_verification.nmc_vf_method.yes_or_no.score.fal_rate(ob_data, fo_of_data, grade_list)
         fal_rate_list.append(fal_rate_score)
     return fal_rate_list
@@ -132,7 +132,7 @@ def hmfn_muti_model(ob_sta, fo_sta_list, grade_list):
     ob_data = ob_data.values
     re_list = []
     for fo_of_data in intersection_of_data.iloc[:, 7:-1]:
-        fo_of_data = fo_of_data.values
+        fo_of_data = intersection_of_data[fo_of_data].values
         hit, mis, fal, cn = nmc_verification.nmc_vf_method.yes_or_no.score.hmfn(ob_data, fo_of_data, grade_list)
         re_list.append(hit.tolist())
         re_list.append(mis.tolist())
@@ -174,8 +174,8 @@ def abcd_muti_model(ob_sta, fo_sta_list):
     ob_data = ob_data.values
     re_list = []
     for fo_of_data in intersection_of_data.iloc[:, 7:-1]:
-        fo_of_data = fo_of_data.values
-        hit, mis, fal, cn = nmc_verification.nmc_vf_method.yes_or_no.score.abcd_of_sunny_rainy(ob_data, fo_of_data)
+        fo_of_data = intersection_of_data[fo_of_data].values
+        hit, mis, fal, cn = nmc_verification.nmc_vf_method.yes_or_no.score.hmfn_of_sunny_rainy(ob_data, fo_of_data)
         re_list.append(hit.tolist())
         re_list.append(mis.tolist())
         re_list.append(fal.tolist())
@@ -198,12 +198,9 @@ def pc_of_sunny_rainy_muti_model(ob_sta, fo_sta_list):
     ob_data = ob_data.values
     re_list = []
     for fo_of_data in intersection_of_data.iloc[:, 7:-1]:
-        fo_of_data = fo_of_data.values
-        hit, mis, fal, cn = nmc_verification.nmc_vf_method.yes_or_no.score.pc_of_sunny_rainy(ob_data, fo_of_data)
-        re_list.append(hit.tolist())
-        re_list.append(mis.tolist())
-        re_list.append(fal.tolist())
-        re_list.append(cn.tolist())
+        fo_of_data = intersection_of_data[fo_of_data].values
+        cm = nmc_verification.nmc_vf_method.yes_or_no.score.pc_of_sunny_rainy(ob_data, fo_of_data)
+        re_list.append(cm)
     return re_list
 
 
@@ -224,7 +221,7 @@ def hit_muti_model(ob_sta, fo_sta_list, grade_list):
     ob_data = ob_data.values
     mis_rate_list = []
     for fo_of_data in intersection_of_data.iloc[:, 7:-1]:
-        fo_of_data = fo_of_data.values
+        fo_of_data = intersection_of_data[fo_of_data].values
         mis_rate_score = nmc_verification.nmc_vf_method.yes_or_no.score.hit_rate(ob_data, fo_of_data, grade_list)
         mis_rate_list.append(mis_rate_score)
 
@@ -248,7 +245,7 @@ def bias_extend_muti_model(ob_sta, fo_sta_list, grade_list):
     ob_data = ob_data.values
     bias_extend_list = []
     for fo_of_data in intersection_of_data.iloc[:, 7:-1]:
-        fo_of_data = fo_of_data.values
+        fo_of_data = intersection_of_data[fo_of_data].values
         bias_extend_score = nmc_verification.nmc_vf_method.yes_or_no.score.bias_extend(ob_data, fo_of_data, grade_list)
         bias_extend_list.append(bias_extend_score)
     return bias_extend_list
@@ -271,7 +268,7 @@ def ets_muti_model(ob_sta, fo_sta_list, grade_list):
     ob_data = ob_data.values
     ets_list = []
     for fo_of_data in intersection_of_data.iloc[:, 7:-1]:
-        fo_of_data = fo_of_data.values
+        fo_of_data = intersection_of_data[fo_of_data].values
         ets_score = nmc_verification.nmc_vf_method.yes_or_no.score.ets(ob_data, fo_of_data, grade_list)
         ets_list.append(ets_score)
     return ets_list
