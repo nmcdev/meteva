@@ -2,6 +2,7 @@ import nmc_verification.nmc_vf_base.function.put_into_sta_data as pisd
 import nmc_verification
 from sklearn.metrics import confusion_matrix
 import nmc_verification.nmc_vf_method.multi_category.table as table
+import string
 
 
 def multi_mode_and_multi_classification_predictive_contingency_table(ob, fo_list, grade_list=None, save_path=None):
@@ -16,17 +17,20 @@ def multi_mode_and_multi_classification_predictive_contingency_table(ob, fo_list
     '''
     fo_list.append(ob)
     meger_df_data = pisd.merge_on_id_and_obTime(fo_list)
+
+    meger_df_data.to_csv('aa.csv')
     ob_data = meger_df_data.iloc[:, -1]
     ob_data = ob_data.values
-    if grade_list is None:
-        colnums = ['level', 'id', 'time']
-        title = ''
-        for colnum in colnums:
-            the_duplicate_values = meger_df_data[colnum].unique()
-            if len(the_duplicate_values) == 1:
-                title = title + str(the_duplicate_values[0])
-        save_path = title + '.xls'
+    colnums = ['level', 'id', 'time']
+    title = ''
+    for colnum in colnums:
+        the_duplicate_values = meger_df_data[colnum].unique()
+        if len(the_duplicate_values) == 1:
+            title = title + str(the_duplicate_values[0])
+    if ':' in title:
+        title = title[:-13]
+        title = title.translate(str.maketrans(':', ':', string.punctuation))
+    save_path = title + '.xls'
     for fo_of_colnum in meger_df_data.iloc[:, 7:-1]:
         fo_of_data = meger_df_data[fo_of_colnum].values
-        table.multi_category_contingency_table(ob_data, fo_of_data, grade_list=grade_list, sheet_name=fo_of_colnum,
-                                               save_path=save_path)
+        table.multi_category_contingency_table(ob_data, fo_of_data, grade_list=grade_list, save_path=save_path)

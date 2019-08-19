@@ -26,21 +26,25 @@ def frequency_histogram_muti_model(ob, fo_list, clevs, x_lable='frequency', save
     '''
     fo_list.append(ob)
     meger_df_data = pisd.merge_on_id_and_obTime(fo_list)
+
     ob = meger_df_data.iloc[:, -1].values
 
-    data_len = len(fo_list)
-    plt.figure(figsize=[6.4 * data_len, 4.8])
+    data_len = len(fo_list)-1
+    fig,axs = plt.subplots(1,data_len,figsize=(4*data_len, 4))
+    plt.subplots_adjust(left=0.05, bottom=0.1, right=0.95, top=0.88,
+                        wspace=0.2, hspace=0.2)
 
     colnums = ['level', 'id', 'time']
     title = ''
     for colnum in colnums:
-        the_duplicate_values = fo_list[colnum].unique()
+        the_duplicate_values = meger_df_data[colnum].unique()
         if len(the_duplicate_values) == 1:
             title = title + str(the_duplicate_values[0])
-    plt.suptitle(title)
+
     for index, fo_of_colnum in enumerate(meger_df_data.iloc[:, 7:-1]):
         fo = meger_df_data[fo_of_colnum].values
-        plt.subplot(1, data_len, index + 1)
+        #axe1 = plt.subplot(1, data_len, index + 1)
+        axe1 = axs[index]
         p_ob = []
         p_fo = []
 
@@ -57,17 +61,17 @@ def frequency_histogram_muti_model(ob, fo_list, clevs, x_lable='frequency', save
         p_fo.append(len(index0[0]) / len(fo))
         xticklabels.append('>=' + str(clevs[-1]))
         x = np.arange(0, len(p_ob))
-        ax3 = plt.axes()
 
-        ax3.bar(x + 0.1, p_ob, width=width, facecolor=left_color, label=left_label)
-        ax3.bar(x - 0.1, p_fo, width=width, facecolor=right_color, label=right_label)
-        ax3.legend(loc=legend_location)
-        ax3.set_xlabel(x_lable, fontsize=10)
-        ax3.set_xticks(x)
-        ax3.set_xticklabels(xticklabels, fontsize=9)
-        ax3.set_ylabel(y_lable, fontsize=10)
-        ax3.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(100))
-        plt.title(fo_of_colnum)
+        axe1.bar(x + 0.1, p_ob, width=width, facecolor=left_color, label=left_label)
+        axe1.bar(x - 0.1, p_fo, width=width, facecolor=right_color, label=right_label)
+        axe1.legend()
+        axe1.set_xlabel(x_lable, fontsize=10)
+        axe1.set_xticks(x)
+        axe1.set_xticklabels(xticklabels, fontsize=9)
+        axe1.set_ylabel(y_lable, fontsize=10)
+        axe1.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(100))
+        axe1.set_title(fo_of_colnum)
+    plt.suptitle(title)
     if save_path is None:
         plt.show()
     else:
