@@ -29,7 +29,7 @@ def reliability_diagrams_muti_model(ob, fo_list, grade_list=None, save_path=None
     colnums = ['level', 'id', 'time']
     title = ''
     for colnum in colnums:
-        the_duplicate_values = fo_list[colnum].unique()
+        the_duplicate_values = meger_df_data[colnum].unique()
         if len(the_duplicate_values) == 1:
             title = title + str(the_duplicate_values[0])
     plt.suptitle(title)
@@ -40,7 +40,6 @@ def reliability_diagrams_muti_model(ob, fo_list, grade_list=None, save_path=None
             clevs = np.arange(0, 1.0, 10)  # 如果没有给定概率等级，就设置默认等级
         else:
             clevs = grade_list
-
         orfs = [0]
         for i in range(1, len(clevs)):
             index0 = np.where((fo > clevs[i - 1]) & (fo <= clevs[i]))
