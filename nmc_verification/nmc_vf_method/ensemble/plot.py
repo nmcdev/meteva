@@ -8,7 +8,9 @@ def box_plot(observed, forecast, save_path=None, x_lable='observation', y_lable=
     box_plot 画一两组数据的箱型图
     ---------------
     :param observed:实况数据 一维的numpy
-    :param forecast:预测数据 一维的numpy
+    :param forecast:预测数据 二
+
+    、维的numpy
     :param save_path: 保存数据的路径
     :param x_lable: 横坐标的标签
     :param y_lable:纵坐标标签
