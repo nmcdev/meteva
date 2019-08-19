@@ -1,60 +1,45 @@
 import numpy as np
-import matplotlib as mpl
 import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
 
 
-def frequency_histogram(ob, fo, clevs, x_lable='frequency', save_path=None,
-                        y_lable='range', left_label='Obs', right_label='Pred',
-                        left_color='r', right_color='b', legend_location="upper right", width=0.2):
+def reliability_diagrams(ob, fo, grade_list=None, save_path=None, diagona_color='r', regression_line_color='g',
+                         broken_line_color='b'):
     '''
-    frequency_histogram 对比测试数据和实况数据的发生的频率
-    :param ob:一个实况数据  类型  numpy
-    :param fo: 预测数据 一维的numpy
-    :param clevs: 等级 一个列表
-    :param x_lable: 横坐标的名字
+    reliability_diagrams  可靠性图
+    ----------------------------
+    :param ob: 实况数据 一维numpy
+    :param fo: 预测数据 一维numpy
+    :param grade_list: 等级
     :param save_path: 保存地址
-    :param y_lable: 纵坐标的名字
-    :param left_label: 左标注名字
-    :param right_label: 右标注名字
-    :param left_color: 左柱状图的颜色
-    :param right_color: 右柱状图颜色
-    :param legend_location: 标注所处的地点
-    :param width: 宽度
+    :param diagona_color:理想线颜色
+    :param regression_line_color: 回归线颜色
+    :param broken_line_color: 折线颜色
     :return:
     '''
-    p_ob = []
-    p_fo = []
+    if grade_list is None:
+        clevs = np.arange(0, 1.0, 10)  # 如果没有给定概率等级，就设置默认等级
+    else:
+        clevs = grade_list
 
-    xticklabels = []
+    orfs = [0]
+    for i in range(1, len(clevs)):
+        index0 = np.where((fo > clevs[i - 1]) & (fo <= clevs[i]))
+        num = np.sum(ob[index0] == 1)
+        lenght = len(index0)
+        orf = num / lenght
+        orfs.append(orf)
+    orfs = np.array(orfs)
+    X = np.array(clevs)
+    X = X.reshape((len(X), -1))
+    model = LinearRegression().fit(X, orfs)
+    y = model.predict(X)
+    plt.plot(X, y, color=regression_line_color)
+    plt.plot(clevs, orfs, color=broken_line_color)
+    plt.scatter(clevs, orfs, color=broken_line_color)
+    plt.plot([0, 1], [0, 1], color=diagona_color)
 
-    for i in range(0, len(clevs) - 1):
-        index0 = np.where((ob >= clevs[i]) & (ob < clevs[i + 1]))
-        xticklabels.append(str(clevs[i]) + '-' + str(clevs[i + 1]))
-        p_ob.append(len(index0[0]) / len(ob))
-        index0 = np.where((fo >= clevs[i]) & (fo < clevs[i + 1]))
-        p_fo.append(len(index0[0]) / len(fo))
-    index0 = np.where(ob >= clevs[-1])
-    p_ob.append(len(index0[0]) / len(ob))
-    index0 = np.where(fo >= clevs[-1])
-    p_fo.append(len(index0[0]) / len(fo))
-    xticklabels.append('>=' + str(clevs[-1]))
-    x = np.arange(0, len(p_ob))
-    ax3 = plt.axes()
-
-    ax3.bar(x + 0.1, p_ob, width=width, facecolor=left_color, label=left_label)
-    ax3.bar(x - 0.1, p_fo, width=width, facecolor=right_color, label=right_label)
-    ax3.legend(loc=legend_location)
-    ax3.set_xlabel(x_lable, fontsize=10)
-    ax3.set_xticks(x)
-    ax3.set_xticklabels(xticklabels, fontsize=9)
-    ax3.set_ylabel(y_lable, fontsize=10)
-    ax3.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(100))
     if save_path is None:
         plt.show()
     else:
         plt.savefig(save_path)
-
-
-ob = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
-fo = np.array([2, 1, 3, 4, 5, 6, 7, 8, 9])
-frequency_histogram(ob, fo, clevs=[3, 6])
