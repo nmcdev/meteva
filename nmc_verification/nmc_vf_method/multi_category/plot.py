@@ -55,6 +55,4 @@ def frequency_histogram(ob, fo, clevs, x_lable='frequency', save_path=None,
         plt.savefig(save_path)
 
 
-ob = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
-fo = np.array([2, 1, 3, 4, 5, 6, 7, 8, 9])
-frequency_histogram(ob, fo, clevs=[3, 6])
+

@@ -23,10 +23,14 @@ def accuracy(ob, fo, grade_list=None):
     else:
         # ob 和fo 是连续的变量，通过 threshold_list 将ob 和fo划分成连续的等级之后再计算等级准确性
         for index in range(len(grade_list) - 1):
-            ob_index_list = np.where((grade_list[index] <= ob)and(ob < grade_list[index + 1]))
+            ob_index_list = np.where((grade_list[index] <= ob) & (ob < grade_list[index + 1]))
             ob[ob_index_list] = grade_list[index]
-            fo_index_list = np.where((grade_list[index] <= fo) and(fo< grade_list[index + 1]))
+            fo_index_list = np.where((grade_list[index] <= fo) & (fo < grade_list[index + 1]))
             fo[fo_index_list] = grade_list[index]
+        ob_index_list = np.where(grade_list[-1] <= ob)
+        ob[ob_index_list] = grade_list[-1]
+        fo_index_list = np.where(grade_list[-1] <= fo)
+        fo[fo_index_list] = grade_list[-1]
         ob1 = ob  # 此处需修改
         fo1 = fo  # 此处需修改
 
@@ -57,13 +61,16 @@ def hss(ob, fo, grade_list=None):
     else:
         # ob 和fo 是连续的变量，通过 threshold_list 将ob 和fo划分成连续的等级之后再计算等级准确性
         for index in range(len(grade_list) - 1):
-            ob_index_list = np.where((grade_list[index] <= ob)and (ob < grade_list[index + 1]))
+            ob_index_list = np.where((grade_list[index] <= ob) & (ob < grade_list[index + 1]))
             ob[ob_index_list] = grade_list[index]
-            fo_index_list = np.where((grade_list[index] <= fo)and (fo< grade_list[index + 1]))
+            fo_index_list = np.where((grade_list[index] <= fo) & (fo < grade_list[index + 1]))
             fo[fo_index_list] = grade_list[index]
+        ob_index_list = np.where(grade_list[-1] <= ob)
+        ob[ob_index_list] = grade_list[-1]
+        fo_index_list = np.where(grade_list[-1] <= fo)
+        fo[fo_index_list] = grade_list[-1]
         ob1 = ob  # 此处需修改
         fo1 = fo  # 此处需修改
-
 
     ob2 = set(ob1)
     fo2 = set(fo1)
@@ -103,13 +110,16 @@ def hk(ob, fo, grade_list=None):
     else:
         # ob 和fo 是连续的变量，通过 threshold_list 将ob 和fo划分成连续的等级之后再计算等级准确性
         for index in range(len(grade_list) - 1):
-            ob_index_list = np.where((grade_list[index] <= ob)and (ob < grade_list[index + 1]))
+            ob_index_list = np.where((grade_list[index] <= ob) & (ob < grade_list[index + 1]))
             ob[ob_index_list] = grade_list[index]
-            fo_index_list = np.where((grade_list[index] <= fo)and (fo< grade_list[index + 1]))
+            fo_index_list = np.where((grade_list[index] <= fo) & (fo < grade_list[index + 1]))
             fo[fo_index_list] = grade_list[index]
+        ob_index_list = np.where(grade_list[-1] <= ob)
+        ob[ob_index_list] = grade_list[-1]
+        fo_index_list = np.where(grade_list[-1] <= fo)
+        fo[fo_index_list] = grade_list[-1]
         ob1 = ob  # 此处需修改
         fo1 = fo  # 此处需修改
-
 
     ob2 = set(ob1)
     fo2 = set(fo1)
