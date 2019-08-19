@@ -18,7 +18,7 @@ def me_muti_model(ob_sta, fo_sta_list):
     ob_data = ob_data.values
     me_list = []
     for fo_of_data in intersection_of_data.iloc[:, 7:-1]:
-        fo_of_data = fo_of_data.values
+        fo_of_data = intersection_of_data[fo_of_data].values
         me_score = nmc_verification.nmc_vf_method.continuous.score.me(ob_data, fo_of_data)
         me_list.append(me_score)
 
@@ -41,7 +41,7 @@ def mae_muti_model(ob_sta, fo_sta_list):
     ob_data = ob_data.values
     mae_list = []
     for fo_of_data in intersection_of_data.iloc[:, 7:-1]:
-        fo_of_data = fo_of_data.values
+        fo_of_data = intersection_of_data[fo_of_data].values
         mae_score = nmc_verification.nmc_vf_method.continuous.score.mae(ob_data, fo_of_data)
         mae_list.append(mae_score)
 
@@ -64,8 +64,8 @@ def mse_muti_model(ob_sta, fo_sta_list):
     ob_data = ob_data.values
     mse_list = []
     for fo_of_data in intersection_of_data.iloc[:, 7:-1]:
-        fo_of_data = fo_of_data.values
-        mse_score = nmc_verification.nmc_vf_method.continuous.score.msse(ob_data, fo_of_data)
+        fo_of_data = intersection_of_data[fo_of_data].values
+        mse_score = nmc_verification.nmc_vf_method.continuous.score.mse(ob_data, fo_of_data)
         mse_list.append(mse_score)
 
     return mse_list
@@ -87,7 +87,7 @@ def rmse_muti_model(ob_sta, fo_sta_list):
     ob_data = ob_data.values
     rmse_list = []
     for fo_of_data in intersection_of_data.iloc[:, 7:-1]:
-        fo_of_data = fo_of_data.values
+        fo_of_data = intersection_of_data[fo_of_data].values
         rmse_score = nmc_verification.nmc_vf_method.continuous.score.rmse(ob_data, fo_of_data)
         rmse_list.append(rmse_score)
 
@@ -110,7 +110,7 @@ def bias_muti_model(ob_sta, fo_sta_list):
     ob_data = ob_data.values
     bias_list = []
     for fo_of_data in intersection_of_data.iloc[:, 7:-1]:
-        fo_of_data = fo_of_data.values
+        fo_of_data = intersection_of_data[fo_of_data].values
         bias_score = nmc_verification.nmc_vf_method.continuous.score.bias(ob_data, fo_of_data)
         bias_list.append(bias_score)
 
@@ -133,7 +133,7 @@ def corr_muti_model(ob_sta, fo_sta_list):
     ob_data = ob_data.values
     corr_list = []
     for fo_of_data in intersection_of_data.iloc[:, 7:-1]:
-        fo_of_data = fo_of_data.values
+        fo_of_data = intersection_of_data[fo_of_data].values
         corr_score = nmc_verification.nmc_vf_method.continuous.score.corr(ob_data, fo_of_data)
         corr_list.append(corr_score)
 
@@ -143,7 +143,7 @@ def corr_muti_model(ob_sta, fo_sta_list):
 import copy
 
 
-def are_muti_model(ob_sta, fo_sta_list):
+def mre_muti_model(ob_sta, fo_sta_list):
     '''
     are_muti_model  多模式下 are——平均绝对值误差
     :param ob_sta:  一个实况数据  类型  dataframe
@@ -158,8 +158,8 @@ def are_muti_model(ob_sta, fo_sta_list):
     ob_data = ob_data.values
     are_list = []
     for fo_of_data in intersection_of_data.iloc[:, 7:-1]:
-        fo_of_data = fo_of_data.values
-        are_score = nmc_verification.nmc_vf_method.continuous.score.are(ob_data, fo_of_data)
+        fo_of_data = intersection_of_data[fo_of_data].values
+        are_score = nmc_verification.nmc_vf_method.continuous.score.mre(ob_data, fo_of_data)
         are_list.append(are_score)
 
     return are_list

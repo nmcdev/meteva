@@ -1,4 +1,3 @@
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 import numpy as np
@@ -6,7 +5,6 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 
 import nmc_verification.nmc_vf_base.function.put_into_sta_data as pisd
-
 
 
 def scatter_regress_muti_model(ob, fo_df_list, save_path=None, scattercolor='r', scattersize=5,
@@ -26,22 +24,24 @@ def scatter_regress_muti_model(ob, fo_df_list, save_path=None, scattercolor='r',
     '''
     fo_df_list.append(ob)
     meger_df_data = pisd.merge_on_id_and_obTime(fo_df_list)
-    ob = meger_df_data.iloc[:, -1].values
 
+    ob = meger_df_data.iloc[:, -1].values
     data_len = len(fo_df_list)
     plt.figure(figsize=[6.4 * data_len, 4.8])
 
     colnums = ['level', 'id', 'time']
     title = ''
     for colnum in colnums:
-        the_duplicate_values = fo_df_list[colnum].unique()
+        the_duplicate_values = meger_df_data[colnum].unique()
         if len(the_duplicate_values) == 1:
             title = title + str(the_duplicate_values[0])
     plt.suptitle(title)
-    for index, fo_of_colnum in enumerate( meger_df_data.iloc[:, 7:-1]):
+    for index, fo_of_colnum in enumerate(meger_df_data.iloc[:, 7:-1]):
         fo = meger_df_data[fo_of_colnum].values
         plt.subplot(1, data_len, index + 1)
         plt.plot(ob, fo, 'o', markerfacecolor=scattercolor, markersize=scattersize)
+        # print(ob)
+        # print(fo)
         ob_or_fo = np.hstack((ob, fo))
         num_max = ob_or_fo.max()
         num_min = ob_or_fo.min()
@@ -80,28 +80,27 @@ def box_plot_muti_model(ob, fo_df_list, save_path=None, x_lable='observation', y
     '''
     fo_df_list.append(ob)
     meger_df_data = pisd.merge_on_id_and_obTime(fo_df_list)
+
     colnums = ['level', 'id', 'time']
     title = ''
     for colnum in colnums:
         the_duplicate_values = meger_df_data[colnum].unique()
         if len(the_duplicate_values) == 1:
             title = title + str(the_duplicate_values[0])
-    plt.title(title)
+
     ob = meger_df_data.iloc[:, -1]
     meger_df_data.drop(meger_df_data.columns[-1], axis=1, inplace=True)
-    meger_df_data = meger_df_data.insert(7, 'ob', ob)
-    labels= meger_df_data.columns[7:]
+    meger_df_data.insert(7, 'ob', ob)
+    labels = meger_df_data.columns[7:]
     ob_and_fo_data = meger_df_data.iloc[:, 7:]
     ob_and_fo_ndarray_T = ob_and_fo_data.values.T
     ob_and_fo_tuple_T = tuple(ob_and_fo_ndarray_T)
-
     plt.boxplot(ob_and_fo_tuple_T, labels=labels)
     plt.title(title)
     if save_path is None:
         plt.show()
     else:
         plt.savefig(save_path)
-
 
 
 def sorted_ob_fo_muti_model(ob, fo_list, save_path=None):
@@ -118,12 +117,13 @@ def sorted_ob_fo_muti_model(ob, fo_list, save_path=None):
     ob = meger_df_data.iloc[:, -1].values
 
     data_len = len(fo_list)
-    plt.figure(figsize=[6.4 * data_len, 4.8])
+    plt.figure(figsize=[10 * data_len, 4.8])
 
     colnums = ['level', 'id', 'time']
     title = ''
     for colnum in colnums:
-        the_duplicate_values = fo_list[colnum].unique()
+        the_duplicate_values = meger_df_data[colnum].unique()
+
         if len(the_duplicate_values) == 1:
             title = title + str(the_duplicate_values[0])
     plt.suptitle(title)
