@@ -41,11 +41,11 @@ while time0 <etime:
             sta_all = nv.nmc_vf_base.function.put_into_sta_data.join(sta_all,sta_merge)
 #print(sta_all)
 
-sta_data_set = nv.nmc_vf_product.perspective.sta_data_set(sta_all)
+sta_data_set = nmc_verification.nmc_vf_report.perspective.sta_data_set(sta_all)
 sta_data_set.set_dhour_unfold()
-veri_result = nv.nmc_vf_product.perspective.veri_result_set(["ts",'bias'],[0.1,10,25,50,100],sta_data_set)
+veri_result = nmc_verification.nmc_vf_report.perspective.veri_result_set(["ts", 'bias'], [0.1, 10, 25, 50, 100], sta_data_set)
 result = veri_result.get_veri_result()
-plot_set = nv.nmc_vf_product.perspective.veri_plot_set(subplot="method",legend="member",axis="dhour")
+plot_set = nmc_verification.nmc_vf_report.perspective.veri_plot_set(subplot="method", legend="member", axis="dhour")
 
 plot_set.bar(result)
 

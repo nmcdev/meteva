@@ -8,7 +8,7 @@ import traceback
 import re
 
 
-def read_from_micaps3(filename,station = None,reserve_time_dtime_level = True,data_name = 'data0'):
+def read_from_micaps3(filename,station = None,time = None,dtime = None,level = None,data_name = 'data0'):
     """
     读取micaps3格式文件转换为pandas中dataframe结构的数据
     :param station:站号，默认：None
@@ -46,27 +46,38 @@ def read_from_micaps3(filename,station = None,reserve_time_dtime_level = True,da
             #sta = bd.sta_data(sta1)
             sta = nmc_verification.nmc_vf_base.basicdata.sta_data(sta1)
             #print(sta)
-            if(reserve_time_dtime_level):
-                y2 = ""
-                if len(strs[3]) == 2:
-                    year = int(strs[3])
-                    if year >= 50:
-                        y2 = '19'
-                    else:
-                        y2 = '20'
-                if len(strs[3]) == 1: strs[3] = "0"+ strs[3]
-                if len(strs[4]) == 1: strs[4] = "0" + strs[4]
-                if len(strs[5]) == 1: strs[5] = "0" + strs[5]
-                if len(strs[6]) == 1: strs[6] = "0" + strs[6]
 
-                time_str = y2 + strs[3] + strs[4] + strs[5] + strs[6]
-                #time64 = method.time_tools.str_to_time64(time_str)
-                time64 = nmc_verification.nmc_vf_base.method.time_tools.str_to_time64(time_str)
+            y2 = ""
+            if len(strs[3]) == 2:
+                year = int(strs[3])
+                if year >= 50:
+                    y2 = '19'
+                else:
+                    y2 = '20'
+            if len(strs[3]) == 1: strs[3] = "0"+ strs[3]
+            if len(strs[4]) == 1: strs[4] = "0" + strs[4]
+            if len(strs[5]) == 1: strs[5] = "0" + strs[5]
+            if len(strs[6]) == 1: strs[6] = "0" + strs[6]
+
+            time_str = y2 + strs[3] + strs[4] + strs[5] + strs[6]
+            time_file = nmc_verification.nmc_vf_base.tool.time_tools.str_to_time(time_str)
+            if(level is None):
                 level = int(strs[7])
-                if level < 0: level = 0
-                sta['time'] = time64
-                sta['level'] = level
-                sta['dtime'] = np.timedelta64(0,'h')
+            if level < 0: level = 0
+            sta['level'] = level
+
+            if time is None:
+                sta['time'] = time_file
+            else:
+                sta['time'] = time
+            if dtime is None:
+                sta['dtime'] = 0
+            else:
+                if dtime[-1][0] == "h":
+                    sta['dtime'] = dtime[0]
+                else:
+                    sta['dtime'] = 10000 + dtime[0]
+
             if(station is not None):
                 sta = nmc_verification.nmc_vf_base.function.sxy_sxy.set_data_to(sta, station)
             return sta
@@ -81,15 +92,24 @@ def read_station(filename,columns,skiprows = 0):
     """
     读取站点数据
     :param filename:带有站点信息的路径已经文件名
-    :param columns 列数
+    :param columns 列名
     ：skiprows:读取时跳过的行数，默认为：0
     :return:返回带有'level','time','dtime','id','lon','lat','alt','data0'列的dataframe站点信息。
     """
     if os.path.exists(filename):
-        file_sta = open(filename)
-        sta0 = pd.read_csv(file_sta, skiprows=skiprows, sep="\s+", header=None)
+        try:
+            file_sta = open(filename, 'r')
+            sta0 = pd.read_csv(file_sta, skiprows=skiprows, sep="\s+", header=None)
+        except:
+            try:
+                file_sta = open(filename, 'r', encoding="UTF-8")
+                sta0 = pd.read_csv(file_sta, skiprows=skiprows, sep="\s+", header=None)
+            except:
+                exstr = traceback.format_exc()
+                print(exstr)
+                return None
         sta0.columns = columns
-        station_column = ['id','lon','lat','alt']
+        station_column = ['id', 'lon', 'lat', 'alt']
         colums1 = []
         for name in station_column:
             if name in columns:
@@ -97,36 +117,38 @@ def read_station(filename,columns,skiprows = 0):
         sta1 = sta0[colums1]
         nsta = len(sta1.index)
         for i in range(nsta):
-            if sta1.loc[i,'lon'] >1000:
-                a = sta1.loc[i,'lon']// 100 + (a % 100) /60
+            if sta1.loc[i, 'lon'] > 1000:
+                a = sta1.loc[i, 'lon'] // 100 + (a % 100) / 60
                 sta1.loc[i, 'lon'] = a
-            if sta1.loc[i,'lat'] >1000:
-                a = sta1.loc[i,'lat']// 100 + (a % 100) /60
+            if sta1.loc[i, 'lat'] > 1000:
+                a = sta1.loc[i, 'lat'] // 100 + (a % 100) / 60
                 sta1.loc[i, 'lat'] = a
-        #sta = bd.sta_data(sta1)
+        # sta = bd.sta_data(sta1)
         sta = nmc_verification.nmc_vf_base.basicdata.sta_data(sta1)
-        #sta['time'] = method.time_tools.str_to_time64("2099010108")
+        if 'alt' not in columns:
+            sta['alt'] = 0
+        # sta['time'] = method.time_tools.str_to_time64("2099010108")
         sta['time'] = nmc_verification.nmc_vf_base.tool.time_tools.str_to_time64("2099010108")
         sta['level'] = 0
-        sta['dtime'] = np.timedelta64(0, 'h')
-        sta.coloumns = ['level','time','dtime','id','lon','lat','alt','data0']
+        sta['dtime'] = 0
+        # sta.coloumns = ['level', 'time', 'dtime', 'id', 'lon', 'lat', 'alt', 'data0']
         sta['data0'] = 0
+        nmc_verification.nmc_vf_base.basicdata.reset_id(sta)
         return sta
     else:
-        print(filename +" not exist")
+        print(filename + " not exist")
         return None
    
 
+def read_from_sevp(filename0, element=None):
 
-
-
-def read_from_sevp(filename, element=None):
     '''
     兼容多个时次的预报产品文件 txt格式
     param：filename:文件路径和名称
     param:index:从1到21列数据的索引。
     return：dataframe格式的站点数据
     '''
+    filename = filename0
     try:
         if os.path.exists(filename):
             try:
@@ -169,7 +191,7 @@ def read_from_sevp(filename, element=None):
                     return None
 
             num_list = re.findall(r"\d+", line3)
-            sta1['time'] = nmc_verification.nmc_vf_base.method.time_tools.str_to_time64(num_list[0])
+            sta1['time'] = nmc_verification.nmc_vf_base.tool.time_tools.str_to_time64(num_list[0])
             sta1['id'] = 99999
             sta1['lat'] = 99999
             sta1['lon'] = 99999
@@ -206,14 +228,11 @@ def read_from_sevp(filename, element=None):
             line_name = dframe1.columns.tolist()[element]
             data1 = dframe1.iloc[:, element]
 
-
             data = pd.concat([data, data1], axis=1)
             data.rename({line_name:'data0'},inplace=True)
 
-
             return data
         else:
-
             print("不存在此文件,即将结束！")
     except:
         exstr = traceback.format_exc()

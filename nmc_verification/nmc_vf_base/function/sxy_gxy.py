@@ -41,7 +41,7 @@ def transform(sta,dlon = None,dlat = None):
 def sta_to_grid_idw(sta, grid0,background = None,effectR = 1000,nearNum = 16,other_info='left'):
     data_name = nmc_verification.nmc_vf_base.basicdata.get_data_names(sta)
     if other_info=='left':
-        grid = nmc_verification.nmc_vf_base.basicdata.grid(grid0.glon,grid0.glat,[sta.ix[0,'time']],[sta.ix[0,'dtime']],[sta.ix[0,'level']],data_name)
+        grid = nmc_verification.nmc_vf_base.basicdata.grid(grid0.glon,grid0.glat,[sta.ix[0,'time']],[sta.ix[0,'dtime'],"h"],[sta.ix[0,'level']],data_name)
     else:
         grid = grid0
     xyz_sta =  nmc_verification.nmc_vf_base.tool.math_tools.lon_lat_to_cartesian(sta.ix[:, 'lon'], sta.ix[:, 'lat'], R = nmc_verification.nmc_vf_base.basicdata.const.ER)
@@ -58,10 +58,11 @@ def sta_to_grid_idw(sta, grid0,background = None,effectR = 1000,nearNum = 16,oth
     dat = np.sum(w * input_dat[inds], axis=1) / np.sum(w, axis=1)
     bg = nmc_verification.nmc_vf_base.basicdata.grid_data(grid)
     if(background is not None):
-        bg = nmc_verification.nmc_vf_base.function.gxy_gxy.linearInterpolation(background,grid)
+        bg = nmc_verification.nmc_vf_base.function.gxy_gxy.interpolation_linear(background,grid)
     bg_dat = bg.values.flatten()
     dat = np.where(d[:,0] > effectR,bg_dat,dat)
     grd = nmc_verification.nmc_vf_base.basicdata.grid_data(grid,dat)
+    grd.name = "data0"
     return grd
 
 #站点到格点转换

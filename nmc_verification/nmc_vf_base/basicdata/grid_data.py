@@ -20,7 +20,7 @@ def set_coords(grd,level = None,time = None,dtime = None, member = None):
     nmember = int(len(grd.coords.variables.get(grd.coords.dims[0])))
     nlevel = int(len(grd.coords.variables.get(grd.coords.dims[1])))
     ntime = int(len(grd.coords.variables.get(grd.coords.dims[2])))
-    ndt = int(len(grd.coords.variables.get(grd.coords.dims[3])))
+    ndtime = int(len(grd.coords.variables.get(grd.coords.dims[3])))
     if (level != None) and (nlevel == 1):
         grd.coords["level"] = [level]
     if(member != None) and (nmember ==1):
@@ -47,16 +47,9 @@ def set_coords(grd,level = None,time = None,dtime = None, member = None):
         else:
             ttime = time
         grd.coords["time"] = [ttime]
-    if (dtime != None) and (ndt == 1):
-        if type(dtime) == str:
-            gdt_num = ''.join([x for x in dtime if x.isdigit()])
-            dt_int = int(gdt_num)
-            TIME_type = re.findall(r"\D+", dtime)[0]
-            if(TIME_type == "d"):TIME_type = "D"
-            ddtime = np.timedelta64(dt_int, TIME_type)
-        else:
-            ddtime = dtime
-        grd.coords["dtime"] = [ddtime]
+    if (dtime != None) and (ndtime == 1):
+        grd.coords["dtime"] = [dtime[0]]
+        grd.attrs["dtime_type"] = dtime[-1]
     if (member != None) and (nmember == 1):
         grd.coords["member"] = [member]
     return grd
@@ -72,27 +65,28 @@ def grid_data(grid,data=None):
     # 通过起始经纬度和格距计算经纬度格点数
     lon = np.arange(nlon) * dlon + slon
     lat = np.arange(nlat) * dlat + slat
-
-    times = pd.date_range(grid.stime, grid.etime, freq=grid.gdtime[2])
+    #print(grid.gtime[2])
+    times = pd.date_range(grid.stime, grid.etime, freq=grid.gtime[2])
     ntime = len(times)
     # 根据timedelta的格式，算出ndt次数和gds时效列表
-    edtimedelta = grid.edtimedelta
-    sdtimedelta = grid.sdtimedelta
-    ddtimedelta = grid.ddtimedelta
-    ndt = int((edtimedelta - sdtimedelta) / ddtimedelta) + 1
-    gdt_list = []
-    for i in range(ndt):
-        gdt_list.append(sdtimedelta + ddtimedelta * i)
+
+    ndt = len(grid.dtimes)-1
+    gdt_list = grid.dtimes[0:-1]
 
     levels = grid.levels
     nlevels = len(levels)
+
     members = grid.members
     nmember = len(members)
     if np.all(data == None):
         data = np.zeros((nmember, nlevels, ntime, ndt, nlat, nlon))
     else:
         data = data.reshape(nmember, nlevels, ntime, ndt, nlat, nlon)
-    return (xr.DataArray(data, coords={'member': members,'level': levels,'time': times,'dtime':gdt_list,
+    grd = (xr.DataArray(data, coords={'member': members,'level': levels,'time': times,'dtime':gdt_list,
                                'lat': lat, 'lon': lon},
                          dims=['member', 'level','time', 'dtime','lat', 'lon']))
+
+    grd.attrs["dtime_type"] = grid.dtimes[-1]
+    grd.name = "data0"
+    return grd
 

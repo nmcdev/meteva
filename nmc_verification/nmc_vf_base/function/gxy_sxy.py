@@ -38,7 +38,7 @@ def interpolation_nearest(grd,sta,other_info='left'):
     sta1.loc[:, data_name] = dat_sta[:]
     if other_info == 'left':
         sta1['time'] = grid.stime
-        sta1['dtime'] = grid.sdtimedelta
+        sta1['dtime'] = grid.dtimes[0]
         sta1['level'] = grid.levels[0]
         nmc_verification.nmc_vf_base.basicdata.set_data_name(sta1,grid.members[0])
     return sta1
@@ -46,7 +46,7 @@ def interpolation_nearest(grd,sta,other_info='left'):
 #双线性格点到站点的插值
 def interpolation_linear(grd,sta,other_info='left'):
     grid = nmc_verification.nmc_vf_base.basicdata.get_grid_of_data(grd)
-    sta1 = nmc_verification.nmc_vf_base.function.get_from_sta.sta_in_grid_xy(sta, grid)
+    sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_grid_xy(sta, grid)
     dat0 = grd.values
     dat = np.squeeze(dat0)
 
@@ -66,7 +66,7 @@ def interpolation_linear(grd,sta,other_info='left'):
     sta1.loc[:, data_name] = dat_sta[:]
     if other_info == 'left':
         sta1['time'] = grid.stime
-        sta1['dtime'] = grid.sdtimedelta
+        sta1['dtime'] = grid.dtimes[0]
         sta1['level'] = grid.levels[0]
         nmc_verification.nmc_vf_base.basicdata.set_data_name(sta1,grid.members[0])
     return sta1

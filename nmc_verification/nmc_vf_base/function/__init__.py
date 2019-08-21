@@ -10,3 +10,4 @@ from . import sxy_sxy
 from . import sxy_gxy
 from . import sxy_sxym
 from . import sxym_sxy
+from . import gxy_gxym

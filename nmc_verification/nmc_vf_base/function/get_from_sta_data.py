@@ -59,7 +59,7 @@ def sta_of_time(sta,time):
 def sta_in_time_list(sta,time_list):
     time_list1 = []
     for time0 in time_list:
-        time_list1.append(nmc_verification.nmc_vf_base.method.time_tools.all_type_time_to_time64(time0))
+        time_list1.append(nmc_verification.nmc_vf_base.tool.time_tools.all_type_time_to_time64(time0))
     sta1 = sta.loc[sta['time'].isin(time_list1)]
     return sta1
 
@@ -122,10 +122,7 @@ def sta_of_dtime(sta,dtime):
 
 #为拥有多dtime的站点数据，依次增加dtime所表示的list列表
 def sta_in_dtime_list(sta,dtime_list):
-    dtime_list1 = []
-    for time0 in dtime_list:
-        dtime_list1.append(nmc_verification.nmc_vf_base.method.time_tools.all_type_timedelta_to_timedelta64(time0))
-    sta1 = sta.loc[sta['dtime'].isin(dtime_list1)]
+    sta1 = sta.loc[sta['dtime'].isin(dtime_list)]
     return sta1
 
 #为拥有多dday的站点数据，依次增加dday所表示的list列表

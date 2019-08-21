@@ -1,9 +1,10 @@
-
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 
-def reliability_diagrams(ob, fo, grade_list = None,save_path = None, diagona_color='r', regression_line_color='g', broken_line_color='b'):
+
+def reliability_diagrams(ob, fo, grade_list=None, save_path=None, diagona_color='r', regression_line_color='g',
+                         broken_line_color='b'):
     '''
     reliability_diagrams  可靠性图
     ----------------------------
@@ -17,7 +18,7 @@ def reliability_diagrams(ob, fo, grade_list = None,save_path = None, diagona_col
     :return:
     '''
     if grade_list is None:
-        clevs = np.arange(0,1.0,10) # 如果没有给定概率等级，就设置默认等级
+        clevs = np.arange(0, 1.0, 10)  # 如果没有给定概率等级，就设置默认等级
     else:
         clevs = grade_list
 
@@ -37,7 +38,6 @@ def reliability_diagrams(ob, fo, grade_list = None,save_path = None, diagona_col
     plt.plot(clevs, orfs, color=broken_line_color)
     plt.scatter(clevs, orfs, color=broken_line_color)
     plt.plot([0, 1], [0, 1], color=diagona_color)
-
 
     if save_path is None:
         plt.show()
