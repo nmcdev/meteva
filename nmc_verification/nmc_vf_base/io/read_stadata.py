@@ -6,6 +6,7 @@ import pandas as pd
 import nmc_verification
 import traceback
 import re
+import copy
 
 
 def read_from_micaps3(filename,station = None,time = None,dtime = None,level = None,data_name = 'data0'):
