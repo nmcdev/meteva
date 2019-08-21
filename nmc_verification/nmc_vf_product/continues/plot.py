@@ -37,6 +37,7 @@ def scatter_regress_muti_model(ob, fo_df_list, save_path=None, scattercolor='r',
             title = title + str(the_duplicate_values[0])
     plt.suptitle(title)
     for index, fo_of_colnum in enumerate(meger_df_data.iloc[:, 7:-1]):
+
         fo = meger_df_data[fo_of_colnum].values
         plt.subplot(1, data_len, index + 1)
         plt.plot(ob, fo, 'o', markerfacecolor=scattercolor, markersize=scattersize)
@@ -64,7 +65,6 @@ def scatter_regress_muti_model(ob, fo_df_list, save_path=None, scattercolor='r',
         plt.show()
     else:
         plt.savefig(save_path)
-
 
 def box_plot_muti_model(ob, fo_df_list, save_path=None, x_lable='observation', y_lable='forecast', title='box-plot'):
     '''

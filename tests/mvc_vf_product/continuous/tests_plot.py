@@ -18,7 +18,6 @@ def get_tests_path(path=__file__):
 
 if __name__ == '__main__':
     path = get_tests_path()
-    print(path)
     grib_data = io.read_griddata.read_from_nc(path + '\data\BT18010120.012.nc')
 
     sta_data = io.read_stadata.read_station(path + '\data\station_table.txt', columns=['id', 'lat', 'lon', 'alt'])

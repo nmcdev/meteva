@@ -55,4 +55,14 @@ def merge_on_id_and_obTime(sta_list):
         sta['dtime'] = 0
         intersection_of_data = nmc_verification.nmc_vf_base.function.put_into_sta_data.merge_on_all_dim(
             intersection_of_data, sta)
+    data = 'data'
+    new_name = []
+    num = len(sta_list)
+    for i in range(0, num):
+        name = data + str(i)
+        new_name.append(name)
+
+    new_name = ['level', 'time', 'dtime', 'id', 'lon', 'lat', 'alt']+new_name
+
+    intersection_of_data.columns=new_name
     return intersection_of_data

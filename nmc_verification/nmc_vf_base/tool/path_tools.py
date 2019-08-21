@@ -158,7 +158,7 @@ def get_time_after_nearest_path(path_model,time,max_seconds,path_list = None):
     return nearest_path
 
 #以列表的形式返回根目录下所有文件的路径
-def get_filename_list_in_dir(root_dir,all_path = None):
+def get_path_list_in_dir(root_dir,all_path = None):
     if not os.path.exists(root_dir):
         return []
     files = os.listdir(root_dir)
@@ -167,7 +167,7 @@ def get_filename_list_in_dir(root_dir,all_path = None):
     for file in files:
         fi_d = os.path.join(root_dir,file)
         if os.path.isdir(fi_d):
-            get_filename_list_in_dir(fi_d,all_path)
+            get_path_list_in_dir(fi_d,all_path)
         else:
             all_path.append(fi_d)
 
