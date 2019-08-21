@@ -139,6 +139,10 @@ def reset_id(sta):
 
 
 def reset_id(sta):
+    '''
+    输入的sta的站号中可能有些站号包含a-z,A-Z的字母，对此将这些字母转换为对应的ASCII数字，再将整个字符串格式的站号转换为数值形式
+    返回sta站号为整型
+    '''
     values = sta['id'].values
     if type(values[0]) == str:
         int_id = np.zeros(len(values))
