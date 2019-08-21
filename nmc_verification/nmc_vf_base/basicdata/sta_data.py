@@ -2,6 +2,7 @@
 import copy
 import numpy as np
 
+
 def sta_data(df,columns = None):
     '''
     sta_data() 对数据进行格式化成为固定格式
@@ -153,3 +154,4 @@ def reset_id(sta):
         int_id = int_id.astype(np.int32)
         sta['id'] = int_id
     return
+

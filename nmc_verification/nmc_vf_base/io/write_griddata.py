@@ -86,7 +86,7 @@ def write_to_nc(da,filename = "a.txt",scale_factor = 0.01):
                         'dtype': 'int32',
                         'scale_factor': scale_factor,
                          'zlib': True
-                            }
+                          }
                     }
     da.to_netcdf(filename,encoding = encodingdict)
 
