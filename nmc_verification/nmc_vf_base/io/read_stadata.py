@@ -41,7 +41,6 @@ def read_from_micaps3(filename,station = None,time = None,dtime = None,level = N
 
             file_sta = open(filename)
             sta1 = pd.read_csv(file_sta, skiprows=skip_num, sep="\s+", header=None, usecols=[0, 1, 2,3,4])
-
             sta1.columns = ['id','lon','lat','alt',data_name]
             sta1.drop_duplicates(keep='first', inplace=True)
             #sta = bd.sta_data(sta1)
@@ -239,3 +238,17 @@ def read_from_sevp(filename0, element=None):
         exstr = traceback.format_exc()
         print(exstr)
 
+
+def read_from_micaps1_2_8(filename,column,station = None):
+    if os.path.exists(filename):
+        sta1 = pd.read_csv(filename, skiprows=2, sep="\s+", header=None, usecols= [0,1,2,3,column])
+        #print(sta1)
+        sta1.columns = ['id','lon', 'lat','alt', 'data0']
+        sta2 = nmc_verification.nmc_vf_base.basicdata.sta_data(sta1)
+        if(station is None):
+            return sta2
+        else:
+            sta = nmc_verification.nmc_vf_base.function.sxy_sxy.set_data_to(sta2, station)
+            return sta
+    else:
+        return None

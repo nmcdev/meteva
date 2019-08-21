@@ -10,18 +10,15 @@ def interpolation_linear(grd, grid, other_info='left'):
     :other_info:网格数据除了xy方向的数值之外，还有time,dtime，leve member 等维度的值，如果other_info= 'left’则返回结果中这些维度的值就采用grd里的值，
     否则采用grid里的值，默认为：left
     :return:双线性插值之后的结果
-    
     '''
     if (grd is None):
         return None
-
     # 六维转换为二维的值
     dat0 = grd.values
     dat = np.squeeze(dat0)
-
     grd0 = nmc_verification.nmc_vf_base.basicdata.get_grid_of_data(grd)
     if (grd0.dlon * grd0.nlon >= 360):
-        grd1 = nmc_verification.nmc_vf_base.basicdata.grid([grd0.slon, grd0.dlon, grd0.elon + grd0.dlon],[grd0.slat, grd0.dlat, grd0.elat])
+        grd1 = nmc_verification.nmc_vf_base.basicdata.grid([grd0.slon, grd0.elon + grd0.dlon,grd0.dlon],[grd0.slat, grd0.elat, grd0.dlat])
         dat1 = np.zeros((grd1.nlat,grd1.nlon))
         dat1[:,0:-1] = dat[:,:]
         dat1[:, -1] = dat[:, 0]
@@ -87,7 +84,6 @@ def add(grd1,grd2,other_info = 'left'):
         return grd
 
 
-
 def mean_convolve(grd, half_window_size, skip=1):
     # 该函数计算网格点附近矩形方框内的平均值
     # 使用同规格的场，确保网格范围和分辨率一致
@@ -96,15 +92,12 @@ def mean_convolve(grd, half_window_size, skip=1):
         print("pdf_skip is larger than half pdf_window_size")
         return None
     grid0 = nmc_verification.nmc_vf_base.get_grid_of_data(grd)
-
     step_num_lon = int(math.ceil((grid0.nlon - 1) / skip)) + 1
     dlon_skip = grid0.dlon * skip
     elon_skip = grid0.slon + dlon_skip * (step_num_lon - 1)
-
     step_num_lat = int(math.ceil((grid0.nlat - 1) / skip)) + 1
     dlat_skip = grid0.dlat * skip
     elat_skip = grid0.slat + dlat_skip * (step_num_lat - 1)
-
     grid_skip = nmc_verification.nmc_vf_base.grid([grid0.slon, elon_skip, dlon_skip],
                                                   [grid0.slat, elat_skip, dlat_skip])
     dat0 = grd.values.squeeze()
@@ -138,3 +131,18 @@ def mean_convolve(grd, half_window_size, skip=1):
     grd_mean = nmc_verification.nmc_vf_base.function.gxy_gxy.interpolation_linear(grd_mean_skip, grid0)
 
     return grd_mean
+
+
+from scipy.ndimage import convolve
+
+def smooth(grd,times = 1):
+    dat = grd.values.squeeze()
+    kernel = np.array([[0.0625, 0.125, 0.0625],
+                       [0.125, 0.25, 0.125],
+                       [0.0625, 0.125, 0.0625]])
+    for i in range(times):
+        dat = convolve(dat, kernel)
+
+    grid0 = nmc_verification.nmc_vf_base.get_grid_of_data(grd)
+    grd1 = nmc_verification.nmc_vf_base.grid_data(grid0,dat)
+    return grd1

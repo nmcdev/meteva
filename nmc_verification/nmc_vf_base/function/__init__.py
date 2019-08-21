@@ -11,3 +11,4 @@ from . import sxy_gxy
 from . import sxy_sxym
 from . import sxym_sxy
 from . import gxy_gxym
+from . import gxym_gxym

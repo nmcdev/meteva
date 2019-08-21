@@ -83,10 +83,10 @@ def write_to_micaps4(da,filename = "a.txt",effectiveNum = 6):
 def write_to_nc(da,filename = "a.txt",scale_factor = 0.01):
 
     encodingdict = {da.name:{
-                        'dtype': 'int16',
+                        'dtype': 'int32',
                         'scale_factor': scale_factor,
-                        # 'zlib': True
-                            }
+                         'zlib': True
+                          }
                     }
     da.to_netcdf(filename,encoding = encodingdict)
 

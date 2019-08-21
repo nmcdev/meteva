@@ -51,7 +51,6 @@ def drop_nan(sta):
     df = sta.dropna(subset = columns_data)
     return df
 
-
 #将两个站点dataframe相加在一起
 def add_on_id(sta1_0, sta2_0, how="left", default=None):
     if sta1_0 is None:
