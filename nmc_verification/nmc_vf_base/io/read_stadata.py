@@ -9,7 +9,7 @@ import re
 import copy
 
 
-def read_from_micaps3(filename,station = None,time = None,dtime = None,level = None,data_name = 'data0'):
+def read_from_micaps3(filename,station = None,time = None,dtime = None,level = None,data_name = 'data0',drop_same_id = True):
     """
     读取micaps3格式文件转换为pandas中dataframe结构的数据
     :param station:站号，默认：None
@@ -43,6 +43,8 @@ def read_from_micaps3(filename,station = None,time = None,dtime = None,level = N
             sta1 = pd.read_csv(file_sta, skiprows=skip_num, sep="\s+", header=None, usecols=[0, 1, 2,3,4])
             sta1.columns = ['id','lon','lat','alt',data_name]
             sta1.drop_duplicates(keep='first', inplace=True)
+            if drop_same_id:
+                sta1 = sta1.drop_duplicates(['id'])
             #sta = bd.sta_data(sta1)
             sta = nmc_verification.nmc_vf_base.basicdata.sta_data(sta1)
             #print(sta)
@@ -88,7 +90,7 @@ def read_from_micaps3(filename,station = None,time = None,dtime = None,level = N
         print(exstr)
         return None
 
-def read_station(filename,columns,skiprows = 0):
+def read_station(filename,columns,skiprows = 0,drop_same_id = True):
     """
     读取站点数据
     :param filename:带有站点信息的路径已经文件名
@@ -125,6 +127,9 @@ def read_station(filename,columns,skiprows = 0):
                 sta1.loc[i, 'lat'] = a
         # sta = bd.sta_data(sta1)
         sta = nmc_verification.nmc_vf_base.basicdata.sta_data(sta1)
+        if drop_same_id:
+            sta = sta.drop_duplicates(['id'])
+
         if 'alt' not in columns:
             sta['alt'] = 0
         # sta['time'] = method.time_tools.str_to_time64("2099010108")
@@ -140,7 +145,7 @@ def read_station(filename,columns,skiprows = 0):
         return None
    
 
-def read_from_sevp(filename0, element=None):
+def read_from_sevp(filename0, element=None,drop_same_id = True):
 
     '''
     兼容多个时次的预报产品文件 txt格式
@@ -231,6 +236,8 @@ def read_from_sevp(filename0, element=None):
             data = pd.concat([data, data1], axis=1)
             data.rename({line_name:'data0'},inplace=True)
 
+            if drop_same_id:
+                data = data.drop_duplicates(['id'])
             return data
         else:
             print("不存在此文件,即将结束！")
@@ -239,12 +246,15 @@ def read_from_sevp(filename0, element=None):
         print(exstr)
 
 
-def read_from_micaps1_2_8(filename,column,station = None):
+def read_from_micaps1_2_8(filename,column,station = None,drop_same_id = True):
     if os.path.exists(filename):
         sta1 = pd.read_csv(filename, skiprows=2, sep="\s+", header=None, usecols= [0,1,2,3,column])
         #print(sta1)
         sta1.columns = ['id','lon', 'lat','alt', 'data0']
         sta2 = nmc_verification.nmc_vf_base.basicdata.sta_data(sta1)
+        if drop_same_id:
+            sta2 = sta2.drop_duplicates(['id'])
+
         if(station is None):
             return sta2
         else:
