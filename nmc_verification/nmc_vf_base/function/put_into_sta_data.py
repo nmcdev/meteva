@@ -43,7 +43,7 @@ def that_the_name_exists(list, value):
     :return:
     '''
     if value in list:
-        value = value + '_0'
+        value = str(value) + 'x'
         return that_the_name_exists(list, value)
     else:
         return value
@@ -65,7 +65,7 @@ def merge_on_all_dim(sta, sta1):
         columns = ['level', 'time', 'dtime', 'id', 'lon', 'lat', 'alt']
         sta_value_columns = sta.iloc[:, 6:].columns.values.tolist()
         sta1_value_columns = sta1.iloc[:, 6:].columns.values.tolist()
-        if sta_value_columns >= sta1_value_columns:
+        if len(sta_value_columns) >= len(sta1_value_columns):
             for sta1_value_column in sta1_value_columns:
                 ago_name = copy.deepcopy(sta1_value_column)
                 sta1_value_column = that_the_name_exists(sta_value_columns, sta1_value_column)
