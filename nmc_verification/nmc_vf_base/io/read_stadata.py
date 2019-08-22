@@ -6,15 +6,11 @@ import pandas as pd
 import nmc_verification
 import traceback
 import re
+import copy
 
 
-<<<<<<< Updated upstream
-def read_from_micaps3(filename,station = None,time = None,dtime = None,level = None,data_name = 'data0'):
-    """
-=======
 def read_from_micaps3(filename, station=None, time=None, dtime=None, level=None, data_name='data0', drop_same_id=True):
     '''
->>>>>>> Stashed changes
     读取micaps3格式文件转换为pandas中dataframe结构的数据
 
     :param reserve_time_dtime_level:保留时间，时效和层次，默认为rue
@@ -52,20 +48,12 @@ def read_from_micaps3(filename, station=None, time=None, dtime=None, level=None,
             file.close()
 
             file_sta = open(filename)
-<<<<<<< Updated upstream
-            sta1 = pd.read_csv(file_sta, skiprows=skip_num, sep="\s+", header=None, usecols=[0, 1, 2,3,4])
-
-            sta1.columns = ['id','lon','lat','alt',data_name]
-            sta1.drop_duplicates(keep='first', inplace=True)
-            #sta = bd.sta_data(sta1)
-=======
             sta1 = pd.read_csv(file_sta, skiprows=skip_num, sep="\s+", header=None, usecols=[0, 1, 2, 3, 4])
             sta1.columns = ['id', 'lon', 'lat', 'alt', data_name]
             sta1.drop_duplicates(keep='first', inplace=True)
             if drop_same_id:
                 sta1 = sta1.drop_duplicates(['id'])
             # sta = bd.sta_data(sta1)
->>>>>>> Stashed changes
             sta = nmc_verification.nmc_vf_base.basicdata.sta_data(sta1)
             # print(sta)
 
@@ -110,12 +98,8 @@ def read_from_micaps3(filename, station=None, time=None, dtime=None, level=None,
         print(exstr)
         return None
 
-<<<<<<< Updated upstream
-def read_station(filename,columns,skiprows = 0):
-=======
 
 def read_station(filename, columns, skiprows=0, drop_same_id=True):
->>>>>>> Stashed changes
     """
     读取站点数据
     :param filename:带有站点信息的路径已经文件名
@@ -153,6 +137,9 @@ def read_station(filename, columns, skiprows=0, drop_same_id=True):
                 sta1.loc[i, 'lat'] = a
         # sta = bd.sta_data(sta1)
         sta = nmc_verification.nmc_vf_base.basicdata.sta_data(sta1)
+        if drop_same_id:
+            sta = sta.drop_duplicates(['id'])
+
         if 'alt' not in columns:
             sta['alt'] = 0
         # sta['time'] = method.time_tools.str_to_time64("2099010108")
@@ -167,10 +154,6 @@ def read_station(filename, columns, skiprows=0, drop_same_id=True):
         print(filename + " not exist")
         return None
 
-<<<<<<< Updated upstream
-def read_from_sevp(filename0, element=None):
-=======
->>>>>>> Stashed changes
 
 def read_from_sevp(filename0, element=None, drop_same_id=True):
     '''
@@ -264,6 +247,8 @@ def read_from_sevp(filename0, element=None, drop_same_id=True):
             data = pd.concat([data, data1], axis=1)
             data.rename({line_name: 'data0'}, inplace=True)
 
+            if drop_same_id:
+                data = data.drop_duplicates(['id'])
             return data
         else:
             print("不存在此文件,即将结束！")
@@ -271,8 +256,6 @@ def read_from_sevp(filename0, element=None, drop_same_id=True):
         exstr = traceback.format_exc()
         print(exstr)
 
-<<<<<<< Updated upstream
-=======
 
 def read_from_micaps1_2_8(filename, column, station=None, drop_same_id=True):
     '''
@@ -298,4 +281,3 @@ def read_from_micaps1_2_8(filename, column, station=None, drop_same_id=True):
             return sta
     else:
         return None
->>>>>>> Stashed changes

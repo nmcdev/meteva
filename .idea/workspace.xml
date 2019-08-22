@@ -2,19 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="34257bfb-b75a-4b41-bec0-191ae896ca69" name="Default" comment="测试了读取m1 m2  m8  的文件">
-      <change afterPath="$PROJECT_DIR$/tests/data/19082108.000" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/data/19082120.096" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/data/19082208.000" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/nmc_verification/nmc_vf_base/io/read_stadata.py" beforeDir="false" afterPath="$PROJECT_DIR$/nmc_verification/nmc_vf_base/io/read_stadata.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/batch_test/0020180102T0000.xls" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/batch_test/a.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/batch_test/aa.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/batch_test/aa.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/batch_test/b.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/batch_test/c.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/batch_test/contingency_table.xls" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/batch_test/mult_category_contingency_table.xls" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/nmc_vf_base/tests_io.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/nmc_vf_base/tests_io.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -29,12 +17,22 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="tests.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/tests/batch_test/tests.py">
+      <file leaf-file-name="read_stadata.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/nmc_verification/nmc_vf_base/io/read_stadata.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="264">
-              <caret line="15" column="14" lean-forward="true" selection-start-line="15" selection-start-column="14" selection-end-line="15" selection-end-column="14" />
+            <state relative-caret-position="-5213">
+              <caret line="30" column="6" lean-forward="true" selection-start-line="30" selection-start-column="6" selection-end-line="30" selection-end-column="6" />
+              <folding>
+                <element signature="e#44#62#0" expanded="true" />
+              </folding>
             </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="read_griddata.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/nmc_verification/nmc_vf_base/io/read_griddata.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-66" />
           </provider>
         </entry>
       </file>
@@ -60,7 +58,7 @@
   <component name="NodePackageJsonFileManager">
     <packageJsonPaths />
   </component>
-  <component name="ProjectFrameBounds" extendedState="7">
+  <component name="ProjectFrameBounds" extendedState="6">
     <option name="x" value="16" />
     <option name="y" value="54" />
     <option name="width" value="1066" />
@@ -211,7 +209,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1376" height="744" extended-state="7" />
+    <frame x="-8" y="-8" width="1376" height="744" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info anchor="bottom" id="TODO" order="6" />
@@ -221,7 +219,7 @@
       <window_info anchor="bottom" id="Version Control" order="8" />
       <window_info anchor="bottom" id="Python Console" order="12" />
       <window_info anchor="bottom" id="Terminal" order="11" />
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.26376146" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.26376146" />
       <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
       <window_info anchor="right" id="Database" order="3" weight="0.3293023" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.32933104" />
@@ -276,16 +274,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/nmc_verification/nmc_vf_base/io/read_stadata.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="814">
-          <caret line="133" column="38" lean-forward="true" selection-start-line="133" selection-start-column="38" selection-end-line="133" selection-end-column="38" />
-          <folding>
-            <element signature="e#44#62#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/nmc_verification/nmc_vf_base/io/write_stadata.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="309">
@@ -311,8 +299,23 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/tests/batch_test/tests.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="264">
-          <caret line="15" column="14" lean-forward="true" selection-start-line="15" selection-start-column="14" selection-end-line="15" selection-end-column="14" />
+        <state relative-caret-position="217">
+          <caret line="15" column="14" selection-start-line="15" selection-start-column="14" selection-end-line="15" selection-end-column="14" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/nmc_verification/nmc_vf_base/io/read_griddata.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-66" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/nmc_verification/nmc_vf_base/io/read_stadata.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-5213">
+          <caret line="30" column="6" lean-forward="true" selection-start-line="30" selection-start-column="6" selection-end-line="30" selection-end-column="6" />
+          <folding>
+            <element signature="e#44#62#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
