@@ -118,24 +118,7 @@ def set_time_dtime_level_name(sta,time = None,dtime = None,level = None,data_nam
     if data_name is not None:
         set_data_name(sta,data_name)
         
-        
-def reset_id(sta):
-    '''
-    将带有a-z,A-Z格式的按照，通过ASCII码转换为数字，拼接完之后，再返回
-    例如：sta = 'abdf' 返回：9798100102
-    :param sta:站号
-    :return:ASCII转码之后的int型站号。
-    '''
-    a_list = []
-    b_list = []
-    for item in sta:
-        a_list.append(item)
-    num = len(a_list)
-    for i in range(0, num):
-        num = ord(a_list[i])
-        b_list.append(str(num))
-    item2 = "".join(b_list)
-    return int(item2)
+
 
 
 def reset_id(sta):
