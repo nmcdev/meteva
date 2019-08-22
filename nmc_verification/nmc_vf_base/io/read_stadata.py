@@ -8,44 +8,66 @@ import traceback
 import re
 
 
+<<<<<<< Updated upstream
 def read_from_micaps3(filename,station = None,time = None,dtime = None,level = None,data_name = 'data0'):
     """
+=======
+def read_from_micaps3(filename, station=None, time=None, dtime=None, level=None, data_name='data0', drop_same_id=True):
+    '''
+>>>>>>> Stashed changes
     读取micaps3格式文件转换为pandas中dataframe结构的数据
-    :param station:站号，默认：None
+
     :param reserve_time_dtime_level:保留时间，时效和层次，默认为rue
     :param data_name:dataframe中数值的values列的名称
     :return:返回一个dataframe结构的多列站点数据。
-    """
+    :param filename: 文件路径
+    :param station: 站号，默认：None
+    :param time: 起报时  默认：NOne
+    :param dtime: 时效 默认：None
+    :param level:  层次  默认：None
+    :param data_name: 要素名  默认：'data0'
+    :param drop_same_id: 是否要删除相同id的行  默认为True
+    :return:
+    '''
     try:
         if os.path.exists(filename):
-            file = open(filename,'r')
+            file = open(filename, 'r')
             skip_num = 0
             strs = []
             nline = 0
             nregion = 0
             nstart = 0
-            while 1>0:
+            while 1 > 0:
                 skip_num += 1
                 str1 = file.readline()
                 strs.extend(str1.split())
 
-                if(len(strs)>8):
+                if (len(strs) > 8):
                     nline = int(strs[8])
-                if(len(strs)>11 + nline):
+                if (len(strs) > 11 + nline):
                     nregion = int(strs[11 + nline])
                     nstart = nline + 2 * nregion + 14
-                    if(len(strs) == nstart):
+                    if (len(strs) == nstart):
                         break
             file.close()
 
             file_sta = open(filename)
+<<<<<<< Updated upstream
             sta1 = pd.read_csv(file_sta, skiprows=skip_num, sep="\s+", header=None, usecols=[0, 1, 2,3,4])
 
             sta1.columns = ['id','lon','lat','alt',data_name]
             sta1.drop_duplicates(keep='first', inplace=True)
             #sta = bd.sta_data(sta1)
+=======
+            sta1 = pd.read_csv(file_sta, skiprows=skip_num, sep="\s+", header=None, usecols=[0, 1, 2, 3, 4])
+            sta1.columns = ['id', 'lon', 'lat', 'alt', data_name]
+            sta1.drop_duplicates(keep='first', inplace=True)
+            if drop_same_id:
+                sta1 = sta1.drop_duplicates(['id'])
+            # sta = bd.sta_data(sta1)
+>>>>>>> Stashed changes
             sta = nmc_verification.nmc_vf_base.basicdata.sta_data(sta1)
-            #print(sta)
+            # print(sta)
 
             y2 = ""
             if len(strs[3]) == 2:
@@ -54,14 +76,14 @@ def read_from_micaps3(filename,station = None,time = None,dtime = None,level = N
                     y2 = '19'
                 else:
                     y2 = '20'
-            if len(strs[3]) == 1: strs[3] = "0"+ strs[3]
+            if len(strs[3]) == 1: strs[3] = "0" + strs[3]
             if len(strs[4]) == 1: strs[4] = "0" + strs[4]
             if len(strs[5]) == 1: strs[5] = "0" + strs[5]
             if len(strs[6]) == 1: strs[6] = "0" + strs[6]
 
             time_str = y2 + strs[3] + strs[4] + strs[5] + strs[6]
             time_file = nmc_verification.nmc_vf_base.tool.time_tools.str_to_time(time_str)
-            if(level is None):
+            if (level is None):
                 level = int(strs[7])
             if level < 0: level = 0
             sta['level'] = level
@@ -78,7 +100,7 @@ def read_from_micaps3(filename,station = None,time = None,dtime = None,level = N
                 else:
                     sta['dtime'] = 10000 + dtime[0]
 
-            if(station is not None):
+            if (station is not None):
                 sta = nmc_verification.nmc_vf_base.function.sxy_sxy.set_data_to(sta, station)
             return sta
         else:
@@ -88,12 +110,18 @@ def read_from_micaps3(filename,station = None,time = None,dtime = None,level = N
         print(exstr)
         return None
 
+<<<<<<< Updated upstream
 def read_station(filename,columns,skiprows = 0):
+=======
+
+def read_station(filename, columns, skiprows=0, drop_same_id=True):
+>>>>>>> Stashed changes
     """
     读取站点数据
     :param filename:带有站点信息的路径已经文件名
     :param columns 列名
-    ：skiprows:读取时跳过的行数，默认为：0
+    :param skiprows:读取时跳过的行数，默认为：0
+    :param drop_same_id: 是否要删除相同id的行  默认为True
     :return:返回带有'level','time','dtime','id','lon','lat','alt','data0'列的dataframe站点信息。
     """
     if os.path.exists(filename):
@@ -138,15 +166,20 @@ def read_station(filename,columns,skiprows = 0):
     else:
         print(filename + " not exist")
         return None
-   
 
+<<<<<<< Updated upstream
 def read_from_sevp(filename0, element=None):
+=======
+>>>>>>> Stashed changes
 
+def read_from_sevp(filename0, element=None, drop_same_id=True):
     '''
     兼容多个时次的预报产品文件 txt格式
-    param：filename:文件路径和名称
-    param:index:从1到21列数据的索引。
-    return：dataframe格式的站点数据
+    :param：filename:文件路径和名称
+    :param: element:选取要素
+    :param drop_same_id: 是否要删除相同id的行  默认为True
+    :return：dataframe格式的站点数据
+
     '''
     filename = filename0
     try:
@@ -229,7 +262,7 @@ def read_from_sevp(filename0, element=None):
             data1 = dframe1.iloc[:, element]
 
             data = pd.concat([data, data1], axis=1)
-            data.rename({line_name:'data0'},inplace=True)
+            data.rename({line_name: 'data0'}, inplace=True)
 
             return data
         else:
@@ -238,3 +271,31 @@ def read_from_sevp(filename0, element=None):
         exstr = traceback.format_exc()
         print(exstr)
 
+<<<<<<< Updated upstream
+=======
+
+def read_from_micaps1_2_8(filename, column, station=None, drop_same_id=True):
+    '''
+    read_from_micaps1_2_8  读取m1、m2、m8格式的文件
+    :param filename: 文件路径
+    :param column: 选取哪列要素  4-len
+    :param station: 站号 默认为None
+    :param drop_same_id: 是否要删除相同id的行  默认为True
+    :return:
+    '''
+    if os.path.exists(filename):
+        sta1 = pd.read_csv(filename, skiprows=2, sep="\s+", header=None, usecols=[0, 1, 2, 3, column])
+        # print(sta1)
+        sta1.columns = ['id', 'lon', 'lat', 'alt', 'data0']
+        sta2 = nmc_verification.nmc_vf_base.basicdata.sta_data(sta1)
+        if drop_same_id:
+            sta2 = sta2.drop_duplicates(['id'])
+
+        if station is None:
+            return sta2
+        else:
+            sta = nmc_verification.nmc_vf_base.function.sxy_sxy.set_data_to(sta2, station)
+            return sta
+    else:
+        return None
+>>>>>>> Stashed changes
