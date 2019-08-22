@@ -48,12 +48,14 @@ def read_from_micaps3(filename, station=None, time=None, dtime=None, level=None,
             file.close()
 
             file_sta = open(filename)
+
             sta1 = pd.read_csv(file_sta, skiprows=skip_num, sep="\s+", header=None, usecols=[0, 1, 2, 3, 4])
             sta1.columns = ['id', 'lon', 'lat', 'alt', data_name]
             sta1.drop_duplicates(keep='first', inplace=True)
             if drop_same_id:
                 sta1 = sta1.drop_duplicates(['id'])
             # sta = bd.sta_data(sta1)
+
             sta = nmc_verification.nmc_vf_base.basicdata.sta_data(sta1)
             # print(sta)
 
@@ -98,8 +100,8 @@ def read_from_micaps3(filename, station=None, time=None, dtime=None, level=None,
         print(exstr)
         return None
 
-
 def read_station(filename, columns, skiprows=0, drop_same_id=True):
+
     """
     读取站点数据
     :param filename:带有站点信息的路径已经文件名
@@ -155,7 +157,7 @@ def read_station(filename, columns, skiprows=0, drop_same_id=True):
         return None
 
 
-def read_from_sevp(filename0, element=None, drop_same_id=True):
+def read_from_sevp(filename0, element=None,drop_same_id = True):
     '''
     兼容多个时次的预报产品文件 txt格式
     :param：filename:文件路径和名称
@@ -270,14 +272,17 @@ def read_from_micaps1_2_8(filename, column, station=None, drop_same_id=True):
         sta1 = pd.read_csv(filename, skiprows=2, sep="\s+", header=None, usecols=[0, 1, 2, 3, column])
         # print(sta1)
         sta1.columns = ['id', 'lon', 'lat', 'alt', 'data0']
+
         sta2 = nmc_verification.nmc_vf_base.basicdata.sta_data(sta1)
         if drop_same_id:
             sta2 = sta2.drop_duplicates(['id'])
 
         if station is None:
+
             return sta2
         else:
             sta = nmc_verification.nmc_vf_base.function.sxy_sxy.set_data_to(sta2, station)
             return sta
     else:
         return None
+

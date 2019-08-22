@@ -2,6 +2,8 @@ import numpy as np
 import math
 import nmc_verification
 from scipy.spatial import cKDTree
+import time
+
 def transform(sta,dlon = None,dlat = None):
     """
     将站点形式的规则网格的数据转化为格点数据
@@ -38,10 +40,11 @@ def transform(sta,dlon = None,dlat = None):
     return grd
 
 #站点到格点的反距离插值，对每个格点，获取其最近的几个站点编号、距离, 然后计算权重和。
-def sta_to_grid_idw(sta, grid0,background = None,effectR = 1000,nearNum = 16,other_info='left'):
+def sta_to_grid_idw(sta, grid0,background = None,effectR = 1000,nearNum = 8,other_info='left'):
     data_name = nmc_verification.nmc_vf_base.basicdata.get_data_names(sta)
+    index0 = sta.index[0]
     if other_info=='left':
-        grid = nmc_verification.nmc_vf_base.basicdata.grid(grid0.glon,grid0.glat,[sta.ix[0,'time']],[sta.ix[0,'dtime'],"h"],[sta.ix[0,'level']],data_name)
+        grid = nmc_verification.nmc_vf_base.basicdata.grid(grid0.glon,grid0.glat,[sta.ix[index0,'time']],[sta.ix[index0,'dtime'],"h"],[sta.ix[index0,'level']],data_name)
     else:
         grid = grid0
     xyz_sta =  nmc_verification.nmc_vf_base.tool.math_tools.lon_lat_to_cartesian(sta.ix[:, 'lon'], sta.ix[:, 'lat'], R = nmc_verification.nmc_vf_base.basicdata.const.ER)
@@ -52,10 +55,13 @@ def sta_to_grid_idw(sta, grid0,background = None,effectR = 1000,nearNum = 16,oth
     tree = cKDTree(xyz_sta)
     #d,inds 分别是站点到格点的距离和id
     d, inds = tree.query(xyz_grid, k=nearNum)
+    start = time.time()
     d += 1e-6
     w = 1.0 / d ** 2
     input_dat = sta.ix[:,'data0'].values
     dat = np.sum(w * input_dat[inds], axis=1) / np.sum(w, axis=1)
+    end = time.time()
+    print(end- start)
     bg = nmc_verification.nmc_vf_base.basicdata.grid_data(grid)
     if(background is not None):
         bg = nmc_verification.nmc_vf_base.function.gxy_gxy.interpolation_linear(background,grid)

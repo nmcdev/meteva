@@ -2,6 +2,7 @@
 import copy
 import numpy as np
 
+
 def sta_data(df,columns = None):
     '''
     sta_data() 对数据进行格式化成为固定格式
@@ -116,7 +117,15 @@ def set_time_dtime_level_name(sta,time = None,dtime = None,level = None,data_nam
         sta['level'] = level
     if data_name is not None:
         set_data_name(sta,data_name)
+        
+
+
+
 def reset_id(sta):
+    '''
+    输入的sta的站号中可能有些站号包含a-z,A-Z的字母，对此将这些字母转换为对应的ASCII数字，再将整个字符串格式的站号转换为数值形式
+    返回sta站号为整型
+    '''
     values = sta['id'].values
     if type(values[0]) == str:
         int_id = np.zeros(len(values))

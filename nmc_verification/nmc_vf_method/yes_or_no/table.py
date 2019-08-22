@@ -6,7 +6,9 @@ import numpy as np
 import pandas as pd
 
 
+
 def contingency_table(ob, fo, grade=None, save_path='contingency_table.xls', sheet_name='sheet1'):
+
     '''
     multi_category_contingency_table 多分类预测列联表
     :param ob: 实况数据 一维numpy
@@ -15,6 +17,7 @@ def contingency_table(ob, fo, grade=None, save_path='contingency_table.xls', she
     :param save_path: 保存地址
     :return:
     '''
+
 
     # 需要更改
     if grade is not None:
@@ -39,6 +42,7 @@ def contingency_table(ob, fo, grade=None, save_path='contingency_table.xls', she
     conf_mx = np.vstack((conf_mx, line_sums))
     index = list(set(np.hstack((ob, fo))))
     index.append('sum')
+
     table_data = pd.DataFrame(conf_mx,
                               columns=pd.MultiIndex.from_product([['fo'], index]),
                               index=pd.MultiIndex.from_product([['ob'], index])

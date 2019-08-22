@@ -1,6 +1,5 @@
 import numpy as np
 
-
 def pc_of_sunny_rainy(Ob, Fo):
     '''
     晴雨准确率
@@ -78,6 +77,7 @@ def fal_rate(Ob, Fo, grade_list=None):
 
 
 def mis_rate(Ob, Fo, grade_list=None):
+
     '''
     mis_rate 漏报率评分
     --------------------------
@@ -110,8 +110,10 @@ def bias(Ob, Fo, threshold_list=None):
     return (hit + fal) / (hit + mis + 0.0000001)
 
 
+
 def bias_extend(Ob, Fo, threshold_list=None):
     bias0 = bias(Ob, Fo, threshold_list)
+
     bias_extend0 = np.abs(bias0 - 1)
     return bias_extend0
 
