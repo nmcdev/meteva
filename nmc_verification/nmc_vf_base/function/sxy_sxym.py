@@ -2,14 +2,15 @@ import nmc_verification
 from nmc_verification.nmc_vf_base.tool.math_tools import lon_lat_to_cartesian
 from scipy.spatial import cKDTree
 import numpy as np
+import copy
 
 def get_nearby_sta_index_ensemble(sta_to,nearNum = 100,sta_from = None,drop_frist = False):
     if(sta_to is None):
         return None
     if(sta_from is None):
-        sta_from = sta_to.copy()
-    xyz_sta0 = lon_lat_to_cartesian(sta_to.ix[:,'lon'], sta_to.ix[:,'lat'],R = nmc_verification.nmc_vf_base.basicdata.ER)
-    xyz_sta1 = lon_lat_to_cartesian(sta_from.ix[:,'lon'], sta_from.ix[:,'lat'],R = nmc_verification.nmc_vf_base.basicdata.ER)
+        sta_from = copy.deepcopy(sta_to)
+    xyz_sta0 = lon_lat_to_cartesian(sta_to['lon'].values[:], sta_to['lat'].values[:],R = nmc_verification.nmc_vf_base.basicdata.ER)
+    xyz_sta1 = lon_lat_to_cartesian(sta_from['lon'].values[:], sta_from['lat'].values[:],R = nmc_verification.nmc_vf_base.basicdata.ER)
     tree = cKDTree(xyz_sta0)
     _,indexs = tree.query(xyz_sta1, k=nearNum)
     sta_ensemble = sta_to[nmc_verification.nmc_vf_base.get_coord_names()]
@@ -24,9 +25,9 @@ def get_nearby_sta_id_ensemble(sta_to,nearNum = 100,sta_from = None,drop_frist =
     if(sta_to is None):
         return None
     if(sta_from is None):
-        sta_from = sta_to.copy()
-    xyz_sta0 = lon_lat_to_cartesian(sta_to.ix[:,'lon'], sta_to.ix[:,'lat'],R = nmc_verification.nmc_vf_base.basicdata.ER)
-    xyz_sta1 = lon_lat_to_cartesian(sta_from.ix[:,'lon'], sta_from.ix[:,'lat'],R = nmc_verification.nmc_vf_base.basicdata.ER)
+        sta_from = copy.deepcopy(sta_to)
+    xyz_sta0 = lon_lat_to_cartesian(sta_to['lon'].values[:], sta_to['lat'].values[:],R = nmc_verification.nmc_vf_base.basicdata.ER)
+    xyz_sta1 = lon_lat_to_cartesian(sta_from['lon'].values[:], sta_from['lat'].values[:],R = nmc_verification.nmc_vf_base.basicdata.ER)
     tree = cKDTree(xyz_sta0)
     _,indexs = tree.query(xyz_sta1, k=nearNum)
     input_dat = sta_from.ix[:, 'id'].values
@@ -42,9 +43,9 @@ def get_nearby_sta_value_ensemble(sta_to,nearNum = 100,sta_from = None,drop_fris
     if(sta_to is None):
         return None
     if(sta_from is None):
-        sta_from = sta_to.copy()
-    xyz_sta0 = lon_lat_to_cartesian(sta_to.ix[:,'lon'], sta_to.ix[:,'lat'],R = nmc_verification.nmc_vf_base.basicdata.ER)
-    xyz_sta1 = lon_lat_to_cartesian(sta_from.ix[:,'lon'], sta_from.ix[:,'lat'],R = nmc_verification.nmc_vf_base.basicdata.ER)
+        sta_from = copy.deepcopy(sta_to)
+    xyz_sta0 = lon_lat_to_cartesian(sta_to['lon'].values[:], sta_to['lat'].values[:],R = nmc_verification.nmc_vf_base.basicdata.ER)
+    xyz_sta1 = lon_lat_to_cartesian(sta_from['lon'].values[:], sta_from['lat'].values[:],R = nmc_verification.nmc_vf_base.basicdata.ER)
     tree = cKDTree(xyz_sta0)
     _,indexs = tree.query(xyz_sta1, k=nearNum)
     data_name = nmc_verification.nmc_vf_base.get_data_names(sta_from)[0]
@@ -61,9 +62,9 @@ def get_nearby_sta_dis_ensemble(sta_to,nearNum = 100,sta_from = None,drop_frist 
     if(sta_to is None):
         return None
     if(sta_from is None):
-        sta_from = sta_to.copy()
-    xyz_sta0 = lon_lat_to_cartesian(sta_to.ix[:,'lon'], sta_to.ix[:,'lat'],R = nmc_verification.nmc_vf_base.basicdata.ER)
-    xyz_sta1 = lon_lat_to_cartesian(sta_from.ix[:,'lon'], sta_from.ix[:,'lat'],R = nmc_verification.nmc_vf_base.basicdata.ER)
+        sta_from = copy.deepcopy(sta_to)
+    xyz_sta0 = lon_lat_to_cartesian(sta_to['lon'].values[:], sta_to['lat'].values[:],R = nmc_verification.nmc_vf_base.basicdata.ER)
+    xyz_sta1 = lon_lat_to_cartesian(sta_from['lon'].values[:], sta_from['lat'].values[:],R = nmc_verification.nmc_vf_base.basicdata.ER)
     tree = cKDTree(xyz_sta0)
     d,_ = tree.query(xyz_sta1, k=nearNum)
     sta_ensemble = sta_to[nmc_verification.nmc_vf_base.get_coord_names()]

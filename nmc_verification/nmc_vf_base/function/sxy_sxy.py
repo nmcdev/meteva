@@ -243,8 +243,8 @@ def multiply_on_id(sta1_0, sta2_0, how="left", default=None):
 
 def idw_sta_to_sta(sta0, station,effectR = 1000,nearNum = 16):
     sta1 = copy.deepcopy(station)
-    xyz_sta0 = nmc_verification.nmc_vf_base.tool.math_tools.lon_lat_to_cartesian(sta0.ix[:, 'lon'], sta0.ix[:, 'lat'], R = nmc_verification.nmc_vf_base.basicdata.const.ER)
-    xyz_sta1 = nmc_verification.nmc_vf_base.tool.math_tools.lon_lat_to_cartesian(sta1.ix[:, 'lon'], sta1.ix[:, 'lat'], R = nmc_verification.nmc_vf_base.basicdata.const.ER)
+    xyz_sta0 = nmc_verification.nmc_vf_base.tool.math_tools.lon_lat_to_cartesian(sta0['lon'].values[:], sta0['lat'].values[:], R = nmc_verification.nmc_vf_base.basicdata.const.ER)
+    xyz_sta1 = nmc_verification.nmc_vf_base.tool.math_tools.lon_lat_to_cartesian(sta1['lon'].values[:], sta1['lat'].values[:], R = nmc_verification.nmc_vf_base.basicdata.const.ER)
     tree = cKDTree(xyz_sta0)
     d, inds = tree.query(xyz_sta1, k=nearNum)
     d += 1e-6
