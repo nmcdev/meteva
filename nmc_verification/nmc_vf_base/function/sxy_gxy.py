@@ -30,8 +30,8 @@ def transform(sta,dlon = None,dlat = None):
                 dlat = math.fabs(dlat)
                 break
 
-    ig = ((sta.ix[:,'lon'] - slon) // dlon).astype(dtype = 'int16')
-    jg = ((sta.ix[:,'lat'] - slat) // dlat).astype(dtype = 'int16')
+    ig = ((sta['lon'].values - slon) // dlon).astype(dtype = 'int16')
+    jg = ((sta['lat'].values - slat) // dlat).astype(dtype = 'int16')
     grid0 = nmc_verification.nmc_vf_base.basicdata.grid([slon,elon,dlon],[slat,elat,dlat])
     dat = np.zeros((grid0.nlat,grid0.nlon))
     data_name = nmc_verification.nmc_vf_base.basicdata.get_data_names(sta)[0]
@@ -47,7 +47,7 @@ def sta_to_grid_idw(sta, grid0,background = None,effectR = 1000,nearNum = 8,othe
         grid = nmc_verification.nmc_vf_base.basicdata.grid(grid0.glon,grid0.glat,[sta.ix[index0,'time']],[sta.ix[index0,'dtime'],"h"],[sta.ix[index0,'level']],data_name)
     else:
         grid = grid0
-    xyz_sta =  nmc_verification.nmc_vf_base.tool.math_tools.lon_lat_to_cartesian(sta.ix[:, 'lon'], sta.ix[:, 'lat'], R = nmc_verification.nmc_vf_base.basicdata.const.ER)
+    xyz_sta =  nmc_verification.nmc_vf_base.tool.math_tools.lon_lat_to_cartesian(sta['lon'].values, sta['lat'].values, R = nmc_verification.nmc_vf_base.basicdata.const.ER)
     lon = np.arange(grid.nlon) * grid.dlon + grid.slon
     lat = np.arange(grid.nlat) * grid.dlat + grid.slat
     grid_lon,grid_lat = np.meshgrid(lon,lat)
@@ -58,7 +58,7 @@ def sta_to_grid_idw(sta, grid0,background = None,effectR = 1000,nearNum = 8,othe
     start = time.time()
     d += 1e-6
     w = 1.0 / d ** 2
-    input_dat = sta.ix[:,'data0'].values
+    input_dat = sta['data0'].values
     dat = np.sum(w * input_dat[inds], axis=1) / np.sum(w, axis=1)
     end = time.time()
     print(end- start)
@@ -83,13 +83,13 @@ def sta_to_grid_oa2(sta0,background,sm = 1,effect_R = 1000,rate_of_model = 0):
     dat = np.squeeze(grd.values)
 
 
-    ig = ((sta.ix[:,'lon'] - grid.slon) // grid.dlon).astype(dtype = 'int16')
+    ig = ((sta['lon'].values - grid.slon) // grid.dlon).astype(dtype = 'int16')
 
-    jg = ((sta.ix[:,'lat'] - grid.slat) // grid.dlat).astype(dtype = 'int16')
+    jg = ((sta['lat'].values - grid.slat) // grid.dlat).astype(dtype = 'int16')
 
-    dx = (sta.ix[:,'lon'] - grid.slon) / grid.dlon - ig
+    dx = (sta['lon'].values - grid.slon) / grid.dlon - ig
 
-    dy = (sta.ix[:,'lat'] - grid.slat) / grid.dlat - jg
+    dy = (sta['lat'].values - grid.slat) / grid.dlat - jg
 
     c00 = (1 - dx) * (1 - dy)
 
