@@ -116,8 +116,7 @@ def sta_between_time_range(sta,start_time,end_time,dtime = None):
 
 #为站点信息重新赋dtime层名称
 def sta_of_dtime(sta,dtime):
-    dtime1 = nmc_verification.nmc_vf_base.method.time_tools.all_type_time_to_time64(dtime)
-    sta1 = sta.loc[sta['dtime']==dtime1]
+    sta1 = sta.loc[sta['dtime']==dtime]
     return sta1
 
 #为拥有多dtime的站点数据，依次增加dtime所表示的list列表
@@ -198,5 +197,4 @@ def get_by_para_dict(sta,para_dict):
     sta1 = sta_between_lat_range(sta1, para_dict['lat'][0], para_dict['lat'][1])
     sta1 = sta_between_alt_range(sta1, para_dict['alt'][0], para_dict['alt'][1])
     return sta1
-
 
