@@ -14,11 +14,6 @@ def all_type_time_to_time64(time0):
         print("时间类型不识别")
         return None
 
-def all_type_time_to_datetime(time0):
-    time64 = all_type_time_to_time64(time0)
-    time1 = time64.astype(datetime.datetime)
-    return time1
-
 #所有的timedelta类型的数据转为timedelta64类型的时间格式
 def all_type_timedelta_to_timedelta64(timedelta0):
     if isinstance(timedelta0,np.timedelta64):
@@ -61,8 +56,6 @@ def str_to_time64(time_str):
         str1 +="0000"
     elif len(str1) == 12:
         str1 +="00"
-    elif len(str1) > 12:
-        str1 = time_str[0:12]
     else:
         print("输入日期格式不识别，请检查！")
 
@@ -70,8 +63,6 @@ def str_to_time64(time_str):
     time = datetime.datetime.strptime(str1, '%Y%m%d%H%M%S')
     time64 = np.datetime64(time)
     return time64
-
-
 
 #datetime64类型的数据转换为str类型
 def time_to_str(time):
