@@ -29,7 +29,10 @@ nmc_verification/nmc_vf_base/function/sxy_gxy.py
 nmc_verification/nmc_vf_base/function/sxy_sxy.py
 nmc_verification/nmc_vf_base/function/sxy_sxym.py
 nmc_verification/nmc_vf_base/function/sxym_sxy.py
+nmc_verification/nmc_vf_base/io/DataBlock_pb2.py
+nmc_verification/nmc_vf_base/io/GDS_data_service.py
 nmc_verification/nmc_vf_base/io/__init__.py
+nmc_verification/nmc_vf_base/io/httpclient.py
 nmc_verification/nmc_vf_base/io/read_griddata.py
 nmc_verification/nmc_vf_base/io/read_stadata.py
 nmc_verification/nmc_vf_base/io/write_griddata.py

@@ -7,7 +7,10 @@ import nmc_verification
 import traceback
 import re
 import copy
-
+from . import DataBlock_pb2
+from .GDS_data_service import GDSDataService
+import struct
+from collections import OrderedDict
 
 def read_from_micaps3(filename, station=None, time=None, dtime=None, level=None, data_name='data0', drop_same_id=True):
     '''
@@ -286,3 +289,107 @@ def read_from_micaps1_2_8(filename, column, station=None, drop_same_id=True):
     else:
         return None
 
+
+
+def read_from_gds(ip,port,filename,element_id = None,station = None):
+    # ip 为字符串形式，示例 “10.20.30.40”
+    # port 为整数形式
+    # filename 为字符串形式 示例 "ECMWF_HR/TCDC/19083108.000"
+    service = GDSDataService(ip, port)
+    try:
+        directory,fileName = os.path.split(filename)
+        status, response = byteArrayResult = service.getData(directory, fileName)
+        ByteArrayResult = DataBlock_pb2.ByteArrayResult()
+        if status == 200:
+            ByteArrayResult.ParseFromString(response)
+            if ByteArrayResult is not None:
+                byteArray = ByteArrayResult.byteArray
+                nsta = struct.unpack("i", byteArray[288:292])[0]
+                id_num = struct.unpack("h", byteArray[292:294])[0]
+                id_tpye = {}
+                for i in range(id_num):
+                    element_id0 = struct.unpack("h", byteArray[294 + i * 4:296 + i * 4])[0]
+                    id_tpye[element_id0] = struct.unpack("h", byteArray[296 + i * 4:298 + i * 4])[0]
+                    if(element_id is None and element_id0 > 200 and element_id0 % 2 == 1):
+                        element_id = element_id0
+                station_data_dict = OrderedDict()
+                index = 294 + id_num * 4
+                type_lenght_dict = {1: 1, 2: 2, 3: 4, 4: 4, 5: 4, 6: 8, 7: 1}
+                type_str_dict = {1: 'b', 2: 'h', 3: 'i', 4: 'l', 5: 'f', 6: 'd', 7: 'c'}
+
+                for i in range(nsta):
+                    one_station_dat = {}
+                    one_station_dat["id"] =str(struct.unpack("i", byteArray[index: index + 4])[0])
+                    index += 4
+                    one_station_dat['lon'] =struct.unpack("f", byteArray[index: index + 4])[0]
+                    index += 4
+                    one_station_dat['lat'] =(struct.unpack("f", byteArray[index: index + 4])[0])
+                    index += 4
+                    value_num = struct.unpack("h", byteArray[index:index + 2])[0]
+                    index += 2
+                    values = {}
+                    for j in range(value_num):
+                        id = struct.unpack("h", byteArray[index:index + 2])[0]
+                        index += 2
+                        id_tpye0 = id_tpye[id]
+                        dindex = type_lenght_dict[id_tpye0]
+                        type_str = type_str_dict[id_tpye0]
+                        value = struct.unpack(type_str, byteArray[index:index + dindex])[0]
+                        index += dindex
+                        values[id] = value
+                    if(element_id in values.keys()):
+                        one_station_dat["alt"] = values[3]
+                        one_station_dat['data0'] =values[element_id]
+                        station_data_dict[i] = one_station_dat
+                sta = pd.DataFrame(station_data_dict).T
+                sta2 = nmc_verification.nmc_vf_base.basicdata.sta_data(sta)
+
+                filename1 = os.path.split(filename)[1].split(".")
+                print(filename1)
+                time1 = nmc_verification.nmc_vf_base.tool.time_tools.str_to_time(filename1[0])
+                dtime = int(filename1[1])
+                sta2["time"] = time1
+                sta["dtime"] = dtime
+                if station is None:
+                    return sta2
+                else:
+                    sta = nmc_verification.nmc_vf_base.function.sxy_sxy.set_data_to(sta2, station)
+                    return sta
+        return None
+    except:
+        return None
+
+
+def read_from_micaps16(filename):
+    if os.path.exists(filename):
+        file = open(filename,'r')
+        head = file.readline()
+        head = file.readline()
+        stationids = []
+        row1 = []
+        row2 = []
+        while(head is not None and head.strip() != ""):
+            strs = head.split()
+            stationids.append(strs[0])
+            a = int(strs[1])
+            b = a // 100 + (a % 100) /60
+            row1.append(b)
+            a = int(strs[2])
+            b = a // 100 + (a % 100) /60
+            row2.append(b)
+            head =  file.readline()
+        row1 = np.array(row1)
+        row2 = np.array(row2)
+        ids = np.array(stationids)
+        dat = np.zeros((len(row1),3))
+        if(np.max(row2) > 90 or np.min(row2) <-90):
+            dat[:,0] = row2[:]
+            dat[:,1] = row1[:]
+        else:
+            dat[:,0] = row1[:]
+            dat[:,1] = row2[:]
+        station = pd.DataFrame(dat, index=ids, columns=['lon', 'lat', 'dat'])
+        return station
+    else:
+        print(filename +" not exist")
+        return None
