@@ -1,4 +1,5 @@
 import numpy as np
+import copy
 
 def pc_of_sunny_rainy(Ob, Fo):
     '''
@@ -21,12 +22,13 @@ def hmfn_of_sunny_rainy(Ob, Fo):
     :return:
     '''
     # 晴雨准确率
-    Fo[Fo < 0.1] = 0
+    fo1 = copy.deepcopy(Fo)
+    fo1[fo1 < 0.099] = 0
     num = np.size(Ob)
     obhap = np.zeros(num)
     obhap[Ob > 0] = 1
     fohap = np.zeros(num)
-    fohap[Fo > 0] = 1
+    fohap[fo1 > 0] = 1
     obhap01 = np.zeros(num)
     obhap01[Ob >= 0.1] = 1
 
