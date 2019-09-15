@@ -96,6 +96,8 @@ def str_to_time(str0):
         num += "0000"
     elif len(num) == 12:
         num += "00"
+    elif len(num) > 12:
+        num = num[0:12]
     else:
         print("输入日期有误，请检查！")
     # 统一将日期变为datetime类型
