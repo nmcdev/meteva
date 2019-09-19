@@ -6,18 +6,16 @@ import numpy as np
 import pandas as pd
 
 
-
-def contingency_table(ob, fo, grade=None, save_path='contingency_table.xls', sheet_name='sheet1'):
-
+def contingency_table(ob, fo, grade=None, save_path='contingency_table.xls', sheet_name='sheet1',
+                      is_append_sheet=False, excel_write=None):
     '''
-    multi_category_contingency_table 多分类预测列联表
+    contingency_table 二分类预测列联表
     :param ob: 实况数据 一维numpy
     :param fo: 预测数据 一维numpy
     :param grade_list: 等级
     :param save_path: 保存地址
     :return:
     '''
-
 
     # 需要更改
     if grade is not None:
@@ -42,12 +40,15 @@ def contingency_table(ob, fo, grade=None, save_path='contingency_table.xls', she
     conf_mx = np.vstack((conf_mx, line_sums))
     index = list(set(np.hstack((ob, fo))))
     index.append('sum')
-
     table_data = pd.DataFrame(conf_mx,
                               columns=pd.MultiIndex.from_product([['fo'], index]),
                               index=pd.MultiIndex.from_product([['ob'], index])
                               )
-    table_data.to_excel(save_path, sheet_name=sheet_name)
+    if is_append_sheet:
+        table_data.to_excel(excel_writer=excel_write, sheet_name=sheet_name)
+        excel_write.save()
+    else:
+        table_data.to_excel(save_path, sheet_name=sheet_name)
 # contingency_table1
 
 # def contingency_table(ob, fo,threshold_list = None,save_path = None, figsize=(9, 4), x_label=None, y_label=None, title='contingency table', fontsize=20,
