@@ -44,7 +44,7 @@ def sta_to_grid_idw(sta, grid0,background = None,effectR = 1000,nearNum = 8,othe
     data_name = nmc_verification.nmc_vf_base.basicdata.get_data_names(sta)
     index0 = sta.index[0]
     if other_info=='left':
-        grid = nmc_verification.nmc_vf_base.basicdata.grid(grid0.glon,grid0.glat,[sta.ix[index0,'time']],[sta.ix[index0,'dtime'],"h"],[sta.ix[index0,'level']],data_name)
+        grid = nmc_verification.nmc_vf_base.basicdata.grid(grid0.glon,grid0.glat,[sta.loc[index0,'time']],[sta.loc[index0,'dtime'],"h"],[sta.loc[index0,'level']],data_name)
     else:
         grid = grid0
     xyz_sta =  nmc_verification.nmc_vf_base.tool.math_tools.lon_lat_to_cartesian(sta['lon'].values, sta['lat'].values, R = nmc_verification.nmc_vf_base.basicdata.const.ER)
