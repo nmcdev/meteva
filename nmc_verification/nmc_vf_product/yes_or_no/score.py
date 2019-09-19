@@ -118,7 +118,7 @@ def fal_rate_muti_model(ob_sta, fo_sta_list, grade_list):
 #     return hmfn_array
 def hmfn_muti_model(ob_sta, fo_sta_list, grade_list):
     '''
-    bias_muti_model 求多模式 hit, hit, mis, fal, cn
+    hmfn_muti_model 求多模式 hit, hit, mis, fal, cn
     :param ob_sta:  一个实况数据  类型  dataframe
     :param fo_sta_list: 多模式预测数据 列表  类型list  list中的类型是dataframe
     每个dataframe 中的最后一列列名不能相同，表示时空数据的列为在前，列名相同
@@ -157,30 +157,30 @@ def hmfn_muti_model(ob_sta, fo_sta_list, grade_list):
 #     abcd_array = np.array(re_list)
 #     abcd_array = abcd_array.reshape(4, fo_num)
 #     return abcd_array
-def abcd_muti_model(ob_sta, fo_sta_list):
-    '''
-    bias_muti_model 求多模式 hit, mis, fal, cn  晴雨准确率
-    :param ob_sta:  一个实况数据  类型  dataframe
-    :param fo_sta_list: 多模式预测数据 列表  类型list  list中的类型是dataframe
-    每个dataframe 中的最后一列列名不能相同，表示时空数据的列为在前，列名相同
-
-    :return:
-    '''
-
-    fo_sta_list.append(ob_sta)
-    intersection_of_data = nmc_verification.nmc_vf_base.function.put_into_sta_data.merge_on_id_and_obTime(fo_sta_list)
-
-    ob_data = intersection_of_data.iloc[:, -1]
-    ob_data = ob_data.values
-    re_list = []
-    for fo_of_data in intersection_of_data.iloc[:, 7:-1]:
-        fo_of_data = intersection_of_data[fo_of_data].values
-        hit, mis, fal, cn = nmc_verification.nmc_vf_method.yes_or_no.score.hmfn_of_sunny_rainy(ob_data, fo_of_data)
-        re_list.append(hit.tolist())
-        re_list.append(mis.tolist())
-        re_list.append(fal.tolist())
-        re_list.append(cn.tolist())
-    return re_list
+# def abcd_muti_model(ob_sta, fo_sta_list):
+#     '''
+#     bias_muti_model 求多模式 hit, mis, fal, cn  晴雨准确率
+#     :param ob_sta:  一个实况数据  类型  dataframe
+#     :param fo_sta_list: 多模式预测数据 列表  类型list  list中的类型是dataframe
+#     每个dataframe 中的最后一列列名不能相同，表示时空数据的列为在前，列名相同
+#
+#     :return:
+#     '''
+#
+#     fo_sta_list.append(ob_sta)
+#     intersection_of_data = nmc_verification.nmc_vf_base.function.put_into_sta_data.merge_on_id_and_obTime(fo_sta_list)
+#
+#     ob_data = intersection_of_data.iloc[:, -1]
+#     ob_data = ob_data.values
+#     re_list = []
+#     for fo_of_data in intersection_of_data.iloc[:, 7:-1]:
+#         fo_of_data = intersection_of_data[fo_of_data].values
+#         hit, mis, fal, cn = nmc_verification.nmc_vf_method.yes_or_no.score.hmfn_of_sunny_rainy(ob_data, fo_of_data)
+#         re_list.append(hit.tolist())
+#         re_list.append(mis.tolist())
+#         re_list.append(fal.tolist())
+#         re_list.append(cn.tolist())
+#     return re_list
 
 
 def pc_of_sunny_rainy_muti_model(ob_sta, fo_sta_list):
