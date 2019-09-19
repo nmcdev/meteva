@@ -6,7 +6,8 @@ import copy
 from sklearn.linear_model import LinearRegression
 
 
-def multi_category_contingency_table(ob, fo, grade_list=None, save_path='mult_category_contingency_table.xls'):
+def multi_category_contingency_table(ob, fo, grade_list=None, save_path='mult_category_contingency_table.xls',
+                                     is_append_sheet=False, sheet_name='sheet1', excel_writer=None):
     # sheet_name = 'sheet'
     '''
     multi_category_contingency_table 多分类预测列联表
@@ -34,7 +35,7 @@ def multi_category_contingency_table(ob, fo, grade_list=None, save_path='mult_ca
         fo = new_fo
         ob = new_ob
     index = list(set(np.hstack((ob, fo))))
-    print(index)
+
     conf_mx = confusion_matrix(ob, fo)
     row_sums = conf_mx.sum(axis=1, keepdims=True)
     conf_mx = np.hstack((conf_mx, row_sums))
@@ -45,6 +46,8 @@ def multi_category_contingency_table(ob, fo, grade_list=None, save_path='mult_ca
                               columns=pd.MultiIndex.from_product([['fo'], index]),
                               index=pd.MultiIndex.from_product([['ob'], index])
                               )
-    print(save_path)
-    table_data.to_excel(save_path, sheet_name='sheet2')
-#
+    if not is_append_sheet:
+        table_data.to_excel(save_path, sheet_name=sheet_name)
+    else:
+        table_data.to_excel(excel_writer=excel_writer, sheet_name=sheet_name)
+        excel_writer.save()
