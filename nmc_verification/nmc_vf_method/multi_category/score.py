@@ -43,7 +43,7 @@ def accuracy(ob, fo, grade_list=None):
     return accuracy_score
 
 
-def hss(ob, fo, grade_list=None):
+def  hss(ob, fo, grade_list=None):
     '''
     hss heidke技能得分
     :param ob: 实况数据 一维numpy
@@ -73,7 +73,6 @@ def hss(ob, fo, grade_list=None):
         fo[fo_index_list] = grade_list[-1]
         ob1 = ob  # 此处需修改
         fo1 = fo  # 此处需修改
-
 
     ob2 = set(ob1)
     fo2 = set(fo1)
