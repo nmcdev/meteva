@@ -1,25 +1,14 @@
 Metadata-Version: 1.1
 Name: nmc-verification
-Version: 1.0.6
+Version: 1.1.19
 Summary: A collections of functions for meteorological verification.
 Home-page: UNKNOWN
-Author: liucouhua,zhanglianyi,wangbaoli
+Author: liucouhua,wangbaoli,zhanglianyi
 Author-email: liucouhua@163.com
 License: GPL3
-Description: # nmc_verification
-        提供气象产品检验相关程序
-        打包pip可以下载的python安装包
-        1.注册一个pypi账号
-        2.编写一个自己的python 项目
-        要发布项目，必须得先有一个自己的项目，我们把代码放在一个文件夹里像下面这样
-        3.建立一个setup.py文件,这个文件是用来打包的.
-        4.本地打包项目文件,在命令行上先 cd 到存放setup.py文件的目录，然后用下面的命令
-        python setup.py sdist
-        5.上传项目到pypi服务器,在setup.py这一级的目录下建立一个系统文件 .pypirc.
-        命令：twine upload dist/nmc_verification-1.0.0.tar.gz
-        6.下载上传的库.
-        pip install nmc_verification
-        
+Description: #nmc_verification
+        提供气象产品检验相关程序
+        说明文档详见： https://www.showdoc.cc/nmc
 Platform: UNKNOWN
 Classifier: Development Status :: 3 - Alpha
 Classifier: Intended Audience :: Developers

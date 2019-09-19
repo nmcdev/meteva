@@ -6,7 +6,7 @@ import datetime
 
 # ts_array = ts_array.reshape((len(fo_sta_list), len(grade_list)))
 # TS评分
-def ts_muti_model(ob_sta, fo_sta_list, grade_list=None):
+def ts_muti_model(ob_sta, fo_sta_list, grade_list=[1e-300]):
     '''
     求多模式 ts
     :param ob_sta: 一个实况数据  类型  dataframe
@@ -31,7 +31,7 @@ def ts_muti_model(ob_sta, fo_sta_list, grade_list=None):
 
 
 # 计算偏差值
-def bias_muti_model(ob_sta, fo_sta_list, grade_list):
+def bias_muti_model(ob_sta, fo_sta_list,grade_list=[1e-300]):
     '''
     bias_muti_model 求多模式 bias
     :param ob_sta:  一个实况数据  类型  dataframe
@@ -55,7 +55,7 @@ def bias_muti_model(ob_sta, fo_sta_list, grade_list):
     return bias_list
 
 
-def mis_rate_muti_model(ob_sta, fo_sta_list, grade_list):
+def mis_rate_muti_model(ob_sta, fo_sta_list, grade_list=[1e-300]):
     '''
     mis_rate_muti_model 求多模式 mis_rate   漏报率
     :param ob_sta:  一个实况数据  类型  dataframe
@@ -78,7 +78,7 @@ def mis_rate_muti_model(ob_sta, fo_sta_list, grade_list):
     return mis_rate_list
 
 
-def fal_rate_muti_model(ob_sta, fo_sta_list, grade_list):
+def fal_rate_muti_model(ob_sta, fo_sta_list, grade_list=[1e-300]):
     '''
     fal_rate_muti_model 求多模式 fal_rate   失败率
     :param ob_sta:  一个实况数据  类型  dataframe
@@ -116,9 +116,9 @@ def fal_rate_muti_model(ob_sta, fo_sta_list, grade_list):
 #     hmfn_array = np.array(re_list)
 #     hmfn_array = hmfn_array.reshape(4, fo_num, len(grade_list))
 #     return hmfn_array
-def hmfn_muti_model(ob_sta, fo_sta_list, grade_list):
+def hmfn_muti_model(ob_sta, fo_sta_list, grade_list=[1e-300]):
     '''
-    hmfn_muti_model 求多模式 hit, hit, mis, fal, cn
+    bias_muti_model 求多模式 hit, hit, mis, fal, cn
     :param ob_sta:  一个实况数据  类型  dataframe
     :param fo_sta_list: 多模式预测数据 列表  类型list  list中的类型是dataframe
     每个dataframe 中的最后一列列名不能相同，表示时空数据的列为在前，列名相同
@@ -157,30 +157,30 @@ def hmfn_muti_model(ob_sta, fo_sta_list, grade_list):
 #     abcd_array = np.array(re_list)
 #     abcd_array = abcd_array.reshape(4, fo_num)
 #     return abcd_array
-# def abcd_muti_model(ob_sta, fo_sta_list):
-#     '''
-#     bias_muti_model 求多模式 hit, mis, fal, cn  晴雨准确率
-#     :param ob_sta:  一个实况数据  类型  dataframe
-#     :param fo_sta_list: 多模式预测数据 列表  类型list  list中的类型是dataframe
-#     每个dataframe 中的最后一列列名不能相同，表示时空数据的列为在前，列名相同
-#
-#     :return:
-#     '''
-#
-#     fo_sta_list.append(ob_sta)
-#     intersection_of_data = nmc_verification.nmc_vf_base.function.put_into_sta_data.merge_on_id_and_obTime(fo_sta_list)
-#
-#     ob_data = intersection_of_data.iloc[:, -1]
-#     ob_data = ob_data.values
-#     re_list = []
-#     for fo_of_data in intersection_of_data.iloc[:, 7:-1]:
-#         fo_of_data = intersection_of_data[fo_of_data].values
-#         hit, mis, fal, cn = nmc_verification.nmc_vf_method.yes_or_no.score.hmfn_of_sunny_rainy(ob_data, fo_of_data)
-#         re_list.append(hit.tolist())
-#         re_list.append(mis.tolist())
-#         re_list.append(fal.tolist())
-#         re_list.append(cn.tolist())
-#     return re_list
+def hmfn_of_sunny_rainy_muti_model(ob_sta, fo_sta_list):
+    '''
+    bias_muti_model 求多模式 hit, mis, fal, cn  晴雨准确率
+    :param ob_sta:  一个实况数据  类型  dataframe
+    :param fo_sta_list: 多模式预测数据 列表  类型list  list中的类型是dataframe
+    每个dataframe 中的最后一列列名不能相同，表示时空数据的列为在前，列名相同
+
+    :return:
+    '''
+
+    fo_sta_list.append(ob_sta)
+    intersection_of_data = nmc_verification.nmc_vf_base.function.put_into_sta_data.merge_on_id_and_obTime(fo_sta_list)
+
+    ob_data = intersection_of_data.iloc[:, -1]
+    ob_data = ob_data.values
+    re_list = []
+    for fo_of_data in intersection_of_data.iloc[:, 7:-1]:
+        fo_of_data = intersection_of_data[fo_of_data].values
+        hit, mis, fal, cn = nmc_verification.nmc_vf_method.yes_or_no.score.hmfn_of_sunny_rainy(ob_data, fo_of_data)
+        re_list.append(hit.tolist())
+        re_list.append(mis.tolist())
+        re_list.append(fal.tolist())
+        re_list.append(cn.tolist())
+    return re_list
 
 
 def pc_of_sunny_rainy_muti_model(ob_sta, fo_sta_list):
@@ -204,7 +204,7 @@ def pc_of_sunny_rainy_muti_model(ob_sta, fo_sta_list):
     return re_list
 
 
-def hit_muti_model(ob_sta, fo_sta_list, grade_list):
+def hit_muti_model(ob_sta, fo_sta_list, grade_list=[1e-300]):
     '''
 
     hit_muti_model 求多模式    命中率
@@ -228,7 +228,7 @@ def hit_muti_model(ob_sta, fo_sta_list, grade_list):
     return mis_rate_list
 
 
-def bias_extend_muti_model(ob_sta, fo_sta_list, grade_list):
+def bias_extend_muti_model(ob_sta, fo_sta_list, grade_list=[1e-300]):
     '''
 
     bias_extend_muti_model 求多模式  bias_extend评分
@@ -251,7 +251,7 @@ def bias_extend_muti_model(ob_sta, fo_sta_list, grade_list):
     return bias_extend_list
 
 
-def ets_muti_model(ob_sta, fo_sta_list, grade_list):
+def ets_muti_model(ob_sta, fo_sta_list, grade_list=[1e-300]):
     '''
 
      ets_muti_model      求多模式 ets评分

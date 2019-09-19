@@ -1,1 +1,3 @@
-import nmc_verification.nmc_vf_product.score as score
+
+from . import yes_or_no
+from .yes_or_no import *

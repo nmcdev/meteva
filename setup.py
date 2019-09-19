@@ -3,10 +3,9 @@
 from os import path
 from setuptools import find_packages, setup
 from codecs import open
-
 name = "nmc_verification"
-author ="liucouhua,zhanglianyi,wangbaoli"
-version ="1.0.8"
+author ="liucouhua,wangbaoli,zhanglianyi"
+version ="1.1.19"
 
 here = path.abspath(path.dirname(__file__))
 
@@ -42,6 +41,6 @@ setup(
                       'scipy>=0.19.0',
                       'pandas>=0.20.0',
                       'xarray>=0.11.0',
-                      'sklearn>=0.21.2',
+                      'scikit-learn>=0.21.2',
                       'matplotlib>=3.0.1']
 )
