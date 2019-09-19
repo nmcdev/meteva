@@ -102,3 +102,50 @@ def str_to_time(str0):
         print("输入日期有误，请检查！")
     # 统一将日期变为datetime类型
     return datetime.datetime.strptime(num, '%Y%m%d%H%M%S')
+
+
+def get_dtime_of_path(path_model,path):
+    ttt_index = path_model.find("TTT")
+    if (ttt_index >= 0):
+        ttt = int(path[ttt_index:ttt_index + 3])
+    else:
+        ttt = 0
+    return ttt
+def get_time_of_path(path_model,path):
+    yy_index = path_model.find("YYYY")
+    if  yy_index < 0:
+        yy_index = path_model.find("YY")
+        if(yy_index <0):
+            yy = 2000
+        else:
+            yy = int(path[yy_index: yy_index + 2])
+    else:
+        yy = int(path[yy_index: yy_index+4])
+
+    mm_index = path_model.find("MM")
+    if(mm_index >=0):
+        mm = int(path[mm_index:mm_index+2])
+    else:
+        mm = 1
+
+    dd_index = path_model.find("DD")
+    if(dd_index>=0):
+        dd = int(path[dd_index:dd_index + 2])
+    else:
+        dd = 1
+    hh_index = path_model.find("HH")
+    if(hh_index>=0):
+        hh = int(path[hh_index:hh_index + 2])
+    else:
+        hh = 0
+    ff_index = path_model.find("FF")
+    if(ff_index>=0):
+        ff = int(path[ff_index:ff_index + 2])
+    else:
+        ff = 0
+    ss_index = path_model.find("SS")
+    if(ss_index>=0):
+        ss = int(path[ss_index:ss_index + 2])
+    else:
+        ss = 0
+    return datetime.datetime(yy,mm,dd,hh,ff,ss)
