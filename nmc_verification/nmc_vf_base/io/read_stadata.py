@@ -338,7 +338,10 @@ def read_from_gds(ip,port,filename,element_id = None,station = None):
                         index += dindex
                         values[id] = value
                     if(element_id in values.keys()):
-                        one_station_dat["alt"] = values[3]
+                        if 3 in values.keys():
+                            one_station_dat["alt"] = values[3]
+                        else:
+                            one_station_dat["alt"] = 9999
                         one_station_dat['data0'] =values[element_id]
                         station_data_dict[i] = one_station_dat
                 sta = pd.DataFrame(station_data_dict).T
@@ -357,7 +360,8 @@ def read_from_gds(ip,port,filename,element_id = None,station = None):
                     return sta
         return None
     except:
-        return None
+        exstr = traceback.format_exc()
+        print(exstr)
 
 
 def read_from_micaps16(filename):

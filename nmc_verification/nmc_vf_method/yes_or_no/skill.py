@@ -2,7 +2,10 @@
 #计算晴雨预报相对技巧
 def spc(pc,pc_base):
     if pc_base == 1:
-        return 9999
+        if pc <1:
+            return -999
+        else:
+            return 0
     else:
         spc1 = (pc - pc_base) / (1 - pc_base)
         return spc1
