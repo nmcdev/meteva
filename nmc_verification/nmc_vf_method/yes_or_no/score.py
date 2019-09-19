@@ -109,7 +109,11 @@ def bias(Ob, Fo, threshold_list=None):
     # 如果threshold_list ==None，则说明Ob,Fo是0或1组成的数组
 
     hit, mis, fal, _ = hmfn(Ob, Fo, threshold_list)
-    return (hit + fal) / (hit + mis + 0.0000001)
+    bias0 = (hit + fal) / (hit + mis + 0.0000001)
+    sum = hit +mis +fal
+    bias0[sum == 0] = 1
+
+    return bias0
 
 
 
