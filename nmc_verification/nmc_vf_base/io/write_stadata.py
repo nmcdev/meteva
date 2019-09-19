@@ -30,7 +30,10 @@ def write_to_micaps3(sta0,filename = "a.txt", type = -1,effectiveNum = 4):
             else:
                 time_str = "2099 01 01 0 0 "
 
-            level = int(sta['level'].iloc[0])
+            if np.isnan(sta['level'].iloc[0]):
+                level = 0
+            else:
+                level = int(sta['level'].iloc[0])
             if type<0 or level == np.NaN or level ==pd.NaT:
                 level = int(type)
 
