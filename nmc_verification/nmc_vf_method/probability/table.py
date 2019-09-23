@@ -31,8 +31,11 @@ def multi_category_contingency_table(ob, fo, grade_list=None, save_path='multi_c
     conf_mx = np.hstack((conf_mx, row_sums))
     line_sums = conf_mx.sum(axis=0, keepdims=True)
     conf_mx = np.vstack((conf_mx, line_sums))
+    if grade_list is not None:
+        index = grade_list
+    else:
+        index = list(set(np.hstack((ob, fo))))
 
-    index = list(set(np.hstack((ob, fo))))
     index.append('sum')
 
     table_data = pd.DataFrame(conf_mx,
