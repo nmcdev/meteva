@@ -6,7 +6,7 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 
 
-def scatter_regress(ob, fo, save_path=None, scattercolor='r', scattersize=5, x_label='fo', y_label='bo', fontsize=10,
+def scatter_regress(ob, fo, save_path=None, scattercolor='r', scattersize=5, x_label='fo', y_label='bo', fontsize=15,
                     line_color='r'):
     # 批量测试降水、温度等要素的绘图结果，获取一组最佳样式
     '''
@@ -47,7 +47,7 @@ def scatter_regress(ob, fo, save_path=None, scattercolor='r', scattersize=5, x_l
         plt.savefig(save_path)
 
 
-def sorted_ob_fo(ob, fo, save_path=None):
+def sorted_ob_fo(ob, fo, save_path=None, x_label='ob', y_label='fo', fontsize=10, color='r'):
     '''
     sorted_ob_fo 将传入的两组数据先进行排序
     然后画出折线图
@@ -59,7 +59,10 @@ def sorted_ob_fo(ob, fo, save_path=None):
     '''
     ob_sorted = np.sort(ob)
     fo_sorted = np.sort(fo)
-    plt.plot(fo_sorted, ob_sorted)
+    plt.plot(fo_sorted, ob_sorted, color)
+    plt.xlabel(x_label, size=fontsize)
+
+    plt.ylabel(y_label, size=fontsize)
 
     if save_path is None:
         plt.show()
@@ -67,7 +70,7 @@ def sorted_ob_fo(ob, fo, save_path=None):
         plt.savefig(save_path)
 
 
-def box_plot(observed, forecast, save_path=None, x_lable='observation', y_lable='forecast', title='box-plot'):
+def box_plot(observed, forecast, save_path=None, x_label='observation', y_label='forecast', title='box-plot'):
     '''
     box_plot 画一两组数据的箱型图
     ---------------
@@ -79,7 +82,12 @@ def box_plot(observed, forecast, save_path=None, x_lable='observation', y_lable=
     :param title: 图片名字
     :return:
     '''
-    plt.boxplot((observed, forecast), labels=[x_lable, y_lable])
+    plt.boxplot((observed, forecast))
+    fontsize = 15
+    plt.xlabel(x_label, size=fontsize)
+
+    plt.ylabel(y_label, size=fontsize)
+
     plt.title(title)
     if save_path is None:
         plt.show()
