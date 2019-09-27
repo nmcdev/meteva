@@ -24,6 +24,7 @@ def scatter_regress_muti_model(ob, fo_df_list, save_path=None, scattercolor='r',
     '''
     fo_df_list.append(ob)
     meger_df_data = pisd.merge_on_id_and_obTime(fo_df_list)
+
     ob = meger_df_data.iloc[:, -1].values
     data_len = len(fo_df_list)
     plt.figure(figsize=[6.4 * data_len, 4.8])
@@ -42,6 +43,7 @@ def scatter_regress_muti_model(ob, fo_df_list, save_path=None, scattercolor='r',
         # print(ob)
         # print(fo)
         ob_or_fo = np.hstack((ob, fo))
+        print(ob_or_fo)
         num_max = ob_or_fo.max()
         num_min = ob_or_fo.min()
         X = np.zeros((len(ob), 1))

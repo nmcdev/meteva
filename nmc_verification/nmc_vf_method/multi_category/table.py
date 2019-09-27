@@ -49,5 +49,7 @@ def multi_category_contingency_table(ob, fo, grade_list=None, save_path='mult_ca
     if not is_append_sheet:
         table_data.to_excel(save_path, sheet_name=sheet_name)
     else:
-        table_data.to_excel(excel_writer=excel_writer, sheet_name=sheet_name)
+        print('sheet_name:',sheet_name)
+        # print(excel_writer)
+        table_data.to_excel(excel_writer=excel_writer, sheet_name=str(sheet_name))
         excel_writer.save()

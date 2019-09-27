@@ -43,7 +43,11 @@ def frequency_histogram_muti_model(ob, fo_list, clevs, x_lable='frequency', save
     for index, fo_of_colnum in enumerate(meger_df_data.iloc[:, 7:-1]):
         fo = meger_df_data[fo_of_colnum].values
         # axe1 = plt.subplot(1, data_len, index + 1)
-        axe1 = axs[index]
+        print(data_len)
+        if data_len == 1:
+            axe1 = axs
+        else:
+            axe1 = axs[index]
         p_ob = []
         p_fo = []
 

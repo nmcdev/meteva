@@ -43,6 +43,8 @@ def frequency_histogram(ob, fo, clevs, x_lable='frequency', save_path=None,
 
     ax3.bar(x + 0.1, p_ob, width=width, facecolor=left_color, label=left_label)
     ax3.bar(x - 0.1, p_fo, width=width, facecolor=right_color, label=right_label)
+    max = np.max([np.max(p_fo), np.max(p_ob)])
+    plt.ylim(0, max * 1.3)
     ax3.legend(loc=legend_location)
     ax3.set_xlabel(x_lable, fontsize=10)
     ax3.set_xticks(x)
@@ -53,6 +55,3 @@ def frequency_histogram(ob, fo, clevs, x_lable='frequency', save_path=None,
         plt.show()
     else:
         plt.savefig(save_path)
-
-
-

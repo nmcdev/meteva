@@ -31,7 +31,7 @@ def ts_muti_model(ob_sta, fo_sta_list, grade_list=[1e-300]):
 
 
 # 计算偏差值
-def bias_muti_model(ob_sta, fo_sta_list,grade_list=[1e-300]):
+def bias_muti_model(ob_sta, fo_sta_list, grade_list=[1e-300]):
     '''
     bias_muti_model 求多模式 bias
     :param ob_sta:  一个实况数据  类型  dataframe

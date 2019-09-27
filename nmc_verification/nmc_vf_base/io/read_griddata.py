@@ -12,7 +12,8 @@ import struct
 from . import DataBlock_pb2
 from .GDS_data_service import GDSDataService
 
-def grid_ragular(slon,dlon,elon,slat,dlat,elat):
+
+def grid_ragular(slon, dlon, elon, slat, dlat, elat):
     """
     规范化格点（起始经纬度，间隔经度，格点数）
     :param slon:起始经度
@@ -42,10 +43,10 @@ def grid_ragular(slon,dlon,elon,slat,dlat,elat):
         nlat1 = math.ceil(nlat)
     else:
         nlat1 = int(round(nlat))
-    return slon1,dlon1,elon1,slat1,dlat1,elat1,nlon1,nlat1
+    return slon1, dlon1, elon1, slat1, dlat1, elat1, nlon1, nlat1
 
 
-def read_from_micaps4(filename,grid=None):
+def read_from_micaps4(filename, grid=None):
     '''
     读取micaps4格式的格点数据，并将其保存为xarray中DataArray结构的六维数据信息
     :param filename:Micaps4格式的文件路径和文件名
@@ -57,11 +58,11 @@ def read_from_micaps4(filename,grid=None):
             print(filename + " is not exist")
             return None
         try:
-            file = open(filename,'r')
+            file = open(filename, 'r')
             str1 = file.read()
             file.close()
         except:
-            file = open(filename,'r',encoding='utf-8')
+            file = open(filename, 'r', encoding='utf-8')
             str1 = file.read()
             file.close()
         strs = str1.split()
@@ -72,8 +73,8 @@ def read_from_micaps4(filename,grid=None):
         dts = int(strs[7])
         levels = float(strs[8])
 
-        #由于m4只提供年份的后两位，因此，做了个暂时的换算范围在1920-2019年的范围可以匹配成功
-        if len(str(year1)) ==4:
+        # 由于m4只提供年份的后两位，因此，做了个暂时的换算范围在1920-2019年的范围可以匹配成功
+        if len(str(year1)) == 4:
             year3 = str(year1)
         else:
             if year1 >= 50:
@@ -87,18 +88,18 @@ def read_from_micaps4(filename,grid=None):
         elon = float(strs[12])
         slat = float(strs[13])
         elat = float(strs[14])
-        slon1, dlon1, elon1, slat1, dlat1, elat1, nlon1, nlat1 = grid_ragular(slon,dlon,elon,slat,dlat,elat)
-        if len(strs) - 22 >= nlon1 * nlat1 :
-            #用户没有输入参数信息的时候，使用m4文件自带的信息
+        slon1, dlon1, elon1, slat1, dlat1, elat1, nlon1, nlat1 = grid_ragular(slon, dlon, elon, slat, dlat, elat)
+        if len(strs) - 22 >= nlon1 * nlat1:
+            # 用户没有输入参数信息的时候，使用m4文件自带的信息
             k = 22
             dat = (np.array(strs[k:])).astype(float).reshape((1, 1, 1, 1, nlat1, nlon1))
             lon = np.arange(nlon1) * dlon1 + slon1
             lat = np.arange(nlat1) * dlat1 + slat1
-            dates = pd.to_datetime(ymd, format = "%Y%m%d%H%M" )
-            #print(dates)
-            #times = pd.date_range(dates, periods=1)
+            dates = pd.to_datetime(ymd, format="%Y%m%d%H%M")
+            # print(dates)
+            # times = pd.date_range(dates, periods=1)
             dtimes = dts
-            #print(levels,times,dts)
+            # print(levels,times,dts)
             da = xr.DataArray(dat, coords={'member': ['data0'], 'level': [levels], 'time': [dates], 'dtime': [dtimes],
                                            'lat': lat, 'lon': lon},
                               dims=['member', 'level', 'time', 'dtime', 'lat', 'lon'])
@@ -108,7 +109,7 @@ def read_from_micaps4(filename,grid=None):
             if grid is None:
                 return da
             else:
-                #如果传入函数有grid信息，就需要进行一次双线性插值，按照grid信息进行提取网格信息。
+                # 如果传入函数有grid信息，就需要进行一次双线性插值，按照grid信息进行提取网格信息。
                 da1 = nmc_verification.nmc_vf_base.function.gxy_gxy.interpolation_linear(da, grid)
                 return da1
         else:
@@ -119,9 +120,9 @@ def read_from_micaps4(filename,grid=None):
         print(e)
         return None
 
-#读取nc数据
-def read_from_nc(filename,grid = None,value_name = None,member = None,level = None,time = None,dt = None,lat = None,lon = None):
 
+# 读取nc数据
+def read_from_nc(filename, grid=None, value_name=None, member=None, level=None, time=None, dt=None, lat=None, lon=None):
     """
     读取NC文件，并将其保存为xarray中DataArray结构的六维数据信息
     :param filename:NC格式的文件路径和文件名
@@ -138,8 +139,8 @@ def read_from_nc(filename,grid = None,value_name = None,member = None,level = No
         ds0 = xr.open_dataset(filename)
         drop_list = []
         ds = xr.Dataset()
-        #1判断要素成员member
-        if(member is None):
+        # 1判断要素成员member
+        if (member is None):
             member = "member"
         if member in list(ds0.coords) or member in list(ds0):
             if member in ds0.coords:
@@ -154,7 +155,7 @@ def read_from_nc(filename,grid = None,value_name = None,member = None,level = No
         else:
             ds.coords["member"] = ("member", [0])
 
-        #2判断层次level
+        # 2判断层次level
         if (level is None):
             if "level" in list(ds0.coords) or "level" in list(ds0):
                 level = "level"
@@ -174,7 +175,7 @@ def read_from_nc(filename,grid = None,value_name = None,member = None,level = No
             ds.coords["level"] = ("level", [0])
 
         # 3判断时间time
-        if(time is None):
+        if (time is None):
             if "time" in ds0.coords or "time" in list(ds0):
                 time = "time"
             elif "t" in ds0.coords:
@@ -208,8 +209,8 @@ def read_from_nc(filename,grid = None,value_name = None,member = None,level = No
         else:
             ds.coords["dtime"] = ("dtime", [0])
 
-        #5判断纬度lat
-        if(lat is None):
+        # 5判断纬度lat
+        if (lat is None):
             if "latitude" in ds0.coords or "latitude" in list(ds0):
                 lat = "latitude"
             elif "lat" in ds0.coords or "lat" in list(ds0):
@@ -226,15 +227,15 @@ def read_from_nc(filename,grid = None,value_name = None,member = None,level = No
             else:
                 if "lon" in dims[0].lower() or "x" in dims.lower():
                     lats = lats.values.T
-                ds.coords["lat"] = (("lat","lon"), lats)
+                ds.coords["lat"] = (("lat", "lon"), lats)
             attrs_name = list(lats.attrs)
             for key in attrs_name:
                 ds.lat.attrs[key] = lats.attrs[key]
         else:
-            ds.coords["lat"] = ("lat",[0])
+            ds.coords["lat"] = ("lat", [0])
 
-        #6判断经度lon
-        if(lon is None):
+        # 6判断经度lon
+        if (lon is None):
             if "longitude" in ds0.coords or "longitude" in list(ds0):
                 lon = "longitude"
             elif "lon" in ds0.coords or "lon" in list(ds0):
@@ -252,12 +253,12 @@ def read_from_nc(filename,grid = None,value_name = None,member = None,level = No
             else:
                 if "lon" in dims[0].lower() or "x" in dims.lower():
                     lons = lons.values.T
-                ds.coords["lon"] = (("lat","lon"), lons)
+                ds.coords["lon"] = (("lat", "lon"), lons)
             attrs_name = list(lons.attrs)
             for key in attrs_name:
                 ds.lon.attrs[key] = lons.attrs[key]
         else:
-            ds.coords["lon"] = ("lon",[0])
+            ds.coords["lon"] = ("lon", [0])
 
         da = None
         if value_name is not None:
@@ -277,19 +278,18 @@ def read_from_nc(filename,grid = None,value_name = None,member = None,level = No
         dim_order = {}
 
         for dim in dims:
-            if  "member" in dim.lower():
+            if "member" in dim.lower():
                 dim_order["member"] = dim
-            elif dim.lower().find("time") ==0:
+            elif dim.lower().find("time") == 0:
                 dim_order["time"] = dim
-            elif dim.lower().find("dt") ==0:
+            elif dim.lower().find("dt") == 0:
                 dim_order["dtime"] = dim
-            elif dim.lower().find("lev") ==0:
+            elif dim.lower().find("lev") == 0:
                 dim_order["level"] = dim
-            elif dim.lower().find("lat") ==0 or 'y' == dim.lower():
+            elif dim.lower().find("lat") == 0 or 'y' == dim.lower():
                 dim_order["lat"] = dim
-            elif dim.lower().find("lon") ==0 or 'x' == dim.lower():
+            elif dim.lower().find("lon") == 0 or 'x' == dim.lower():
                 dim_order["lon"] = dim
-
 
         if "member" not in dim_order.keys():
             dim_order["member"] = "member"
@@ -308,12 +308,12 @@ def read_from_nc(filename,grid = None,value_name = None,member = None,level = No
             da = da.expand_dims("lat")
         if "lon" not in dim_order.keys():
             dim_order["lon"] = "lon"
-            da = da .expand_dims("lon")
+            da = da.expand_dims("lon")
 
-        #print(da)
-        da = da.transpose(dim_order["member"],dim_order["level"],dim_order["time"],
-                          dim_order["dtime"],dim_order["lat"],dim_order["lon"])
-        ds[name] = (("member","level","time","dtime","lat","lon"),da)
+        # print(da)
+        da = da.transpose(dim_order["member"], dim_order["level"], dim_order["time"],
+                          dim_order["dtime"], dim_order["lat"], dim_order["lon"])
+        ds[name] = (("member", "level", "time", "dtime", "lat", "lon"), da)
         attrs_name = list(da.attrs)
         for key in attrs_name:
             ds[name].attrs[key] = da.attrs[key]
@@ -323,13 +323,13 @@ def read_from_nc(filename,grid = None,value_name = None,member = None,level = No
         da1 = ds[name]
         da1.name = "data"
         if da1.coords['time'] is None:
-            da1.coords['time'] = pd.date_range("2099-1-1",periods=1)
+            da1.coords['time'] = pd.date_range("2099-1-1", periods=1)
         if da1.coords['dtime'] is None:
             da1.coords['dtime'] = [0]
 
         attrs_name = list(da1.attrs)
         if "dtime_type" in attrs_name:
-            da1.attrs["dtime_type"]= "hour"
+            da1.attrs["dtime_type"] = "hour"
 
         nmc_verification.nmc_vf_base.reset(da1)
         if grid is None:
@@ -347,7 +347,7 @@ def read_from_nc(filename,grid = None,value_name = None,member = None,level = No
         return None
 
 
-def read_from_gds_file(filename,grid = None):
+def read_from_gds_file(filename, grid=None):
     print("a")
     try:
         if not os.path.exists(filename):
@@ -372,9 +372,9 @@ def read_from_gds_file(filename,grid = None):
             if (startLat < -90): startLat = -90.0
             if (endLat > 90): endLat = 90.0
             if (endLat < -90): endLat = -90.0
-            grid0 = nmc_verification.nmc_vf_base.grid([startLon,endLon,lonInterval],[startLat,endLat,latInterval])
+            grid0 = nmc_verification.nmc_vf_base.grid([startLon, endLon, lonInterval], [startLat, endLat, latInterval])
             grd = nmc_verification.nmc_vf_base.grid_data(grid0)
-            grd.values = np.frombuffer(byteArray[278:], dtype='float32').reshape(1,1,1,1,grid0.nlat, grid0.nlon)
+            grd.values = np.frombuffer(byteArray[278:], dtype='float32').reshape(1, 1, 1, 1, grid0.nlat, grid0.nlon)
             grd.attrs["dtime_type"] = "hour"
             nmc_verification.nmc_vf_base.reset(grd)
             if (grid is None):
@@ -389,17 +389,17 @@ def read_from_gds_file(filename,grid = None):
         return None
 
 
-def read_from_gds(ip,port,filename,grid = None):
+def read_from_gds(ip, port, filename, grid=None):
     # ip 为字符串形式，示例 “10.20.30.40”
     # port 为整数形式
     # filename 为字符串形式 示例 "ECMWF_HR/TCDC/19083108.000"
 
     service = GDSDataService(ip, port)
     try:
-        if(service is None):
+        if (service is None):
             print("service is None")
             return
-        directory,fileName = os.path.split(filename)
+        directory, fileName = os.path.split(filename)
         status, response = byteArrayResult = service.getData(directory, fileName)
         ByteArrayResult = DataBlock_pb2.ByteArrayResult()
         if status == 200:
@@ -442,14 +442,14 @@ def read_from_gds(ip,port,filename,grid = None):
         return None
 
 
-def read_wind_from_gds_file(filename,grid = None):
+def read_wind_from_gds_file(filename, grid=None):
     try:
         if not os.path.exists(filename):
             print(filename + " is not exist")
             return None
         file = open(filename, 'rb')
         byteArray = file.read()
-        #print(len(byteArray))
+        # print(len(byteArray))
         discriminator = struct.unpack("4s", byteArray[:4])[0].decode("gb2312")
         t = struct.unpack("h", byteArray[4:6])
         mName = struct.unpack("20s", byteArray[6:26])[0].decode("gb2312")
@@ -463,47 +463,50 @@ def read_wind_from_gds_file(filename,grid = None):
         description = mName.rstrip('\x00') + '_' + eleName.rstrip('\x00') + "_" + str(
             level) + '(' + description.rstrip('\x00') + ')' + ":" + str(period)
         if (gridCount == (len(byteArray) - 278) / 8):
-            if(startLat > 90):startLat = 90.0
-            if(startLat < -90) : startLat = -90.0
-            if(endLat > 90) : endLat = 90.0
-            if(endLat < -90): endLat = -90.0
-            grid0 = nmc_verification.nmc_vf_base.grid([startLon,endLon,lonInterval],[startLat,endLat,latInterval])
+            if (startLat > 90): startLat = 90.0
+            if (startLat < -90): startLat = -90.0
+            if (endLat > 90): endLat = 90.0
+            if (endLat < -90): endLat = -90.0
+            grid0 = nmc_verification.nmc_vf_base.grid([startLon, endLon, lonInterval], [startLat, endLat, latInterval])
             speed = nmc_verification.nmc_vf_base.grid_data(grid0)
             i_s = 278
-            i_e = 278 + grid0.nlon * grid0.nlat *4
-            speed.values = np.frombuffer(byteArray[i_s:i_e], dtype='float32').reshape(1,1,1,1,grid0.nlat,grid0.nlon)
-            i_s += grid0.nlon * grid0.nlat *4
-            i_e += grid0.nlon * grid0.nlat *4
+            i_e = 278 + grid0.nlon * grid0.nlat * 4
+            speed.values = np.frombuffer(byteArray[i_s:i_e], dtype='float32').reshape(1, 1, 1, 1, grid0.nlat,
+                                                                                      grid0.nlon)
+            i_s += grid0.nlon * grid0.nlat * 4
+            i_e += grid0.nlon * grid0.nlat * 4
             angle = nmc_verification.nmc_vf_base.grid_data(grid0)
-            angle.values = np.frombuffer(byteArray[i_s:i_e], dtype='float32').reshape(1,1,1,1,grid0.nlat, grid0.nlon)
+            angle.values = np.frombuffer(byteArray[i_s:i_e], dtype='float32').reshape(1, 1, 1, 1, grid0.nlat,
+                                                                                      grid0.nlon)
             nmc_verification.nmc_vf_base.reset(speed)
             nmc_verification.nmc_vf_base.reset(angle)
-            wind = nmc_verification.nmc_vf_base.function.gxy_gxym.get_wind_from_speed_angle(speed,angle)
+            wind = nmc_verification.nmc_vf_base.function.gxy_gxym.get_wind_from_speed_angle(speed, angle)
             if (grid is None):
                 return wind
             else:
-                return nmc_verification.nmc_vf_base.function.gxym_gxym.interpolation_linear(wind,grid)
+                return nmc_verification.nmc_vf_base.function.gxym_gxym.interpolation_linear(wind, grid)
 
     except Exception as e:
         print(e)
         return None
 
-def read_wind_from_micaps2(filename,grid = None):
+
+def read_wind_from_micaps2(filename, grid=None):
     if os.path.exists(filename):
         try:
             column = nmc_verification.nmc_vf_base.m2_value_column.风向
-            sta_angle = nmc_verification.nmc_vf_base.io.read_stadata.read_from_micaps1_2_8(filename,column)
+            sta_angle = nmc_verification.nmc_vf_base.io.read_stadata.read_from_micaps1_2_8(filename, column)
             column = nmc_verification.nmc_vf_base.m2_value_column.风速
             sta_speed = nmc_verification.nmc_vf_base.io.read_stadata.read_from_micaps1_2_8(filename, column)
             grid_angle = nmc_verification.nmc_vf_base.function.sxy_gxy.transform(sta_angle)
             grid_angle.values = 270 - grid_angle.values
             grid_speed = nmc_verification.nmc_vf_base.function.sxy_gxy.transform(sta_speed)
-            wind = nmc_verification.nmc_vf_base.function.gxy_gxym.get_wind_from_speed_angle(grid_speed,grid_angle)
+            wind = nmc_verification.nmc_vf_base.function.gxy_gxym.get_wind_from_speed_angle(grid_speed, grid_angle)
             nmc_verification.nmc_vf_base.reset(wind)
             if grid is None:
                 return wind
             else:
-                wind1 = nmc_verification.nmc_vf_base.function.gxym_gxym.interpolation_linear(wind,grid=grid)
+                wind1 = nmc_verification.nmc_vf_base.function.gxym_gxym.interpolation_linear(wind, grid=grid)
                 return wind1
         except (Exception, BaseException) as e:
             exstr = traceback.format_exc()
@@ -515,7 +518,7 @@ def read_wind_from_micaps2(filename,grid = None):
         return None
 
 
-def read_wind_from_micap11(filename,grid = None):
+def read_wind_from_micap11(filename, grid=None):
     if os.path.exists(filename):
         file = open(filename, 'r')
         str1 = file.read()
@@ -527,15 +530,15 @@ def read_wind_from_micap11(filename,grid = None):
         elon = float(strs[11])
         slat = float(strs[12])
         elat = float(strs[13])
-        grid0 =nmc_verification.nmc_vf_base.grid([slon,elon,dlon],[slat,elat,dlat])
+        grid0 = nmc_verification.nmc_vf_base.grid([slon, elon, dlon], [slat, elat, dlat])
         if len(strs) - 15 >= 2 * grid0.nlon * grid0.nlat:
             k = 16
-            dat_u= (np.array(strs[k:(k + grid0.nlon * grid0.nlat)])).astype(float).reshape((grid0.nlat,grid0.nlon))
+            dat_u = (np.array(strs[k:(k + grid0.nlon * grid0.nlat)])).astype(float).reshape((grid0.nlat, grid0.nlon))
             k += grid0.nlon * grid0.nlat
             dat_v = (np.array(strs[k:(k + grid0.nlon * grid0.nlat)])).astype(float).reshape((grid0.nlat, grid0.nlon))
-            grid_u = nmc_verification.nmc_vf_base.grid_data(grid0,dat_u)
-            grid_v = nmc_verification.nmc_vf_base.grid_data(grid0,dat_v)
-            wind = nmc_verification.nmc_vf_base.function.gxy_gxym.put_uv_into_wind(grid_u,grid_v)
+            grid_u = nmc_verification.nmc_vf_base.grid_data(grid0, dat_u)
+            grid_v = nmc_verification.nmc_vf_base.grid_data(grid0, dat_v)
+            wind = nmc_verification.nmc_vf_base.function.gxy_gxym.put_uv_into_wind(grid_u, grid_v)
             nmc_verification.nmc_vf_base.reset(wind)
             if grid is None:
                 return wind
@@ -550,18 +553,17 @@ def read_wind_from_micap11(filename,grid = None):
         return None
 
 
-
-def read_AWX_from_gds(ip,port,filename,grid = None):
+def read_AWX_from_gds(ip, port, filename, grid=None):
     # ip 为字符串形式，示例 “10.20.30.40”
     # port 为整数形式
     # filename 为字符串形式 示例 "ECMWF_HR/TCDC/19083108.000"
 
     service = GDSDataService(ip, port)
     try:
-        if(service is None):
+        if (service is None):
             print("service is None")
             return
-        directory,fileName = os.path.split(filename)
+        directory, fileName = os.path.split(filename)
         status, response = byteArrayResult = service.getData(directory, fileName)
         ByteArrayResult = DataBlock_pb2.ByteArrayResult()
         if status == 200:
@@ -621,9 +623,9 @@ def read_AWX_from_gds(ip,port,filename,grid = None):
                 awx_index[data_awx < 0] = data_awx[data_awx < 0] + 256
                 awx_index *= 4
                 real_data_awx = realcalib[awx_index]
-                grid0 = nmc_verification.nmc_vf_base.grid([slon, elon, dlon],[slat, elat, dlat])
+                grid0 = nmc_verification.nmc_vf_base.grid([slon, elon, dlon], [slat, elat, dlat])
                 grd = nmc_verification.nmc_vf_base.grid_data(grid0)
-                grd.values = real_data_awx.reshape(1,1,1,1,grid0.nlat, grid0.nlon)
+                grd.values = real_data_awx.reshape(1, 1, 1, 1, grid0.nlat, grid0.nlon)
                 grd.attrs["dtime_type"] = "hour"
                 nmc_verification.nmc_vf_base.reset(grd)
                 if (grid is None):
