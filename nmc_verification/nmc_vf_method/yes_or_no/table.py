@@ -40,15 +40,14 @@ def contingency_table(ob, fo, grade=None, save_path='contingency_table.xls', she
     conf_mx = np.vstack((conf_mx, line_sums))
     index = list(set(np.hstack((ob, fo))))
     index.append('sum')
-    table_data = pd.DataFrame(conf_mx,
-                              columns=pd.MultiIndex.from_product([['fo'], index]),
+    table_data = pd.DataFrame(conf_mx, columns=pd.MultiIndex.from_product([['fo'], index]),
                               index=pd.MultiIndex.from_product([['ob'], index])
                               )
     if is_append_sheet:
-        table_data.to_excel(excel_writer=excel_write, sheet_name=sheet_name)
+        table_data.to_excel(excel_writer=excel_write, sheet_name=str(sheet_name))
         excel_write.save()
     else:
-        table_data.to_excel(save_path, sheet_name=sheet_name)
+        table_data.to_excel(save_path, sheet_name=str(sheet_name))
 # contingency_table1
 
 # def contingency_table(ob, fo,threshold_list = None,save_path = None, figsize=(9, 4), x_label=None, y_label=None, title='contingency table', fontsize=20,

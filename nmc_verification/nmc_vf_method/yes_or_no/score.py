@@ -109,7 +109,7 @@ def bias(Ob, Fo, grade_list=[1e-300]):
     # 返回一维bias评分值数组，数组中的每个值对应一个等级
     # 如果threshold_list ==None，则说明Ob,Fo是0或1组成的数组
 
-    hit, mis, fal, _ = hmfn(Ob, Fo, grade_list=[1e-300])
+    hit, mis, fal, _ = hmfn(Ob, Fo, grade_list)
     bias0 = (hit + fal) / (hit + mis + 0.0000001)
     sum = hit +mis +fal
     bias0[sum == 0] = 1
@@ -119,7 +119,7 @@ def bias(Ob, Fo, grade_list=[1e-300]):
 
 
 def bias_extend(Ob, Fo, grade_list=[1e-300]):
-    bias0 = bias(Ob, Fo,grade_list=[1e-300])
+    bias0 = bias(Ob, Fo,grade_list)
 
     bias_extend0 = np.abs(bias0 - 1)
     return bias_extend0

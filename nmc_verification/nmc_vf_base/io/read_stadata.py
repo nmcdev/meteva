@@ -154,6 +154,7 @@ def read_station(filename, columns, skiprows=0, drop_same_id=True):
         # sta.coloumns = ['level', 'time', 'dtime', 'id', 'lon', 'lat', 'alt', 'data0']
         sta['data0'] = 0
         nmc_verification.nmc_vf_base.basicdata.reset_id(sta)
+        print(sta)
         return sta
     else:
         print(filename + " not exist")

@@ -31,6 +31,7 @@ def multi_mode_and_multi_classification_predictive_contingency_table(ob, fo_list
     if ':' in title:
         title = title[:-13]
         title = title.translate(str.maketrans(':', ':', string.punctuation))
+    # print(title)
     if save_path is None:
         save_path = title + '.xlsx'
     else:

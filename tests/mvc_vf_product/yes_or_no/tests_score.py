@@ -44,7 +44,7 @@ if __name__ == '__main__':
           score.hmfn_muti_model(in_sta, [in_sta, in_sta, in_sta], grade_list=[0, 0.1, 0.3, 0.6, 1]))
 
     print('求abcd_muti_model中......')
-    print('abcd_muti_model得分：', score.abcd_muti_model(in_sta, [in_sta, in_sta, in_sta]))
+    print('abcd_muti_model得分：', score.hmfn_of_sunny_rainy_muti_model(in_sta, [in_sta, in_sta, in_sta]))
 
     print('求pc_of_sunny_rainy_muti_model中......')
     print('pc_of_sunny_rainy_muti_model得分：',
