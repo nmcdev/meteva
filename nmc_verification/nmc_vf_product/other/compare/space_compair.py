@@ -1,19 +1,24 @@
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+
 plt.rcParams['font.sans-serif'] = ['SimHei']  # 用来正常显示中文标签
 plt.rcParams['axes.unicode_minus'] = False  # 用来正常显示负号
 import numpy  as np
 import cartopy.crs as ccrs
-
+import nmc_verification
 from nmc_met_graphics.plot.china_map import add_china_map_2cartopy
-from nmc_verification.nmc_vf_base import function
+# from nmc_verification.nmc_vf_base import function
 from sklearn.linear_model import LinearRegression
+
+
 # import nmc_vf_base as nvb
-from nmc_verification.nmc_vf_method import continuous
-from nmc_verification.nmc_vf_method import yes_or_no
+# from nmc_verification.nmc_vf_method import continuous
+# from nmc_verification.nmc_vf_method import yes_or_no
+
 
 # 绘制24小时格点站点降水检验图
-def draw_veri_rain_24(grid_fo, sta_ob, filename=None):
+def draw_veri_rain_24(grd_fo, sta_ob, filename=None):
+    grid_fo = nmc_verification.nmc_vf_base.get_grid_of_data(grd_fo)
     fig = plt.figure(figsize=(10, 7))
     # 平面对比图
     rect1 = [0.00, 0.42, 0.7, 0.55]  # 左下宽高
@@ -30,13 +35,13 @@ def draw_veri_rain_24(grid_fo, sta_ob, filename=None):
     y = np.arange(grid_fo.nlat) * grid_fo.dlat + grid_fo.slat
     clevs = [0.1, 10, 25, 50, 100, 250, 1000]
     colors_grid = ["#E0EEFA", "#B4D3E9", "#6FB0D7", "#3787C0", "#105BA4", "#07306B", "#07306B"]
-    plot_grid = ax.contourf(x, y, grid_fo.dat, clevs, colors=colors_grid, transform=datacrs)  # 填色图
+    plot_grid = ax.contourf(x, y, grd_fo.values.squeeze, clevs, colors=colors_grid, transform=datacrs)  # 填色图
 
     colorbar_position_grid = fig.add_axes([0.035, 0.94, 0.25, 0.015])  # 位置[左,下,宽,高]
     plt.colorbar(plot_grid, cax=colorbar_position_grid, orientation='horizontal')
     plt.text(0.035, 0.955, "model accumulated precipition(mm)", fontsize=10)
     # 绘制填色站点值
-    sta_ob_in = function.get_from_sta_data.sta_in_grid_xy(sta_ob, grid=grid_fo.grid)
+    sta_ob_in = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_grid_xy(sta_ob, grid=grid_fo)
     colors_sta = ['#FFFFFF', '#0055FF', '#00FFB4', '#F4FF00', '#FE1B00', '#910000', '#B800BA']
     dat = sta_ob_in.values[:, 2]
     dat[dat > 1000] = 0
@@ -60,7 +65,7 @@ def draw_veri_rain_24(grid_fo, sta_ob, filename=None):
     # 散点回归图
     rect2 = [0.07, 0.07, 0.21, 0.30]  # 左下宽高
     ax2 = plt.axes(rect2)
-    sta_fo = function.gxy_sxy.interpolation_linear(grid_fo, sta_ob_in)
+    sta_fo = nmc_verification.nmc_vf_base.function.gxy_sxy.interpolation_linear(grd_fo, sta_ob_in)
 
     ob = sta_ob_in.values[:, 2]
     fo = sta_fo.values[:, 2]
@@ -148,19 +153,19 @@ def draw_veri_rain_24(grid_fo, sta_ob, filename=None):
     ax5 = plt.axes(rect5)
     ax5.axes.set_axis_off()
 
-    mae = continuous.score.mae(ob, fo)
-    me = continuous.score.me(ob, fo)
-    mse = continuous.score.mse(ob, fo)
-    rmse = continuous.score.rmse(ob, fo)
-    bias_c = continuous.score.bias(ob, fo)
-    cor = continuous.score.corr(ob, fo)
-    hit, mis, fal, co = yes_or_no.score.hmfn(ob, fo, clevs[1:])
-    ts = yes_or_no.score.ts(ob, fo, clevs[1:])
-    ets = yes_or_no.score.ets(ob, fo, clevs[1:])
-    bias = yes_or_no.score.bias(ob, fo, clevs[1:])
-    hit_rate = yes_or_no.score.hit_rate(ob, fo, clevs[1:])
-    mis_rate = yes_or_no.score.mis_rate(ob, fo, clevs[1:])
-    fal_rate = yes_or_no.score.fal_rate(ob, fo, clevs[1:])
+    mae = nmc_verification.nmc_vf_method.continuous.score.mae(ob, fo)
+    me = nmc_verification.nmc_vf_method.continuous.score.me(ob, fo)
+    mse = nmc_verification.nmc_vf_method.continuous.score.mse(ob, fo)
+    rmse = nmc_verification.nmc_vf_method.continuous.score.rmse(ob, fo)
+    bias_c = nmc_verification.nmc_vf_method.continuous.score.bias(ob, fo)
+    cor = nmc_verification.nmc_vf_method.continuous.score.corr(ob, fo)
+    hit, mis, fal, co = nmc_verification.nmc_vf_method.yes_or_no.score.hmfn(ob, fo, clevs[1:])
+    ts = nmc_verification.nmc_vf_method.yes_or_no.score.ts(ob, fo, clevs[1:])
+    ets = nmc_verification.nmc_vf_method.yes_or_no.score.ets(ob, fo, clevs[1:])
+    bias = nmc_verification.nmc_vf_method.yes_or_no.score.bias(ob, fo, clevs[1:])
+    hit_rate = nmc_verification.nmc_vf_method.yes_or_no.score.hit_rate(ob, fo, clevs[1:])
+    mis_rate = nmc_verification.nmc_vf_method.yes_or_no.score.mis_rate(ob, fo, clevs[1:])
+    fal_rate = nmc_verification.nmc_vf_method.yes_or_no.score.fal_rate(ob, fo, clevs[1:])
     text = str(len(ob)) + "评分站点预报检验统计量\n"
     text += "Mean absolute error:" + "%6.2f" % mae + "\n"
     text += "Mean error:" + "%6.2f" % me + "\n"
@@ -210,7 +215,7 @@ def show_obfo_rain_24(grid_fo, sta_ob, filename=None):
     plt.colorbar(plot_grid, cax=colorbar_position_grid, orientation='horizontal')
     plt.text(0.035, 0.955, "model accumulated precipition(mm)", fontsize=10)
     # 绘制填色站点值
-    sta_ob_in = function.get_from_sta_data.sta_in_grid_xy(sta_ob, grid=grid_fo.grid)
+    sta_ob_in = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_grid_xy(sta_ob, grid=grid_fo.grid)
     colors_sta = ['#FFFFFF', '#0055FF', '#00FFB4', '#F4FF00', '#FE1B00', '#910000', '#B800BA']
     dat = sta_ob_in.values[:, 2]
     dat[dat > 1000] = 0
