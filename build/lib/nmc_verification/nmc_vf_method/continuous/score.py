@@ -94,6 +94,15 @@ def mre(Ob, Fo):
         are0 = np.mean(np.abs(d1 / s1))
         return are0
 
+#NSE 纳什系数
+#常被用于水文预报的检验，含义类似解释方差占比
+def nse(Ob,Fo):
+    mob = np.mean(Ob)
+    qdob = np.mean(np.power(Ob - mob,2))
+    if qdob ==0:
+        return -9999
+    else:
+        return 1-np.mean(np.power(Ob - Fo,2))/qdob
 
 # FSS
 def FSS(Ob, Fo, window_sizes_list=[3], threshold_list=[50], Masker=None):

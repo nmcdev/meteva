@@ -3,6 +3,7 @@ import numpy as np
 import copy
 import nmc_verification
 import datetime
+import time
 
 
 # 两个站点信息合并为一个，在原有的dataframe的基础上增加行数
@@ -42,6 +43,8 @@ def that_the_name_exists(list, value):
     :param value:  要素名
     :return:
     '''
+    value = str(value)
+    list = [str(i) for i in list]
     if value in list:
         value = str(value) + 'x'
         return that_the_name_exists(list, value)
@@ -49,7 +52,7 @@ def that_the_name_exists(list, value):
         return value
 
 
-# 两个站点信息合并为一个，以站号为公共部分，在原有的dataframe的基础上增加列数
+#  两个站点信息合并为一个，以站号为公共部分，在原有的dataframe的基础上增加列数
 def merge_on_all_dim(sta, sta1):
     '''
     merge_on_all_dim 合并两个sta_dataframe并且使要素名不重复
@@ -63,13 +66,14 @@ def merge_on_all_dim(sta, sta1):
         return sta
     else:
         columns = ['level', 'time', 'dtime', 'id', 'lon', 'lat', 'alt']
-        sta_value_columns = sta.iloc[:, 6:].columns.values.tolist()
-        sta1_value_columns = sta1.iloc[:, 6:].columns.values.tolist()
+        sta_value_columns = sta.iloc[:, 7:].columns.values.tolist()
+        sta1_value_columns = sta1.iloc[:, 7:].columns.values.tolist()
         if len(sta_value_columns) >= len(sta1_value_columns):
+
             for sta1_value_column in sta1_value_columns:
                 ago_name = copy.deepcopy(sta1_value_column)
                 sta1_value_column = that_the_name_exists(sta_value_columns, sta1_value_column)
-                sta1.rename(columns={ago_name: sta1_value_column})
+                sta1.rename(columns={ago_name: sta1_value_column},inplace=True)
         else:
             for sta_value_column in sta_value_columns:
                 ago_name = copy.deepcopy(sta_value_column)
@@ -95,3 +99,46 @@ def merge_on_id_and_obTime(sta_list):
         intersection_of_data = nmc_verification.nmc_vf_base.function.put_into_sta_data.merge_on_all_dim(
             intersection_of_data, sta)
     return intersection_of_data
+# def merge_on_all_dim(sta, sta1):
+#     if (sta is None):
+#         return sta1
+#     elif sta1 is None:
+#         return sta
+#     else:
+#         columns = ['level', 'time', 'dtime', 'id', 'lon', 'lat', 'alt']
+#         df = pd.merge(sta, sta1, on=columns, how='inner')
+#         return df
+#
+#
+# def merge_on_id_and_obTime(sta_list):
+#     intersection_of_data = None
+#     for sta in sta_list:
+#         sta['dtime'] = sta['dtime'].map(lambda x: datetime.timedelta(hours=x))
+#         sta['time'] = sta['time'] + sta['dtime']
+#         sta['dtime'] = 0
+#         intersection_of_data = nmc_verification.nmc_vf_base.function.put_into_sta_data.merge_on_all_dim(
+#             intersection_of_data, sta)
+#     sta_value_columns_list = intersection_of_data.iloc[:, 7:].columns.values.tolist()
+#     sta_value_columns_list = [str(sta_value) for sta_value in sta_value_columns_list]
+#     sta_value_columns_set = set(sta_value_columns_list)
+#
+#     for sta_value in sta_value_columns_set:
+#         num = sta_value_columns_list.count(sta_value)
+#         if num > 1:
+#             for i in range(num - 1):
+#                 t = time.time()
+#                 sta_value_columns_list[sta_value_columns_list.index(sta_value)] = sta_value + str(round(t * 1000))
+#     sta_value_columns_list = ['level', 'time', 'dtime', 'id', 'lon', 'lat', 'alt'] + sta_value_columns_list
+#     intersection_of_data.columns = sta_value_columns_list
+#     return  intersection_of_data
+
+    # lenght = len(sta_list)
+    #     # corr_columns = ['level', 'time', 'dtime', 'id', 'lon', 'lat', 'alt']
+    #     # data = 'data'
+    #     # for i in range(0, lenght):
+    #     #     data1 = data + str(i)
+    #     #     corr_columns.append(data1)
+    #     # intersection_of_data.columns = corr_columns
+    #     #
+    #     # nmc_verification.nmc_vf_base.sta_data(intersection_of_data)
+    #     # return intersection_of_data

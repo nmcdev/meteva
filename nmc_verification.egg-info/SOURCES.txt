@@ -26,6 +26,7 @@ nmc_verification/nmc_vf_base/function/put_into_grid_data.py
 nmc_verification/nmc_vf_base/function/put_into_sta_data.py
 nmc_verification/nmc_vf_base/function/sltdtxy_sltdtxym.py
 nmc_verification/nmc_vf_base/function/sxy_gxy.py
+nmc_verification/nmc_vf_base/function/sxy_gxym.py
 nmc_verification/nmc_vf_base/function/sxy_sxy.py
 nmc_verification/nmc_vf_base/function/sxy_sxym.py
 nmc_verification/nmc_vf_base/function/sxym_sxy.py
@@ -98,3 +99,4 @@ nmc_verification/nmc_vf_report/perspective/veri_result_set.py
 nmc_verification/nmc_vf_report/perspective/veri_task.py
 nmc_verification/nmc_vf_report/perspective/veri_task1.py
 nmc_verification/nmc_vf_report/perspective/veri_task2.py
+nmc_verification/nmc_vf_report/perspective/veri_task_add_rmse.py

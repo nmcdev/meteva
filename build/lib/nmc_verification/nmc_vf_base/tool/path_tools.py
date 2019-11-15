@@ -3,6 +3,8 @@
 import datetime as datetime
 import os as os
 import numpy as np
+from ..io import DataBlock_pb2
+from ..io.GDS_data_service import GDSDataService
 
 #获取最新的路径
 def get_latest_path(dir,time,dt,dt_cell = "hour",dt_step = 1, farthest = 240):
@@ -180,3 +182,50 @@ def get_path_of_grd_nc_longname(root_dir,time,dhour,nc_Fname,fhour_add):
                                                                          "%Y%m%d%H"), dhour, fhour_add, nc_Fname)
     file = r"{0}\{1}\{2}".format(root_dir, time.strftime("%Y%m%d"), ruc_file)
     return file
+
+
+
+def get_gds_file_list_in_one_dir(ip,port,dir):
+
+    service = GDSDataService(ip, port)
+    # 获得指定目录下的所有文件
+    status, response = service.getFileList(dir)
+    MappingResult = DataBlock_pb2.MapResult()
+    file_list = []
+    if status == 200:
+        if MappingResult is not None:
+            # Protobuf的解析
+            MappingResult.ParseFromString(response)
+            results = MappingResult.resultMap
+            # 遍历指定目录
+            for name_size_pair in results.items():
+                if (name_size_pair[1] != 'D'):
+                    file_list.append(name_size_pair[0])
+    return file_list
+
+def get_gds_all_dir(ip,port,path,all_path,service = None):
+    # 初始化GDS客户端
+    if service is None:
+        service = GDSDataService(ip, port)
+    # 获得指定目录下的所有文件
+    status, response = service.getFileList(path)
+    MappingResult = DataBlock_pb2.MapResult()
+    if status == 200:
+        if MappingResult is not None:
+            # Protobuf的解析
+            MappingResult.ParseFromString(response)
+            results = MappingResult.resultMap
+            # 遍历指定目录
+            contain_dir = False
+            for name_size_pair in results.items():
+                if (name_size_pair[1] == 'D'):
+                    contain_dir = True
+                    path1 = '%s%s%s' % (path, "/" , name_size_pair[0])
+                    if(path1[0:1] == "/"):
+                        path1 = path1[1:]
+                    if(path1[0:1] == "/"):
+                        path1 = path1[1:]
+                    get_gds_all_dir(ip,port,path1,all_path,service)
+                    #print(name_size_pair[0])
+            if(not contain_dir):
+                all_path.append(path)

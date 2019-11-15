@@ -1,4 +1,6 @@
+
 import numpy as np
+import copy
 
 def pc_of_sunny_rainy(Ob, Fo):
     '''
@@ -21,12 +23,13 @@ def hmfn_of_sunny_rainy(Ob, Fo):
     :return:
     '''
     # 晴雨准确率
-    Fo[Fo < 0.1] = 0
+    fo1 = copy.deepcopy(Fo)
+    fo1[fo1 < 0.099] = 0
     num = np.size(Ob)
     obhap = np.zeros(num)
     obhap[Ob > 0] = 1
     fohap = np.zeros(num)
-    fohap[Fo > 0] = 1
+    fohap[fo1 > 0] = 1
     obhap01 = np.zeros(num)
     obhap01[Ob >= 0.1] = 1
 
@@ -42,7 +45,7 @@ def hmfn_of_sunny_rainy(Ob, Fo):
     return hit, mis, fal, cn
 
 
-def hit_rate(Ob, Fo, grade_list=None):
+def hit_rate(Ob, Fo, grade_list=[1e-300]):
     '''
     hit_rate 求出命中率
     ----------------------
@@ -59,7 +62,7 @@ def hit_rate(Ob, Fo, grade_list=None):
     return hit / (hit + mis + 0.0000001)
 
 
-def fal_rate(Ob, Fo, grade_list=None):
+def fal_rate(Ob, Fo, grade_list=[1e-300]):
     '''
     fal-rate  求出误报率
     ------------------
@@ -76,7 +79,7 @@ def fal_rate(Ob, Fo, grade_list=None):
     return fal / (hit + fal + 0.0000001)
 
 
-def mis_rate(Ob, Fo, grade_list=None):
+def mis_rate(Ob, Fo, grade_list=[1e-300]):
 
     '''
     mis_rate 漏报率评分
@@ -94,7 +97,7 @@ def mis_rate(Ob, Fo, grade_list=None):
     return mis / (hit + mis + 0.0000001)
 
 
-def bias(Ob, Fo, threshold_list=None):
+def bias(Ob, Fo, grade_list=[1e-300]):
     '''
     bias   bias评分
     ----------------
@@ -106,19 +109,24 @@ def bias(Ob, Fo, threshold_list=None):
     # 返回一维bias评分值数组，数组中的每个值对应一个等级
     # 如果threshold_list ==None，则说明Ob,Fo是0或1组成的数组
 
-    hit, mis, fal, _ = hmfn(Ob, Fo, threshold_list)
-    return (hit + fal) / (hit + mis + 0.0000001)
+    hit, mis, fal, _ = hmfn(Ob, Fo, grade_list)
+    bias0 = (hit + fal) / (hit + mis + 0.0000001)
+    sum = hit +mis +fal
+    bias0[sum == 0] = 1
+    delta = fal - mis
+    bias0[delta ==0] = 1
+    return bias0
 
 
 
-def bias_extend(Ob, Fo, threshold_list=None):
-    bias0 = bias(Ob, Fo, threshold_list)
+def bias_extend(Ob, Fo, grade_list=[1e-300]):
+    bias0 = bias(Ob, Fo,grade_list)
 
     bias_extend0 = np.abs(bias0 - 1)
     return bias_extend0
 
 
-def ts(Ob, Fo, grade_list=None):
+def ts(Ob, Fo, grade_list=[1e-300]):
     '''
     ts ts评分
     -----------------------------
@@ -151,7 +159,7 @@ def ts_hmfn(hit, mis, fal):
     return hit / (hit + mis + fal + 0.000001)
 
 
-def ets(Ob, Fo, grade_list=None):
+def ets(Ob, Fo, grade_list=[1e-300]):
     '''
     ets ets评分
     ----------------------------
@@ -187,7 +195,7 @@ def ets_hmfn(hit, mis, fal, cn):
     return (hit - hit_random) / (hit + mis + fal - hit_random + 0.000001)
 
 
-def hmfn(Ob, Fo, threshold_list=None):
+def hmfn(Ob, Fo, grade_list=[1e-300]):
     '''
     hmfn  列联表
     -------------------------------
@@ -200,36 +208,25 @@ def hmfn(Ob, Fo, threshold_list=None):
     # 输入观测Ob和预报Fo的预报数据（1维的numpy数组）
     # 返回命中数、空报数、漏报数、正确否定数共4个数组，数组中的每个值对应一个等级
     # 如果threshold_list ==None，则说明Ob,Fo是0或1组成的数组
-    if threshold_list is None:
 
-        hit_threshold = (Ob * Fo)
-        mis_threshold = (Ob * (1 - Fo))
-        fal_threshold = ((1 - Ob) * Fo)
-        cn_threshold = ((1 - Ob) * (1 - Fo))
-        hit = hit_threshold.sum()
-        mis = mis_threshold.sum()
-        fal = fal_threshold.sum()
-        cn = cn_threshold.sum()
-        return hit, mis, fal, cn
-    else:
-        hit = np.zeros(len(threshold_list))
-        mis = np.zeros(len(threshold_list))
-        fal = np.zeros(len(threshold_list))
-        cn = np.zeros(len(threshold_list))
-        for i in range(len(threshold_list)):
-            threshold = threshold_list[i]
-            num = np.size(Ob)
-            obhap = np.zeros(num)
-            obhap[Ob >= threshold] = 1
-            fohap = np.zeros(num)
-            fohap[Fo >= threshold] = 1
+    hit = np.zeros(len(grade_list))
+    mis = np.zeros(len(grade_list))
+    fal = np.zeros(len(grade_list))
+    cn = np.zeros(len(grade_list))
+    for i in range(len(grade_list)):
+        threshold = grade_list[i]
+        num = np.size(Ob)
+        obhap = np.zeros(num)
+        obhap[Ob >= threshold] = 1
+        fohap = np.zeros(num)
+        fohap[Fo >= threshold] = 1
 
-            hit_threshold = (obhap * fohap)
-            mis_threshold = (obhap * (1 - fohap))
-            fal_threshold = ((1 - obhap) * fohap)
-            cn_threshold = ((1 - obhap) * (1 - fohap))
-            hit[i] = hit_threshold.sum()
-            mis[i] = mis_threshold.sum()
-            fal[i] = fal_threshold.sum()
-            cn[i] = cn_threshold.sum()
-        return hit, mis, fal, cn
+        hit_threshold = (obhap * fohap)
+        mis_threshold = (obhap * (1 - fohap))
+        fal_threshold = ((1 - obhap) * fohap)
+        cn_threshold = ((1 - obhap) * (1 - fohap))
+        hit[i] = hit_threshold.sum()
+        mis[i] = mis_threshold.sum()
+        fal[i] = fal_threshold.sum()
+        cn[i] = cn_threshold.sum()
+    return hit, mis, fal, cn

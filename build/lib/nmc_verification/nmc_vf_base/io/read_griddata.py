@@ -550,3 +550,89 @@ def read_wind_from_micap11(filename,grid = None):
         return None
 
 
+
+def read_AWX_from_gds(ip,port,filename,grid = None):
+    # ip 为字符串形式，示例 “10.20.30.40”
+    # port 为整数形式
+    # filename 为字符串形式 示例 "ECMWF_HR/TCDC/19083108.000"
+
+    service = GDSDataService(ip, port)
+    try:
+        if(service is None):
+            print("service is None")
+            return
+        directory,fileName = os.path.split(filename)
+        status, response = byteArrayResult = service.getData(directory, fileName)
+        ByteArrayResult = DataBlock_pb2.ByteArrayResult()
+        if status == 200:
+            ByteArrayResult.ParseFromString(response)
+            if ByteArrayResult is not None:
+                byteArray = ByteArrayResult.byteArray
+                sat96 = struct.unpack("12s", byteArray[:12])[0]
+                levl = np.frombuffer(byteArray[12:30], dtype='int16').astype(dtype="int32")
+                formatstr = struct.unpack("8s", byteArray[30:38])[0]
+                qualityflag = struct.unpack("h", byteArray[38:40])[0]
+                satellite = struct.unpack("8s", byteArray[40:48])[0]
+                lev2 = np.frombuffer(byteArray[48:104], dtype='int16').astype(dtype="int32")
+
+                recordlen = levl[4]
+                headnum = levl[5]
+                datanum = levl[6]
+                timenum = lev2[0:5]
+                nlon = lev2[7]
+                nlat = lev2[8]
+                range = lev2[12:16].astype("float32")
+                slat = range[0] / 100
+                elat = range[1] / 100
+                slon = range[2] / 100
+                elon = range[3] / 100
+
+                # nintels=lev2[20:22].astype("float32")
+                dlon = (elon - slon) / (nlon - 1)
+                dlat = (elat - slat) / (nlat - 1)
+
+                colorlen = lev2[24]
+                caliblen = lev2[25]
+                geololen = lev2[26]
+
+                # print(levl)
+                # print(lev2)
+                head_lenght = headnum * recordlen
+                data_lenght = datanum * recordlen
+                # print(head_lenght  + data_lenght)
+                # print( data_lenght)
+                # print(grd.nlon * grd.nlat)
+                # headrest = np.frombuffer(byteArray[:head_lenght], dtype='int8')
+                data_awx = np.frombuffer(byteArray[head_lenght:(head_lenght + data_lenght)], dtype='int8')
+
+                if colorlen <= 0:
+                    calib = np.frombuffer(byteArray[104:(104 + 2048)], dtype='int16').astype(dtype="float32")
+                else:
+                    # color = np.frombuffer(byteArray[104:(104+colorlen*2)], dtype='int16')
+                    calib = np.frombuffer(byteArray[(104 + colorlen * 2):(104 + colorlen * 2 + 2048)],
+                                          dtype='int16').astype(
+                        dtype="float32")
+
+                realcalib = calib / 100.0
+                realcalib[calib < 0] = (calib[calib < 0] + 65536) / 100.0
+
+                awx_index = np.empty(len(data_awx), dtype="int32")
+                awx_index[:] = data_awx[:]
+                awx_index[data_awx < 0] = data_awx[data_awx < 0] + 256
+                awx_index *= 4
+                real_data_awx = realcalib[awx_index]
+                grid0 = nmc_verification.nmc_vf_base.grid([slon, elon, dlon],[slat, elat, dlat])
+                grd = nmc_verification.nmc_vf_base.grid_data(grid0)
+                grd.values = real_data_awx.reshape(1,1,1,1,grid0.nlat, grid0.nlon)
+                grd.attrs["dtime_type"] = "hour"
+                nmc_verification.nmc_vf_base.reset(grd)
+                if (grid is None):
+                    grd.name = "data0"
+                    return grd
+                else:
+                    da = nmc_verification.nmc_vf_base.function.gxy_gxy.interpolation_linear(grd, grid)
+                    da.name = "data0"
+                    return da
+    except Exception as e:
+        print(e)
+        return None

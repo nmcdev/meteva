@@ -3,7 +3,7 @@ import datetime
 
 
 # 准确率
-def accuracy_muti_model(ob_sta, fo_sta_list, grade_list):
+def accuracy_muti_model(ob_sta, fo_sta_list, grade_list=None):
     '''
     accuracy_muti_model  多模式下 准确率
     :param ob_sta:  一个实况数据  类型  dataframe
@@ -26,7 +26,7 @@ def accuracy_muti_model(ob_sta, fo_sta_list, grade_list):
     return accuracy_list
 
 
-def hss_muti_model(ob_sta, fo_sta_list, grade_list):
+def hss_muti_model(ob_sta, fo_sta_list, grade_list=None):
     '''
     accuracy_muti_model  多模式下 hss 评分
     :param ob_sta:  一个实况数据  类型  dataframe
@@ -48,7 +48,7 @@ def hss_muti_model(ob_sta, fo_sta_list, grade_list):
     return hss_list
 
 
-def hk_muti_model(ob_sta, fo_sta_list, grade_list):
+def hk_muti_model(ob_sta, fo_sta_list, grade_list=None):
     '''
     accuracy_muti_model  多模式下 hk评分
     :param ob_sta:  一个实况数据  类型  dataframe

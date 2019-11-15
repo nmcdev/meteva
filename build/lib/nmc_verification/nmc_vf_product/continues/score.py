@@ -1,6 +1,9 @@
+
+#有bug  没有深拷贝
+
 import nmc_verification
 import datetime
-
+import copy
 
 def me_muti_model(ob_sta, fo_sta_list):
     '''
@@ -11,8 +14,9 @@ def me_muti_model(ob_sta, fo_sta_list):
     每个dataframe 中的最后一列列名不能相同，表示时空数据的列为在前，列名相同
     :return:
     '''
-    fo_sta_list.append(ob_sta)
-    intersection_of_data = nmc_verification.nmc_vf_base.function.put_into_sta_data.merge_on_id_and_obTime(fo_sta_list)
+    fo_sta_list1 = copy.deepcopy(fo_sta_list)
+    fo_sta_list1.append(ob_sta)
+    intersection_of_data = nmc_verification.nmc_vf_base.function.put_into_sta_data.merge_on_id_and_obTime(fo_sta_list1)
 
     ob_data = intersection_of_data.iloc[:, -1]
     ob_data = ob_data.values
@@ -34,8 +38,9 @@ def mae_muti_model(ob_sta, fo_sta_list):
     每个dataframe 中的最后一列列名不能相同，表示时空数据的列为在前，列名相同
     :return:
     '''
-    fo_sta_list.append(ob_sta)
-    intersection_of_data = nmc_verification.nmc_vf_base.function.put_into_sta_data.merge_on_id_and_obTime(fo_sta_list)
+    fo_sta_list1 = copy.deepcopy(fo_sta_list)
+    fo_sta_list1.append(ob_sta)
+    intersection_of_data = nmc_verification.nmc_vf_base.function.put_into_sta_data.merge_on_id_and_obTime(fo_sta_list1)
 
     ob_data = intersection_of_data.iloc[:, -1]
     ob_data = ob_data.values
@@ -57,8 +62,9 @@ def mse_muti_model(ob_sta, fo_sta_list):
     每个dataframe 中的最后一列列名不能相同，表示时空数据的列为在前，列名相同
     :return:
     '''
-    fo_sta_list.append(ob_sta)
-    intersection_of_data = nmc_verification.nmc_vf_base.function.put_into_sta_data.merge_on_id_and_obTime(fo_sta_list)
+    fo_sta_list1 = copy.deepcopy(fo_sta_list)
+    fo_sta_list1.append(ob_sta)
+    intersection_of_data = nmc_verification.nmc_vf_base.function.put_into_sta_data.merge_on_id_and_obTime(fo_sta_list1)
 
     ob_data = intersection_of_data.iloc[:, -1]
     ob_data = ob_data.values
@@ -80,8 +86,9 @@ def rmse_muti_model(ob_sta, fo_sta_list):
     每个dataframe 中的最后一列列名不能相同，表示时空数据的列为在前，列名相同
     :return:
     '''
-    fo_sta_list.append(ob_sta)
-    intersection_of_data = nmc_verification.nmc_vf_base.function.put_into_sta_data.merge_on_id_and_obTime(fo_sta_list)
+    fo_sta_list1 = copy.deepcopy(fo_sta_list)
+    fo_sta_list1.append(ob_sta)
+    intersection_of_data = nmc_verification.nmc_vf_base.function.put_into_sta_data.merge_on_id_and_obTime(fo_sta_list1)
 
     ob_data = intersection_of_data.iloc[:, -1]
     ob_data = ob_data.values
@@ -103,8 +110,9 @@ def bias_muti_model(ob_sta, fo_sta_list):
     每个dataframe 中的最后一列列名不能相同，表示时空数据的列为在前，列名相同
     :return:
     '''
-    fo_sta_list.append(ob_sta)
-    intersection_of_data = nmc_verification.nmc_vf_base.function.put_into_sta_data.merge_on_id_and_obTime(fo_sta_list)
+    fo_sta_list1 = copy.deepcopy(fo_sta_list)
+    fo_sta_list1.append(ob_sta)
+    intersection_of_data = nmc_verification.nmc_vf_base.function.put_into_sta_data.merge_on_id_and_obTime(fo_sta_list1)
 
     ob_data = intersection_of_data.iloc[:, -1]
     ob_data = ob_data.values
@@ -126,8 +134,9 @@ def corr_muti_model(ob_sta, fo_sta_list):
     每个dataframe 中的最后一列列名不能相同，表示时空数据的列为在前，列名相同
     :return:
     '''
-    fo_sta_list.append(ob_sta)
-    intersection_of_data = nmc_verification.nmc_vf_base.function.put_into_sta_data.merge_on_id_and_obTime(fo_sta_list)
+    fo_sta_list1 = copy.deepcopy(fo_sta_list)
+    fo_sta_list1.append(ob_sta)
+    intersection_of_data = nmc_verification.nmc_vf_base.function.put_into_sta_data.merge_on_id_and_obTime(fo_sta_list1)
 
     ob_data = intersection_of_data.iloc[:, -1]
     ob_data = ob_data.values
@@ -140,19 +149,20 @@ def corr_muti_model(ob_sta, fo_sta_list):
     return corr_list
 
 
-import copy
+
 
 
 def mre_muti_model(ob_sta, fo_sta_list):
     '''
-    are_muti_model  多模式下 are——平均绝对值误差
+    mre_muti_model  多模式下 are——平均相对误差
     :param ob_sta:  一个实况数据  类型  dataframe
     :param fo_sta_list: 多模式预测数据 列表  类型list  list中的类型是dataframe
     每个dataframe 中的最后一列列名不能相同，表示时空数据的列为在前，列名相同
     :return:
     '''
-    fo_sta_list.append(ob_sta)
-    intersection_of_data = nmc_verification.nmc_vf_base.function.put_into_sta_data.merge_on_id_and_obTime(fo_sta_list)
+    fo_sta_list1 = copy.deepcopy(fo_sta_list)
+    fo_sta_list1.append(ob_sta)
+    intersection_of_data = nmc_verification.nmc_vf_base.function.put_into_sta_data.merge_on_id_and_obTime(fo_sta_list1)
 
     ob_data = intersection_of_data.iloc[:, -1]
     ob_data = ob_data.values

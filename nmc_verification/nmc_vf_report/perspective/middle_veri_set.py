@@ -45,7 +45,7 @@ def ver_one_groupsta_one_method(sta,vmethod,para1,para2,data_names,sample_same):
                 if vmethod == "hmfn":
                     result_one_model = np.array(list(nmc_verification.nmc_vf_method.yes_or_no.score.hmfn(ob,fo,para1)))
                 else:
-                    result_one_model = np.array(list(nmc_verification.nmc_vf_method.yes_or_no.score.abcd_of_sunny_rainy(ob, fo)))
+                    result_one_model = np.array(list(nmc_verification.nmc_vf_method.yes_or_no.score.hmfn_of_sunny_rainy(ob, fo)))
 
         if result_one_model is None:
             if vmethod == "hmfn":

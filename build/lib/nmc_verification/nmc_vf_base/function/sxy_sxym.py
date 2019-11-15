@@ -49,7 +49,7 @@ def get_nearby_sta_value_ensemble(sta_to,nearNum = 100,sta_from = None,drop_fris
     tree = cKDTree(xyz_sta0)
     _,indexs = tree.query(xyz_sta1, k=nearNum)
     data_name = nmc_verification.nmc_vf_base.get_data_names(sta_from)[0]
-    input_dat = sta_from.ix[:, data_name].values
+    input_dat = sta_from[data_name].values
     sta_ensemble = sta_to[nmc_verification.nmc_vf_base.get_coord_names()]
     for i in range(nearNum):
         data_name = "data" + str(i)

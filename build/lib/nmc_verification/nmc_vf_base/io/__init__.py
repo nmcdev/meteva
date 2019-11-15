@@ -3,3 +3,5 @@ from . import read_griddata
 from . import write_griddata
 from . import read_stadata
 from . import write_stadata
+from . import DataBlock_pb2
+from .GDS_data_service import GDSDataService
