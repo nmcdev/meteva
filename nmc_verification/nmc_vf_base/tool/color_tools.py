@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 plt.rcParams['font.sans-serif']=['SimHei'] #用来正常显示中文标签
 plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
 import matplotlib.colors as colors
-
+import pkg_resources
 
 def get_steps_range(line):
     num = len(line)
@@ -49,7 +49,7 @@ def get_steps_range(line):
 
     return step_num,i_start_list
 
-def get_color_map_from_picture(path,show = False):
+def get_cmap_from_picture(path,show = False):
     #im的第一维是y方向，第二维是x方向，第三维是rgb
     im = image.imread(path)
     #首先沿着x方向寻找
@@ -150,4 +150,34 @@ def get_color_map_from_picture(path,show = False):
         plt.show()
     cmap = colors.ListedColormap(color_list, 'indexed')
     return cmap
+
+def get_clev_and_cmap_by_element_name(element_name):
+
+    path = None
+    if element_name == "temp":
+        path = pkg_resources.resource_filename('nmc_verification', "resources/colormaps/color_temp_2m.txt")
+        print(path)
+    clev_cmap = np.loadtxt(path)
+    clev = clev_cmap[:, 0]
+    cmap = clev_cmap[:, 1:] / 255
+    cmap = cmap.tolist()
+    cmap = colors.ListedColormap(cmap, 'indexed')
+    return clev,cmap
+
+def get_part_clev_and_cmap(clev_all,cmap_all,vmax,vmin):
+    start_i = 0
+    for i in range(len(clev_all)-1):
+        if vmin<clev_all[i+1]:
+            start_i = i
+            break
+    end_i = 0
+    for i in range(len(clev_all)-1):
+        if vmax > clev_all[i]:
+            end_i = i+2
+
+    clev_part = clev_all[start_i:end_i]
+    cmap_colors = cmap_all.colors
+    cmap_colors_part = cmap_colors[start_i:end_i]
+    cmap_part = colors.ListedColormap(cmap_colors_part, 'indexed')
+    return clev_part,cmap_part
 
