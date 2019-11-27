@@ -17,6 +17,8 @@ def all_type_time_to_time64(time0):
 def all_type_time_to_datetime(time0):
     time64 = all_type_time_to_time64(time0)
     time1 = time64.astype(datetime.datetime)
+    if isinstance(time1,int):
+        time1 = datetime.datetime.utcfromtimestamp(time1/1000000000)
     return time1
 
 #所有的timedelta类型的数据转为timedelta64类型的时间格式
