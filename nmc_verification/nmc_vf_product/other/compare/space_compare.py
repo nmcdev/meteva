@@ -568,8 +568,115 @@ def rain_24h_comprehensive_chinaland_sg(sta_ob,grd_fo,  filename=None):
     plt.close()
     return
 
-def temper(sta_ob,grd_fo,filename = None):
-    pass
+def temper_gg(grd_ob,grd_fo,filename = None):
+
+    ob_min = np.min(grd_ob.values)
+    fo_min = np.min(grd_fo.values)
+    ob_max = np.max(grd_ob.values)
+    fo_max = np.max(grd_fo.values)
+
+    ob_fo_max = max(ob_max,fo_max)
+    ob_fo_min = min(ob_min,fo_min)
+    clevs_temp, cmap_temp = nmc_verification.nmc_vf_base.tool.color_tools.get_clev_and_cmap_by_element_name("temp")
+    clevs,cmap = nmc_verification.nmc_vf_base.tool.color_tools.get_part_clev_and_cmap(clevs_temp,cmap_temp,ob_fo_max,ob_fo_min)
+
+    width = 9  #整个画面的宽度
+    width_colorbar = 0.6
+    height_title = 0.3
+    height_veri_plot = 0.5
+
+    grid0 = nmc_verification.nmc_vf_base.get_grid_of_data(grd_fo)
+    if(grid0.nlon <= grid0.nlat * 0.5):
+        #采用3*1布局
+        width_map = (width - 2 * width_colorbar) / 3
+        height_map = (grid0.nlat/ grid0.nlon) * width_map
+        height = height_map + height_title + height_veri_plot
+        rect1 = [width_colorbar/width, height_veri_plot/ height, width_map/width , height_map/height]  # 实况
+        rect2 = [(1 * width_map +width_colorbar)/width, height_veri_plot / height, width_map/width ,  height_map/height] # 预报
+        rect3 = [(2 * width_map +width_colorbar+0.05)/width, height_veri_plot / height, width_map/width , height_map/height]  # 误差
+        ob_fo_colorbar_box = [0.02,height_veri_plot / height,0.015,height_map/height]
+        error_colorbar_box = [(3 * width_map +width_colorbar+0.05)/width,height_veri_plot / height,0.015,height_map/height]
+
+    else:
+        #采用1*2 + 1 布局
+        width_map = (width - 2 * width_colorbar) / 1.5
+        height_map = (grid0.nlat / grid0.nlon) * width_map
+        height = height_map + height_title + height_veri_plot
+        rect1 = [(width_colorbar -0.03)/width, (height_veri_plot + 0.5 * height_map) / height, 0.5 * width_map/width , 0.5* height_map/height]  # 实况
+        rect2 = [(width_colorbar -0.03)/width, height_veri_plot / height, 0.5 * width_map/width , 0.5* height_map/height] # 预报
+        rect3 = [(0.5 * width_map +width_colorbar)/width, height_veri_plot / height, width_map/width , height_map/height]  # 误差
+        ob_fo_colorbar_box = [0.02,height_veri_plot / height,0.01,height_map/height]
+        error_colorbar_box = [(1.5 * width_map +width_colorbar+0.05)/width,height_veri_plot / height,0.01,height_map/height]
+
+    rect4 = [0.05, 0.06, 0.26, height_veri_plot / height-0.1]  # 散点回归图，左下宽高
+    rect5 = [0.38, 0.06, 0.28, height_veri_plot / height-0.1]  # 频率柱状图， 左下宽高
+    rect6 = [0.67, 0.01, 0.3, height_veri_plot / height-0.03]  # 左下宽高
+    rect_title = [ width_colorbar/width,(height_veri_plot+ height_map)/height,1-2*width_colorbar/width, 0.001]
+
+    fig = plt.figure(figsize=(width, height))
+    # 平面对比图1
+    datacrs = ccrs.PlateCarree()
+    ax1 = plt.axes(rect1, projection=datacrs)
+    ax2 = plt.axes(rect2, projection=datacrs)
+    ax3 = plt.axes(rect3, projection=datacrs)
+    # 设置地图背景
+
+    map_extent = [grid0.slon, grid0.elon, grid0.slat, grid0.elat]
+    ax1.set_extent(map_extent, crs=datacrs)
+    ax2.set_extent(map_extent, crs=datacrs)
+    ax3.set_extent(map_extent, crs=datacrs)
+    add_china_map_2cartopy(ax1, name='province', edgecolor='k', lw=0.3)  # 省界
+    add_china_map_2cartopy(ax1, name='river', edgecolor='blue', lw=0.3)  # 河流
+    add_china_map_2cartopy(ax2, name='province', edgecolor='k', lw=0.3)  # 省界
+    add_china_map_2cartopy(ax2, name='river', edgecolor='blue', lw=0.3)  # 河流
+    add_china_map_2cartopy(ax3, name='province', edgecolor='k', lw=0.3)  # 省界
+    add_china_map_2cartopy(ax3, name='river', edgecolor='blue', lw=0.3)  # 河流
+
+    # 绘制格点预报场
+    x = np.arange(grid0.nlon) * grid0.dlon + grid0.slon
+    y = np.arange(grid0.nlat) * grid0.dlat + grid0.slat
+    #clevs = [-10,0,15,20,22,24,26,28,30,32,34,35]
+    #colors_grid = ["#00AAAA","#009500","#808000", "#BFBF00","#FFFF00","#FFD400","#FFAA00","#FF7F00","#FF0000","#FF002A","#FF0055","#FF0055"]
+
+    plot_grid = ax1.contourf(x, y, grd_ob.values.squeeze(), levels = clevs,cmap=cmap, transform=datacrs)  # 填色图
+    ax1.set_title("实况",fontsize=12,loc="left",y = 0.0)
+    colorbar_position_grid = fig.add_axes(ob_fo_colorbar_box)  # 位置[左,下,宽,高]
+    plt.colorbar(plot_grid, cax=colorbar_position_grid, orientation='vertical')
+    plt.title("温度(℃)", fontsize=8,verticalalignment='bottom')
+
+    ax2.contourf(x, y, grd_fo.values.squeeze(), levels = clevs,cmap=cmap, transform=datacrs)  # 填色图
+    ax2.set_title("预报", fontsize=12, loc="left",y = 0.0)
+
+    clevs1 = [-5,-4,-3,-2,-1.5,-1,-0.5,0,0.5,1,1.5,2,3,4,5]
+    error = grd_fo.values.squeeze() - grd_ob.values.squeeze()
+
+    plot_grid1 = ax3.contourf(x, y,error , clevs1,cmap = "bwr", transform=datacrs)  # 填色图
+    colorbar_position_grid1 = fig.add_axes(error_colorbar_box)  # 位置[左,下,宽,高]
+    ax3.set_title("预报 - 实况",fontsize=12, loc="left",y = 0.0)
+    plt.colorbar(plot_grid1, cax=colorbar_position_grid1, orientation='vertical')
+    plt.title("误差(℃)", fontsize=8, verticalalignment='bottom')
+
+    time_str = nmc_verification.nmc_vf_base.tool.time_tools.time_to_str(grid0.gtime[0])
+    dati_str = time_str[0:4] + "年" + time_str[4:6] + "月" + time_str[6:8] + "日" + time_str[8:10] + "时"
+    if type(grid0.members[0]) == str:
+        model_name = grid0.members[0]
+    else:
+        model_name = str(grid0.members[0])
+
+    title = model_name + " " + dati_str + "起报" + str(grid0.dtimes[0]) + "H时效预报和实况对比及误差"
+    ax_title = plt.axes(rect_title)
+    ax_title.axes.set_axis_off()
+    ax_title.set_title(title)
+
+
+    # 图片显示或保存
+    if (filename is None):
+        plt.show()
+        print()
+    else:
+        plt.savefig(filename, dpi=300)
+    plt.close()
+
 
 def temper_comprehensive_gg(grd_ob,grd_fo,filename = None):
 
