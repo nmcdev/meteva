@@ -1,4 +1,4 @@
-from nmc_verification.nmc_vf_product.other.compare import space_compair
+from nmc_verification.nmc_vf_product.other.compare import space_compare
 from nmc_verification.nmc_vf_base.io import read_griddata
 from nmc_verification.nmc_vf_base.io import read_stadata
 from nmc_verification.nmc_vf_base.basicdata.grid import grid
@@ -6,20 +6,25 @@ import nmc_verification.nmc_vf_base as nvb
 import pandas as pd
 import numpy as np
 
-ob = np.array([1,2,3])
-fo = np.array([1,2,3])
-cor = np.corrcoef(ob,fo)
-print(cor)
-data_fo = read_griddata.read_from_nc('G:\ppt\ec\grid\/rain24/BT18070108.024.nc')
-#data_fo = nvb.get_grid_of_data(data_nc)
-# data_nc = grid([data_nc.lon[0].values, data_nc.lon[-1].values, ((data_nc.lon[-1] - data_nc.lon[0]) / 1400).values],
-#                [data_nc.lat[0].values, data_nc.lat[-1].values, ((data_nc.lat[-1] - data_nc.lat[0]) / 900).values],
-#                [data_nc.time[0].values, data_nc.time[0].values], data_nc.dtime[0].values, data_nc.level[0].values,
-#                data_nc.member.values)
-data_ob = read_stadata.read_from_micaps3('G:\ppt\ob\sta\/rain24/BT18070208.000')
-data_ob = nvb.function.get_from_sta_data.sta_between_value_range(data_ob, 0, 1000)
-grid = nvb.grid([70,140,0.25],[15,55,0.25])
-data_fo = nvb.function.gxy_gxy.interpolation_linear(data_fo,grid)
-print(data_fo)
-print(data_ob)
-space_compair.draw_veri_rain_24(data_fo, data_ob)
+grid = nvb.grid([73,135,0.25],[18,53,0.25])
+
+#grid = nvb.grid([110,120,0.25],[20,45,0.25])
+#data_fo = read_griddata.read_from_nc('I:/ppt/ec/grid/rain24/BT18070108.024.nc')
+#nvb.set_coords(data_fo,dtime= [24],member= "ecmwf")
+#data_ob = read_stadata.read_from_micaps3('I:/ppt/ob/sta/rain24/BT18070208.000')
+#data_ob = nvb.function.get_from_sta_data.sta_between_value_range(data_ob, 0, 1000)
+#space_compair.rain_24h_sg(data_fo, data_ob) #简单对比图
+#space_compair.rain_24h_comprehensive_sg(data_ob,data_fo, filename="H:/rain24.png") #综合对比图
+
+#data_fo = nvb.function.gxy_gxy.interpolation_linear(data_fo,grid)
+#space_compair.rain_24h_comprehensive_sg(data_ob, data_fo,filename="H:/rain24.png") #改变区域后，重新制作综合对比图
+#space_compair.rain_24h_comprehensive_chinaland(data_ob,data_fo) # 显示范围锁定为中国陆地的综合对比图，布局进行了针对性优化
+#grid = None
+
+grd_fo = nvb.io.read_griddata.read_from_nc(r"H:\task\develop\python\git\nmc_verification\tests\data\ecmwf\temp_2m\19111608.024.nc",grid=grid)
+print(grd_fo)
+nvb.set_coords(grd_fo,dtime= [24],member= "ecmwf")
+grd_ob = nvb.io.read_griddata.read_from_nc(r"H:\task\develop\python\git\nmc_verification\tests\data\ecmwf\temp_2m\19111708.000.nc",grid=grid)
+
+space_compare.temper_gg(grd_ob, grd_fo, "H:/temp.png")
+
