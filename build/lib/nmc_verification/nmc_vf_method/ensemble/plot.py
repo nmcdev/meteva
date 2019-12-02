@@ -1,6 +1,9 @@
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+plt.rcParams['font.sans-serif']=['SimHei'] #用来正常显示中文标签
+plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
 import numpy as np
+import copy
 
 
 def box_plot(observed, forecast, save_path=None, x_lable='observation', y_lable='forecast', title='box-plot'):
@@ -68,3 +71,61 @@ def frequency_histogram(ob, fo, clevs, x_lable='frequency',
     ax3.set_ylabel(y_lable, fontsize=10)
     ax3.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(100))
     plt.show()
+
+
+def rank_histogram(ob,fo,save_path= None):
+    '''
+    :param ob:
+    :param fo:
+    :param save_path:
+    :return:
+    '''
+    en_num = fo.shape[1]
+    sample_num = ob.size
+    fo1 = copy.deepcopy(fo)
+    fo1.sort(axis = 1)
+    index = np.where(ob<fo1[:,0])
+    rank_num = [len(index[0])]
+    for i in range(en_num-1):
+        index = np.where((ob>=fo1[:,i]) & (ob < fo1[:,i+1]))
+        rank_num.append(len(index[0]))
+    index = np.where(ob>=fo1[:,-1])
+    rank_num.append(len(index[0]))
+    rank_rate = np.array(rank_num)/sample_num
+    x = np.arange(0,en_num+1)
+    plt.bar(x,rank_rate)
+    plt.ylabel("比例")
+    plt.xlabel("观测值在集合序列中的排序")
+    plt.title("Rank Histogram")
+    if save_path is None:
+        plt.show()
+    else:
+        plt.savefig(save_path)
+    pass
+
+
+def mse_variance(ob,fo,save_path = None):
+    '''
+    :param ob:
+    :param fo:
+    :param save_path:
+    :return:
+    '''
+    mean_fo = np.mean(fo,axis=1)
+    mse = np.square(ob- mean_fo)
+    var = np.var(fo,axis=1)
+
+    plt.plot(mse,var,'.')
+    if save_path is None:
+        plt.show()
+    else:
+        plt.savefig(save_path)
+    pass
+
+'''
+fo = np.random.rand(10000,2)
+ob = np.random.rand(10000)
+
+#rank_histogram(ob,fo)
+mse_variance(ob,fo)
+'''
