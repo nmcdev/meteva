@@ -29,8 +29,8 @@ def mse(Ob, Fo):
     '''
     mse  求两组数据的均方误差
     ----------------------------------
-    :param Ob:实况数据 一维numpy
-    :param Fo:预测数据 一维numpy
+    :param Ob:实况数据 多维numpy
+    :param Fo:预测数据 多维numpy
     :return: mean_sqrt_error
     '''
     mean_sqrt_error = np.mean(np.square(Ob - Fo))
@@ -78,10 +78,10 @@ def corr(Ob, Fo):
 # 平均相对误差
 def mre(Ob, Fo):
     '''
-    are  平均绝对值误差
+    mre  精细化网格预报竞赛检验办法中的降水量定量相对误差检验指标
     :param Ob: 实况数据 不定长维度的numpy
     :param Fo: 测试数据 不定长维度的numpy
-    :return: are
+    :return: mre
     '''
     s = Ob + Fo
     if np.sum(s) == 0:
@@ -97,6 +97,12 @@ def mre(Ob, Fo):
 #NSE 纳什系数
 #常被用于水文预报的检验，含义类似解释方差占比
 def nse(Ob,Fo):
+    '''
+    nse纳什系数, 常用于计算两个非正态序列的相对误差情况，取值范围为负无穷至1，其取值越接近1代表越准确
+    :param Ob:实况数据 不定长维度的numpy
+    :param Fo:测试数据 不定长维度的numpy
+    :return:
+    '''
     mob = np.mean(Ob)
     qdob = np.mean(np.power(Ob - mob,2))
     if qdob ==0:
@@ -106,6 +112,15 @@ def nse(Ob,Fo):
 
 # FSS
 def FSS(Ob, Fo, window_sizes_list=[3], threshold_list=[50], Masker=None):
+    '''
+
+    :param Ob: 实况数据 2维的numpy
+    :param Fo: 实况数据 2维的numpy
+    :param window_sizes_list: 卷积窗口宽度的列表，以格点数为单位
+    :param threshold_list:  事件发生的阈值
+    :param Masker:  2维的numpy检验的关注区域，在Masker网格值取值为0或1，函数只对网格值等于1的区域的数据进行计算。
+    :return:
+    '''
     shape = Ob.shape
     nw = len(window_sizes_list)
     # print(nw)
