@@ -1,7 +1,6 @@
 import nmc_verification
 import datetime
 
-
 def me_muti_model(ob_sta, fo_sta_list):
     '''
     me_muti_model 求多模式  me——误差平均值评分
@@ -13,7 +12,6 @@ def me_muti_model(ob_sta, fo_sta_list):
     '''
     fo_sta_list.append(ob_sta)
     intersection_of_data = nmc_verification.nmc_vf_base.function.put_into_sta_data.merge_on_id_and_obTime(fo_sta_list)
-
     ob_data = intersection_of_data.iloc[:, -1]
     ob_data = ob_data.values
     me_list = []
