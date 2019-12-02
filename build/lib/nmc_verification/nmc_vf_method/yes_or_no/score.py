@@ -4,12 +4,8 @@ import copy
 def pc_hmfn(hmfn_list):
     '''
     晴雨准确率
-    -------------------------
-    :param hit: 命中数
-    :param mis: 空报数
-    :param fal: 漏报数
-    -------------------------
-    :return:
+    :param hmfn_list,一个组元的列表，其中每个组元为(hit,mis,fal,cn)，它由hmfn_of_sunny_rainy返回
+    :return: 0到1的实数，完美值为1
     '''
     hmfn_array = np.array(hmfn_list)
     hmfn_array_sum = np.sum(hmfn_array,axis=0)
@@ -23,23 +19,21 @@ def pc_hmfn(hmfn_list):
 def pc_of_sunny_rainy(Ob, Fo):
     '''
     晴雨准确率
-    :param Ob: 一个一维得numpy.ndarray   实况数据
-    :param Fo: 一个一维得numpy.ndarray   预测数据
-    :return:
+    :param Ob: 实况数据  任意维numpy数组
+    :param Fo: 预测数据 任意维numpy数组
+    :return: 0到1的实数，完美值为1
     '''
-    # 晴雨准确率
-    hmfn_list = hmfn_of_sunny_rainy(Ob, Fo)
-    cr = pc_hmfn(hmfn_list)
+    hit, mis, fal, cn = hmfn_of_sunny_rainy(Ob, Fo)
+    cr = (hit + cn) / (hit + mis + fal + cn)
     return cr
 
 def hmfn_of_sunny_rainy(Ob, Fo):
     '''
     晴雨准确率列联表
-    :param Ob: 一个一维得numpy.ndarray   实况数据
-    :param Fo: 一个一维得numpy.ndarray   预测数据
-    :return:
+    :param Ob: 实况数据  任意维numpy数组
+    :param Fo: 预测数据 任意维numpy数组
+    :return: python 组元型数据，其内容为 (命中数,漏报数,空报数,正确否定数)
     '''
-    # 晴雨准确率
     fo1 = copy.deepcopy(Fo)
     fo1[fo1 < 0.099] = 0
     shape = Ob.shape
@@ -59,13 +53,25 @@ def hmfn_of_sunny_rainy(Ob, Fo):
     mis = mis_threshold.sum()
     fal = fal_threshold.sum()
     cn = cn_threshold.sum()
-    return hit.tolist(), mis.tolist(), fal.tolist(), cn.tolist()
+    return hit, mis, fal, cn
 
 def hit_rate(Ob, Fo, grade_list=[1e-30]):
+    '''
+    命中率
+    :param Ob: 实况数据  任意维numpy数组
+    :param Fo: 预测数据 任意维numpy数组
+    :param grade_list: 多个阈值同时检验时的等级参数
+    :return: 0到1的实数，完美值为1
+    '''
     hit, mis, fal, _ = hmfn(Ob, Fo, grade_list)
     return hit / (hit + mis + 0.0000001)
 
 def hit_rate_hmfn(hmfn_list):
+    '''
+    命中率
+    :param hmfn_list,一个组元的列表，其中每个组元为(hit,mis,fal,cn)，它由hmfn返回
+    :return: 0到1的实数，完美值为1
+    '''
     hmfn_array = np.array(hmfn_list)
     hmfn_array_sum = np.sum(hmfn_array,axis=0)
     hit = hmfn_array_sum[0]
@@ -74,21 +80,22 @@ def hit_rate_hmfn(hmfn_list):
 
 def fal_rate(Ob, Fo, grade_list=[1e-30]):
     '''
-    fal-rate  求出误报率
-    ------------------
-    :param Ob: 实况数据 一维numpy
-    :param Fo: 预测数据 一维numpy
-    :param grade_list: 等级
-    :return:
+    空报率
+    :param Ob: 实况数据  任意维numpy数组
+    :param Fo: 预测数据 任意维numpy数组
+    :param grade_list: 多个阈值同时检验时的等级参数
+    :return: 0到1的实数，完美值为0
     '''
-    # 输入观测Ob和预报Fo的预报数据（1维的numpy数组），以及判断事件是否发生的阈值threshold，
-    # 返回一维空报率评分值数组，数组中的每个值对应一个等级
-    # 如果threshold_list ==None，则说明Ob,Fo是0或1组成的数组
 
     hit, mis, fal, _ = hmfn(Ob, Fo, grade_list)
     return fal / (hit + fal + 0.0000001)
 
 def fal_rate_hmfn(hmfn_list):
+    '''
+    空报率
+    :param hmfn_list,一个组元的列表，其中每个组元为(hit,mis,fal,cn)，它由hmfn返回
+    :return: 0到1的实数，完美值为0
+    '''
     hmfn_array = np.array(hmfn_list)
     hmfn_array_sum = np.sum(hmfn_array,axis=0)
     hit = hmfn_array_sum[0]
@@ -96,23 +103,23 @@ def fal_rate_hmfn(hmfn_list):
     return fal / (hit + fal + 0.0000001)
 
 def mis_rate(Ob, Fo, grade_list=[1e-30]):
-
     '''
-    mis_rate 漏报率评分
-    --------------------------
-    :param Ob: 实况数据 一维numpy
-    :param Fo: 预测数据 一维numpy
-    :param grade_list: 等级
-    :return:
+    漏报率
+    :param Ob: 实况数据  任意维numpy数组
+    :param Fo: 预测数据 任意维numpy数组
+    :param grade_list: 多个阈值同时检验时的等级参数
+    :return: 0到1的实数，完美值为0
     '''
-    # 输入观测Ob和预报Fo的预报数据（1维的numpy数组），以及判断事件是否发生的阈值threshold，
-    # 返回一维漏报率评分值数组，数组中的每个值对应一个等级
-    # 如果threshold_list ==None，则说明Ob,Fo是0或1组成的数组
 
     hit, mis, fal, _ = hmfn(Ob, Fo, grade_list)
     return mis / (hit + mis + 0.0000001)
 
 def mis_rate_hmfn(hmfn_list):
+    '''
+    空报率
+    :param hmfn_list,一个组元的列表，其中每个组元为(hit,mis,fal,cn)，它由hmfn返回
+    :return: 0到1的实数，完美值为0
+    '''
     hmfn_array = np.array(hmfn_list)
     hmfn_array_sum = np.sum(hmfn_array,axis=0)
     mis = hmfn_array_sum[1]
@@ -121,15 +128,12 @@ def mis_rate_hmfn(hmfn_list):
 
 def bias(Ob, Fo, grade_list=[1e-30]):
     '''
-    bias   bias评分
-    ----------------
-    :param Ob: 实况数据 一维numpy
-    :param Fo: 预测数据 一维numpy
-    :param grade_list: 等级
-    :return: '''
-    # 输入观测Ob和预报Fo的预报数据（1维的numpy数组），以及判断事件是否发生的阈值threshold，
-    # 返回一维bias评分值数组，数组中的每个值对应一个等级
-    # 如果threshold_list ==None，则说明Ob,Fo是0或1组成的数组
+    偏差
+    :param Ob: 实况数据  任意维numpy数组
+    :param Fo: 预测数据 任意维numpy数组
+    :param grade_list: 多个阈值同时检验时的等级参数
+    :return: 0到正无穷的实数，完美值为1
+    '''
 
     hit, mis, fal, _ = hmfn(Ob, Fo, grade_list)
     bias0 = (hit + fal) / (hit + mis + 0.0000001)
@@ -140,6 +144,11 @@ def bias(Ob, Fo, grade_list=[1e-30]):
     return bias0
 
 def bias_hmfn(hmfn_list):
+    '''
+    偏差
+    :param hmfn_list,一个组元的列表，其中每个组元为(hit,mis,fal,cn)，它由hmfn返回
+    :return: 0到正无穷的实数，完美值为1
+    '''
     hmfn_array = np.array(hmfn_list)
     hmfn_array_sum = np.sum(hmfn_array,axis=0)
     mis = hmfn_array_sum[1]
@@ -153,43 +162,44 @@ def bias_hmfn(hmfn_list):
     return bias0
 
 def bias_extend(Ob, Fo, grade_list=[1e-30]):
+    '''
+    偏差幅度
+    :param Ob: 实况数据  任意维numpy数组
+    :param Fo: 预测数据 任意维numpy数组
+    :param grade_list: 多个阈值同时检验时的等级参数
+    :return: 0到无穷大的实数，完美值为0
+    '''
     bias0 = bias(Ob, Fo,grade_list)
     bias_extend0 = np.abs(bias0 - 1)
     return bias_extend0
 
 def bias_extend_hmfn(hmfn_list):
+    '''
+    偏差幅度
+    :param hmfn_list,一个组元的列表，其中每个组元为(hit,mis,fal,cn)，它由hmfn返回
+    :return: 0到无穷大的实数，完美值为0
+    '''
     bias0 = bias_hmfn(hmfn_list)
     bias_extend0 = np.abs(bias0 - 1)
     return bias_extend0
 
 def ts(Ob, Fo, grade_list=[1e-30]):
     '''
-    ts ts评分
-    -----------------------------
-    :param Ob: 实况数据 一维numpy
-    :param Fo: 预测数据 一维numpy
-    :param grade_list: 等级
-    -----------------------------
-    :return:
+    ts评分
+    :param Ob: 实况数据  任意维numpy数组
+    :param Fo: 预测数据 任意维numpy数组
+    :param grade_list: 多个阈值同时检验时的等级参数
+    :return: 0-1的实数，0代表没有技巧，完美值为1
     '''
-    # 输入观测Ob和预报Fo的预报数据（1维的numpy数组），以及判断事件是否发生的阈值value，
-    # 返回一维ts评分值数组，数组中的每个值对应一个等级
-    # 如果threshold_list ==None，则说明Ob,Fo是0或1组成的数组
     hmfn_list = [hmfn(Ob, Fo, grade_list)]
     return ts_hmfn(hmfn_list)
 
 def ts_hmfn(hmfn_list):
     '''
-    ts  hmfn评分
-    -------------------------
-    :param hit: 命中数
-    :param mis: 空报数
-    :param fal: 漏报数
-    -------------------------
-    :return:
+    空报率
+    :param hmfn_list,一个组元的列表，其中每个组元为(hit,mis,fal,cn)，它由hmfn返回
+    :return: 0-1的实数，0代表没有技巧，完美值为1
     '''
-    # 输入命中、空报、漏报数
-    # 返回一维ts评分值数组，数组中的每个值对应一个等级
     hmfn_array = np.array(hmfn_list)
     hmfn_array_sum = np.sum(hmfn_array,axis=0)
     hit = hmfn_array_sum[0]
@@ -200,31 +210,20 @@ def ts_hmfn(hmfn_list):
 
 def ets(Ob, Fo, grade_list=[1e-30]):
     '''
-    ets ets评分
-    ----------------------------
-    :param Ob: 实况数据 一维numpy
-    :param Fo: 预测数据 一维numpy
-    :param grade_list: 等级
-    -----------------------------
-    :return:
+    漏报率
+    :param Ob: 实况数据  任意维numpy数组
+    :param Fo: 预测数据 任意维numpy数组
+    :param grade_list: 多个阈值同时检验时的等级参数
+    :return: -1/3 到1 的实数，完美值为1, 0代表没有技巧
     '''
-    # 输入观测Ob和预报Fo的预报数据（1维的numpy数组），以及判断事件是否发生的阈值value，
-    # 返回一维ets评分值数组，数组中的每个值对应一个等级
-    # 如果threshold_list ==None，则说明Ob,Fo是0或1组成的数组
     hmfn_list = [hmfn(Ob, Fo, grade_list)]
     return ets_hmfn(hmfn_list)
 
 def ets_hmfn(hmfn_list):
     '''
-    ets_hmfn ets_hmfn评分# 输入命中数、空报数、漏报数、正确否定数
-    # 返回一维ets评分值数组，数组中的每个值对应一个等级
-    -------------------------
-    :param hit: 命中数
-    :param mis: 空报数
-    :param fal: 漏报数
-    :param cn: 正确否定数
-    -------------------------
-    :return:
+    空报率
+    :param hmfn_list,一个组元的列表，其中每个组元为(hit,mis,fal,cn)，它由hmfn返回
+    :return: -1/3 到1 的实数，完美值为1, 0代表没有技巧
     '''
     hmfn_array = np.array(hmfn_list)
     hmfn_array_sum = np.sum(hmfn_array,axis=0)
@@ -239,17 +238,11 @@ def ets_hmfn(hmfn_list):
 
 def hmfn(Ob, Fo, grade_list=[1e-300]):
     '''
-    hmfn  列联表
-    -------------------------------
-    :param Ob: 实况数据  一维numpy
-    :param Fo: 预测数据  一维numpy
-    :param threshold_list:阈值列表
-    -------------------------------
-    :return:
+    预报列联表
+    :param Ob: 实况数据  任意维numpy数组
+    :param Fo: 预测数据 任意维numpy数组
+    :return: python 组元型数据，其内容为 (命中数,漏报数,空报数,正确否定数)
     '''
-    # 输入观测Ob和预报Fo的预报数据（1维的numpy数组）
-    # 返回命中数、空报数、漏报数、正确否定数共4个数组，数组中的每个值对应一个等级
-    # 如果threshold_list ==None，则说明Ob,Fo是0或1组成的数组
 
     hit = np.zeros(len(grade_list))
     mis = np.zeros(len(grade_list))
