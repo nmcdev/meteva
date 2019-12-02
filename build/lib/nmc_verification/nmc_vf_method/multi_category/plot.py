@@ -1,54 +1,63 @@
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import copy
 
-
-def frequency_histogram(ob, fo, clevs, x_lable='frequency', save_path=None,
-                        y_lable='range', left_label='Obs', right_label='Pred',
-                        left_color='r', right_color='b', legend_location="upper right", width=0.2):
+def frequency_histogram(ob, fo, grade_list = None, save_path=None):
     '''
     frequency_histogram 对比测试数据和实况数据的发生的频率
-    :param ob:一个实况数据  类型  numpy
-    :param fo: 预测数据 一维的numpy
-    :param clevs: 等级 一个列表
-    :param x_lable: 横坐标的名字
+    :param ob: 实况数据 任意维numpy数组
+    :param fo: 预测数据 任意维numpy数组
+    :param grade_list: 等级
     :param save_path: 保存地址
-    :param y_lable: 纵坐标的名字
-    :param left_label: 左标注名字
-    :param right_label: 右标注名字
-    :param left_color: 左柱状图的颜色
-    :param right_color: 右柱状图颜色
-    :param legend_location: 标注所处的地点
-    :param width: 宽度
-    :return:
+    :return: 无
     '''
-    p_ob = []
-    p_fo = []
+    total_num = ob.size
 
-    xticklabels = []
+    if grade_list is not None:
 
-    for i in range(0, len(clevs) - 1):
-        index0 = np.where((ob >= clevs[i]) & (ob < clevs[i + 1]))
-        xticklabels.append(str(clevs[i]) + '-' + str(clevs[i + 1]))
-        p_ob.append(len(index0[0]) / len(ob))
-        index0 = np.where((fo >= clevs[i]) & (fo < clevs[i + 1]))
-        p_fo.append(len(index0[0]) / len(fo))
-    index0 = np.where(ob >= clevs[-1])
-    p_ob.append(len(index0[0]) / len(ob))
-    index0 = np.where(fo >= clevs[-1])
-    p_fo.append(len(index0[0]) / len(fo))
-    xticklabels.append('>=' + str(clevs[-1]))
-    x = np.arange(0, len(p_ob))
-    ax3 = plt.axes()
+        shape = ob.shape
+        new_ob = np.zeros(shape)
+        new_fo = np.zeros(shape)
+        index_list =["<" + str(grade_list[0])]
+        ob_index_list = np.where(ob<grade_list[0])
+        ob_num_list = [len(ob_index_list[0])]
+        fo_index_list = np.where(fo < grade_list[0])
+        fo_num_list = [len(fo_index_list[0])]
+        for index in range(len(grade_list) - 1):
+            ob_index_list = np.where((grade_list[index] <= ob) & (ob < grade_list[index + 1]))
+            ob_num_list.append(len(ob_index_list[0]))
+            fo_index_list = np.where((grade_list[index] <= fo) & (fo < grade_list[index + 1]))
+            fo_num_list.append(len(fo_index_list[0]))
+            index_list.append("["+str(grade_list[index]) + "," + str(grade_list[index+1]) + ")")
+        ob_index_list = np.where(grade_list[-1] <= ob)
+        ob_num_list.append(len(ob_index_list[0]))
+        fo_index_list = np.where(grade_list[-1] <= fo)
+        fo_num_list.append(len(fo_index_list[0]))
+        index_list.append(">=" + str(grade_list[-1]))
 
-    ax3.bar(x + 0.1, p_ob, width=width, facecolor=left_color, label=left_label)
-    ax3.bar(x - 0.1, p_fo, width=width, facecolor=right_color, label=right_label)
-    ax3.legend(loc=legend_location)
-    ax3.set_xlabel(x_lable, fontsize=10)
-    ax3.set_xticks(x)
-    ax3.set_xticklabels(xticklabels, fontsize=9)
-    ax3.set_ylabel(y_lable, fontsize=10)
-    ax3.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(100))
+    else:
+        new_fo = copy.deepcopy(fo).flatten()
+        new_ob = copy.deepcopy(ob).flatten()
+        index_list = list(set(np.hstack((new_ob, new_fo))))
+        ob_num_list = []
+        fo_num_list = []
+        for i in range(len(index_list)):
+            ob_index_list = np.where(ob == index_list[i])
+            ob_num_list.append(len(ob_index_list[0]))
+            fo_index_list = np.where(fo == index_list[i])
+            fo_num_list.append(len(fo_index_list[0]))
+    p_ob = np.array(ob_num_list)/total_num
+    p_fo = np.array(fo_num_list)/total_num
+    x = np.arange(len(index_list))
+    plt.bar(x + 0.1, p_ob, width=0.2, facecolor="r", label="观测")
+    plt.bar(x - 0.1, p_fo, width=0.2, facecolor="b", label="预报")
+    plt.legend()
+    plt.xlabel("类别", fontsize=10)
+    plt.xticks(x,index_list)
+    plt.ylabel("样本占比", fontsize=10)
+    ymax = max(np.max(p_ob),np.max(p_fo))* 1.4
+    plt.ylim(0.0, ymax)
     if save_path is None:
         plt.show()
     else:
