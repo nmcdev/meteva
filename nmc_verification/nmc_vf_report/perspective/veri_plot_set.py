@@ -105,10 +105,15 @@ class veri_plot_set:
     #初始化设置画图的默认参数
     def __init__(self,subplot = None,legend = None,axis = None,save_dir = ""):
         self.subplot = subplot
+
         if legend == None:
             self.legend = self.subplot
+        else:
+            self.legend = legend
         if axis ==None:
             self.axis = self.legend
+        else:
+            self.axis = axis
 
         self.save_dir = save_dir
     
