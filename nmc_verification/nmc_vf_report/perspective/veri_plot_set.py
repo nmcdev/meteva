@@ -68,7 +68,8 @@ def layout(subplot_num,legend_num,axis_num):
                 com_legend = True
             subplot_w = left_right_edge_width * 2 + axis_num * fit_width_bar * (legend_num + 2)
             fig_w = subplot_w * column_num
-            if fig_w <fit_width_fig :fig_w = fit_width_fig
+            if fig_w <fit_width_fig :
+                fig_w = fit_width_fig
             if fig_w < max_width_fig:
                 fig_h = subplot_h * row_num
                 return fig_w,fig_h,row_num,column_num,com_legend
@@ -104,41 +105,44 @@ class veri_plot_set:
     #初始化设置画图的默认参数
     def __init__(self,subplot = None,legend = None,axis = None,save_dir = ""):
         self.subplot = subplot
-        self.legend = legend
-        self.axis = axis
+        if legend == None:
+            self.legend = self.subplot
+        if axis ==None:
+            self.axis = self.legend
+
         self.save_dir = save_dir
     
     #柱状图参数设置
     def bar(self,veri_result):
         coords = veri_result.coords
         dims = veri_result.dims
-        #print(dims)
-
         not_file_dim = [self.subplot, self.legend, self.axis]
+
         file_pare_dict = {}
         plot_pare_dict = {}
         for dim in dims:
-            if not dim in not_file_dim:
+            if not dim  in not_file_dim:
                 file_pare_dict[dim] = coords[dim].values.tolist()
             else:
                 plot_pare_dict[dim] = coords[dim].values.tolist()
+        if  not file_pare_dict :
+            file_pare_dict[self.subplot] = coords[self.subplot].values.tolist()
 
         file_pare_list = para_array_to_list(0,file_pare_dict)
-        print(file_pare_list)
         colors = ['r','b','g','m','c','y','orange']
         for para_dict in file_pare_list:
-            #print(para_dict)
             veri_result_plot = veri_result.loc[para_dict]
-            #print(veri_result_plot)
             subplot_num = len(plot_pare_dict[self.subplot])
             legend_num = len(plot_pare_dict[self.legend])
             axis_num = len(plot_pare_dict[self.axis])
+
             width_fig, hight_fig, row_num, column_num,com_legend = layout(subplot_num,legend_num,axis_num)
-            print(width_fig)
-            print(hight_fig)
-            print(row_num)
-            print(column_num)
-            print(com_legend)
+
+            # print(width_fig)
+            # print(hight_fig)
+            # print(row_num)
+            # print(column_num)
+            # print(com_legend)
             fig,axs = plt.subplots(nrows=row_num, ncols=column_num, figsize=(width_fig, hight_fig))
             for s in range(subplot_num):
                 si = int(s / column_num)
@@ -153,6 +157,7 @@ class veri_plot_set:
                     ax = axs[si, sj]
 
                 x0 = np.arange(axis_num)
+
                 bar_width = 1/(legend_num + 2)
                 para_dict_subplot = {}
                 para_dict_subplot[self.subplot] = plot_pare_dict[self.subplot][s]
@@ -161,9 +166,18 @@ class veri_plot_set:
 
                 for c in range(legend_num):
                     x = x0 - 0.5 + (c + 1.5) * bar_width
+
+
                     para_dict_subplot[self.legend] = plot_pare_dict[self.legend][c]
                     values = veri_result_plot.loc[para_dict_subplot].values
+                    index = values>100000
+
+                    values[index] = 0
+
+                    ax.scatter(x[index],values[index],marker = 'x')
                     ax.bar(x,values,bar_width* 0.8,color =  colors[c], label=legends[c])
+
+
                 xticklabel = plot_pare_dict[self.axis]
 
                 ax.set_title(para_dict_subplot[self.subplot])
