@@ -1,41 +1,88 @@
+import pkg_resources
+from matplotlib.patches import Polygon
+from mpl_toolkits.basemap import Basemap
+import nmc_verification
+from nmc_verification.nmc_vf_base import function
+from sklearn.linear_model import LinearRegression
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-
-plt.rcParams['font.sans-serif'] = ['SimHei']  # 用来正常显示中文标签
-plt.rcParams['axes.unicode_minus'] = False  # 用来正常显示负号
-import numpy  as np
+import numpy as np
 import cartopy.crs as ccrs
 import nmc_verification
 from nmc_met_graphics.plot.china_map import add_china_map_2cartopy
 # from nmc_verification.nmc_vf_base import function
 from sklearn.linear_model import LinearRegression
 
+# 用来正常显示负号
+plt.rcParams['font.sans-serif'] = ['SimHei']  # 用来正常显示中文标签
+plt.rcParams['axes.unicode_minus'] = False
+import nmc_vf_base as nvb
+from nmc_verification.nmc_vf_method import continuous
+from nmc_verification.nmc_vf_method import yes_or_no
 
-# import nmc_vf_base as nvb
-# from nmc_verification.nmc_vf_method import continuous
-# from nmc_verification.nmc_vf_method import yes_or_no
+
+
+
+
+def add_china_map_2basemap(mp, ax, name='province', facecolor='none',
+                           edgecolor='c', lw=2, encoding = 'utf-8',**kwargs):
+    """
+    Add china province boundary to basemap instance.
+
+    :param mp: basemap instance.
+    :param ax: matplotlib axes instance.
+    :param name: map name.
+    :param facecolor: fill color, default is none.
+    :param edgecolor: edge color.
+    :param lw: line width.
+    :param kwargs: keywords passing to Polygon.
+    :return: None.
+    """
+
+    # map name
+    names = {'nation': "bou1_4p", 'province': "bou2_4p",
+             'county': "BOUNT_poly", 'river': "hyd1_4p",
+             'river_high': "hyd2_4p"}
+
+    # get shape file and information
+    shpfile = pkg_resources.resource_filename(
+        'nmc_verification', "resources/maps/" + names[name])
+    _ = mp.readshapefile(shpfile, 'states', drawbounds=True,default_encoding=encoding)
+
+    for info, shp in zip(mp.states_info, mp.states):
+        poly = Polygon(
+            shp, facecolor=facecolor, edgecolor=edgecolor, lw=lw, **kwargs)
+        ax.add_patch(poly)
+
+
+# 用来正常显示负号
+plt.rcParams['font.sans-serif'] = ['SimHei']  # 用来正常显示中文标签
+plt.rcParams['axes.unicode_minus'] = False
+
+
+
 
 
 # 绘制24小时格点站点降水检验图
 def draw_veri_rain_24(grd_fo, sta_ob, filename=None):
+
     grid_fo = nmc_verification.nmc_vf_base.get_grid_of_data(grd_fo)
+
     fig = plt.figure(figsize=(10, 7))
     # 平面对比图
     rect1 = [0.00, 0.42, 0.7, 0.55]  # 左下宽高
-    datacrs = ccrs.PlateCarree()
-    ax = plt.axes(rect1, projection=datacrs)
-    # 设置地图背景
-    map_extent = [grid_fo.slon, grid_fo.elon, grid_fo.slat, grid_fo.elat]
-    ax.set_extent(map_extent, crs=datacrs)
-    add_china_map_2cartopy(ax, name='province', edgecolor='k', lw=0.3)  # 省界
-    add_china_map_2cartopy(ax, name='river', edgecolor='blue', lw=0.3)  # 河流
 
-    # 绘制格点预报场
+    ax = plt.axes(rect1)
+    # 设置地图背景
+    # llcrnrlon = 119.3, llcrnrlat = 20.7, urcrnrlon = 124.6, urcrnrlat = 26
+    mp = Basemap(llcrnrlon=grid_fo.slon, urcrnrlon= grid_fo.elon,llcrnrlat= grid_fo.slat, urcrnrlat=grid_fo.elat)
+    add_china_map_2basemap(mp, ax, name='province', edgecolor='k', lw=0.3,encoding = 'gbk')
+    add_china_map_2basemap(mp, ax, name='river', edgecolor='k', lw=0.3, encoding='gbk')
     x = np.arange(grid_fo.nlon) * grid_fo.dlon + grid_fo.slon
     y = np.arange(grid_fo.nlat) * grid_fo.dlat + grid_fo.slat
     clevs = [0.1, 10, 25, 50, 100, 250, 1000]
     colors_grid = ["#E0EEFA", "#B4D3E9", "#6FB0D7", "#3787C0", "#105BA4", "#07306B", "#07306B"]
-    plot_grid = ax.contourf(x, y, grd_fo.values.squeeze, clevs, colors=colors_grid, transform=datacrs)  # 填色图
+    plot_grid = ax.contourf(x, y, grd_fo.values.squeeze(), clevs, colors=colors_grid)  # 填色图
 
     colorbar_position_grid = fig.add_axes([0.035, 0.94, 0.25, 0.015])  # 位置[左,下,宽,高]
     plt.colorbar(plot_grid, cax=colorbar_position_grid, orientation='horizontal')
@@ -50,28 +97,28 @@ def draw_veri_rain_24(grd_fo, sta_ob, filename=None):
     for i in range(len(clevs) - 1):
         index0 = np.where((dat >= clevs[i]) & (dat < clevs[i + 1]))
         if (len(index0[0]) > 0):
-            x = np.squeeze(sta_ob_in.values[index0, 0])
-            y = np.squeeze(sta_ob_in.values[index0, 1])
+            x = np.squeeze(sta_ob_in.values[index0, 4])
+            y = np.squeeze(sta_ob_in.values[index0, 5])
             if (len(index0) == 1):
                 x = np.array([x])
                 y = np.array([y])
                 if (i > 0):
-                    ax.scatter(x, y, c=colors_sta[i], transform=ccrs.PlateCarree(), s=3, label=cleves_name[i],
+                    ax.scatter(x, y, c=colors_sta[i], s=3, label=cleves_name[i],
                                linewidths=0.3, edgecolor='k')
                 else:
-                    ax.scatter(x, y, c=colors_sta[i], transform=ccrs.PlateCarree(), s=1, label=cleves_name[i])
+                    ax.scatter(x, y, c=colors_sta[i], s=1, label=cleves_name[i])
     ax.legend(facecolor='whitesmoke', title="observation", loc="lower left", edgecolor='whitesmoke')
 
     # 散点回归图
     rect2 = [0.07, 0.07, 0.21, 0.30]  # 左下宽高
     ax2 = plt.axes(rect2)
     sta_fo = nmc_verification.nmc_vf_base.function.gxy_sxy.interpolation_linear(grd_fo, sta_ob_in)
-
-    ob = sta_ob_in.values[:, 2]
-    fo = sta_fo.values[:, 2]
+    ob = sta_ob_in.values[:, -1]
+    fo = sta_fo.values[:, -1]
     ax2.plot(ob, fo, '.', color='k')
 
     # 绘制比例线
+
     rate = np.sum(fo) / np.sum(ob)
     ob_line = np.arange(0, np.max(ob), np.max(ob) / 30)
     fo_rate = ob_line * rate
@@ -85,6 +132,9 @@ def draw_veri_rain_24(grd_fo, sta_ob, filename=None):
     X[:, 0] = ob_line[:]
     fo_rg = clf.predict(X)
     ax2.plot(ob_line, fo_rg, color='b', linestyle='dashed')
+    ob = ob.astype(np.float32)
+    fo = fo.astype(np.float32)
+
     rg_text1 = "R = " + '%.2f' % (np.corrcoef(ob, fo)[0, 1])
     rg_text2 = "y = " + '%.2f' % (clf.coef_[0]) + "* x + " + '%.2f' % (clf.intercept_)
 
@@ -111,7 +161,7 @@ def draw_veri_rain_24(grd_fo, sta_ob, filename=None):
     ax2.xaxis.set_minor_locator(xminorLocator)
     ax2.yaxis.set_minor_locator(yminorLocator)
 
-    # 绘制频率柱状图 
+    # 绘制频率柱状图
     p_ob = np.zeros(6)
     p_fo = np.zeros(6)
     x = np.arange(6) + 1
@@ -191,7 +241,12 @@ def draw_veri_rain_24(grd_fo, sta_ob, filename=None):
     return
 
 
-# 绘制24小时降水实况与预报对比图
+
+
+
+
+
+
 def show_obfo_rain_24(grid_fo, sta_ob, filename=None):
     fig = plt.figure(figsize=(6, 3.6))
     # 平面对比图
