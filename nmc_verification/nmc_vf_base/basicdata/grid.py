@@ -184,6 +184,15 @@ class grid:
         grid_str += "glon:" + str(self.glon) + "\n"
         grid_str += "glat:" + str(self.glat) + "\n"
         return grid_str
+    def __str__(self):
+        grid_str = ""
+        grid_str += "members:" + str(self.members) +"\n"
+        grid_str += "levels:" + str(self.levels) + "\n"
+        grid_str += "gtime:" + str([self.stime_str,self.etime_str,self.dtime_str]) + "\n"
+        grid_str += "dtimes:" + str(self.dtimes)  +"\n"
+        grid_str += "glon:" + str(self.glon) + "\n"
+        grid_str += "glat:" + str(self.glat) + "\n"
+        return grid_str
 
 def get_grid_of_data(grid_data0):
     '''
