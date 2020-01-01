@@ -5,7 +5,7 @@ import nmc_verification
 import os
 
 
-def write_to_micaps4(da,filename = "a.txt",effectiveNum = 6):
+def write_griddata_to_micaps4(da,filename = "a.txt",effectiveNum = 6):
     """
     输出micaps4格式文件
     :param da:xarray多维数据信息
@@ -80,7 +80,7 @@ def write_to_micaps4(da,filename = "a.txt",effectiveNum = 6):
                fmt=format_str, header=title, comments='')
     print('Create [%s] success' % filename)
 
-def write_to_nc(da,filename = "a.txt",scale_factor = 0.01):
+def write_griddata_to_nc(da,filename = "a.txt",scale_factor = 0.01):
 
     encodingdict = {da.name:{
                         'dtype': 'int32',
@@ -92,7 +92,7 @@ def write_to_nc(da,filename = "a.txt",scale_factor = 0.01):
     da.to_netcdf(filename,encoding = encodingdict)
 
 
-def write_to_micaps11(wind,filename = "a.txt",effectiveNum = 4):
+def write_griddata_to_micaps11(wind,filename = "a.txt",effectiveNum = 4):
     dir = os.path.split(os.path.abspath(filename))[0]
     if os.path.isdir(dir):
         grid0 = nmc_verification.nmc_vf_base.basicdata.get_grid_of_data(wind)
