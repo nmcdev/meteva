@@ -7,8 +7,10 @@ def frequency_histogram(ob, fo, grade_list = None, save_path=None):
     '''
     frequency_histogram 对比测试数据和实况数据的发生的频率
     :param ob: 实况数据 任意维numpy数组
-    :param fo: 预测数据 任意维numpy数组
-    :param grade_list: 等级
+    :param fo: 预测数据 任意维numpy数组,Fo.shape 和Ob.shape一致
+    :param grade_list: 如果该参数为None，观测或预报值出现过的值都作为分类标记.
+    如果该参数不为None，它必须是一个从小到大排列的实数，以其中列出的数值划分出的多个区间作为分类标签。
+    对于预报和观测值不为整数的情况，grade_list 不能设置为None。
     :param save_path: 保存地址
     :return: 无
     '''
@@ -53,9 +55,9 @@ def frequency_histogram(ob, fo, grade_list = None, save_path=None):
     plt.bar(x + 0.1, p_ob, width=0.2, facecolor="r", label="观测")
     plt.bar(x - 0.1, p_fo, width=0.2, facecolor="b", label="预报")
     plt.legend()
-    plt.xlabel("类别", fontsize=10)
+    plt.xlabel("类别", fontsize=14)
     plt.xticks(x,index_list)
-    plt.ylabel("样本占比", fontsize=10)
+    plt.ylabel("样本占比", fontsize=14)
     ymax = max(np.max(p_ob),np.max(p_fo))* 1.4
     plt.ylim(0.0, ymax)
     if save_path is None:
