@@ -1,22 +1,20 @@
 from sklearn.metrics import confusion_matrix
-
 import pandas as pd
 import numpy as np
 import copy
 from sklearn.linear_model import LinearRegression
 
-
-
 def contingency_table(ob, fo, grade_list=None, save_path=None):
     '''
     multi_category_contingency_table 多分类预测列联表
-    :param ob: 实况数据 一维numpy
-    :param fo: 预测数据 一维numpy
-    :param grade_list: 等级
+    :param ob: 实况数据 任意维numpy数组
+    :param fo: 预测数据 任意维numpy数组,Fo.shape 和Ob.shape一致
+    :param grade_list: 如果该参数为None，观测或预报值出现过的值都作为分类标记.
+    如果该参数不为None，它必须是一个从小到大排列的实数，以其中列出的数值划分出的多个区间作为分类标签。
+    对于预报和观测值不为整数的情况，grade_list 不能设置为None。
     :param save_path: 保存地址
-    :return:
+    :return: 内容为混淆矩阵的二维数组，shape为（类别数 + 1）×（类别数 + 1）
     '''
-
     if grade_list is not None:
         ngrade = len(grade_list) + 1
         conf_mx = np.zeros((ngrade, ngrade))
@@ -28,7 +26,7 @@ def contingency_table(ob, fo, grade_list=None, save_path=None):
             fo1 = fo[ob_index_list]
             for j in range(len(gle)- 1 ):
                 fo_index_list = np.where((fo1 >= gle[j]) & (fo1< gle[j+ 1]))
-                conf_mx[i,j ] = len(fo_index_list[0])
+                conf_mx[j,i] = len(fo_index_list[0])
 
         index_list = ["<" + str(grade_list[0])]
         for index in range(len(grade_list) - 1):
@@ -49,19 +47,20 @@ def contingency_table(ob, fo, grade_list=None, save_path=None):
                                   columns=pd.MultiIndex.from_product([['观测'], index_list]),
                                   index=pd.MultiIndex.from_product([['预报'], index_list])
                                   )
-        print(save_path)
+        print("列联表已以excel表格形式保存至" + save_path)
         table_data.to_excel(save_path, sheet_name='sheet1')
     return conf_mx
 
-
-def hap_num_table(ob,fo, grade_list=None, save_path=None):
+def frequency_table(ob,fo, grade_list=None, save_path=None):
     '''
     contingency_table 多分类各等级发生样本数
-    :param ob: 实况数据 一维numpy
-    :param fo: 预测数据 一维numpy
-    :param grade_list: 等级
+    :param ob: 实况数据 任意维numpy数组
+    :param fo: 预测数据 任意维numpy数组,Fo.shape 和Ob.shape一致
+    :param grade_list: 如果该参数为None，观测或预报值出现过的值都作为分类标记.
+    如果该参数不为None，它必须是一个从小到大排列的实数，以其中列出的数值划分出的多个区间作为分类标签。
+    对于预报和观测值不为整数的情况，grade_list 不能设置为None。
     :param save_path: 保存地址
-    :return:
+    :return: 返回 2*N的numpy数组
     '''
     '''
     multi_category_contingency_table 多分类预测列联表
@@ -103,6 +102,6 @@ def hap_num_table(ob,fo, grade_list=None, save_path=None):
                                   columns=pd.MultiIndex.from_product([['类别'], index_list]),
                                   index=pd.MultiIndex.from_product([['ob-fo'], ["观测","预报"]])
                                   )
-        print(save_path)
+        print("频率统计结果已以excel表格形式保存至" + save_path)
         table_data.to_excel(save_path, sheet_name='sheet1')
     return conf_mx

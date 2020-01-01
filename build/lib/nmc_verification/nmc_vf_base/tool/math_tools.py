@@ -58,3 +58,37 @@ def lon_lat_to_cartesian(lon, lat, R=1):
     return xyz
 
 
+def mean_iteration(count_old,mean_old,count_new,mean_new):
+    count_total = count_new + count_old
+    rate1 = count_old/count_total
+    rate2 = count_new/count_total
+    mean = rate1 * mean_old + rate2 * mean_new
+    return mean
+
+def ss_iteration(count_old,mean_old,ss_old,count_new,mean_new,ss_new):
+    import math
+    count_total = count_new + count_old
+    rate1 = count_old/count_total
+    rate2 = count_new/count_total
+    mean_total = rate1 * mean_old + rate2 * mean_new
+    ss_total = ss_old * count_old
+    ss_total += count_old * math.pow((1- rate1) * mean_old - rate2 * mean_new,2)
+    ss_total += ss_new * count_new
+    ss_total += count_new * math.pow((1- rate2) * mean_new - rate1 * mean_old,2)
+    ss_total /= count_total
+    return count_total,mean_total,ss_total
+
+def sxy_iteration(count_old,meanx_old,meany_old,sxy_old,count_new,meanx_new,meany_new,sxy_new):
+    import math
+    count_total = count_new + count_old
+    rate1 = count_old/count_total
+    rate2 = count_new/count_total
+    meanx_total = rate1 * meanx_old + rate2 * meanx_new
+    meany_total = rate1 * meany_old + rate2 * meany_new
+    sxy_total = sxy_old * count_old
+    sxy_total += count_old * ((1- rate1) * meanx_old - rate2 * meanx_new) * ((1- rate1) * meany_old - rate2 * meany_new)
+    sxy_total += sxy_new * count_new
+    sxy_total += count_new * ((1- rate2) * meanx_new - rate1 * meanx_old) * ((1- rate2) * meany_new - rate1 * meany_old)
+    sxy_total /= count_total
+    return count_total, meanx_total, meany_total,sxy_total
+

@@ -37,6 +37,41 @@ def para_array_to_list(key_num,para_array):
                 para_list.append(dict1)
     return para_list
 
+
+def layout_bar(subplot_num,lengend_num,axis_num):
+    # 设置一个子图的一些基本参数
+    com_legend = False
+    up_low_edge_width = 0.2
+    left_right_edge_width = 0.3
+    min_width_bar = 0.1 # bar的最小宽度
+    fit_width_bar = 0.3  #bar的最合适宽度
+    max_width_fig = 12  # 图像的最大宽度
+    max_height_fig = 12  # 图像的最大高度
+    width_x_inter = 0.5
+    common_legend_height = 1  # 如果子图较多，需要将legend 放在整个fig的顶部共用
+    fit_subplot_height = 4
+    min_subplot_height = 2
+
+    # 首先计算一个子图的x坐标数据量
+    x_num_in_oneplot = lengend_num * axis_num
+    width_of_oneplot = x_num_in_oneplot * fit_width_bar + width_x_inter
+    column_num = int(max_width_fig/width_of_oneplot)
+    if column_num<1:
+        column_num = 1
+    if column_num> subplot_num:
+        column_num = subplot_num
+    row_num = int(math.ceil(subplot_num/column_num))
+    fig_w = width_of_oneplot * column_num + (column_num-1) * width_x_inter + up_low_edge_width
+    fig_h = fit_subplot_height * row_num
+    if fig_h > max_height_fig:
+        fig_h_1 = min_subplot_height * row_num
+        if fig_h< fig_h_1:
+            fig_h = fig_h_1
+
+
+    return fig_w, fig_h, row_num, column_num, com_legend
+
+
 #自动布局模块
 def layout(subplot_num,legend_num,axis_num):
     #设置一个子图的一些基本参数
@@ -122,28 +157,26 @@ class veri_plot_set:
                 file_pare_dict[dim] = coords[dim].values.tolist()
             else:
                 plot_pare_dict[dim] = coords[dim].values.tolist()
+        colors = ['r', 'b', 'g', 'm', 'c', 'y', 'orange']
 
-        file_pare_list = para_array_to_list(0,file_pare_dict)
-        print(file_pare_list)
-        colors = ['r','b','g','m','c','y','orange']
-        for para_dict in file_pare_list:
-            #print(para_dict)
-            veri_result_plot = veri_result.loc[para_dict]
-            #print(veri_result_plot)
+        if len(file_pare_dict) == 0:
+            # print(para_dict)
+            veri_result_plot = veri_result
+            # print(veri_result_plot)
             subplot_num = len(plot_pare_dict[self.subplot])
             legend_num = len(plot_pare_dict[self.legend])
             axis_num = len(plot_pare_dict[self.axis])
-            width_fig, hight_fig, row_num, column_num,com_legend = layout(subplot_num,legend_num,axis_num)
+            width_fig, hight_fig, row_num, column_num, com_legend = layout_bar(subplot_num, legend_num, axis_num)
             print(width_fig)
             print(hight_fig)
             print(row_num)
             print(column_num)
             print(com_legend)
-            fig,axs = plt.subplots(nrows=row_num, ncols=column_num, figsize=(width_fig, hight_fig))
+            fig, axs = plt.subplots(nrows=row_num, ncols=column_num, figsize=(width_fig, hight_fig))
             for s in range(subplot_num):
                 si = int(s / column_num)
                 sj = s % column_num
-                if row_num == 1 & column_num ==1:
+                if row_num == 1 and column_num == 1:
                     ax = axs
                 elif row_num == 1:
                     ax = axs[sj]
@@ -153,7 +186,7 @@ class veri_plot_set:
                     ax = axs[si, sj]
 
                 x0 = np.arange(axis_num)
-                bar_width = 1/(legend_num + 2)
+                bar_width = 1 / (legend_num + 2)
                 para_dict_subplot = {}
                 para_dict_subplot[self.subplot] = plot_pare_dict[self.subplot][s]
                 legends = plot_pare_dict[self.legend]
@@ -163,21 +196,77 @@ class veri_plot_set:
                     x = x0 - 0.5 + (c + 1.5) * bar_width
                     para_dict_subplot[self.legend] = plot_pare_dict[self.legend][c]
                     values = veri_result_plot.loc[para_dict_subplot].values
-                    ax.bar(x,values,bar_width* 0.8,color =  colors[c], label=legends[c])
+                    ax.bar(x, values, bar_width * 0.8, color=colors[c], label=legends[c])
                 xticklabel = plot_pare_dict[self.axis]
 
                 ax.set_title(para_dict_subplot[self.subplot])
                 ax.set_xticks(x0)
                 ax.set_xticklabels(xticklabel)
                 y_max = np.max(values_subplot) * 1.5
-                ax.set_ylim(0,y_max)
+                ax.set_ylim(0, y_max)
                 ax.legend()
             save_path = self.save_dir
-            for key in para_dict.keys():
-                save_path += str(key) + "="+ str(para_dict[key]) + "_"
-            save_path += ".png"
+            save_path += "\\verification_result.png"
             nmc_verification.nmc_vf_base.tool.path_tools.creat_path(save_path)
             plt.savefig(save_path)
+
+
+        else:
+            file_pare_list = para_array_to_list(0,file_pare_dict)
+
+
+            for para_dict in file_pare_list:
+                #print(para_dict)
+                veri_result_plot = veri_result.loc[para_dict]
+                #print(veri_result_plot)
+                subplot_num = len(plot_pare_dict[self.subplot])
+                legend_num = len(plot_pare_dict[self.legend])
+                axis_num = len(plot_pare_dict[self.axis])
+                width_fig, hight_fig, row_num, column_num,com_legend = layout_bar(subplot_num,legend_num,axis_num)
+                print(width_fig)
+                print(hight_fig)
+                print(row_num)
+                print(column_num)
+                print(com_legend)
+                fig,axs = plt.subplots(nrows=row_num, ncols=column_num, figsize=(width_fig, hight_fig))
+                for s in range(subplot_num):
+                    si = int(s / column_num)
+                    sj = s % column_num
+                    if row_num == 1 & column_num ==1:
+                        ax = axs
+                    elif row_num == 1:
+                        ax = axs[sj]
+                    elif column_num == 1:
+                        ax = axs[si]
+                    else:
+                        ax = axs[si, sj]
+
+                    x0 = np.arange(axis_num)
+                    bar_width = 1/(legend_num + 2)
+                    para_dict_subplot = {}
+                    para_dict_subplot[self.subplot] = plot_pare_dict[self.subplot][s]
+                    legends = plot_pare_dict[self.legend]
+                    values_subplot = veri_result_plot.loc[para_dict_subplot].values
+
+                    for c in range(legend_num):
+                        x = x0 - 0.5 + (c + 1.5) * bar_width
+                        para_dict_subplot[self.legend] = plot_pare_dict[self.legend][c]
+                        values = veri_result_plot.loc[para_dict_subplot].values
+                        ax.bar(x,values,bar_width* 0.8,color =  colors[c], label=legends[c])
+                    xticklabel = plot_pare_dict[self.axis]
+
+                    ax.set_title(para_dict_subplot[self.subplot])
+                    ax.set_xticks(x0)
+                    ax.set_xticklabels(xticklabel)
+                    y_max = np.max(values_subplot) * 1.5
+                    ax.set_ylim(0,y_max)
+                    ax.legend()
+                save_path = self.save_dir
+                for key in para_dict.keys():
+                    save_path += str(key) + "="+ str(para_dict[key]) + "_"
+                save_path += ".png"
+                nmc_verification.nmc_vf_base.tool.path_tools.creat_path(save_path)
+                plt.savefig(save_path)
 
 
 

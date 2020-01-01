@@ -12,6 +12,7 @@ def join(sta, sta1):
         return sta1
     else:
         sta = pd.concat([sta, sta1])
+    sta = sta.drop_duplicates(['id'])
     sta = sta.reset_index(drop=True)
     return sta
 

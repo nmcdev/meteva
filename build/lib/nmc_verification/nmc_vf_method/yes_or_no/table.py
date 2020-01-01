@@ -21,12 +21,12 @@ def contingency_table(ob, fo, grade_list=[1e-30], save_path=None):
         shape = ob.shape
         new_ob = np.zeros(shape)
         new_fo = np.zeros(shape)
-        index_list =["未发生"]
+        index_list =["No"]
         ob_index_list = np.where(ob >= grade)
         new_ob[ob_index_list] = 1
         fo_index_list = np.where(fo >= grade)
         new_fo[fo_index_list] = 1
-        index_list.append("发生")
+        index_list.append("Yes")
 
         new_fo = new_fo.flatten()
         new_ob = new_ob.flatten()
@@ -48,14 +48,14 @@ def contingency_table(ob, fo, grade_list=[1e-30], save_path=None):
         conf_mx_list.append(conf_mx)
         if save_path is not None:
             table_data = pd.DataFrame(conf_mx,
-                                      columns=pd.MultiIndex.from_product([['ob'], index_list]),
-                                      index=pd.MultiIndex.from_product([['fo'], index_list])
+                                      columns=pd.MultiIndex.from_product([['观测'], index_list]),
+                                      index=pd.MultiIndex.from_product([['预报'], index_list])
                                       )
             table_data_list.append(table_data)
     if save_path is not None:
         with pd.ExcelWriter(save_path) as writer:
             for i in range(len(table_data_list)):
                 table_data_list[i].to_excel(writer, sheet_name='grade_'+str(grade_list[i]))
-
-    return conf_mx_list
+        print("列联表已以excel表格形式保存至" + save_path)
+    return np.array(conf_mx_list)
 
