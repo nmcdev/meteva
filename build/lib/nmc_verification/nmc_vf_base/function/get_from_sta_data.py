@@ -50,7 +50,7 @@ def sta_in_id_list(sta,id_list):
 
 #为站点信息重新赋time层名称
 def sta_of_time(sta,time):
-    time1= nmc_verification.nmc_vf_base.method.time_tools.all_type_time_to_time64(time)
+    time1= nmc_verification.nmc_vf_base.tool.time_tools.all_type_time_to_time64(time)
     sta1 = sta.loc[sta['time'] == time1]
     return sta1
 
