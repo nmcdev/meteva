@@ -4,7 +4,6 @@ from nmc_verification.nmc_vf_product.continues import score
 import os
 def get_tests_path(path=__file__):
     path = os.path.dirname(path)
-
     if path[-5:] == 'tests':
         return path
     elif len(path) == 3:
@@ -14,9 +13,9 @@ def get_tests_path(path=__file__):
         return path
 if __name__ == '__main__':
     path = get_tests_path()
-
-    grib_data = io.read_griddata.read_from_nc(path+'/data/BT18010120.012.nc')
-    sta_data = io.read_stadata.read_station(path+'/data/station_table.txt', columns=['id', 'lat', 'lon', 'alt'])
+    path = "H:/test_data/"
+    grib_data = io.read_griddata.read_from_nc(path+'BT18010120.012.nc')
+    sta_data = io.read_stadata.read_station(path+'station_table.txt', columns=['id', 'lat', 'lon', 'alt'])
     in_sta = gxy_sxy.interpolation_linear(grib_data, sta_data)
     print('mre_muti_model得分为：')
     print(score.mre_muti_model(in_sta, [in_sta, in_sta, in_sta]))
