@@ -42,5 +42,10 @@ setup(
                       'pandas>=0.20.0',
                       'xarray>=0.11.0',
                       'scikit-learn>=0.21.2',
-                      'matplotlib>=3.0.1']
+                      'matplotlib>=3.0.1',
+                      "httplib2>=0.12.0",
+                      "protobuf>=3.6.1",
+                      "netCDF4>=1.5.1.2",
+                      "basemap>=1.2.1",
+                      "pyshap>=2.1.0"]
 )
