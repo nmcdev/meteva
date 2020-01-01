@@ -15,24 +15,29 @@ def box_plot(ob, fo, save_path=None):
     :param save_path 不为None时输出到图片中
     :return: 无
     '''
-    en_num = fo.shape[1]
+    en_num = fo.shape[0]
     width = en_num * 0.22 + 0.3
-    data = np.zeros((len(ob),en_num+1))
-    data[:,0] = ob[:]
-    data[:,1:] = fo[:,:]
-
+    data = np.zeros((en_num+1,len(ob)))
+    data[0,:] = ob[:]
+    data[1:,:] = fo[:,:]
+    data = data.T
     fig = plt.figure(figsize=(width,4))
     #plt.boxplot((observed, forecast), labels=["观测","预报" ])
-    labels = ["观测"]
+    labels = ["ob\n观测"]
     for i in range(en_num):
         if i == int(en_num/2):
-            labels.append(str(i)+"\n预报")
+            labels.append(str(i+1)+"\n预报")
         else:
-            labels.append(str(i))
-    plt.boxplot((data),labels=labels)
+            labels.append(str(i+1))
+    bplot = plt.boxplot((data),showfliers =True,patch_artist=True,labels=labels)
+    for i, item in enumerate(bplot["boxes"]):
+        if i == 0:
+            item.set_facecolor("pink")
+        else:
+            item.set_facecolor("lightblue")
     plt.axvline(0.5,color = "b")
     plt.subplots_adjust(left=0.5/width,right=1-0.1/width)
-
+    plt.title("频率对比箱须图",fontsize = 14)
 
     if save_path is None:
         plt.show()
@@ -47,24 +52,24 @@ def rank_histogram(ob,fo,save_path= None):
     :param save_path:
     :return:
     '''
-    en_num = fo.shape[1]
+    en_num = fo.shape[0]
     sample_num = ob.size
     fo1 = copy.deepcopy(fo)
-    fo1.sort(axis = 1)
-    index = np.where(ob<fo1[:,0])
+    fo1.sort(axis = 0)
+    index = np.where(ob<fo1[0,:])
     rank_num = [len(index[0])]
     for i in range(en_num-1):
-        index = np.where((ob>=fo1[:,i]) & (ob < fo1[:,i+1]))
+        index = np.where((ob>=fo1[i,:]) & (ob < fo1[i+1,:]))
         rank_num.append(len(index[0]))
-    index = np.where(ob>=fo1[:,-1])
+    index = np.where(ob>=fo1[-1,:])
     rank_num.append(len(index[0]))
     rank_rate = np.array(rank_num)/sample_num
     x = np.arange(0,en_num+1)
     ymax = np.max(rank_rate) * 1.5
     plt.bar(x,rank_rate)
-    plt.ylabel("比例")
-    plt.xlabel("观测值在集合序列中的排序")
-    plt.title("Rank Histogram")
+    plt.ylabel("比例",fontsize = 14)
+    plt.xlabel("观测值在集合序列中的排序号",fontsize = 14)
+    plt.title("排序柱状图",fontsize = 14)
     plt.ylim(0,ymax)
     if save_path is None:
         plt.show()
@@ -73,10 +78,14 @@ def rank_histogram(ob,fo,save_path= None):
     pass
 
 
+def mse_variance(ob,fo):
+    '''
+    :param ob:实况数据 一维的numpy
+    :param fo:预测数据 二维的numpy数组
+    :return: 
+    '''
+    mean_fo = np.mean(fo,axis=0)
+    pass
+    
 
-fo = np.random.rand(100,50)
-ob = np.random.rand(100)
 
-
-pass
-#mse_variance(ob,fo)
