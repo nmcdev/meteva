@@ -11,6 +11,7 @@ import nmc_verification
 import struct
 from . import DataBlock_pb2
 from .GDS_data_service import GDSDataService
+import copy
 
 def grid_ragular(slon,dlon,elon,slat,dlat,elat):
     """
@@ -32,20 +33,129 @@ def grid_ragular(slon,dlon,elon,slat,dlat,elat):
     elat1 = elat
     nlon = 1 + (elon1 - slon1) / dlon1
     error = abs(round(nlon) - nlon)
-    if (error > 0.01):
+    if (error > 0.05):
         nlon1 = math.ceil(nlon)
     else:
         nlon1 = int(round(nlon))
     nlat = 1 + (elat - slat) / dlat
     error = abs(round(nlat) - nlat)
-    if (error > 0.01):
+    if (error > 0.05):
         nlat1 = math.ceil(nlat)
     else:
         nlat1 = int(round(nlat))
     return slon1,dlon1,elon1,slat1,dlat1,elat1,nlon1,nlat1
 
 
-def read_from_micaps4(filename,grid=None):
+def DataArray_to_grd(dataArray,member = None,level = None,time = None,dtime = None,lat = None,lon = None):
+    da = copy.deepcopy(dataArray)
+    dim_order = {}
+    new_coods = {}
+
+    if member is None:
+        da  = da.expand_dims("member")
+        dim_order["member"] = "member"
+        new_coods["member"] = [0]
+    elif type(member) == str:
+        if member in da.coords:
+            dim_order["member"] = member
+            new_coods["member"] = da.coords[member]
+        else:
+            da = da.expand_dims("member")
+            dim_order["member"] = "member"
+            new_coods["member"] = [0]
+    else:
+        dim_order["member"] = member.dims[0]
+        new_coods["member"] = member.values.tolist()
+
+    if level is None:
+        da = da.expand_dims("level")
+        dim_order["level"] = "level"
+        new_coods["level"] = [0]
+    elif type(level) == str:
+        if level in da.coords:
+            dim_order["level"] = level
+            new_coods["level"] = da.coords[level]
+        else:
+            da = da.expand_dims("level")
+            dim_order["level"] = "level"
+            new_coods["level"] = [0]
+    else:
+        dim_order["level"] = level.dims[0]
+        new_coods["level"] = level.values.tolist()
+
+
+    if time is None:
+        da = da.expand_dims("time")
+        dim_order["time"] = "time"
+        new_coods["time"] = pd.date_range("2099-1-1", periods=1)
+    elif type(time) == str:
+        if time in da.coords:
+            dim_order["time"] = time
+            new_coods["time"] = da.coords[time]
+        else:
+            da = da.expand_dims("time")
+            dim_order["time"] = "time"
+            new_coods["time"] = pd.date_range("2099-1-1", periods=1)
+    else:
+        dim_order["time"] = time.dims[0]
+        new_coods["time"] = time.values.tolist()
+
+    if dtime is None:
+        da = da.expand_dims("dtime")
+        dim_order["dtime"] = "dtime"
+        new_coods["dtime"] = [0]
+    elif type(dtime) == str:
+        if dtime in da.coords:
+            dim_order["dtime"] = dtime
+            new_coods["dtime"] = da.coords[dtime]
+        else:
+            da = da.expand_dims("dtime")
+            dim_order["dtime"] = "dtime"
+            new_coods["dtime"] = [0]
+    else:
+        dim_order["level"] = dtime.dims[0]
+        new_coods["dtime"] = dtime.values.tolist()
+
+    if lat is None:
+        da = da.expand_dims("lat")
+        dim_order["lat"] = "latitude"
+        new_coods["lat"] = [0]
+    elif type(lat) == str:
+        if lat in da.coords:
+            dim_order["lat"] = lat
+            new_coods["lat"] = da.coords[lat]
+        else:
+            da = da.expand_dims("lat")
+            dim_order["lat"] = "latitude"
+            new_coods["lat"] = [0]
+    else:
+        dim_order["lat"] = lat.dims[0]
+        new_coods["lat"] = lat.values.tolist()
+
+    if lon is None:
+        da = da.expand_dims("lon")
+        dim_order["lon"] = "longitude"
+        new_coods["lon"] = [0]
+    elif type(lon) == str:
+        if lon in da.coords:
+            dim_order["lon"] = lon
+            new_coods["lon"] = da.coords[lon]
+        else:
+            da = da.expand_dims("lon")
+            dim_order["lon"] = "longitude"
+            new_coods["lon"] = [0]
+    else:
+        dim_order["lon"] = lon.dims[0]
+        new_coods["lon"] = lon.values.tolist()
+    da = da.transpose(dim_order["member"], dim_order["level"], dim_order["time"],
+                      dim_order["dtime"], dim_order["lat"], dim_order["lon"])
+
+    da = xr.DataArray(da.values, coords=new_coods, dims=["member","level","time","dtime","latitude","longitude"])
+    da.name ="data"
+    return da
+
+
+def read_griddata_from_micaps4(filename,grid=None):
     '''
     读取micaps4格式的格点数据，并将其保存为xarray中DataArray结构的六维数据信息
     :param filename:Micaps4格式的文件路径和文件名
@@ -120,7 +230,7 @@ def read_from_micaps4(filename,grid=None):
         return None
 
 #读取nc数据
-def read_from_nc(filename,grid = None,value_name = None,member = None,level = None,time = None,dt = None,lat = None,lon = None):
+def read_griddata_from_nc(filename,grid = None,value_name = None,member = None,level = None,time = None,dt = None,lat = None,lon = None):
 
     """
     读取NC文件，并将其保存为xarray中DataArray结构的六维数据信息
@@ -147,6 +257,7 @@ def read_from_nc(filename,grid = None,value_name = None,member = None,level = No
             else:
                 members = ds0[member]
                 drop_list.append(member)
+
             ds.coords["member"] = ("member", members)
             attrs_name = list(members.attrs)
             for key in attrs_name:
@@ -273,8 +384,10 @@ def read_from_nc(filename,grid = None,value_name = None,member = None,level = No
                     size = size * shape[i]
                 if size > 1:
                     break
+
         dims = da.dims
         dim_order = {}
+
 
         for dim in dims:
             if  "member" in dim.lower():
@@ -347,7 +460,100 @@ def read_from_nc(filename,grid = None,value_name = None,member = None,level = No
         return None
 
 
-def read_from_gds_file(filename,grid = None):
+#读取nc数据
+def read_griddata_from_nc1(filename,grid = None,value_name = None,member = None,level = None,time = None,dt = None,lat = None,lon = None):
+
+    """
+    读取NC文件，并将其保存为xarray中DataArray结构的六维数据信息
+    :param filename:NC格式的文件路径和文件名
+    :param value_name:nc文件中要素name的值,默认：None
+    :param member:要素名,默认：None
+    :param level:层次,默认：None
+    :param time:时间,默认：None
+    :param dt:时效,默认：None
+    :param lat:纬度,默认：None
+    :param lon:经度,默认：None
+    :return:返回一个DataArray结构的六维数据信息da1
+    """
+    try:
+        ds0 = xr.open_dataset(filename)
+        drop_list = []
+        ds = xr.Dataset()
+        #1判断要素成员member
+        if member in list(ds0):
+            drop_list.append(member)
+            member =  ds0[member]
+
+        #2判断层次level
+        if level in list(ds0):
+            drop_list.append(level)
+            level = ds0[level]
+        #3 time
+        if time is None:
+            if "time" in ds0.coords or "time" in list(ds0):
+                time = "time"
+        elif time in list(ds0):
+            drop_list.append(time)
+            time = ds0[time]
+
+        if dt in list(ds0):
+            drop_list.append(dt)
+            dt = ds0[dt]
+
+        #5判断纬度lat
+        if(lat is None):
+            if "latitude" in ds0.coords or "latitude" in list(ds0):
+                lat = "latitude"
+            elif "lat" in ds0.coords or "lat" in list(ds0):
+                lat = "lat"
+
+        if lat in list(ds0):
+            drop_list.append(lat)
+            lat = ds0[lat]
+
+        #6判断经度lon
+        if(lon is None):
+            if "longitude" in ds0.coords or "longitude" in list(ds0):
+                lon = "longitude"
+            elif "lon" in ds0.coords or "lon" in list(ds0):
+                lon = "lon"
+        if lon in list(ds0):
+            drop_list.append(lon)
+            lon = ds0[lon]
+
+        da = None
+        if value_name is not None:
+            da = ds0[value_name]
+        else:
+            name_list = list((ds0))
+            for name in name_list:
+                if name in drop_list: continue
+                da = ds0[name]
+                shape = da.values.shape
+                size = 1
+                for i in range(len(shape)):
+                    size = size * shape[i]
+                if size > 1:
+                    break
+        da1 = DataArray_to_grd(da,member,level,time,dt,lat,lon)
+
+        nmc_verification.nmc_vf_base.reset(da1)
+        if grid is None:
+            da1.name = "data0"
+            return da1
+        else:
+            # 如果传入函数有grid信息，就需要进行一次双线性插值，按照grid信息进行提取网格信息。
+            da2 = nmc_verification.nmc_vf_base.function.gxy_gxy.interpolation_linear(da1, grid)
+            da2.name = "data0"
+            return da2
+
+
+    except:
+        exstr = traceback.format_exc()
+        print(exstr)
+
+
+def read_griddata_from_gds_file(filename,grid = None):
     print("a")
     try:
         if not os.path.exists(filename):
@@ -389,7 +595,7 @@ def read_from_gds_file(filename,grid = None):
         return None
 
 
-def read_from_gds(ip,port,filename,grid = None):
+def read_griddata_from_gds(ip,port,filename,grid = None):
     # ip 为字符串形式，示例 “10.20.30.40”
     # port 为整数形式
     # filename 为字符串形式 示例 "ECMWF_HR/TCDC/19083108.000"
@@ -442,7 +648,7 @@ def read_from_gds(ip,port,filename,grid = None):
         return None
 
 
-def read_wind_from_gds_file(filename,grid = None):
+def read_gridwind_from_gds_file(filename,grid = None):
     try:
         if not os.path.exists(filename):
             print(filename + " is not exist")
@@ -488,7 +694,7 @@ def read_wind_from_gds_file(filename,grid = None):
         print(e)
         return None
 
-def read_wind_from_micaps2(filename,grid = None):
+def read_gridwind_from_micaps2(filename,grid = None):
     if os.path.exists(filename):
         try:
             column = nmc_verification.nmc_vf_base.m2_value_column.风向
@@ -515,7 +721,7 @@ def read_wind_from_micaps2(filename,grid = None):
         return None
 
 
-def read_wind_from_micap11(filename,grid = None):
+def read_gridwind_from_micap11(filename,grid = None):
     if os.path.exists(filename):
         file = open(filename, 'r')
         str1 = file.read()
@@ -548,7 +754,6 @@ def read_wind_from_micap11(filename,grid = None):
     else:
         print(filename + " not exists")
         return None
-
 
 
 def read_AWX_from_gds(ip,port,filename,grid = None):
