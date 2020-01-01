@@ -5,6 +5,7 @@ import os as os
 import numpy as np
 from ..io import DataBlock_pb2
 from ..io.GDS_data_service import GDSDataService
+import re
 
 #获取最新的路径
 def get_latest_path(dir,time,dt,dt_cell = "hour",dt_step = 1, farthest = 240):
@@ -16,6 +17,41 @@ def get_latest_path(dir,time,dt,dt_cell = "hour",dt_step = 1, farthest = 240):
 
 #获取路径
 def get_path(dir,time,dt = None,dt_cell = "hour"):
+    '''
+    根据路径通配形式返回路径
+    :param dir:
+    :param time:
+    :param dt:
+    :param dt_cell:
+    :return:
+    '''
+    if(dir.find("*")<0):
+        return get_path_without_star(dir,time,dt,dt_cell)
+    else:
+        dir_0,filename_0 = os.path.split(dir)
+        dir_1 = get_path_without_star(dir_0,time,dt,dt_cell)
+        filename_1 = get_path_without_star(filename_0,time,dt,dt_cell)
+        patten = dir_1  +"\\"+ filename_1
+        patten = patten.replace("\\","/")
+        patten = patten.replace("*","\\S+")
+        files = os.listdir(dir_1)
+        for file in files:
+            path = dir_1 + "/" + file
+            path = path.replace("\\","/")
+            match = re.match(patten,path)
+            if match is not None:
+                return path
+    return None
+
+
+def get_path_without_star(dir,time,dt = None,dt_cell = "hour"):
+    '''
+    :param dir:
+    :param time:
+    :param dt:
+    :param dt_cell:
+    :return:
+    '''
     if(dt is not None):
         if(not type(dt) == type(1)):
             if(dt_cell.lower()=="hour"):
@@ -31,7 +67,6 @@ def get_path(dir,time,dt = None,dt_cell = "hour"):
     cdt3 = '%03d' % dt
     cdt4 = '%04d' % dt
     dir1 = dir.replace("TTTT",cdt4).replace("TTT",cdt3)
-
     y4 = time.strftime("%Y")
     y2 = y4[2:]
     mo = time.strftime("%m")
@@ -40,6 +75,7 @@ def get_path(dir,time,dt = None,dt_cell = "hour"):
     mi = time.strftime("%M")
     ss = time.strftime("%S")
     dir1 = dir1.replace("YYYY",y4).replace("YY",y2).replace("MM",mo).replace("DD",dd).replace("HH",hh).replace("FF",mi).replace("SS",ss)
+    dir1 = dir1.replace(">","")
     return dir1
 
 #创建路径
@@ -182,7 +218,6 @@ def get_path_of_grd_nc_longname(root_dir,time,dhour,nc_Fname,fhour_add):
                                                                          "%Y%m%d%H"), dhour, fhour_add, nc_Fname)
     file = r"{0}\{1}\{2}".format(root_dir, time.strftime("%Y%m%d"), ruc_file)
     return file
-
 
 
 def get_gds_file_list_in_one_dir(ip,port,dir):
