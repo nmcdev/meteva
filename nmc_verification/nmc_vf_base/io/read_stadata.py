@@ -12,7 +12,7 @@ from .GDS_data_service import GDSDataService
 import struct
 from collections import OrderedDict
 
-def read_from_micaps3(filename, station=None, time=None, dtime=None, level=None, data_name='data0', drop_same_id=True):
+def read_stadata_from_micaps3(filename, station=None, time=None, dtime=None, level=None, data_name='data0', drop_same_id=True):
     '''
     读取micaps3格式文件转换为pandas中dataframe结构的数据
 
@@ -160,7 +160,7 @@ def read_station(filename, columns, skiprows=0, drop_same_id=True):
         return None
 
 
-def read_from_sevp(filename0, element=None,drop_same_id = True):
+def read_stadata_from_sevp(filename0, element=None,drop_same_id = True):
     '''
     兼容多个时次的预报产品文件 txt格式
     :param：filename:文件路径和名称
@@ -262,7 +262,7 @@ def read_from_sevp(filename0, element=None,drop_same_id = True):
         print(exstr)
 
 
-def read_from_micaps1_2_8(filename, column, station=None, drop_same_id=True):
+def read_stadata_from_micaps1_2_8(filename, column, station=None, drop_same_id=True):
     '''
     read_from_micaps1_2_8  读取m1、m2、m8格式的文件
     :param filename: 文件路径
@@ -291,7 +291,7 @@ def read_from_micaps1_2_8(filename, column, station=None, drop_same_id=True):
 
 
 
-def read_from_gds(ip,port,filename,element_id = None,station = None):
+def read_stadata_from_gds(ip,port,filename,element_id = None,station = None):
     # ip 为字符串形式，示例 “10.20.30.40”
     # port 为整数形式
     # filename 为字符串形式 示例 "ECMWF_HR/TCDC/19083108.000"
@@ -364,7 +364,7 @@ def read_from_gds(ip,port,filename,element_id = None,station = None):
         print(exstr)
 
 
-def read_from_micaps16(filename):
+def read_stadata_from_micaps16(filename):
     if os.path.exists(filename):
         file = open(filename,'r')
         head = file.readline()
@@ -398,7 +398,7 @@ def read_from_micaps16(filename):
         print(filename +" not exist")
         return None
 
-def read_from_csv(filename):
+def read_stadata_from_csv(filename):
     sta = pd.read_csv(filename,parse_dates=['time'])
     sta.drop(sta.columns[[0]], axis=1, inplace=True)
     return sta
