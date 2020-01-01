@@ -397,3 +397,8 @@ def read_from_micaps16(filename):
     else:
         print(filename +" not exist")
         return None
+
+def read_from_csv(filename):
+    sta = pd.read_csv(filename,parse_dates=['time'])
+    sta.drop(sta.columns[[0]], axis=1, inplace=True)
+    return sta
