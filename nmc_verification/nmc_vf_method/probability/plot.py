@@ -4,71 +4,123 @@ plt.rcParams['font.sans-serif']=['SimHei'] #用来正常显示中文标签
 plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import roc_curve
+from nmc_verification.nmc_vf_method.yes_or_no.score import pofd_hfmc,pod_hfmc
+from nmc_verification.nmc_vf_base.tool.plot_tools import set_plot_IV
+from nmc_verification.nmc_vf_base import IV
 
-def reliability(Ob, Fo,  save_path=None):
+
+def hnh(Ob,Fo,grade_count = 10):
+    '''
+
+    :param Ob:
+    :param Fo:
+    :param grade_count:
+    :return:
+    '''
+    grade = 1/grade_count
+    grade_list = np.arange(0,1,grade).tolist()
+    grade_list.append(1)
+    th_list = []
+    for g in range(len(grade_list)-1):
+        index = np.where((Fo>=grade_list[g]) & (Fo < grade_list[g+1]))
+        ob1 = Ob[index]
+        ob2 = ob1[ob1>0]
+        th_list.append([ob1.size,ob2.size])
+    hnh_array = np.array(th_list)
+    return hnh_array
+
+def reliability(Ob, Fo,grade_count = 10, save_path=None):
     '''
     :param Ob:
     :param Fo:
     :param save_path:
     :return:
     '''
+    hnh_array = hnh(Ob,Fo,grade_count)
+    reliability_hnh(hnh_array,save_path)
 
-    grade = np.arange(0,1.11,0.1)
-    print(Fo)
-    print(Ob)
-    observed = Fo[Ob == 1]
-    print(observed)
-    not_observed = Fo[Ob ==0]
-    print(not_observed)
-    observed_grade_num =[len(observed[observed<grade[1]])]
-    not_observed_grade_num = [len(not_observed[not_observed<grade[1]])]
-    total_num = Ob.size
-    for i in range(1,len(grade)-2):
-        indexs = np.where((observed<grade[i+1]) & (observed >= grade[i]))
-        observed_grade_num.append(len(indexs[0]))
-        indexs = np.where((not_observed<grade[i+1]) & (not_observed >= grade[i]))
-        not_observed_grade_num.append(len(indexs[0]))
-    observed_grade_num = np.array(observed_grade_num)
-    not_observed_grade_num = np.array(not_observed_grade_num)
-    grade_num = observed_grade_num + not_observed_grade_num
-    ob_rate = observed_grade_num/(grade_num+ 1e-30)
-    line_x = np.arange(0,1.01,0.1)
-    prefect_line_y = np.arange(0,1.01,0.1)
+def reliability_hnh(hnh_array,save_path = None):
+    '''
+    根据中间结果计算
+    :param th:
+    :param save_path:
+    :return:
+    '''
+    total_grade_num = hnh_array[:,0]
+    observed_grade_num = hnh_array[:,1]
+    ngrade = len(total_grade_num)
+    grade = 1/ngrade
+    total_num = np.sum(total_grade_num)
+    under = np.zeros_like(total_grade_num)
+    under[:] = total_grade_num[:]
+    under[total_grade_num == 0] = 1
+    ob_rate = observed_grade_num /under
+    ob_rate[total_grade_num == 0] = IV
+    ob_rate_noIV = set_plot_IV(ob_rate)
+    ob_rate[total_grade_num == 0] = np.nan
+    index_iv = np.where(total_grade_num == 0)
+    line_x = np.arange(0,1.00,grade)
+    prefect_line_y = np.arange(0,1.00,grade)
     climate_line_y = np.ones_like(line_x) * np.sum(observed_grade_num)/total_num
-
-    x = np.arange(0.05,1,0.1)
+    x = np.arange(grade/2,1,grade)
     fig = plt.figure(figsize=(5,5))
     grid_plt = plt.GridSpec(5,1,hspace=0)
-
     ax1 = plt.subplot(grid_plt[0:4,0])
+    plt.plot(x,ob_rate_noIV,"--",linewidth = 0.5,color = "k")
+    x_iv = x[index_iv[0]]
+    ob_rate_noIV_iv = ob_rate_noIV[index_iv[0]]
+    plt.plot(x_iv,ob_rate_noIV_iv,"x",color = 'k')
     plt.plot(x,ob_rate,marker = ".",markersize = "10",label = "实际预报",color = "r")
     plt.plot(line_x,prefect_line_y,'--',label = "完美预报",color = "k")
     plt.plot(line_x, climate_line_y, ':', label="无技巧预报",color = "k")
     plt.setp(ax1.get_xticklabels(),visible=False)
-
     plt.ylim(0.0, 1)
     plt.ylabel("实况的发生比例")
-
     plt.legend(loc=2)
-
-
     ax2 = plt.subplot(grid_plt[4,0], sharex=ax1)
-    plt.bar(x, grade_num,width=0.03)
-    plt.setp(ax2.get_xticklabels())
+    plt.bar(x, total_grade_num,width=0.03)
+    #plt.setp(ax2.get_xticklabels())
 
     plt.ylabel("样本数")
     plt.xlim(0.0, 1.0)
+    plt.xticks(np.arange(0.1,1.01,0.1))
     plt.xlabel("预测的概率")
 
     if save_path is None:
         plt.show()
     else:
         plt.savefig(save_path)
+        plt.close()
 
-def roc(Ob, Fo,save_path = None):
-    fig = plt.figure(figsize=(5, 4))
-    (fpr_dtree, tpr_dtree, thresholds_dtree) = roc_curve(Ob,Fo, pos_label=1)
-    plt.plot(fpr_dtree, tpr_dtree, color="blue", linewidth=2, label="实际预报")
+def roc(Ob, Fo,grade_count = 10,save_path = None):
+    '''
+
+    :param Ob:
+    :param Fo:
+    :param grade_count:
+    :param save_path:
+    :return:
+    '''
+    hnh_array = hnh(Ob,Fo,grade_count)
+    roc_hnh(hnh_array,save_path)
+
+def roc_hfmc(hfmc,save_path =None):
+    '''
+
+    :param hfmc:
+    :param save_path:
+    :return:
+    '''
+    fig = plt.figure(figsize=(5, 4.7))
+    far = [1]
+    far.extend(pofd_hfmc(hfmc).tolist())
+    far.append(0)
+    pod = [1]
+    pod.extend(pod_hfmc(hfmc).tolist())
+    pod.append(0)
+    far = np.array(far)
+    pod = np.array(pod)
+    plt.plot(far, pod, color="blue", linewidth=2, marker = ".",label="实际预报")
     plt.plot([0, 1], [0, 1],  ":",color="k",linewidth=1,label = "无技巧预报")
     plt.xlabel("空报率")
     plt.ylabel("命中率")
@@ -79,33 +131,63 @@ def roc(Ob, Fo,save_path = None):
         plt.show()
     else:
         plt.savefig(save_path)
+        plt.close()
     pass
 
-def discrimination(Ob,Fo,save_path=None):
-    grade = np.arange(0,1.11,0.1)
-    print(Fo)
-    print(Ob)
-    observed = Fo[Ob == 1]
-    print(observed)
-    not_observed = Fo[Ob ==0]
-    print(not_observed)
-    observed_grade_num =[len(observed[observed<grade[1]])]
-    not_observed_grade_num = [len(not_observed[not_observed<grade[1]])]
-    total_num = Ob.size
-    for i in range(1,len(grade)-2):
-        indexs = np.where((observed<grade[i+1]) & (observed >= grade[i]))
-        observed_grade_num.append(len(indexs[0]))
-        indexs = np.where((not_observed<grade[i+1]) & (not_observed >= grade[i]))
-        not_observed_grade_num.append(len(indexs[0]))
-    observed_grade_num = np.array(observed_grade_num)/total_num
-    not_observed_grade_num = np.array(not_observed_grade_num)/total_num
-    x = np.arange(0.05,1,0.1)
-    plt.bar(x-0.01,not_observed_grade_num,width=0.02,edgecolor = 'r',fill = False,label = "未发生")
-    plt.bar(x+0.01,observed_grade_num,width=0.02,color = 'b',label = "已发生")
+def roc_hnh(hnh_array,save_path = None):
+    '''
 
+    :param th_array:
+    :param save_path:
+    :return:
+    '''
+    total_grade_num = hnh_array[:,0]
+    observed_grade_num = hnh_array[:,1]
+    ngrade = len(total_grade_num)
+    hfmc = np.zeros((len(total_grade_num),4))
+    total_hap = np.sum(observed_grade_num)
+    total_num = np.sum(total_grade_num)
+    for i in range(ngrade):
+        hfmc[i, 0] = np.sum(observed_grade_num[i:])
+        hfmc[i, 1] = np.sum(total_grade_num[i:]) - hfmc[i, 0]
+        hfmc[i, 2] = total_hap - hfmc[i, 0]
+        hfmc[i, 3]= total_num - (hfmc[i, 0] + hfmc[i, 1]+ hfmc[i, 2])
+
+    roc_hfmc(hfmc, save_path)
+
+def discrimination(Ob,Fo,grade_count = 10,save_path=None):
+    '''
+
+    :param Ob:
+    :param Fo:
+    :param grade_count:
+    :param save_path:
+    :return:
+    '''
+    hnh_array = hnh(Ob,Fo,grade_count)
+    discrimination_hnh(hnh_array,save_path)
+
+def discrimination_hnh(th_array,save_path = None):
+    '''
+
+    :param th_array:
+    :param save_path:
+    :return:
+    '''
+    total_grade_num = th_array[:,0]
+    observed_grade_num = th_array[:,1]
+    total_num = np.sum(total_grade_num)
+    observed_grade_rate = observed_grade_num/total_num
+    not_observed_grade_num = total_grade_num - observed_grade_num
+    not_observed_grade_rate = not_observed_grade_num/total_num
+    ngrade = len(total_grade_num)
+    grade = 1/ngrade
+    x = np.arange(grade / 2, 1, grade)
+    plt.bar(x-0.01,not_observed_grade_rate,width=0.02,edgecolor = 'r',fill = False,label = "未发生")
+    plt.bar(x+0.01,observed_grade_rate,width=0.02,color = 'b',label = "已发生")
     plt.xlabel("预测的概率")
     plt.ylabel("占总样本数的比例")
-    ymax = max(np.max(observed_grade_num),np.max(not_observed_grade_num))* 1.4
+    ymax = max(np.max(observed_grade_rate),np.max(not_observed_grade_rate))* 1.4
     plt.ylim(0.0, ymax)
     plt.xlim(0.0, 1.0)
     plt.legend(loc=1)
@@ -113,58 +195,93 @@ def discrimination(Ob,Fo,save_path=None):
         plt.show()
     else:
         plt.savefig(save_path)
+        plt.close()
     pass
 
-def comprehensive(Ob,Fo,save_path = None):
+def comprehensive(Ob,Fo,grade_count = 10,save_path = None):
     '''
     :param Ob:
     :param Fo:
     :param save_path:
     :return:
     '''
-    grade = np.arange(0,1.11,0.1)
-    observed = Fo[Ob == 1]
-    not_observed = Fo[Ob ==0]
-    observed_grade_num =[len(observed[observed<grade[1]])]
-    not_observed_grade_num = [len(not_observed[not_observed<grade[1]])]
-    total_num = Ob.size
-    for i in range(1,len(grade)-2):
-        indexs = np.where((observed<grade[i+1]) & (observed >= grade[i]))
-        observed_grade_num.append(len(indexs[0]))
-        indexs = np.where((not_observed<grade[i+1]) & (not_observed >= grade[i]))
-        not_observed_grade_num.append(len(indexs[0]))
-    observed_grade_num = np.array(observed_grade_num)
-    not_observed_grade_num = np.array(not_observed_grade_num)
-    grade_num = observed_grade_num + not_observed_grade_num
-    ob_rate = observed_grade_num/(grade_num+ 1e-30)
-    line_x = np.arange(0,1.01,0.1)
-    prefect_line_y = np.arange(0,1.01,0.1)
-    climate_line_y = np.ones_like(line_x) * np.sum(observed_grade_num)/total_num
+    hnh_array= hnh(Ob,Fo,grade_count)
+    comprehensive_hnh(hnh_array,save_path)
 
-    x = np.arange(0.05,1,0.1)
-    fig = plt.figure(figsize=(10,6))
+def comprehensive_hnh(th_array,save_path = None):
+    '''
+
+    :param th_array:
+    :param save_path:
+    :return:
+    '''
+    total_grade_num = th_array[:, 0]
+    observed_grade_num = th_array[:, 1]
+    total_num = np.sum(total_grade_num)
+
+    under = np.zeros_like(total_grade_num)
+    under[:] = total_grade_num[:]
+    under[total_grade_num == 0] = 1
+    ob_rate = observed_grade_num / under
+    ob_rate[total_grade_num == 0] = IV
+    ob_rate_noIV = set_plot_IV(ob_rate)
+    ob_rate[total_grade_num == 0] = np.nan
+    index_iv = np.where(total_grade_num == 0)
+
+    not_observed_grade_num = total_grade_num - observed_grade_num
+
+    ngrade = len(total_grade_num)
+    grade = 1 / ngrade
+    x = np.arange(grade / 2, 1, grade)
+
+    line_x = np.arange(0, 1.01, 0.1)
+    prefect_line_y = np.arange(0, 1.01, 0.1)
+    climate_line_y = np.ones_like(line_x) * np.sum(observed_grade_num) / total_num
+
+    fig = plt.figure(figsize=(10, 7))
     plt.subplots_adjust(wspace=0.2, hspace=1)
-    grid_plt = plt.GridSpec(5,2)
-    ax1 = plt.subplot(grid_plt[0:4,0])
-    plt.plot(x,ob_rate,marker = ".",markersize = "10",label = "实际预报",color = "r")
-    plt.plot(line_x,prefect_line_y,'--',label = "完美预报",color = "k")
-    plt.plot(line_x, climate_line_y, ':', label="无技巧预报",color = "k")
+    grid_plt = plt.GridSpec(6, 2)
+    ax1 = plt.subplot(grid_plt[0:4, 0])
+    plt.plot(x, ob_rate_noIV, "--", linewidth=0.5, color="k")
+    x_iv = x[index_iv[0]]
+    ob_rate_noIV_iv = ob_rate_noIV[index_iv[0]]
+    plt.plot(x_iv, ob_rate_noIV_iv, "x", color='k')
+    plt.plot(x, ob_rate, marker=".", markersize="10", label="实际预报", color="r")
+    plt.plot(line_x, prefect_line_y, '--', label="完美预报", color="k")
+    plt.plot(line_x, climate_line_y, ':', label="无技巧预报", color="k")
     plt.xlim(0.0, 1.0)
     plt.ylim(0.0, 1)
     plt.xlabel("预测的概率")
     plt.ylabel("实况的发生比例")
     plt.legend(loc=2)
 
-    ax2 = plt.subplot(grid_plt[4,0])
-    plt.bar(x, grade_num,width=0.03)
-    plt.setp(ax2.get_xticklabels())
+    ax2 = plt.subplot(grid_plt[4:, 0])
+    plt.bar(x, total_grade_num, width=0.03)
+    #plt.setp(ax2.get_xticklabels())
     plt.xlim(0.0, 1.0)
     plt.ylabel("样本数")
     plt.xlabel("预测的概率")
 
-    (fpr_dtree, tpr_dtree, thresholds_dtree) = roc_curve(Ob, Fo, pos_label=1)
-    ax3 = plt.subplot(grid_plt[0:4,1])
-    plt.plot(fpr_dtree, tpr_dtree, color="blue", linewidth=2, label="实际预报")
+
+    total_hap = np.sum(observed_grade_num)
+    hfmc = np.zeros((len(total_grade_num), 4))
+    for i in range(ngrade):
+        hfmc[i, 0] = np.sum(observed_grade_num[i:])
+        hfmc[i, 1] = np.sum(total_grade_num[i:]) - hfmc[i, 0]
+        hfmc[i, 2] = total_hap - hfmc[i, 0]
+        hfmc[i, 3]= total_num - (hfmc[i, 0] + hfmc[i, 1]+ hfmc[i, 2])
+
+    far = [1]
+    far.extend(pofd_hfmc(hfmc).tolist())
+    far.append(0)
+    pod = [1]
+    pod.extend(pod_hfmc(hfmc).tolist())
+    pod.append(0)
+    far = np.array(far)
+    pod = np.array(pod)
+
+    ax3 = plt.subplot(grid_plt[0:4, 1])
+    plt.plot(far, pod, color="blue", linewidth=2, label="实际预报")
     plt.plot([0, 1], [0, 1], ":", color="k", linewidth=1, label="无技巧预报")
     plt.xlabel("空报率")
     plt.ylabel("命中率")
@@ -172,20 +289,19 @@ def comprehensive(Ob,Fo,save_path = None):
     plt.xlim(0.0, 1.0)
     plt.legend(loc=4)
 
-    ax4 = plt.subplot(grid_plt[4, 1])
-    plt.bar(x-0.01,not_observed_grade_num,width=0.02,edgecolor = 'r',fill = False,label = "未发生")
-    plt.bar(x+0.01,observed_grade_num,width=0.02,color = 'b',label = "已发生")
+    ax4 = plt.subplot(grid_plt[4:, 1])
+    plt.bar(x - 0.01, not_observed_grade_num/total_num, width=0.02, edgecolor='r', fill=False, label="未发生")
+    plt.bar(x + 0.01, observed_grade_num/total_num, width=0.02, color='b', label="已发生")
 
     plt.xlabel("预测的概率")
     plt.ylabel("占总样本数的比例")
-    ymax = max(np.max(observed_grade_num),np.max(not_observed_grade_num))* 2
+    ymax = max(np.max(observed_grade_num/total_num), np.max(not_observed_grade_num/total_num)) * 1.5
     plt.ylim(0.0, ymax)
     plt.xlim(0.0, 1.0)
-    plt.legend(loc=9,ncol=2)
+    plt.legend(loc="upper right", ncol=2)
 
     if save_path is None:
         plt.show()
     else:
         plt.savefig(save_path)
     pass
-
