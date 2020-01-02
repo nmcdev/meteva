@@ -2,6 +2,13 @@
 import datetime
 import  nmc_verification as nv
 import nmc_verification.nmc_vf_base.method.path_tools as pt
+import nmc_verification.nmc_vf_base as nvb
+
+station = nvb.io.read_station(nvb.sta)
+
+
+
+
 
 # 累加观测文件
 def ca_ob():
