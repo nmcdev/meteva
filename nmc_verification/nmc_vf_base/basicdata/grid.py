@@ -174,17 +174,12 @@ class grid:
             self.dlon = abs(self.dlon)
         return
 
-    # tostring 的作用是重置系统自动的函数，在print(grid) 的时候可以很整齐的看到所有信息
-    def tostring(self):
-        grid_str = ""
-        grid_str += "members:" + str(self.members) +"\n"
-        grid_str += "levels:" + str(self.levels) + "\n"
-        grid_str += "gtime:" + str([self.stime_str,self.etime_str,self.dtime_str]) + "\n"
-        grid_str += "dtimes:" + str(self.dtimes)  +"\n"
-        grid_str += "glon:" + str(self.glon) + "\n"
-        grid_str += "glat:" + str(self.glat) + "\n"
-        return grid_str
+
     def __str__(self):
+        '''
+        重置系统自动的函数，在print(grid) 的时候可以很整齐的看到所有信息
+        :return:  string
+        '''
         grid_str = ""
         grid_str += "members:" + str(self.members) +"\n"
         grid_str += "levels:" + str(self.levels) + "\n"

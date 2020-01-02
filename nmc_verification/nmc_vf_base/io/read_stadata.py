@@ -11,6 +11,10 @@ from . import DataBlock_pb2
 from .GDS_data_service import GDSDataService
 import struct
 from collections import OrderedDict
+import datetime
+
+def read_station(filename):
+    return read_stadata_from_micaps3(filename)
 
 def read_stadata_from_micaps3(filename, station=None, time=None, dtime=None, level=None, data_name='data0', drop_same_id=True):
     '''
@@ -103,7 +107,7 @@ def read_stadata_from_micaps3(filename, station=None, time=None, dtime=None, lev
         print(exstr)
         return None
 
-def read_station(filename, columns, skiprows=0, drop_same_id=True):
+def read_stadata_from_txt(filename, columns , skiprows=0, drop_same_id=True):
 
     """
     读取站点数据
@@ -279,7 +283,9 @@ def read_stadata_from_micaps1_2_8(filename, column, station=None, drop_same_id=T
         sta2 = nmc_verification.nmc_vf_base.basicdata.sta_data(sta1)
         if drop_same_id:
             sta2 = sta2.drop_duplicates(['id'])
-
+        sta2["time"] = datetime.datetime(2099,1,1,8,0)
+        sta2["level"] = 0
+        sta2["dtime"] = 0
         if station is None:
 
             return sta2
@@ -288,7 +294,6 @@ def read_stadata_from_micaps1_2_8(filename, column, station=None, drop_same_id=T
             return sta
     else:
         return None
-
 
 
 def read_stadata_from_gds(ip,port,filename,element_id = None,station = None):
