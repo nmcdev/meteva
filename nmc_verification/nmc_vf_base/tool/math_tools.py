@@ -66,7 +66,6 @@ def mean_iteration(count_old,mean_old,count_new,mean_new):
     return mean
 
 def ss_iteration(count_old,mean_old,ss_old,count_new,mean_new,ss_new):
-    import math
     count_total = count_new + count_old
     rate1 = count_old/count_total
     rate2 = count_new/count_total
@@ -92,3 +91,12 @@ def sxy_iteration(count_old,meanx_old,meany_old,sxy_old,count_new,meanx_new,mean
     sxy_total /= count_total
     return count_total, meanx_total, meany_total,sxy_total
 
+def get_index(X,level_list):
+    levels = np.array(level_list)
+    levels.sort()
+    index = np.zeros_like(X)
+    index[...] = len(levels)
+    for i in range(len(levels)):
+        level = levels[i]
+        index[X < level] = i - 1
+    return index

@@ -1,6 +1,7 @@
 import numpy as np
 import nmc_verification
 import math
+from scipy.ndimage import convolve
 
 def interpolation_linear(grd, grid, other_info='left'):
     '''
@@ -132,8 +133,6 @@ def mean_convolve(grd, half_window_size, skip=1):
 
     return grd_mean
 
-
-from scipy.ndimage import convolve
 
 def smooth(grd,times = 1):
     dat = grd.values.squeeze()
