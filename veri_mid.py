@@ -7,9 +7,6 @@ import nmc_verification.nmc_vf_base as nvb
 station = nvb.io.read_station(nvb.sta)
 
 
-
-
-
 # 累加观测文件
 def ca_ob():
     dir = r"H:\task\other\201906-中期检验\data\sta2513.txt"

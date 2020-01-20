@@ -1,4 +1,4 @@
-from nmc_verification.nmc_vf_product.continuous.space_compare import *
+from nmc_verification.nmc_vf_product.base.space_compare import *
 import nmc_verification.nmc_vf_base as nvb
 
 grid = nvb.grid([73,135,0.25],[18,53,0.25])

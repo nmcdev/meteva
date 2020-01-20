@@ -1,11 +1,8 @@
 import nmc_verification.nmc_vf_base.function.put_into_sta_data as pisd
 import nmc_verification.nmc_vf_method.yes_or_no as yon
-import string
-import pathlib
-import pandas as pd
+import  string
 
-
-def contingency_table_multi_mode(ob, fo_list, grade=None, save_path=None, sheet_name='sheet1'):
+def contingency_table_multi_mode(ob, fo_list, grade=None, save_path='contingency_table.xls', sheet_name='sheet1'):
     '''
 
     :param ob_sta:  一个实况数据  类型  dataframe
@@ -27,17 +24,11 @@ def contingency_table_multi_mode(ob, fo_list, grade=None, save_path=None, sheet_
         the_duplicate_values = meger_df_data[colnum].unique()
         if len(the_duplicate_values) == 1:
             title = title + str(the_duplicate_values[0])
-    if ':' in title:
-        title = title[:-13]
-        title = title.translate(str.maketrans(':', ':', string.punctuation))
-    if save_path is None:
-        save_path = title + '.xlsx'
-    else:
-        save_path = save_path + '/' + title + '.xlsx'
-    pathlib.Path(save_path).touch()
-    writer = pd.ExcelWriter(save_path)
+        if ':' in title:
+            title = title[:-13]
+            title = title.translate(str.maketrans(':', ':', string.punctuation))
+        save_path = title + '.xls'
     for fo_of_colnum in meger_df_data.iloc[:, 7:-1]:
         fo_of_data = meger_df_data[fo_of_colnum].values
-        yon.table.contingency_table(ob_data, fo_of_data, grade=grade, excel_write=writer, is_append_sheet=True,
+        yon.table.contingency_table(ob_data, fo_of_data, grade=grade, save_path=save_path,
                                     sheet_name=fo_of_colnum)
-    writer.close()

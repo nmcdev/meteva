@@ -6,7 +6,7 @@ import matplotlib as mpl
 
 def frequency_histogram_muti_model(ob, fo_list, clevs, x_lable='frequency', save_path=None,
                                    y_lable='range', left_label='Obs', right_label='Pred',
-                                   left_color='r', right_color='b', width=0.2):
+                                   left_color='r', right_color='b', legend_location="upper right", width=0.2):
     '''
     frequency_histogram_muti_model多模式下对比测试数据和实况数据的发生的频率
     :param ob:一个实况数据  类型  dataframe
@@ -20,6 +20,7 @@ def frequency_histogram_muti_model(ob, fo_list, clevs, x_lable='frequency', save
     :param right_label: 右标注名字
     :param left_color: 左柱状图的颜色
     :param right_color: 右柱状图颜色
+    :param legend_location: 标注所处的地点
     :param width: 宽度
     :return:
     '''
@@ -28,8 +29,8 @@ def frequency_histogram_muti_model(ob, fo_list, clevs, x_lable='frequency', save
 
     ob = meger_df_data.iloc[:, -1].values
 
-    data_len = len(fo_list) - 1
-    fig, axs = plt.subplots(1, data_len, figsize=(4 * data_len, 4))
+    data_len = len(fo_list)-1
+    fig,axs = plt.subplots(1,data_len,figsize=(4*data_len, 4))
     plt.subplots_adjust(left=0.05, bottom=0.1, right=0.95, top=0.88,
                         wspace=0.2, hspace=0.2)
 
@@ -42,7 +43,7 @@ def frequency_histogram_muti_model(ob, fo_list, clevs, x_lable='frequency', save
 
     for index, fo_of_colnum in enumerate(meger_df_data.iloc[:, 7:-1]):
         fo = meger_df_data[fo_of_colnum].values
-        # axe1 = plt.subplot(1, data_len, index + 1)
+        #axe1 = plt.subplot(1, data_len, index + 1)
         axe1 = axs[index]
         p_ob = []
         p_fo = []
@@ -63,8 +64,7 @@ def frequency_histogram_muti_model(ob, fo_list, clevs, x_lable='frequency', save
 
         axe1.bar(x + 0.1, p_ob, width=width, facecolor=left_color, label=left_label)
         axe1.bar(x - 0.1, p_fo, width=width, facecolor=right_color, label=right_label)
-
-        axe1.legend(loc='best')
+        axe1.legend()
         axe1.set_xlabel(x_lable, fontsize=10)
         axe1.set_xticks(x)
         axe1.set_xticklabels(xticklabels, fontsize=9)

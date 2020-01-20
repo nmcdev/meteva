@@ -3,9 +3,6 @@ import nmc_verification
 from sklearn.metrics import confusion_matrix
 import nmc_verification.nmc_vf_method.multi_category.table as table
 import string
-import pandas as pd
-import numpy as np
-import pathlib
 
 
 def multi_mode_and_multi_classification_predictive_contingency_table(ob, fo_list, grade_list=None, save_path=None):
@@ -20,6 +17,8 @@ def multi_mode_and_multi_classification_predictive_contingency_table(ob, fo_list
     '''
     fo_list.append(ob)
     meger_df_data = pisd.merge_on_id_and_obTime(fo_list)
+
+    meger_df_data.to_csv('aa.csv')
     ob_data = meger_df_data.iloc[:, -1]
     ob_data = ob_data.values
     colnums = ['level', 'id', 'time']
@@ -31,17 +30,7 @@ def multi_mode_and_multi_classification_predictive_contingency_table(ob, fo_list
     if ':' in title:
         title = title[:-13]
         title = title.translate(str.maketrans(':', ':', string.punctuation))
-    if save_path is None:
-        save_path = title + '.xlsx'
-    else:
-        save_path = save_path + '/' + title + '.xlsx'
-
-    pathlib.Path(save_path).touch()
-    writer = pd.ExcelWriter(save_path)
+    save_path = title + '.xls'
     for fo_of_colnum in meger_df_data.iloc[:, 7:-1]:
         fo_of_data = meger_df_data[fo_of_colnum].values
-        table.multi_category_contingency_table(ob_data, fo_of_data, grade_list=grade_list, is_append_sheet=True,
-                                               excel_writer=writer, sheet_name=fo_of_colnum, )
-        # multi_category_contingency_table(ob_data, fo_of_data, writer, fo_of_colnum, grade_list=grade_list)
-    writer.close()
-
+        table.multi_category_contingency_table(ob_data, fo_of_data, grade_list=grade_list, save_path=save_path)

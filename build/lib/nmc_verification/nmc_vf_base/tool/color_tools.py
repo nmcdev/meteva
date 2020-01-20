@@ -5,6 +5,60 @@ plt.rcParams['font.sans-serif']=['SimHei'] #用来正常显示中文标签
 plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
 import matplotlib.colors as colors
 import pkg_resources
+import math
+
+
+def clev_cmap_temper_2m():
+    path = pkg_resources.resource_filename('nmc_verification', "resources/colormaps/color_temp_2m.txt")
+    return get_clev_and_cmap_from_file(path)
+def clev_cmap_rain_1h():
+    path = pkg_resources.resource_filename('nmc_verification', "resources/colormaps/color_rain_1h.txt")
+    return get_clev_and_cmap_from_file(path)
+def clev_cmap_rain_3h():
+    path = pkg_resources.resource_filename('nmc_verification', "resources/colormaps/color_rain_3h.txt")
+    return get_clev_and_cmap_from_file(path)
+def clev_cmap_rain_24h():
+    path = pkg_resources.resource_filename('nmc_verification', "resources/colormaps/color_rain_24h.txt")
+    return get_clev_and_cmap_from_file(path)
+def clev_cmap_rh():
+    path = pkg_resources.resource_filename('nmc_verification', "resources/colormaps/color_rh.txt")
+    return get_clev_and_cmap_from_file(path)
+def clev_cmap_vis():
+    path = pkg_resources.resource_filename('nmc_verification', "resources/colormaps/color_vis.txt")
+    return get_clev_and_cmap_from_file(path)
+def clev_cmap_wind_speed():
+    path = pkg_resources.resource_filename('nmc_verification', "resources/colormaps/color_wind_speed.txt")
+    return get_clev_and_cmap_from_file(path)
+def clev_cmap_cloud_total():
+    path = pkg_resources.resource_filename('nmc_verification', "resources/colormaps/color_tcdc.txt")
+    return get_clev_and_cmap_from_file(path)
+
+def clev_cmap_rain_1h_error():
+    path = pkg_resources.resource_filename('nmc_verification', "resources/colormaps/color_rain_1h_error.txt")
+    return get_clev_and_cmap_from_file(path)
+def clev_cmap_rain_3h_error():
+    path = pkg_resources.resource_filename('nmc_verification', "resources/colormaps/color_rain_3h_error.txt")
+    return get_clev_and_cmap_from_file(path)
+def clev_cmap_rh_error():
+    path = pkg_resources.resource_filename('nmc_verification', "resources/colormaps/color_rh_error.txt")
+    return get_clev_and_cmap_from_file(path)
+def clev_cmap_vis_error():
+    path = pkg_resources.resource_filename('nmc_verification', "resources/colormaps/color_vis_error.txt")
+    return get_clev_and_cmap_from_file(path)
+def clev_cmap_wind_speed_error():
+    path = pkg_resources.resource_filename('nmc_verification', "resources/colormaps/color_wind_speed_error.txt")
+    return get_clev_and_cmap_from_file(path)
+def clev_cmap_cloud_total_error():
+    path = pkg_resources.resource_filename('nmc_verification', "resources/colormaps/color_tcdc_error.txt")
+    return get_clev_and_cmap_from_file(path)
+
+def get_clev_and_cmap_from_file(path):
+    clev_cmap = np.loadtxt(path)
+    clev = clev_cmap[:, 0]
+    cmap = clev_cmap[:, 1:] / 255
+    cmap = cmap.tolist()
+    cmap = colors.ListedColormap(cmap, 'indexed')
+    return clev,cmap
 
 def get_steps_range(line):
     num = len(line)
@@ -183,9 +237,7 @@ def get_clev_and_cmap_by_element_name(element_name):
         path = pkg_resources.resource_filename('nmc_verification', "resources/colormaps/color_tcdc.txt")
     elif element_name == "tcdc_error":
         path = pkg_resources.resource_filename('nmc_verification', "resources/colormaps/color_tcdc_error.txt")
-
-
-    clev,cmap = read_clev_and_cmap(path)
+    clev,cmap = get_clev_and_cmap_from_file(path)
     return clev,cmap
 
 def get_part_clev_and_cmap(clev_all,cmap_all,vmax,vmin):
@@ -219,24 +271,41 @@ def write_clev_and_cmap(clev,cmap,path):
         clev_cmap[:, 1:] = cmap_data
     np.savetxt(path,clev_cmap,fmt = "%f")
 
-def read_clev_and_cmap(path):
-    clev_cmap = np.loadtxt(path)
-    clev = clev_cmap[:, 0]
-    cmap = clev_cmap[:, 1:] / 255
-    cmap = cmap.tolist()
-    cmap = colors.ListedColormap(cmap, 'indexed')
-    return clev,cmap
-
 def get_denser_cmap(cmap,multi_num):
     if hasattr(cmap,"colors"):
         colors0 = np.array(cmap.colors)
-        colors_list = [colors0[0]]
+        colors_list = []
         num = len(colors0) - 1
         for i in range(num):
             for j in range(multi_num):
                 color1 = (colors0[i,:]*(multi_num-j) + colors0[i+1,:] * j)/multi_num
                 colors_list.append(color1.tolist())
+        colors_list.append(colors0[-1])
         cmap_denser = colors.ListedColormap(colors_list, 'indexed')
         return cmap_denser
     else:
         return cmap
+
+def show_cmap_clev(cmap,clev = None):
+    """
+    Show color map.
+    :param cmap: color map instance.
+    :return: None
+    """
+    n_colors = len(cmap.colors)
+    width = 8
+    heigh = 1
+    n_h = int(heigh * n_colors/width)
+    im = np.outer(np.ones(n_h), np.arange(n_colors))
+
+
+    fig, ax = plt.subplots(1, figsize=(width, heigh),
+                           subplot_kw=dict(xticks=[], yticks=[]))
+    if clev is not None:
+        max_tick = 10
+        step = int(math.ceil(n_colors/max_tick))
+        x = np.arange(0,n_colors,step)
+        ax.set_xticks(x)
+        labels = clev[x]
+        ax.set_xticklabels(labels)
+    ax.imshow(im, cmap=cmap)

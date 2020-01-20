@@ -21,6 +21,11 @@ def all_type_time_to_datetime(time0):
         time1 = datetime.datetime.utcfromtimestamp(time1/1000000000)
     return time1
 
+def all_type_time_to_str(time0):
+    time1 = all_type_time_to_time64(time0)
+    return time_to_str(time1)
+
+
 #所有的timedelta类型的数据转为timedelta64类型的时间格式
 def all_type_timedelta_to_timedelta64(timedelta0):
     if isinstance(timedelta0,np.timedelta64):
@@ -28,23 +33,38 @@ def all_type_timedelta_to_timedelta64(timedelta0):
     elif isinstance(timedelta0,datetime.timedelta):
         return np.timedelta64(timedelta0)
     elif type(timedelta0) == str:
-        return str_to_timedelta64(timedelta0)
+        timedelta1 = str_to_timedelta(timedelta0)
+        return np.timedelta64(timedelta1)
+    else:
+        print("时效类型不识别")
+        return None
+
+def all_type_timedelta_to_timedelta(timedelta0):
+    if isinstance(timedelta0,datetime.timedelta):
+        return timedelta0
+    elif isinstance(timedelta0,np.timedelta64):
+        seconds = int(timedelta0 / np.timedelta64(1, 's'))
+        timedelta1 = datetime.timedelta(seconds = seconds)
+        return timedelta1
+    elif type(timedelta0) == str:
+        timedelta1 = str_to_timedelta(timedelta0)
+        return timedelta1
     else:
         print("时效类型不识别")
         return None
 
 #str类型的时间转换为timedelta64类型的时间
-def str_to_timedelta64(timedalta_str):
+def str_to_timedelta(timedalta_str):
     num_str = ''.join([x for x in timedalta_str if x.isdigit()])
     num = int(num_str)
     # 提取出dtime_type类型
     TIME_type = re.findall(r"\D+", timedalta_str)[0].lower()
     if TIME_type == 'h':
-        return np.timedelta64(num, 'h')
+        return datetime.timedelta(hours=num)
     elif TIME_type == 'd':
-        return np.timedelta64(num, 'D')
+        return datetime.timedelta(days=num)
     elif TIME_type == 'm':
-        return np.timedelta64(num, 'm')
+        return datetime.timedelta(minutes=num)
     else:
         print("输入的时效格式不识别")
         return None

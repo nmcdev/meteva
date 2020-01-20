@@ -92,3 +92,12 @@ def sxy_iteration(count_old,meanx_old,meany_old,sxy_old,count_new,meanx_new,mean
     sxy_total /= count_total
     return count_total, meanx_total, meany_total,sxy_total
 
+def get_index(X,level_list):
+    levels = np.array(level_list)
+    levels.sort()
+    index = np.zeros_like(X)
+    index[...] = len(levels)
+    for i in range(len(levels)):
+        level = levels[i]
+        index[X < level] = i - 1
+    return index
