@@ -40,7 +40,7 @@ def interpolation_nearest(grd,sta,other_info='left'):
         sta1['time'] = grid.stime
         sta1['dtime'] = grid.dtimes[0]
         sta1['level'] = grid.levels[0]
-        nmc_verification.nmc_vf_base.basicdata.set_data_name(sta1,grid.members[0])
+        nmc_verification.nmc_vf_base.basicdata.set_data_names(sta1,grid.members)
     return sta1
 
 #双线性格点到站点的插值
@@ -62,18 +62,18 @@ def interpolation_linear(grd,sta,other_info='left'):
     ig1 = np.minimum(ig + 1, grid.nlon - 1)
     jg1 = np.minimum(jg + 1, grid.nlat - 1)
     dat_sta= c00 * dat[jg,ig] + c01 * dat[jg,ig1] + c10 * dat[jg1,ig] + c11 * dat[jg1,ig1]
-    data_name = nmc_verification.nmc_vf_base.basicdata.get_data_names(sta)[0]
+    data_name = nmc_verification.nmc_vf_base.get_stadata_names(sta)[0]
     sta1.loc[:, data_name] = dat_sta[:]
     if other_info == 'left':
         sta1['time'] = grid.stime
         sta1['dtime'] = grid.dtimes[0]
         sta1['level'] = grid.levels[0]
-        nmc_verification.nmc_vf_base.basicdata.set_data_name(sta1,grid.members[0])
+        nmc_verification.nmc_vf_base.set_stadata_names(sta1,grid.members)
     return sta1
 
 
 #三维格点到站点的插值
-def cubicInterpolation(grd,sta,other_info = 'left'):
+def interpolation_cubic(grd,sta,other_info = 'left'):
     grid = nmc_verification.nmc_vf_base.basicdata.get_grid_of_data(grd)
     sta1 = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_grid_xy(sta, grid)
     dat0 = grd.values
@@ -93,9 +93,9 @@ def cubicInterpolation(grd,sta,other_info = 'left'):
             sta1[data_name] +=  fdxy * dat[jjq,iip]
     if other_info == 'left':
         sta1['time'] = grid.stime
-        sta1['dtime'] = grid.sdtimedelta
+        sta1['dtime'] = grid.dtimes[0]
         sta1['level'] = grid.levels[0]
-        nmc_verification.nmc_vf_base.basicdata.set_data_name(sta1, grid.members[0])
+        nmc_verification.nmc_vf_base.basicdata.set_data_names(sta1,grid.members)
     return sta1
 
 def cubic_f(n, dx):

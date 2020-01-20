@@ -19,23 +19,22 @@ def transform(sta,dlon = None,dlat = None):
     nsta = len(sta.index)
     if(dlon is None):
         for i in range(nsta-1):
-            dlon = sta.ix[i,'lon'] - sta.ix[i+1,'lon']
+            dlon = sta['lon'].values[i] - sta['lon'].values[i+1]
             if dlon != 0:
                 dlon = math.fabs(dlon)
                 break
     if(dlat is None):
         for i in range(nsta-1):
-            dlat = sta.ix[i,'lat'] - sta.ix[i+1,'lat']
+            dlat = sta['lat'].values[i] - sta['lat'].values[i+1]
             if dlat != 0:
                 dlat = math.fabs(dlat)
                 break
-
     ig = ((sta['lon'].values - slon) // dlon).astype(dtype = 'int16')
     jg = ((sta['lat'].values - slat) // dlat).astype(dtype = 'int16')
     grid0 = nmc_verification.nmc_vf_base.basicdata.grid([slon,elon,dlon],[slat,elat,dlat])
     dat = np.zeros((grid0.nlat,grid0.nlon))
     data_name = nmc_verification.nmc_vf_base.basicdata.get_data_names(sta)[0]
-    dat[jg,ig] = sta.ix[:,data_name]
+    dat[jg,ig] = sta.loc[:,data_name]
     grd = nmc_verification.nmc_vf_base.basicdata.grid_data(grid0,dat)
     return grd
 
