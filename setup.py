@@ -5,7 +5,7 @@ from setuptools import find_packages, setup
 from codecs import open
 name = "nmc_verification"
 author ="liucouhua,wangbaoli,zhanglianyi"
-version ="1.1.22"
+version ="1.1.26"
 
 here = path.abspath(path.dirname(__file__))
 
@@ -46,6 +46,6 @@ setup(
                       "httplib2>=0.12.0",
                       "protobuf>=3.6.1",
                       "netCDF4>=1.5.1.2",
-                      "basemap>=1.2.1",
-                      "pyshap>=2.1.0"]
+                      "seaborn>=0.9.0"
+                      ]
 )

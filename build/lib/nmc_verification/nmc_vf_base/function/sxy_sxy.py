@@ -4,7 +4,6 @@ import copy
 from scipy.spatial import cKDTree
 import nmc_verification
 
-
 #将两个站点数据信息进行合并，并去重。
 def set_data_to(sta,station):
     #删除重复行

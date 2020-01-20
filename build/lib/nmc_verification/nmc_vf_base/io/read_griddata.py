@@ -219,7 +219,7 @@ def read_griddata_from_micaps4(filename,grid=None):
                 return da
             else:
                 #如果传入函数有grid信息，就需要进行一次双线性插值，按照grid信息进行提取网格信息。
-                da1 = nmc_verification.nmc_vf_base.function.gxy_gxy.interpolation_linear(da, grid)
+                da1 = nmc_verification.nmc_vf_base.interp_gg_linear(da, grid)
                 return da1
         else:
             return None
@@ -288,8 +288,7 @@ def read_griddata_from_nc(filename,grid = None,value_name = None,member = None,l
         if(time is None):
             if "time" in ds0.coords or "time" in list(ds0):
                 time = "time"
-            elif "t" in ds0.coords:
-                time = "t"
+
         if time in ds0.coords or time in list(ds0):
             if time in ds0.coords:
                 times = ds0.coords[time]
@@ -373,6 +372,7 @@ def read_griddata_from_nc(filename,grid = None,value_name = None,member = None,l
         da = None
         if value_name is not None:
             da = ds0[value_name]
+            name = value_name
         else:
             name_list = list((ds0))
             for name in name_list:
@@ -426,6 +426,7 @@ def read_griddata_from_nc(filename,grid = None,value_name = None,member = None,l
         #print(da)
         da = da.transpose(dim_order["member"],dim_order["level"],dim_order["time"],
                           dim_order["dtime"],dim_order["lat"],dim_order["lon"])
+        #print(name)
         ds[name] = (("member","level","time","dtime","lat","lon"),da)
         attrs_name = list(da.attrs)
         for key in attrs_name:
@@ -450,7 +451,7 @@ def read_griddata_from_nc(filename,grid = None,value_name = None,member = None,l
             return da1
         else:
             # 如果传入函数有grid信息，就需要进行一次双线性插值，按照grid信息进行提取网格信息。
-            da2 = nmc_verification.nmc_vf_base.function.gxy_gxy.interpolation_linear(da1, grid)
+            da2 = nmc_verification.nmc_vf_base.interp_gg_linear(da1, grid)
             da2.name = "data0"
             return da2
     except (Exception, BaseException) as e:
@@ -543,7 +544,7 @@ def read_griddata_from_nc1(filename,grid = None,value_name = None,member = None,
             return da1
         else:
             # 如果传入函数有grid信息，就需要进行一次双线性插值，按照grid信息进行提取网格信息。
-            da2 = nmc_verification.nmc_vf_base.function.gxy_gxy.interpolation_linear(da1, grid)
+            da2 = nmc_verification.nmc_vf_base.interp_gg_linear(da1, grid)
             da2.name = "data0"
             return da2
 
@@ -554,7 +555,6 @@ def read_griddata_from_nc1(filename,grid = None,value_name = None,member = None,
 
 
 def read_griddata_from_gds_file(filename,grid = None):
-    print("a")
     try:
         if not os.path.exists(filename):
             print(filename + " is not exist")
@@ -587,12 +587,13 @@ def read_griddata_from_gds_file(filename,grid = None):
                 grd.name = "data0"
                 return grd
             else:
-                da = nmc_verification.nmc_vf_base.function.gxy_gxy.interpolation_linear(grd, grid)
+                da = nmc_verification.nmc_vf_base.interp_gg_linear(grd, grid)
                 da.name = "data0"
                 return da
     except Exception as e:
         print(e)
         return None
+
 
 
 def read_griddata_from_gds(ip,port,filename,grid = None):
@@ -606,7 +607,7 @@ def read_griddata_from_gds(ip,port,filename,grid = None):
             print("service is None")
             return
         directory,fileName = os.path.split(filename)
-        status, response = byteArrayResult = service.getData(directory, fileName)
+        status, response = service.getData(directory, fileName)
         ByteArrayResult = DataBlock_pb2.ByteArrayResult()
         if status == 200:
             ByteArrayResult.ParseFromString(response)
@@ -640,9 +641,66 @@ def read_griddata_from_gds(ip,port,filename,grid = None):
                         grd.name = "data0"
                         return grd
                     else:
-                        da = nmc_verification.nmc_vf_base.function.gxy_gxy.interpolation_linear(grd, grid)
+                        da = nmc_verification.nmc_vf_base.interp_gg_linear(grd, grid)
                         da.name = "data0"
                         return da
+    except Exception as e:
+        print(e)
+        return None
+
+
+def read_gridwind_from_gds(ip,port,filename,grid = None):
+    # ip 为字符串形式，示例 “10.20.30.40”
+    # port 为整数形式
+    # filename 为字符串形式 示例 "ECMWF_HR/TCDC/19083108.000"
+
+    service = GDSDataService(ip, port)
+    try:
+        if(service is None):
+            print("service is None")
+            return
+        directory,fileName = os.path.split(filename)
+        status, response =  service.getData(directory, fileName)
+        ByteArrayResult = DataBlock_pb2.ByteArrayResult()
+        if status == 200:
+            ByteArrayResult.ParseFromString(response)
+            if ByteArrayResult is not None:
+                byteArray = ByteArrayResult.byteArray
+                discriminator = struct.unpack("4s", byteArray[:4])[0].decode("gb2312")
+                t = struct.unpack("h", byteArray[4:6])
+                mName = struct.unpack("20s", byteArray[6:26])[0].decode("gb2312")
+                eleName = struct.unpack("50s", byteArray[26:76])[0].decode("gb2312")
+                description = struct.unpack("30s", byteArray[76:106])[0].decode("gb2312")
+                level, y, m, d, h, timezone, period = struct.unpack("fiiiiii", byteArray[106:134])
+                startLon, endLon, lonInterval, lonGridCount = struct.unpack("fffi", byteArray[134:150])
+                startLat, endLat, latInterval, latGridCount = struct.unpack("fffi", byteArray[150:166])
+                isolineStartValue, isolineEndValue, isolineInterval = struct.unpack("fff", byteArray[166:178])
+                gridCount = lonGridCount * latGridCount
+                description = mName.rstrip('\x00') + '_' + eleName.rstrip('\x00') + "_" + str(
+                    level) + '(' + description.rstrip('\x00') + ')' + ":" + str(period)
+                if (gridCount == (len(byteArray) - 278) / 8):
+                    if (startLat > 90): startLat = 90.0
+                    if (startLat < -90): startLat = -90.0
+                    if (endLat > 90): endLat = 90.0
+                    if (endLat < -90): endLat = -90.0
+                    grid0 = nmc_verification.nmc_vf_base.grid([startLon, endLon, lonInterval], [startLat, endLat, latInterval])
+                    speed = nmc_verification.nmc_vf_base.grid_data(grid0)
+                    i_s = 278
+                    i_e = 278 + grid0.nlon * grid0.nlat * 4
+                    speed.values = np.frombuffer(byteArray[i_s:i_e], dtype='float32').reshape(1, 1, 1, 1, grid0.nlat, grid0.nlon)
+                    i_s += grid0.nlon * grid0.nlat * 4
+                    i_e += grid0.nlon * grid0.nlat * 4
+                    angle = nmc_verification.nmc_vf_base.grid_data(grid0)
+                    angle.values = np.frombuffer(byteArray[i_s:i_e], dtype='float32').reshape(1, 1, 1, 1, grid0.nlat, grid0.nlon)
+                    nmc_verification.nmc_vf_base.reset(speed)
+                    nmc_verification.nmc_vf_base.reset(angle)
+
+                    wind = nmc_verification.nmc_vf_base.diag.speed_angle_to_wind(speed, angle)
+                    if (grid is None):
+                        return wind
+                    else:
+                        return nmc_verification.nmc_vf_base.interp_gg_linear(wind, grid)
+
     except Exception as e:
         print(e)
         return None
@@ -684,11 +742,12 @@ def read_gridwind_from_gds_file(filename,grid = None):
             angle.values = np.frombuffer(byteArray[i_s:i_e], dtype='float32').reshape(1,1,1,1,grid0.nlat, grid0.nlon)
             nmc_verification.nmc_vf_base.reset(speed)
             nmc_verification.nmc_vf_base.reset(angle)
-            wind = nmc_verification.nmc_vf_base.function.gxy_gxym.get_wind_from_speed_angle(speed,angle)
+
+            wind = nmc_verification.nmc_vf_base.diag.speed_angle_to_wind(speed,angle)
             if (grid is None):
                 return wind
             else:
-                return nmc_verification.nmc_vf_base.function.gxym_gxym.interpolation_linear(wind,grid)
+                return nmc_verification.nmc_vf_base.diag.interp_gg_linear(wind,grid)
 
     except Exception as e:
         print(e)
@@ -697,19 +756,19 @@ def read_gridwind_from_gds_file(filename,grid = None):
 def read_gridwind_from_micaps2(filename,grid = None):
     if os.path.exists(filename):
         try:
-            column = nmc_verification.nmc_vf_base.m2_value_column.风向
-            sta_angle = nmc_verification.nmc_vf_base.io.read_stadata.read_from_micaps1_2_8(filename,column)
-            column = nmc_verification.nmc_vf_base.m2_value_column.风速
-            sta_speed = nmc_verification.nmc_vf_base.io.read_stadata.read_from_micaps1_2_8(filename, column)
-            grid_angle = nmc_verification.nmc_vf_base.function.sxy_gxy.transform(sta_angle)
+            column = nmc_verification.nmc_vf_base.m2_element_column.风向
+            sta_angle = nmc_verification.nmc_vf_base.io.read_stadata_from_micaps1_2_8(filename,column,drop_same_id=False)
+            column = nmc_verification.nmc_vf_base.m2_element_column.风速
+            sta_speed = nmc_verification.nmc_vf_base.io.read_stadata_from_micaps1_2_8(filename, column,drop_same_id=False)
+            grid_angle = nmc_verification.nmc_vf_base.trans_sta_to_grd(sta_angle)
             grid_angle.values = 270 - grid_angle.values
-            grid_speed = nmc_verification.nmc_vf_base.function.sxy_gxy.transform(sta_speed)
-            wind = nmc_verification.nmc_vf_base.function.gxy_gxym.get_wind_from_speed_angle(grid_speed,grid_angle)
+            grid_speed = nmc_verification.nmc_vf_base.trans_sta_to_grd(sta_speed)
+            wind = nmc_verification.nmc_vf_base.diag.speed_angle_to_wind(grid_speed,grid_angle)
             nmc_verification.nmc_vf_base.reset(wind)
             if grid is None:
                 return wind
             else:
-                wind1 = nmc_verification.nmc_vf_base.function.gxym_gxym.interpolation_linear(wind,grid=grid)
+                wind1 = nmc_verification.nmc_vf_base.interp_gg_linear(wind,grid=grid)
                 return wind1
         except (Exception, BaseException) as e:
             exstr = traceback.format_exc()
@@ -720,8 +779,7 @@ def read_gridwind_from_micaps2(filename,grid = None):
         print(filename + " not exists")
         return None
 
-
-def read_gridwind_from_micap11(filename,grid = None):
+def read_gridwind_from_micaps11(filename,grid = None):
     if os.path.exists(filename):
         file = open(filename, 'r')
         str1 = file.read()
@@ -741,12 +799,12 @@ def read_gridwind_from_micap11(filename,grid = None):
             dat_v = (np.array(strs[k:(k + grid0.nlon * grid0.nlat)])).astype(float).reshape((grid0.nlat, grid0.nlon))
             grid_u = nmc_verification.nmc_vf_base.grid_data(grid0,dat_u)
             grid_v = nmc_verification.nmc_vf_base.grid_data(grid0,dat_v)
-            wind = nmc_verification.nmc_vf_base.function.gxy_gxym.put_uv_into_wind(grid_u,grid_v)
+            wind = nmc_verification.nmc_vf_base.diag.u_v_to_wind(grid_u,grid_v)
             nmc_verification.nmc_vf_base.reset(wind)
             if grid is None:
                 return wind
             else:
-                wind1 = nmc_verification.nmc_vf_base.function.gxym_gxym.interpolation_linear(wind, grid=grid)
+                wind1 = nmc_verification.nmc_vf_base.interp_gg_linear(wind, grid=grid)
                 return wind1
         else:
             print(filename + " format wrong")

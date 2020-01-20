@@ -6,7 +6,7 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 
 
-def scatter_regress(ob, fo, save_path=None):
+def scatter_regress(ob, fo, save_path=None,title = None,rtype = "linear"):
     '''
     绘制观测-预报散点图和线性回归曲线
     :param Ob: 实况数据  任意维numpy数组
@@ -17,36 +17,61 @@ def scatter_regress(ob, fo, save_path=None):
     width = 5
     height = 5
     fig = plt.figure(figsize=(width, height))
-    markersize = 50 * width * height / ob.size
+    markersize = 5 * width * height / np.sqrt(ob.size)
     if markersize <1:
         markersize = 1
     elif markersize >20:
         markersize = 20
-    plt.plot(ob, fo, '.',color= 'b',  markersize=markersize)
-    X = np.zeros((len(ob), 1))
-    X[:, 0] = ob
-    clf = LinearRegression().fit(X, fo)
-    num_max = max(np.max(ob),np.max(fo))
-    num_min = min(np.min(ob),np.min(fo))
-    dmm = num_max - num_min
-    if(num_min != 0):
-        num_min -= 0.1 * dmm
-    num_max += dmm * 0.1
-    dmm = num_max - num_min
-    ob_line = np.arange(num_min, num_max, dmm / 30)
-
-    X = np.zeros((len(ob_line), 1))
-    X[:, 0] = ob_line
-    fo_rg = clf.predict(X)
-    plt.plot(ob_line, fo_rg,color = "r")
-    plt.plot(ob_line, ob_line,'--', color="k")
-    plt.xlim(num_min, num_max)
-    plt.ylim(num_min, num_max)
-    plt.xlabel("观测",fontsize = 14)
-    plt.ylabel("预报",fontsize = 14)
-    rg_text2 = "y = " + '%.2f' % (clf.coef_[0]) + "* x + " + '%.2f' % (clf.intercept_)
-    plt.text(num_min + 0.05 * dmm, num_min + 0.90 * dmm, rg_text2, fontsize=15,color ="r")
-    plt.title("散点回归图",fontsize = 14)
+    plt.plot(fo,ob, '.',color= 'b',  markersize=markersize)
+    if rtype == "rate":
+        num_max = max(np.max(ob),np.max(fo))
+        num_min = min(np.min(ob),np.min(fo))
+        dmm = num_max - num_min
+        if(num_min < 0):
+            num_min -= 0.1 * dmm
+        else:
+            num_min -= 0.1 * dmm
+            if num_min<0:  #如果开始全大于，则最低值扩展不超过0
+                num_min = 0
+        num_max += dmm * 0.1
+        dmm = num_max - num_min
+        ob_line = np.arange(num_min, num_max, dmm / 30)
+        rate = np.mean(ob)/np.mean(fo)
+        fo_rg = ob_line * np.mean(ob)/np.mean(fo)
+        plt.plot(ob_line, fo_rg,color = "r")
+        plt.plot(ob_line, ob_line,'--', color="k")
+        plt.xlim(num_min, num_max)
+        plt.ylim(num_min, num_max)
+        plt.xlabel("预报",fontsize = 14)
+        plt.ylabel("观测",fontsize = 14)
+        rg_text2 = "Y = " + '%.2f' % rate + "* X"
+        plt.text(num_min + 0.05 * dmm, num_min + 0.90 * dmm, rg_text2, fontsize=15,color ="r")
+    elif rtype== "linear":
+        X = np.zeros((len(fo), 1))
+        X[:, 0] = fo
+        clf = LinearRegression().fit(X, ob)
+        num_max = max(np.max(ob),np.max(fo))
+        num_min = min(np.min(ob),np.min(fo))
+        dmm = num_max - num_min
+        if(num_min != 0):
+            num_min -= 0.1 * dmm
+        num_max += dmm * 0.1
+        dmm = num_max - num_min
+        ob_line = np.arange(num_min, num_max, dmm / 30)
+        X = np.zeros((len(ob_line), 1))
+        X[:, 0] = ob_line
+        fo_rg = clf.predict(X)
+        plt.plot(ob_line, fo_rg,color = "r")
+        plt.plot(ob_line, ob_line,'--', color="k")
+        plt.xlim(num_min, num_max)
+        plt.ylim(num_min, num_max)
+        plt.xlabel("预报",fontsize = 14)
+        plt.ylabel("观测",fontsize = 14)
+        rg_text2 = "Y = " + '%.2f' % (clf.coef_[0]) + "* X + " + '%.2f' % (clf.intercept_)
+        plt.text(num_min + 0.05 * dmm, num_min + 0.90 * dmm, rg_text2, fontsize=15,color ="r")
+    if title is None:
+        title = "散点回归图"
+    plt.title(title,fontsize = 14)
     if save_path is None:
         plt.show()
     else:

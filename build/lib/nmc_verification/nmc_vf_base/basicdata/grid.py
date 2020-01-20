@@ -14,19 +14,19 @@ class grid:
         定义一个格点的类grid，来存储网格的范围包括（起始经纬度、格距、起止时间，时间间隔，起止时效，时效间隔，层次列表，数据成员）
         约定坐标顺序为: member, time,ddtime, level, lat,lon
     '''
-    def __init__(self,glon, glat, gtime=None, dtimes=None,levels=None,members = None):
+    def __init__(self,glon, glat, gtime=None, dtime_list=None,level_list=None,member_list = None):
 
         #提取成员维度信息
-        if(members is None):
+        if(member_list is None):
             self.members =['data0']
         else:
-            self.members = members
+            self.members = member_list
         ############################################################################
         #提取层次维度信息
-        if(levels is None):
+        if(level_list is None):
             self.levels =[0]
         else:
-            self.levels = levels
+            self.levels = level_list
         ############################################################################
         #提取时间维度信息
         self.stime = np.datetime64('2099-01-01T00:00:00.000000')
@@ -52,8 +52,8 @@ class grid:
                 else:
                     print("输入日期有误，请检查！")
                 # 统一将日期变为datetime类型
-                self.stime = datetime.strptime(num, '%Y%m%d%H%M%S')
-                self.etime = datetime.strptime(num, '%Y%m%d%H%M%S')
+                self.stime = datetime.datetime.strptime(num, '%Y%m%d%H%M%S')
+                self.etime = datetime.datetime.strptime(num, '%Y%m%d%H%M%S')
                 self.stime = np.datetime64(self.stime)
                 self.etime = np.datetime64(self.etime)
             else:
@@ -83,10 +83,19 @@ class grid:
                     else:
                         print("输入日期有误，请检查！")
                     #统一将日期变为datetime类型
-                self.stime = datetime.strptime(num1[0], '%Y%m%d%H%M%S')
-                self.etime = datetime.strptime(num1[1], '%Y%m%d%H%M%S')
+                #print(num1)
+                self.stime = datetime.datetime.strptime(num1[0], '%Y%m%d%H%M%S')
+                self.etime = datetime.datetime.strptime(num1[1], '%Y%m%d%H%M%S')
                 self.stime = np.datetime64(self.stime)
                 self.etime = np.datetime64(self.etime)
+            elif isinstance(gtime[0],np.datetime64):
+                stime = gtime[0].astype(datetime.datetime)
+                etime = gtime[1].astype(datetime.datetime)
+                if isinstance(stime, int):
+                    stime = datetime.datetime.utcfromtimestamp(stime / 1000000000)
+                    etime = datetime.datetime.utcfromtimestamp(etime / 1000000000)
+                self.stime = stime
+                self.etime = etime
             else:
                 self.stime = gtime[0]
                 self.etime = gtime[1]
@@ -103,6 +112,14 @@ class grid:
                 elif dtime_type == 'm':
                     self.dtime_type ="m"
                     self.dtimedelta = np.timedelta64(self.dtime_int, 'm')
+            elif isinstance(gtime[2],np.timedelta64):
+                seconds = int(gtime[2] / np.timedelta64(1, 's'))
+                if seconds % 3600 == 0:
+                    self.dtime_type = "h"
+                    self.dtime_int = int(seconds / 3600)
+                else:
+                    self.dtime_type = "m"
+                    self.dtime_int = int(seconds / 60)
             else:
                 self.dtimedelta = gtime[2]
                 seconds = gtime[2].total_seconds()
@@ -119,10 +136,10 @@ class grid:
 
         ############################################################################
         #提取预报时效维度信息
-        if dtimes is None:
-            self.dtimes = [0,"hour"]
+        if dtime_list is None:
+            self.dtimes = [0]
         else:
-            self.dtimes = dtimes
+            self.dtimes = dtime_list
         ############################################################################
         #提取经度信息
 
@@ -174,17 +191,12 @@ class grid:
             self.dlon = abs(self.dlon)
         return
 
-    # tostring 的作用是重置系统自动的函数，在print(grid) 的时候可以很整齐的看到所有信息
-    def tostring(self):
-        grid_str = ""
-        grid_str += "members:" + str(self.members) +"\n"
-        grid_str += "levels:" + str(self.levels) + "\n"
-        grid_str += "gtime:" + str([self.stime_str,self.etime_str,self.dtime_str]) + "\n"
-        grid_str += "dtimes:" + str(self.dtimes)  +"\n"
-        grid_str += "glon:" + str(self.glon) + "\n"
-        grid_str += "glat:" + str(self.glat) + "\n"
-        return grid_str
+
     def __str__(self):
+        '''
+        重置系统自动的函数，在print(grid) 的时候可以很整齐的看到所有信息
+        :return:  string
+        '''
         grid_str = ""
         grid_str += "members:" + str(self.members) +"\n"
         grid_str += "levels:" + str(self.levels) + "\n"
@@ -200,8 +212,8 @@ def get_grid_of_data(grid_data0):
     :param grid_data0:初始化之后的网格数据
     :return:返回grid数据。
     '''
-    members = grid_data0['member'].values
-    levels = grid_data0['level'].values
+    member_list = grid_data0['member'].values
+    level_list = grid_data0['level'].values
     times = grid_data0['time'].values
     #print(times)
     if(len(times)>1):
@@ -213,15 +225,11 @@ def get_grid_of_data(grid_data0):
 
     gdt = grid_data0['dtime'].values.tolist()
     attrs_name = list(grid_data0.attrs)
-    if "dtime_type" in attrs_name:
-        gdt.append(grid_data0.attrs["dtime_type"])
-    else:
-        gdt.append("hour")
 
     lons = grid_data0['lon'].values
     glon = [lons[0],lons[-1],lons[1]-lons[0]]
     lats = grid_data0['lat'].values
     glat = [lats[0],lats[-1],lats[1]-lats[0]]
-    grid01 = grid(glon, glat, gtime, gdt, levels, members)
+    grid01 = grid(glon, glat, gtime, gdt, level_list, member_list)
     return grid01
 

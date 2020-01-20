@@ -14,6 +14,13 @@ nmc_verification/nmc_vf_base/basicdata/dicts.py
 nmc_verification/nmc_vf_base/basicdata/grid.py
 nmc_verification/nmc_vf_base/basicdata/grid_data.py
 nmc_verification/nmc_vf_base/basicdata/sta_data.py
+nmc_verification/nmc_vf_base/fun/__init__.py
+nmc_verification/nmc_vf_base/fun/combining.py
+nmc_verification/nmc_vf_base/fun/computing.py
+nmc_verification/nmc_vf_base/fun/diagnosing.py
+nmc_verification/nmc_vf_base/fun/interpolating.py
+nmc_verification/nmc_vf_base/fun/selecting.py
+nmc_verification/nmc_vf_base/fun/transformating.py
 nmc_verification/nmc_vf_base/function/__init__.py
 nmc_verification/nmc_vf_base/function/get_from_grid_data.py
 nmc_verification/nmc_vf_base/function/get_from_sta_data.py
@@ -42,7 +49,9 @@ nmc_verification/nmc_vf_base/tool/__init__.py
 nmc_verification/nmc_vf_base/tool/color_tools.py
 nmc_verification/nmc_vf_base/tool/copy_tools.py
 nmc_verification/nmc_vf_base/tool/frprmn2.py
+nmc_verification/nmc_vf_base/tool/grib_tools.py
 nmc_verification/nmc_vf_base/tool/math_tools.py
+nmc_verification/nmc_vf_base/tool/myBasemap.py
 nmc_verification/nmc_vf_base/tool/path_tools.py
 nmc_verification/nmc_vf_base/tool/plot_tools.py
 nmc_verification/nmc_vf_base/tool/time_tools.py

@@ -41,8 +41,10 @@ def ob_and_multi_time_fo(sta_ob_all,sta_fo_all,pic_path = None,max_dh = None,cle
     ddhs = ddhs[ddhs!=0]
     dh_x = int(np.min(ddhs))
 
-    data_name = nmc_verification.nmc_vf_base.get_undim_data_names(sta_ob_all)[0]
-    sta_all = nmc_verification.nmc_vf_base.function.put_into_sta_data.join(sta_ob_all, sta_fo_all)
+    data_name = nmc_verification.nmc_vf_base.get_undim_data_names(sta_fo_all)[0]
+    sta_ob_all1 = copy.deepcopy(sta_ob_all)
+    nmc_verification.nmc_vf_base.set_stadata_names(sta_ob_all,[data_name])
+    sta_all = nmc_verification.nmc_vf_base.combine_join(sta_ob_all1, sta_fo_all)
     col = (int)(2 * max_dh / dh_x + 1)
     hf_col = (int)(max_dh/dh_x)
     row = (int)(max_dh / dh_y)
@@ -59,7 +61,7 @@ def ob_and_multi_time_fo(sta_ob_all,sta_fo_all,pic_path = None,max_dh = None,cle
             if dh < dh_y and dh >0:
                 time_fo = time_fo + datetime.timedelta(hours = dh)
                 dh = 0
-            sta = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_of_time(sta_all,time_fo)
+            sta = sta_all.loc[sta_all["time"] == time_fo]
             sta = sta.loc[sta["dtime"] == dh]
             if (len(sta.index) > 0):
                 dat[i, j] = sta[data_name].values[0]
@@ -124,6 +126,11 @@ def ob_and_multi_time_fo(sta_ob_all,sta_fo_all,pic_path = None,max_dh = None,cle
         ax1.set_yticklabels(yticks, rotation=360)
         title = data_name + '实况和不同时效预报偏差图'
         ax1.set_title(title, loc='left', fontweight='bold', fontsize='large')
+        for k in range(row + 1):
+            x1 = start_ob_i - k * dh_y / dh_x
+            y1 = k
+            rect = patches.Rectangle((x1, y1), dh_y / dh_x, 1, linewidth=2, edgecolor='k', facecolor='none')
+            ax1.add_patch(rect)
     else:
         height = 16 * row / col + 2
         f, ax2 = plt.subplots(figsize=(16, height), nrows=1, edgecolor='black')
@@ -146,12 +153,12 @@ def ob_and_multi_time_fo(sta_ob_all,sta_fo_all,pic_path = None,max_dh = None,cle
     title = data_name + '实况和不同时效预报对比图'
     ax2.set_title(title, loc='left', fontweight='bold', fontsize='large')
 
-    currentAxis = plt.gca()
+
     for k in range(row+1):
         x1 = start_ob_i - k * dh_y/dh_x
         y1 = k
         rect = patches.Rectangle((x1, y1), dh_y/dh_x, 1, linewidth=2, edgecolor='k', facecolor='none')
-        currentAxis.add_patch(rect)
+        ax2.add_patch(rect)
 
     nmc_verification.nmc_vf_base.tool.path_tools.creat_path(pic_path)
     plt.savefig(pic_path)
@@ -189,7 +196,6 @@ def tcdc_ob_and_multi_time_fo(sta_ob_all,sta_fo_all,pic_path = None,max_dh = Non
 
 def wind_ob_and_multi_time_fo(sta_ob_all,sta_fo_all,pic_path = None,max_dh = None,plot_error = True):
 
-
     #以最近的预报作为窗口中间的时刻
     times_fo = copy.deepcopy(sta_fo_all["time"].values)
     times_fo.sort()
@@ -211,9 +217,12 @@ def wind_ob_and_multi_time_fo(sta_ob_all,sta_fo_all,pic_path = None,max_dh = Non
     dh_x = int(np.min(ddhs))
 
 
-    data_names = nmc_verification.nmc_vf_base.get_undim_data_names(sta_ob_all)
-    title = data_names[0][1:]
-    sta_all = nmc_verification.nmc_vf_base.function.put_into_sta_data.join(sta_ob_all, sta_fo_all)
+    data_names = nmc_verification.nmc_vf_base.get_stadata_names(sta_fo_all)
+    print(data_names)
+    sta_ob_all1 = copy.deepcopy(sta_ob_all)
+    print(sta_ob_all1)
+    nmc_verification.nmc_vf_base.set_stadata_names(sta_ob_all1,data_names)
+    sta_all = nmc_verification.nmc_vf_base.combine_join(sta_ob_all1, sta_fo_all)
     col = (int)(2 * max_dh / dh_x + 1)
     hf_col = (int)(max_dh/dh_x)
     row = (int)(max_dh / dh_y)
@@ -307,7 +316,7 @@ def wind_ob_and_multi_time_fo(sta_ob_all,sta_fo_all,pic_path = None,max_dh = Non
         maxd = np.max(np.abs(diff_speed))
         clev, cmap_error = nmc_verification.nmc_vf_base.tool.color_tools.get_clev_and_cmap_by_element_name("wind_speed_error")
 
-        sns.heatmap(dat_speed, ax=ax1, mask=mask, cmap=cmap_error, vmin=-maxd, vmax=maxd)
+        sns.heatmap(diff_speed, ax=ax1, mask=mask, cmap=cmap_error, vmin=-maxd, vmax=maxd)
         #sns.heatmap(dvalue.T, ax=ax1, mask=mask, cmap=cmap_error, vmin=-maxd, vmax=maxd, center=None, robust=False, annot=True,
         #            fmt=fmt_str)
         ax1.set_xlabel('实况时间')
@@ -315,7 +324,7 @@ def wind_ob_and_multi_time_fo(sta_ob_all,sta_fo_all,pic_path = None,max_dh = Non
         ax1.set_xticks(x + 0.5)
         ax1.set_xticklabels(xticks)
         ax1.set_yticklabels(yticks, rotation=360)
-        title = title + '实况和不同时效预报偏差图'
+        title = data_names[0][1:] + '实况和不同时效预报偏差图'
         ax1.set_title(title, loc='left', fontweight='bold', fontsize='large')
         xx, yy = np.meshgrid(x + 0.5, y + 0.5)
         speed_1d = dat_speed.flatten()
@@ -325,12 +334,12 @@ def wind_ob_and_multi_time_fo(sta_ob_all,sta_fo_all,pic_path = None,max_dh = Non
         v_1d = diff_v.flatten()[speed_1d != 9999]
         ax1.barbs(xx_1d, yy_1d, u_1d, v_1d, barb_increments={'half': 2, 'full': 4, 'flag': 20})
 
-        currentAxis = plt.gca()
         for k in range(row + 1):
             x_1 = start_ob_i - k * dh_y / dh_x
             y_1 = k
             rect = patches.Rectangle((x_1, y_1), dh_y / dh_x, 1, linewidth=2, edgecolor='k', facecolor='none')
-            currentAxis.add_patch(rect)
+            #currentAxis.add_patch(rect)
+            ax1.add_patch(rect)
 
 
     else:
@@ -351,7 +360,7 @@ def wind_ob_and_multi_time_fo(sta_ob_all,sta_fo_all,pic_path = None,max_dh = Non
     ax2.set_xticks(x+0.5)
     ax2.set_xticklabels(xticks)
     ax2.set_yticklabels(yticks, rotation=360)
-    title = title + '实况和不同时效预报对比图'
+    title =  data_names[0][1:] + '实况和不同时效预报对比图'
     ax2.set_title(title, loc='left', fontweight='bold', fontsize='large')
     xx,yy = np.meshgrid(x+0.5,y+0.5)
     speed_1d = dat_speed.flatten()
@@ -361,12 +370,12 @@ def wind_ob_and_multi_time_fo(sta_ob_all,sta_fo_all,pic_path = None,max_dh = Non
     v_1d = dat_v.flatten()[speed_1d !=9999]
     ax2.barbs(xx_1d, yy_1d,u_1d,v_1d, barb_increments={'half': 2, 'full': 4, 'flag': 20})
 
-    currentAxis = plt.gca()
     for k in range(row+1):
         x = start_ob_i - k * dh_y/dh_x
         y = k
         rect = patches.Rectangle((x, y), dh_y/dh_x, 1, linewidth=2, edgecolor='k', facecolor='none')
-        currentAxis.add_patch(rect)
+        ax2.add_patch(rect)
+
 
     nmc_verification.nmc_vf_base.tool.path_tools.creat_path(pic_path)
     plt.savefig(pic_path)
