@@ -38,6 +38,8 @@ def speed_angle_to_wind(speed,angle):
     if isinstance(speed, pd.DataFrame):
         sta = nmc_verification.nmc_vf_base.combine_on_all_coords(speed, angle)
         nmc_verification.nmc_vf_base.set_stadata_names(sta, ["speed", "angle"])
+        #speed = sta["speed"].values.astype(np.float32)
+        #angle = sta["angle"].values.astype(np.float32)
         speed = sta["speed"].values.astype(np.float32)
         angle = sta["angle"].values.astype(np.float32)
         u = -speed * np.sin(angle  * 3.14 / 180)
