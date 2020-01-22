@@ -102,66 +102,67 @@ def layout(subplot_num, legend_num, axis_num):
     return fig_w, fig_h, row_num, column_num, com_legend
 
 
-def layout1(subplot_num, legend_num, axis_num):
-    # 设置一个子图的一些基本参数
-    up_low_edge_width = 0.2
-    left_right_edge_width = 0.3
-    min_width_bar = 0.02  # bar的最小宽度
-    max_width_fig = 12  # 图像的最大宽度
-    max_height_fig = 12  # 图像的最大高度
-    common_legend_height = 1  # 如果子图较多，需要将legend 放在整个fig的顶部共用
-    min_subplot_height = 2
-    fit_width_bar = 0.15
-    fit_suplot_h = 4
-    fit_suplot_w = 6
-    fit_width_fig = 6
-
-    # 首先找一个最优的宽松布局
-    com_legend = False
-    row = 0
-    while row <= subplot_num:
-        row += 1
-        row_num = row
-        column_num = int(math.ceil(subplot_num / row_num))
-        subplot_h = max_height_fig / row_num
-        if subplot_h > fit_suplot_h:
-            subplot_h = fit_suplot_h
-
-        if subplot_h > 3:
-            if subplot_h < 4:
-                com_legend = True
-            subplot_w = left_right_edge_width * 2 + axis_num * fit_width_bar * (legend_num + 2)
-            fig_w = subplot_w * column_num
-            if fig_w < fit_width_fig:
-                fig_w = fit_width_fig
-            if fig_w < max_width_fig:
-                fig_h = subplot_h * row_num
-                return fig_w, fig_h, row_num, column_num, com_legend
-
-    # 如果宽松布局无法实现，就找一个最优的紧凑布局
-    row = 0
-    while row <= subplot_num:
-        row += 1
-        row_num = row
-        column_num = int(math.ceil(subplot_num / row_num))
-        subplot_h = max_height_fig / row_num
-        if subplot_h > fit_suplot_h:
-            subplot_h = fit_suplot_h
-        com_legend = True
-        if subplot_h > 2:
-            subplot_w = left_right_edge_width * 2 + axis_num * min_width_bar * (legend_num + 2)
-            fig_w = subplot_w * column_num
-            if fig_w < max_width_fig:
-                fig_h = subplot_h * row_num
-                return fig_w, fig_h, row_num, column_num, com_legend
-
-    # 如果紧凑布局还是无法实现，就设置强制布局
-    row_num = int(math.ceil(math.sqrt(subplot_num)))
-    column_num = int(math.ceil(subplot_num / row_num))
-    fig_w = max_width_fig
-    fig_h = max_height_fig
-    com_legend = True
-    return fig_w, fig_h, row_num, column_num, com_legend
+#
+# def layout1(subplot_num, legend_num, axis_num):
+#     # 设置一个子图的一些基本参数
+#     up_low_edge_width = 0.2
+#     left_right_edge_width = 0.3
+#     min_width_bar = 0.02  # bar的最小宽度
+#     max_width_fig = 12  # 图像的最大宽度
+#     max_height_fig = 12  # 图像的最大高度
+#     common_legend_height = 1  # 如果子图较多，需要将legend 放在整个fig的顶部共用
+#     min_subplot_height = 2
+#     fit_width_bar = 0.15
+#     fit_suplot_h = 4
+#     fit_suplot_w = 6
+#     fit_width_fig = 6
+#
+#     # 首先找一个最优的宽松布局
+#     com_legend = False
+#     row = 0
+#     while row <= subplot_num:
+#         row += 1
+#         row_num = row
+#         column_num = int(math.ceil(subplot_num / row_num))
+#         subplot_h = max_height_fig / row_num
+#         if subplot_h > fit_suplot_h:
+#             subplot_h = fit_suplot_h
+#
+#         if subplot_h > 3:
+#             if subplot_h < 4:
+#                 com_legend = True
+#             subplot_w = left_right_edge_width * 2 + axis_num * fit_width_bar * (legend_num + 2)
+#             fig_w = subplot_w * column_num
+#             if fig_w < fit_width_fig:
+#                 fig_w = fit_width_fig
+#             if fig_w < max_width_fig:
+#                 fig_h = subplot_h * row_num
+#                 return fig_w, fig_h, row_num, column_num, com_legend
+#
+#     # 如果宽松布局无法实现，就找一个最优的紧凑布局
+#     row = 0
+#     while row <= subplot_num:
+#         row += 1
+#         row_num = row
+#         column_num = int(math.ceil(subplot_num / row_num))
+#         subplot_h = max_height_fig / row_num
+#         if subplot_h > fit_suplot_h:
+#             subplot_h = fit_suplot_h
+#         com_legend = True
+#         if subplot_h > 2:
+#             subplot_w = left_right_edge_width * 2 + axis_num * min_width_bar * (legend_num + 2)
+#             fig_w = subplot_w * column_num
+#             if fig_w < max_width_fig:
+#                 fig_h = subplot_h * row_num
+#                 return fig_w, fig_h, row_num, column_num, com_legend
+#
+#     # 如果紧凑布局还是无法实现，就设置强制布局
+#     row_num = int(math.ceil(math.sqrt(subplot_num)))
+#     column_num = int(math.ceil(subplot_num / row_num))
+#     fig_w = max_width_fig
+#     fig_h = max_height_fig
+#     com_legend = True
+#     return fig_w, fig_h, row_num, column_num, com_legend
 
 
 # dim_names = ["year", "model", "grade", "index"]
@@ -200,7 +201,7 @@ class veri_plot_set:
         self.save_dir = save_dir
 
     # 柱状图参数设置
-    def bar(self, veri_result):
+    def bar(self, veri_result, label_is_diluting=False):
         coords = veri_result.coords
         dims = veri_result.dims
         not_file_dim = [self.subplot, self.legend, self.axis]
@@ -261,7 +262,6 @@ class veri_plot_set:
                         para_dict_subplot[self.legend] = plot_pare_dict[self.legend][c]
                     values = veri_result_plot.loc[para_dict_subplot].values
                     index = values > 100000
-
                     values[index] = 0
 
                     ax.scatter(x[index], values[index], marker='x')
@@ -272,16 +272,30 @@ class veri_plot_set:
                 xticklabel = plot_pare_dict[self.axis]
                 if self.subplot is not None:
                     ax.set_title(para_dict_subplot[self.subplot])
-
-                ax.set_xticks(x0)
-                ax.set_xticklabels(xticklabel)
+                index = np.arange(0, len(x0))
+                if label_is_diluting:
+                    index = self.set_xaxiS(xticklabel, width_fig, column_num)
+                ax.set_xticks(x0[index])
+                ax.set_xticklabels(np.array(xticklabel)[index])
                 y_max = np.max(values_subplot) * 1.5
+
                 ax.set_ylim(0, y_max)
-                ax.legend()
+
+            plt.legend(ncol=6, bbox_to_anchor=(0.01, -0.08, 1, 0.03))
             save_path = self.save_dir
             for key in para_dict.keys():
                 save_path += str(key) + "=" + str(para_dict[key]) + "_"
             save_path += ".png"
-            print(save_path)
             nmc_verification.nmc_vf_base.tool.path_tools.creat_path(save_path)
             plt.savefig(save_path)
+
+    def set_xaxiS(self, xticklabel, width_fig, column_num):
+        xticklabel = [str(i) for i in xticklabel]
+        sub_width = width_fig / column_num
+        max_len = len(max(xticklabel, key=len))
+        axis_num = int(math.floor(sub_width * 72 / 12 / max_len))
+        a = np.linspace(1, len(xticklabel), num=axis_num)
+        a = np.round(a) - 1
+        a = a.astype(np.int)
+        index = list(set(a))
+        return index
