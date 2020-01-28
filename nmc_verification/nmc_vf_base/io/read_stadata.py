@@ -464,7 +464,7 @@ def read_stadata_from_gds(ip, port, filename,element_id,station = None, level=No
                 for k in range(dat.size):
                     id1 = station_ids[k]
                     indexs = np.where(ids == id1)
-                    if len(indexs) >=1:
+                    if len(indexs[0]) >=1:
                         for n in range(len(indexs)):
                             ind1 =ind +  indexs[n][0]
                             record_head = np.frombuffer(byteArray[ind1:(ind1 + 14)], dtype=record_head_dtype)
