@@ -2,9 +2,9 @@ from sklearn.metrics import confusion_matrix
 import pandas as pd
 import numpy as np
 import copy
-from sklearn.linear_model import LinearRegression
 
-def contingency_table(ob, fo, grade_list=None, save_path=None):
+
+def contingency_table_multicategory(ob, fo, grade_list=None, save_path=None):
     '''
     multi_category_contingency_table 多分类预测列联表
     :param ob: 实况数据 任意维numpy数组
@@ -36,6 +36,9 @@ def contingency_table(ob, fo, grade_list=None, save_path=None):
         new_fo = copy.deepcopy(fo).flatten()
         new_ob = copy.deepcopy(ob).flatten()
         index_list = list(set(np.hstack((new_ob, new_fo))))
+        if len(index_list > 30):
+            print("自动识别的样本类别超过30种，判断样本为连续型变量，grade_list不能缺省")
+            return
         conf_mx = confusion_matrix(new_fo, new_ob)
     row_sums = conf_mx.sum(axis=1, keepdims=True)
     conf_mx = np.hstack((conf_mx, row_sums))
@@ -90,6 +93,9 @@ def frequency_table(ob,fo, grade_list=None, save_path=None):
         new_fo = copy.deepcopy(fo).flatten()
         new_ob = copy.deepcopy(ob).flatten()
         index_list = list(set(np.hstack((new_ob, new_fo))))
+        if len(index_list > 30):
+            print("自动识别的样本类别超过30种，判断样本为连续型变量，grade_list不能缺省")
+            return
         conf_mx = np.zeros((2, len(index_list)))
         for i in range(len(index_list)):
             ob_index_list = np.where(ob == index_list[i])
