@@ -469,11 +469,8 @@ def read_stadata_from_gds(ip, port, filename,element_id,station = None, level=No
                             ind1 =ind +  indexs[n][0]
                             record_head = np.frombuffer(byteArray[ind1:(ind1 + 14)], dtype=record_head_dtype)
                             if(record_head['lon'][0] >=-180 and record_head['lon'][0] <= 360 and
-                                    record_head['lat'][0] >= -90 and record_head['lat'][0] <= 90):
+                                    record_head['lat'][0] >= -90 and record_head['lat'][0] <= 90 and record_head["numb"][0] < 1000):
                                 ind1 += 14
-                                record = {
-                                    'id': record_head['id'][0], 'lon': record_head['lon'][0],
-                                    'lat': record_head['lat'][0]}
                                 for j in range(record_head['numb'][0]):  # the record element number is not same, missing value is not included.
                                     element_id = str(np.frombuffer(byteArray[ind1:(ind1 + 2)], dtype='i2')[0])
                                     ind1 += 2
