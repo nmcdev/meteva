@@ -126,7 +126,6 @@ def rain_24h_sg(sta_ob,grd_fo,  save_path=None):
     plt.close()
     return
 
-
 def rain_24h_comprehensive_sg(sta_ob,grd_fo, save_path=None):
     '''
     #绘制24小时降水实况与预报综合对比检验图，画幅中央为预报实况的对比，左右两侧为各类检验指标
@@ -800,7 +799,6 @@ def temper_gg(grd_ob,grd_fo,save_path = None):
     else:
         plt.savefig(save_path, dpi=300)
     plt.close()
-
 
 def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None):
 

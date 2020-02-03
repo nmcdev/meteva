@@ -32,7 +32,7 @@ def put_stadata_on_station(sta,station):
     #删除合并后多余的时空信息列
     len_s = len(list(station.columns))
     drop_col = list(df.columns[6:len_s+5])
-    print(drop_col)
+    #print(drop_col)
     df.drop(drop_col, axis=1, inplace=True)
     #重新命名列名称
     df.columns = sta1.columns
