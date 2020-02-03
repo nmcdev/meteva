@@ -6,7 +6,7 @@ plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
 from nmc_verification.nmc_vf_method.yes_or_no.score import *
 import math
 
-def comprehensive(ob,fo,grade_list = [1e-30],save_path = None):
+def performance(ob,fo,grade_list = [1e-30],save_path = None,title = "综合表现图"):
     '''
 
     :param ob:
@@ -18,7 +18,18 @@ def comprehensive(ob,fo,grade_list = [1e-30],save_path = None):
     hfmc_array = hfmc(ob, fo, grade_list)
     pod = pod_hfmc(hfmc_array)
     sr = sr_hfmc(hfmc_array)
-    fig = plt.figure(figsize=(5, 4.7))
+    leftw = 0.6
+    rightw = 0.6
+    uphight = 1.2
+    lowhight = 1.2
+    axis_size = 3.7
+    width = axis_size + leftw + rightw
+    hight = axis_size + uphight + lowhight
+
+    fig = plt.figure(figsize=(width, hight))
+    ax1 = fig.add_axes([leftw/width, lowhight/width, axis_size/width, axis_size/hight])
+
+
     x = np.arange(0.0001, 1, 0.0001)
     bias_list = [0.2, 0.4,0.6,0.8, 1,1.25, 1.67, 2.5,5]
     ts_list = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
@@ -28,13 +39,13 @@ def comprehensive(ob,fo,grade_list = [1e-30],save_path = None):
         x2 = x[y1<1]
         y2 = y1[y1<1]
         if bias < 1:
-            plt.plot(x2, y2, '--', color='k', linewidth=0.5)
-            plt.text(1.01, bias, "bias=" + str(bias))
+            ax1.plot(x2, y2, '--', color='k', linewidth=0.5)
+            ax1.text(1.01, bias, "bias=" + str(bias))
         elif bias > 1:
-            plt.plot(x2, y2, '--', color='k', linewidth=0.5)
-            plt.text(1.0 / bias - 0.05, 1.02, "bias=" + str(bias))
+            ax1.plot(x2, y2, '--', color='k', linewidth=0.5)
+            ax1.text(1.0 / bias - 0.05, 1.02, "bias=" + str(bias))
         else:
-            plt.plot(x2, y2, '-', color='k', linewidth=0.5)
+            ax1.plot(x2, y2, '-', color='k', linewidth=0.5)
 
     for i in range(len(ts_list)):
         ts = ts_list[i]
@@ -49,25 +60,30 @@ def comprehensive(ob,fo,grade_list = [1e-30],save_path = None):
         index = np.argmin(error)
         sx = x2[index] + 0.02
         sy = y2[index] - 0.02
-        plt.text(sx, sy, "ts=" + str(ts))
+        ax1.text(sx, sy, "ts=" + str(ts))
 
     colors = cm.get_cmap('rainbow', 128)
     for i in range(len(grade_list)):
         color_grade = (i +0.5) /len(grade_list)
-        plt.plot(sr[i], pod[i], 'o', color=colors(color_grade),markersize=12,label = ("grade:" + str(grade_list[i])))
-    plt.legend(loc = "lower left",bbox_to_anchor=(0, -0.22),ncol=3,fontsize = 10)
-    plt.xlim(0, 1)
-    plt.ylim(0, 1)
-    plt.xlabel("成功率",fontsize = 14)
-    plt.ylabel("命中率",fontsize = 14)
+        ax1.plot(sr[i], pod[i], 'o', color=colors(color_grade),markersize=12,label = ("grade:" + str(grade_list[i])))
+
+    nline = math.ceil(len(grade_list)/3)
+    ax1.legend(loc = "lower left",bbox_to_anchor=(0, -(0.18 + 0.05 * nline)),ncol=3,fontsize = 10)
+    ax1.set_xlim(0, 1)
+    ax1.set_ylim(0, 1)
+    ax1.set_xlabel("成功率",fontsize = 14)
+    ax1.set_ylabel("命中率",fontsize = 14)
+    title = title +"\n"
+    ax1.set_title(title)
     if save_path is None:
         plt.show()
     else:
         plt.savefig(save_path)
+        print("检验结果已以图片形式保存至" + save_path)
+    plt.close()
 
 
-
-def comprehensive_hfmc(hfmc_array,axis_list_list,suplot_lengend = [1,0],save_dir = None):
+def performance_hfmc(hfmc_array,axis_list_list,suplot_lengend = [1,0],save_dir = None):
     '''
     :param ob:
     :param fo:
