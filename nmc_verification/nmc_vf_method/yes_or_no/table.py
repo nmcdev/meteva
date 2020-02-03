@@ -5,7 +5,7 @@ import copy
 import numpy as np
 import pandas as pd
 
-def contingency_table(ob, fo, grade_list=[1e-30], save_path=None):
+def contingency_table_yesorno(ob, fo, grade_list=[1e-30], save_path=None):
     '''
     contingency_table 预测列联表
     :param ob: 实况数据 任意维numpy数组
