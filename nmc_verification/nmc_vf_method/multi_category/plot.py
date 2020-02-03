@@ -53,10 +53,15 @@ def frequency_histogram(ob, fo,grade_list = None, save_path=None,title = "频率
     #计算最大的横坐标字符串
     max_str_len = 1
     for index in index_list:
+        if not type(index) ==str:
+            index = str(index)
         if max_str_len <len(index):
             max_str_len = len(index)
+
     #print(max_str_len)
     width = 0.5 + (1+ max_str_len)* 0.1 * len(index_list)
+    if width < 6:
+        width = 6
     height = 6
     fig = plt.figure(figsize=(width, height))
 

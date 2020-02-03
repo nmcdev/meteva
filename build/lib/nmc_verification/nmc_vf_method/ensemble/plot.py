@@ -6,7 +6,7 @@ import numpy as np
 import copy
 
 
-def box_plot(ob, fo, save_path=None):
+def box_plot_ensemble(ob, fo,member_list = None, save_path=None,title ="频率对比箱须图"):
     '''
     box_plot 画一两组数据的箱型图
     ---------------
@@ -17,18 +17,27 @@ def box_plot(ob, fo, save_path=None):
     '''
     en_num = fo.shape[0]
     width = en_num * 0.22 + 0.3
+    if width < 6:
+        width = 6
     data = np.zeros((en_num+1,len(ob)))
     data[0,:] = ob[:]
     data[1:,:] = fo[:,:]
     data = data.T
-    fig = plt.figure(figsize=(width,4))
+
+    fig = plt.figure(figsize=(width,6))
     #plt.boxplot((observed, forecast), labels=["观测","预报" ])
-    labels = ["ob\n观测"]
-    for i in range(en_num):
-        if i == int(en_num/2):
-            labels.append(str(i+1)+"\n预报")
-        else:
-            labels.append(str(i+1))
+
+    if member_list is None:
+        labels = ["ob\n观测"]
+        for i in range(en_num):
+            if i == int(en_num/2):
+                labels.append(str(i+1)+"\n预报")
+            else:
+                labels.append(str(i+1))
+    else:
+        labels = ["观测"]
+        labels.extend(member_list)
+
     bplot = plt.boxplot((data),showfliers =True,patch_artist=True,labels=labels)
     for i, item in enumerate(bplot["boxes"]):
         if i == 0:
@@ -37,15 +46,17 @@ def box_plot(ob, fo, save_path=None):
             item.set_facecolor("lightblue")
     plt.axvline(0.5,color = "b")
     plt.subplots_adjust(left=0.5/width,right=1-0.1/width)
-    plt.title("频率对比箱须图",fontsize = 14)
+    plt.title(title,fontsize = 14)
 
     if save_path is None:
         plt.show()
     else:
         plt.savefig(save_path)
+        print("检验结果已以图片形式保存至" + save_path)
+    plt.close()
 
 
-def rank_histogram(ob,fo,save_path= None):
+def rank_histogram(ob,fo,save_path= None,title = "排序柱状图"):
     '''
     :param ob:一维numpy数组
     :param fo: 二维numpy数组
@@ -69,23 +80,24 @@ def rank_histogram(ob,fo,save_path= None):
     plt.bar(x,rank_rate)
     plt.ylabel("比例",fontsize = 14)
     plt.xlabel("观测值在集合序列中的排序号",fontsize = 14)
-    plt.title("排序柱状图",fontsize = 14)
+    plt.title(title,fontsize = 14)
     plt.ylim(0,ymax)
     if save_path is None:
         plt.show()
     else:
         plt.savefig(save_path)
-    pass
+        print("检验结果已以图片形式保存至" + save_path)
+    plt.close()
 
 
 def mse_variance(ob,fo):
     '''
     :param ob:实况数据 一维的numpy
     :param fo:预测数据 二维的numpy数组
-    :return: 
+    :return:
     '''
     mean_fo = np.mean(fo,axis=0)
     pass
-    
+
 
 

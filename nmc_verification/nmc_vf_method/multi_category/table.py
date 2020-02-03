@@ -36,7 +36,7 @@ def contingency_table_multicategory(ob, fo, grade_list=None, save_path=None):
         new_fo = copy.deepcopy(fo).flatten()
         new_ob = copy.deepcopy(ob).flatten()
         index_list = list(set(np.hstack((new_ob, new_fo))))
-        if len(index_list > 30):
+        if len(index_list) > 30:
             print("自动识别的样本类别超过30种，判断样本为连续型变量，grade_list不能缺省")
             return
         conf_mx = confusion_matrix(new_fo, new_ob)

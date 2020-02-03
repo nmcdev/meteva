@@ -25,35 +25,27 @@ def sta_data(df,columns = None):
     new_columns = ['level', 'time', 'dtime', 'id', 'lon', 'lat']
 
     # 提取数据列名称,扩展到新df的列名称中
-    data_column = []
     for column in columns:
         if column not in new_columns:
             new_columns.append(column)
     sta = copy.deepcopy(df)
+
     sta.columns = columns
     reset_id(sta)
     sta.reset_index(inplace=True)
 
-    # 将缺省的列填充
-    #for corr_column in new_columns:
-    #    if corr_column not in columns:
-    #        columns_num = new_columns.index(corr_column)
-    #        dframe1.insert(columns_num, corr_column,9999)
+    # 更改列名
     sta = sta.reindex(columns = new_columns)
     #dframe1 = dframe1[new_columns]
 
-    # 更改列名
-    #data = 'data'
-    #num = sta.shape[1]
-    #for i in range(8,num):
-    #    new_name = data+str(i)
-    #    sta.rename(columns={i: new_name}, inplace=True)
-
     # 排序
-
     sta.sort_values(by=new_columns[:4],inplace=False)
 
-    # 单层索引
+    if len(sta.columns) == 6:
+        sta["data0"] =0
+    else:
+        for i in range(6,len(sta.columns)):
+            sta.iloc[:,i] = (sta.values[:,i]).astype(np.float32)
     return sta
 
 def get_undim_data_names(sta):
@@ -134,6 +126,7 @@ def reset_id(sta):
     输入的sta的站号中可能有些站号包含a-z,A-Z的字母，对此将这些字母转换为对应的ASCII数字，再将整个字符串格式的站号转换为数值形式
     返回sta站号为整型
     '''
+    #print(sta)
     values = sta['id'].values
     if type(values[0]) == str:
         int_id = np.zeros(len(values))

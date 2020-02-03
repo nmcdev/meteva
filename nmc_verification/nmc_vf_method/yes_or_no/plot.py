@@ -22,12 +22,13 @@ def performance(ob,fo,grade_list = [1e-30],save_path = None,title = "综合表�
     rightw = 0.6
     uphight = 1.2
     lowhight = 1.2
-    axis_size = 3.7
-    width = axis_size + leftw + rightw
-    hight = axis_size + uphight + lowhight
+    axis_size_x = 3.7
+    axis_size_y = 3.5
+    width = axis_size_x + leftw + rightw
+    hight = axis_size_y + uphight + lowhight
 
     fig = plt.figure(figsize=(width, hight))
-    ax1 = fig.add_axes([leftw/width, lowhight/width, axis_size/width, axis_size/hight])
+    ax1 = fig.add_axes([leftw/width, lowhight/width, axis_size_x/width, axis_size_y/hight])
 
 
     x = np.arange(0.0001, 1, 0.0001)

@@ -127,7 +127,7 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = None):
     height = 5
     width = height * rlon / rlat + 1
     fig = plt.figure(figsize=(width,height))
-    ax = plt.axes()
+    ax = plt.axes([0.5/width,0.5/height,(width - 1.7)/width,(height - 1)/height])
     grid0 = nmc_verification.nmc_vf_base.get_grid_of_data(grd)
     add_china_map_2basemap(ax, name='province', edgecolor='k', lw=0.3,encoding = 'gbk')  #"省界"
     ax.set_xlim((grid0.slon, grid0.elon))
@@ -164,7 +164,7 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = None):
             elif r<7 and r>=5.5:
                 inte=inte*6
             elif r>=7 :
-                inte=inte*8
+                inte=inte*10
             vmin = inte * ((int)(vmin / inte)-1)
             vmax = inte * ((int)(vmax / inte) + 2)
             clevs1 = np.arange(vmin,vmax,inte)

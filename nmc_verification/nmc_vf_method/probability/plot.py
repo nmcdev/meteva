@@ -253,8 +253,9 @@ def comprehensive_hnh(th_array,save_path = None,title = "概率预报综合检�
     line_x = np.arange(0, 1.01, 0.1)
     prefect_line_y = np.arange(0, 1.01, 0.1)
     climate_line_y = np.ones_like(line_x) * np.sum(observed_grade_num) / total_num
-
     fig = plt.figure(figsize=(10, 7))
+    title_lines = len(title.split("\n"))
+    plt.suptitle(title,y = 0.90 + 0.03 * title_lines)
     plt.subplots_adjust(wspace=0.2, hspace=1)
     grid_plt = plt.GridSpec(6, 2)
     ax1 = plt.subplot(grid_plt[0:4, 0])
@@ -314,7 +315,7 @@ def comprehensive_hnh(th_array,save_path = None,title = "概率预报综合检�
     ymax = max(np.max(observed_grade_num/total_num), np.max(not_observed_grade_num/total_num)) * 1.5
     plt.ylim(0.0, ymax)
     plt.xlim(0.0, 1.0)
-    plt.suptitle(title)
+
     plt.legend(loc="upper right", ncol=2)
 
     if save_path is None:
