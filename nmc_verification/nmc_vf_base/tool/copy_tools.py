@@ -2,7 +2,8 @@ import os
 import nmc_verification
 import matplotlib.colors as colors
 import time
-
+from nmc_verification.nmc_vf_base.io.GDS_data_service import GDSDataService
+from nmc_verification.nmc_vf_base.io import DataBlock_pb2
 
 def copy_m4_to_nc(input_root_dir,output_root_dir,effectiveNum = 3,recover= False,grid = None):
     input_root_dir = input_root_dir.replace("\\","/")
@@ -246,3 +247,20 @@ def copy_wind_m11_to_nc(input_root_dir,output_root_dir,effectiveNum = 3,recover=
                 print("剩余" + str(left_minutes) + "分钟")
                 print(path_output)
 
+
+def download_gds_files_to_local(ip, port, gds_dir, local_dir,recover= False):
+    print(gds_dir)
+    filelist = nmc_verification.nmc_vf_base.tool.path_tools.get_gds_file_list_in_one_dir(ip, port, gds_dir)
+    for file in filelist:
+        save_path = local_dir +  "/" + file
+        if not os.path.exists(save_path) or recover:
+            service = GDSDataService(ip, port)
+            if service is not None:
+                status, response = service.getData(gds_dir, file)
+                if status == 200:
+                    ByteArrayResult = DataBlock_pb2.ByteArrayResult()
+                    ByteArrayResult.ParseFromString(response)
+                    nmc_verification.nmc_vf_base.tool.path_tools.creat_path(save_path)
+                    br = open(save_path, 'wb')
+                    br.write(ByteArrayResult.byteArray)
+                    br.close()

@@ -9,6 +9,8 @@ import time
 def combine_join(sta, sta1):
     if (sta is None):
         return sta1
+    elif (sta1 is None):
+        return sta
     else:
         data_name1 = nmc_verification.nmc_vf_base.basicdata.get_stadata_names(sta)
         data_name2 = nmc_verification.nmc_vf_base.basicdata.get_stadata_names(sta1)
@@ -85,7 +87,58 @@ def combine_on_all_coords(sta, sta1):
         df = pd.merge(sta, sta1, on=columns, how='inner')
         return df
 
-def combine_on_id_and_obTime(sta_ob,sta_fo_list):
+
+def combine_on_level_time_dtime_id(sta, sta1):
+    '''
+    merge_on_all_dim 合并两个sta_dataframe并且使要素名不重复
+    :param sta: 一个站点dataframe
+    :param sta1: 一个站点dataframe
+    :return:
+    '''
+    if (sta is None):
+        return sta1
+    elif sta1 is None:
+        return sta
+    else:
+        columns = ['level', 'time', 'dtime', 'id']
+        sta_value_columns = sta.iloc[:, 6:].columns.values.tolist()
+        sta2 = copy.deepcopy(sta1)
+        sta2_value_columns = sta2.iloc[:, 6:].columns.values.tolist()
+
+        if len(sta_value_columns) >= len(sta2_value_columns):
+            for sta2_value_column in sta2_value_columns:
+                ago_name = copy.deepcopy(sta2_value_column)
+                sta2_value_column = that_the_name_exists(sta_value_columns, sta2_value_column)
+                sta2.rename(columns={ago_name: sta2_value_column},inplace=True)
+        else:
+            for sta_value_column in sta_value_columns:
+                ago_name = copy.deepcopy(sta_value_column)
+                sta_value_column = that_the_name_exists(sta2_value_columns, sta_value_column)
+                sta.rename(columns={ago_name: sta_value_column})
+        sta2.drop(["lon","lat"], axis=1, inplace=True)
+        df = pd.merge(sta, sta2, on=columns, how='inner')
+        return df
+
+def combine_on_obTime_id(sta_ob,sta_fo_list):
+    '''
+    将观测
+    :param sta_ob:
+    :param sta_fo_list:
+    :return:
+    '''
+    dtime_list = list(set(sta_fo_list[0]['dtime'].values.tolist()))
+    sta_combine = None
+    for dtime in dtime_list:
+        sta = copy.deepcopy(sta_ob)
+        sta["time"] = sta["time"] - datetime.timedelta(hours= dtime)
+        sta["dtime"] = dtime
+        sta_combine = combine_join(sta_combine,sta)
+    for sta_fo in sta_fo_list:
+        sta_combine = combine_on_level_time_dtime_id(sta_combine,sta_fo)
+
+    return sta_combine
+
+def combine_on_obTime(sta_ob,sta_fo_list):
 
     dtime_list = list(set(sta_fo_list[0]['dtime'].values.tolist()))
     sta_combine = None

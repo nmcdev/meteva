@@ -2,6 +2,37 @@ import numpy as np
 from nmc_verification.nmc_vf_base.tool.math_tools import mean_iteration,sxy_iteration,ss_iteration
 from nmc_verification.nmc_vf_base import IV
 
+def sample_count(Ob,Fo  = None):
+    '''
+    计算检验的样本数
+    -----------------------------
+    :param Ob: 实况数据  任意维numpy数组
+    :param Fo: 预测数据 任意维numpy数组,Fo.shape 和Ob.shape一致
+    :return: 整数，Ob.size
+    '''
+    return Ob.size
+
+def ob_mean(Ob,Fo = None):
+    '''
+    计算观测样本的平均
+    -----------------------------
+    :param Ob: 实况数据  任意维numpy数组
+    :param Fo: None或任意数据，它的存在是为了使得参数规范化，方便更高级的封装
+    :return: 实数
+    '''
+    return np.mean(Ob)
+
+def fo_mean(Ob,Fo):
+    '''
+    计算观测样本的平均
+    -----------------------------
+    :param Ob: None或任意数据，它的存在是为了使得参数规范化，方便更高级的封装
+    :param Fo: 预报数据  任意维numpy数组
+    :return: 实数
+    '''
+    return np.mean(Fo)
+
+
 def tase(Ob,Fo):
     '''
     计算平均误差、平均绝对误差、均方误差、均方根误差的中间结果
@@ -98,7 +129,7 @@ def rmse_tase(tase_array):
     root_mean_sqrt_error = np.sqrt(tase_array[...,3]/tase_array[...,0])
     return root_mean_sqrt_error
 
-def bias(Ob, Fo):
+def bias_m(Ob, Fo):
     '''
     均值偏差 求预测数据和实况数据的平均值的比
     ------------------------------

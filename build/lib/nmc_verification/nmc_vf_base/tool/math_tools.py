@@ -66,7 +66,6 @@ def mean_iteration(count_old,mean_old,count_new,mean_new):
     return mean
 
 def ss_iteration(count_old,mean_old,ss_old,count_new,mean_new,ss_new):
-    import math
     count_total = count_new + count_old
     rate1 = count_old/count_total
     rate2 = count_new/count_total

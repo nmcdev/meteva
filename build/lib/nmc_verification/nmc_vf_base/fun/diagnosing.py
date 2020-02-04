@@ -4,30 +4,62 @@ from nmc_verification.nmc_vf_base.tool.math_tools import lon_lat_to_cartesian
 from scipy.spatial import cKDTree
 import numpy as np
 import copy
+import pandas as pd
+
+def t_rh_to_tw(t,rh):
+    sta = nmc_verification.nmc_vf_base.combine_on_all_coords(t,rh)
+    nmc_verification.nmc_vf_base.set_stadata_names(sta,["t","rh"])
+    T = sta["t"].values
+    RH = sta["rh"].values
+    Tw = T * np.arctan(0.151977 * np.sqrt(RH + 8.313659)) + np.arctan(T + RH) - np.arctan(
+        RH - 1.676331) + 0.00391838 * np.power(RH, 1.5) * np.arctan(0.023101 * RH) - 4.686035
+
+    sta["tw"] = Tw
+    sta = sta.drop(["t", "rh"], axis=1)
+    return sta
 
 def u_v_to_wind(u,v):
-    grid0 = nmc_verification.nmc_vf_base.get_grid_of_data(u)
-    grid1 = nmc_verification.nmc_vf_base.grid(grid0.glon,grid0.glat,grid0.gtime,
-                                              dtime_list= grid0.dtimes,level_list=grid0.levels,member_list=["u","v"])
-    wind = nmc_verification.nmc_vf_base.grid_data(grid1)
-    wind.name = "wind"
-    wind.values[0, :, :, :, :, :] = u.values[0, :, :, :, :, :]
-    wind.values[1, :, :, :, :, :] = v.values[0, :, :, :, :, :]
-    return wind
+    if isinstance(u,pd.DataFrame):
+        sta = nmc_verification.nmc_vf_base.combine_on_all_coords(u, v)
+        nmc_verification.nmc_vf_base.set_stadata_names(sta, ["u", "v"])
+        return  sta
+
+    else:
+        grid0 = nmc_verification.nmc_vf_base.get_grid_of_data(u)
+        grid1 = nmc_verification.nmc_vf_base.grid(grid0.glon,grid0.glat,grid0.gtime,
+                                                  dtime_list= grid0.dtimes,level_list=grid0.levels,member_list=["u","v"])
+        wind = nmc_verification.nmc_vf_base.grid_data(grid1)
+        wind.name = "wind"
+        wind.values[0, :, :, :, :, :] = u.values[0, :, :, :, :, :]
+        wind.values[1, :, :, :, :, :] = v.values[0, :, :, :, :, :]
+        return wind
 
 def speed_angle_to_wind(speed,angle):
+    if isinstance(speed, pd.DataFrame):
+        sta = nmc_verification.nmc_vf_base.combine_on_all_coords(speed, angle)
+        nmc_verification.nmc_vf_base.set_stadata_names(sta, ["speed", "angle"])
+        #speed = sta["speed"].values.astype(np.float32)
+        #angle = sta["angle"].values.astype(np.float32)
+        speed = sta["speed"].values.astype(np.float32)
+        angle = sta["angle"].values.astype(np.float32)
+        u = -speed * np.sin(angle  * 3.14 / 180)
+        v = -speed * np.cos(angle * 3.14 / 180)
+        sta["u"] = u
+        sta["v"] = v
+        sta = sta.drop(["speed", "angle"], axis=1)
+        return sta
+    else:
+        speed_v = speed.values.squeeze()
+        angle_v = angle.values.squeeze()
 
-    speed_v = speed.values.squeeze()
-    angle_v = angle.values.squeeze()
-
-    grid0 = nmc_verification.nmc_vf_base.get_grid_of_data(speed)
-    grid1 = nmc_verification.nmc_vf_base.grid(grid0.glon,grid0.glat,grid0.gtime,
-                                              dtime_list=grid0.dtimes,level_list=grid0.levels,member_list=["u","v"])
-    wind = nmc_verification.nmc_vf_base.grid_data(grid1)
-    wind.name = "wind"
-    wind.values[0, :, :, :, :, :] = speed_v[:, :] * np.cos(angle_v[:, :] * math.pi /180)
-    wind.values[1, :, :, :, :, :] = speed_v[:, :] * np.sin(angle_v[:, :] * math.pi /180)
-    return wind
+        grid0 = nmc_verification.nmc_vf_base.get_grid_of_data(speed)
+        grid1 = nmc_verification.nmc_vf_base.grid(grid0.glon,grid0.glat,grid0.gtime,
+                                                  dtime_list=grid0.dtimes,level_list=grid0.levels,member_list=["u","v"])
+        wind = nmc_verification.nmc_vf_base.grid_data(grid1)
+        wind.name = "wind"
+        wind.values[0, :, :, :, :, :] = speed_v[:, :] * np.cos(angle_v[:, :] * math.pi /180)
+        wind.values[1, :, :, :, :, :] = speed_v[:, :] * np.sin(angle_v[:, :] * math.pi /180)
+        return wind
 
 
 

@@ -309,3 +309,4 @@ def show_cmap_clev(cmap,clev = None):
         labels = clev[x]
         ax.set_xticklabels(labels)
     ax.imshow(im, cmap=cmap)
+

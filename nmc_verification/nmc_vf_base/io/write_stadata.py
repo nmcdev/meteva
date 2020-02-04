@@ -47,7 +47,7 @@ def write_stadata_to_micaps3(sta0,save_path = "a.txt",creat_dir = False, type = 
         br.write(str1)
         br.close()
         data_name = nmc_verification.nmc_vf_base.basicdata.get_stadata_names(sta)[0]
-        df = sta[['id','lon','lat',data_name]]
+        df = copy.deepcopy(sta[['id','lon','lat',data_name]])
         df['alt'] = 0
         df = df.reindex(columns = ['id','lon','lat','alt',data_name])
         effectiveNum_str = "%." + '%d'% effectiveNum + "f"

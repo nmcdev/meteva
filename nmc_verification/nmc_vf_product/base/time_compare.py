@@ -23,11 +23,19 @@ def ob_and_multi_time_fo(sta_ob_all,sta_fo_all,pic_path = None,max_dh = None,cle
 
     #以最近的预报作为窗口中间的时刻
     times_fo = copy.deepcopy(sta_fo_all["time"].values)
+    times_fo = list(set(times_fo))
+    if(len(times_fo)==1):
+        print("仅有单个起报时间的预报，程序退出")
+        return
     times_fo.sort()
+    times_fo = np.array(times_fo)
     time_mid = nmc_verification.nmc_vf_base.tool.time_tools.all_type_time_to_datetime(times_fo[-1])
     #以观预报数据的间隔的最小单位作为纵坐标的步长
     dhs_fo = (times_fo[1:] - times_fo[0:-1])
-    dhs_fo = dhs_fo / np.timedelta64(1, 'h')
+    if isinstance(dhs_fo[0],np.timedelta64):
+        dhs_fo = dhs_fo / np.timedelta64(1, 'h')
+    else:
+        dhs_fo = dhs_fo / datetime.timedelta(hours=1)
     dhs_fo_not0 = dhs_fo[dhs_fo!=0]
     dh_y = np.min(dhs_fo_not0)
 
@@ -43,7 +51,7 @@ def ob_and_multi_time_fo(sta_ob_all,sta_fo_all,pic_path = None,max_dh = None,cle
 
     data_name = nmc_verification.nmc_vf_base.get_undim_data_names(sta_fo_all)[0]
     sta_ob_all1 = copy.deepcopy(sta_ob_all)
-    nmc_verification.nmc_vf_base.set_stadata_names(sta_ob_all,[data_name])
+    nmc_verification.nmc_vf_base.set_stadata_names(sta_ob_all1,[data_name])
     sta_all = nmc_verification.nmc_vf_base.combine_join(sta_ob_all1, sta_fo_all)
     col = (int)(2 * max_dh / dh_x + 1)
     hf_col = (int)(max_dh/dh_x)
@@ -160,8 +168,14 @@ def ob_and_multi_time_fo(sta_ob_all,sta_fo_all,pic_path = None,max_dh = None,cle
         rect = patches.Rectangle((x1, y1), dh_y/dh_x, 1, linewidth=2, edgecolor='k', facecolor='none')
         ax2.add_patch(rect)
 
-    nmc_verification.nmc_vf_base.tool.path_tools.creat_path(pic_path)
-    plt.savefig(pic_path)
+    if pic_path is None:
+        plt.show()
+        plt.close()
+    else:
+        nmc_verification.nmc_vf_base.tool.path_tools.creat_path(pic_path)
+        plt.savefig(pic_path)
+        plt.close()
+        print("图片已保存至"+pic_path)
     return
 
 def temp_ob_and_multi_time_fo(sta_ob_all,sta_fo_all,pic_path = None,max_dh = None,plot_error = True):

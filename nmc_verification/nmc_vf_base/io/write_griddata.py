@@ -162,3 +162,8 @@ def write_griddata_to_micaps11(wind,save_path = "a.txt",creat_dir = False,effect
         exstr = traceback.format_exc()
         print(exstr)
         return False
+
+
+
+
+

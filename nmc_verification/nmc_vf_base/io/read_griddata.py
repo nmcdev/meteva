@@ -644,6 +644,9 @@ def read_griddata_from_gds(ip,port,filename,grid = None):
                         da = nmc_verification.nmc_vf_base.interp_gg_linear(grd, grid)
                         da.name = "data0"
                         return da
+        elif status == 416:
+            print(filename + "超出可读时间")
+            return None
     except Exception as e:
         print(e)
         return None
@@ -896,6 +899,23 @@ def read_AWX_from_gds(ip,port,filename,grid = None):
                     da = nmc_verification.nmc_vf_base.function.gxy_gxy.interpolation_linear(grd, grid)
                     da.name = "data0"
                     return da
+    except Exception as e:
+        print(e)
+        return None
+
+def read_griddata_from_binary(filename,grid = None):
+    try:
+        if not os.path.exists(filename):
+            print(filename + " is not exist")
+            return None
+        file = open(filename, 'rb')
+        bytes = file.read()
+        file.close()
+        head = np.frombuffer(bytes[0:24], dtype='float32')
+        grid0 = nmc_verification.nmc_vf_base.grid([head[0],head[1],head[2]],[head[3],head[4],head[5]])
+        dat  = np.frombuffer(bytes[24:], dtype='float32')
+        grd = nmc_verification.nmc_vf_base.grid_data(grid0,dat)
+        return grd
     except Exception as e:
         print(e)
         return None

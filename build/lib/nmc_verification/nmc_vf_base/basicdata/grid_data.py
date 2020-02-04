@@ -151,5 +151,4 @@ def reset(grd):
         dat = grd.values[:, :, :, :, ::-1, :]
         grd.values = dat
 
-        print()
     return

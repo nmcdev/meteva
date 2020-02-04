@@ -2,8 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 plt.rcParams['font.sans-serif']=['SimHei'] #用来正常显示中文标签
 plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import roc_curve
 from nmc_verification.nmc_vf_method.yes_or_no.score import pofd_hfmc,pod_hfmc
 from nmc_verification.nmc_vf_base.tool.plot_tools import set_plot_IV
 from nmc_verification.nmc_vf_base import IV
@@ -19,7 +17,7 @@ def hnh(Ob,Fo,grade_count = 10):
     '''
     grade = 1/grade_count
     grade_list = np.arange(0,1,grade).tolist()
-    grade_list.append(1)
+    grade_list.append(1.1)
     th_list = []
     for g in range(len(grade_list)-1):
         index = np.where((Fo>=grade_list[g]) & (Fo < grade_list[g+1]))
@@ -29,7 +27,7 @@ def hnh(Ob,Fo,grade_count = 10):
     hnh_array = np.array(th_list)
     return hnh_array
 
-def reliability(Ob, Fo,grade_count = 10, save_path=None):
+def reliability(Ob, Fo,grade_count = 10, save_path=None,title = "可靠性图"):
     '''
     :param Ob:
     :param Fo:
@@ -37,9 +35,9 @@ def reliability(Ob, Fo,grade_count = 10, save_path=None):
     :return:
     '''
     hnh_array = hnh(Ob,Fo,grade_count)
-    reliability_hnh(hnh_array,save_path)
+    reliability_hnh(hnh_array,save_path,title = title)
 
-def reliability_hnh(hnh_array,save_path = None):
+def reliability_hnh(hnh_array,save_path = None,title = "可靠性图"):
     '''
     根据中间结果计算
     :param th:
@@ -63,7 +61,7 @@ def reliability_hnh(hnh_array,save_path = None):
     prefect_line_y = np.arange(0,1.00,grade)
     climate_line_y = np.ones_like(line_x) * np.sum(observed_grade_num)/total_num
     x = np.arange(grade/2,1,grade)
-    fig = plt.figure(figsize=(5,5))
+    fig = plt.figure(figsize=(5,5.1))
     grid_plt = plt.GridSpec(5,1,hspace=0)
     ax1 = plt.subplot(grid_plt[0:4,0])
     plt.plot(x,ob_rate_noIV,"--",linewidth = 0.5,color = "k")
@@ -77,6 +75,7 @@ def reliability_hnh(hnh_array,save_path = None):
     plt.ylim(0.0, 1)
     plt.ylabel("实况的发生比例")
     plt.legend(loc=2)
+    plt.title(title)
     ax2 = plt.subplot(grid_plt[4,0], sharex=ax1)
     plt.bar(x, total_grade_num,width=0.03)
     #plt.setp(ax2.get_xticklabels())
@@ -90,9 +89,10 @@ def reliability_hnh(hnh_array,save_path = None):
         plt.show()
     else:
         plt.savefig(save_path)
-        plt.close()
+        print("检验结果已以图片形式保存至" + save_path)
+    plt.close()
 
-def roc(Ob, Fo,grade_count = 10,save_path = None):
+def roc(Ob, Fo,grade_count = 10,save_path = None,title = "ROC图"):
     '''
 
     :param Ob:
@@ -102,16 +102,16 @@ def roc(Ob, Fo,grade_count = 10,save_path = None):
     :return:
     '''
     hnh_array = hnh(Ob,Fo,grade_count)
-    roc_hnh(hnh_array,save_path)
+    roc_hnh(hnh_array,save_path,title)
 
-def roc_hfmc(hfmc,save_path =None):
+def roc_hfmc(hfmc,save_path =None,title = "ROC图"):
     '''
 
     :param hfmc:
     :param save_path:
     :return:
     '''
-    fig = plt.figure(figsize=(5, 4.7))
+    fig = plt.figure(figsize=(5.6, 5.6))
     far = [1]
     far.extend(pofd_hfmc(hfmc).tolist())
     far.append(0)
@@ -120,21 +120,27 @@ def roc_hfmc(hfmc,save_path =None):
     pod.append(0)
     far = np.array(far)
     pod = np.array(pod)
-    plt.plot(far, pod, color="blue", linewidth=2, marker = ".",label="实际预报")
+    if(far.size <30):
+        plt.plot(far, pod, color="blue", linewidth=2, marker = ".",label="实际预报")
+    else:
+        plt.plot(far, pod, color="blue", linewidth=2, label="实际预报")
     plt.plot([0, 1], [0, 1],  ":",color="k",linewidth=1,label = "无技巧预报")
-    plt.xlabel("空报率")
-    plt.ylabel("命中率")
+    plt.xlabel("空报率",fontsize = 14)
+    plt.ylabel("命中率",fontsize = 14)
     plt.ylim(0.0, 1.0)
     plt.xlim(0.0, 1.0)
-    plt.legend(loc=4)
+    plt.legend(loc=4,fontsize = 14)
+    plt.title(title,fontsize = 14)
+    plt.xticks(fontsize = 14)
+    plt.yticks(fontsize=14)
     if save_path is None:
         plt.show()
     else:
         plt.savefig(save_path)
-        plt.close()
-    pass
+        print("检验结果已以图片形式保存至" + save_path)
+    plt.close()
 
-def roc_hnh(hnh_array,save_path = None):
+def roc_hnh(hnh_array,save_path = None,title = "ROC图"):
     '''
 
     :param th_array:
@@ -153,9 +159,9 @@ def roc_hnh(hnh_array,save_path = None):
         hfmc[i, 2] = total_hap - hfmc[i, 0]
         hfmc[i, 3]= total_num - (hfmc[i, 0] + hfmc[i, 1]+ hfmc[i, 2])
 
-    roc_hfmc(hfmc, save_path)
+    roc_hfmc(hfmc, save_path,title)
 
-def discrimination(Ob,Fo,grade_count = 10,save_path=None):
+def discrimination(Ob,Fo,grade_count = 10,save_path=None,title = "区分能力图"):
     '''
 
     :param Ob:
@@ -165,9 +171,9 @@ def discrimination(Ob,Fo,grade_count = 10,save_path=None):
     :return:
     '''
     hnh_array = hnh(Ob,Fo,grade_count)
-    discrimination_hnh(hnh_array,save_path)
+    discrimination_hnh(hnh_array,save_path,title)
 
-def discrimination_hnh(th_array,save_path = None):
+def discrimination_hnh(th_array,save_path = None,title = "区分能力图"):
     '''
 
     :param th_array:
@@ -183,22 +189,32 @@ def discrimination_hnh(th_array,save_path = None):
     ngrade = len(total_grade_num)
     grade = 1/ngrade
     x = np.arange(grade / 2, 1, grade)
-    plt.bar(x-0.01,not_observed_grade_rate,width=0.02,edgecolor = 'r',fill = False,label = "未发生")
-    plt.bar(x+0.01,observed_grade_rate,width=0.02,color = 'b',label = "已发生")
-    plt.xlabel("预测的概率")
-    plt.ylabel("占总样本数的比例")
+
+
+    width = 8
+    height = 6
+    fig = plt.figure(figsize=(width, height))
+    bar_width = 0.1/len(x)
+    plt.bar(x-bar_width,not_observed_grade_rate,width=2*bar_width,edgecolor = 'r',fill = False,label = "未发生")
+    plt.bar(x+bar_width,observed_grade_rate,width=2*bar_width,color = 'b',label = "已发生")
+    plt.xlabel("预测的概率",fontsize = 14)
+    plt.ylabel("占总样本数的比例",fontsize = 14)
     ymax = max(np.max(observed_grade_rate),np.max(not_observed_grade_rate))* 1.4
     plt.ylim(0.0, ymax)
     plt.xlim(0.0, 1.0)
     plt.legend(loc=1)
+    plt.yticks(fontsize = 14)
+    xtick = np.arange(0,1.001,0.1)
+    plt.xticks(xtick,fontsize = 14)
+    plt.title(title,fontsize = 14)
     if save_path is None:
         plt.show()
     else:
         plt.savefig(save_path)
-        plt.close()
-    pass
+        print("检验结果已以图片形式保存至" + save_path)
+    plt.close()
 
-def comprehensive(Ob,Fo,grade_count = 10,save_path = None):
+def comprehensive_probability(Ob,Fo,grade_count = 10,save_path = None,title = "概率预报综合检验图"):
     '''
     :param Ob:
     :param Fo:
@@ -206,9 +222,9 @@ def comprehensive(Ob,Fo,grade_count = 10,save_path = None):
     :return:
     '''
     hnh_array= hnh(Ob,Fo,grade_count)
-    comprehensive_hnh(hnh_array,save_path)
+    comprehensive_hnh(hnh_array,save_path,title)
 
-def comprehensive_hnh(th_array,save_path = None):
+def comprehensive_hnh(th_array,save_path = None,title = "概率预报综合检验图"):
     '''
 
     :param th_array:
@@ -237,8 +253,9 @@ def comprehensive_hnh(th_array,save_path = None):
     line_x = np.arange(0, 1.01, 0.1)
     prefect_line_y = np.arange(0, 1.01, 0.1)
     climate_line_y = np.ones_like(line_x) * np.sum(observed_grade_num) / total_num
-
     fig = plt.figure(figsize=(10, 7))
+    title_lines = len(title.split("\n"))
+    plt.suptitle(title,y = 0.90 + 0.03 * title_lines)
     plt.subplots_adjust(wspace=0.2, hspace=1)
     grid_plt = plt.GridSpec(6, 2)
     ax1 = plt.subplot(grid_plt[0:4, 0])
@@ -298,10 +315,12 @@ def comprehensive_hnh(th_array,save_path = None):
     ymax = max(np.max(observed_grade_num/total_num), np.max(not_observed_grade_num/total_num)) * 1.5
     plt.ylim(0.0, ymax)
     plt.xlim(0.0, 1.0)
+
     plt.legend(loc="upper right", ncol=2)
 
     if save_path is None:
         plt.show()
     else:
         plt.savefig(save_path)
-    pass
+        print("检验结果已以图片形式保存至" + save_path)
+    plt.close()

@@ -8,9 +8,10 @@ def cr(ob,fo,grade_list=[1e-300]):
     :param grade_list:多个阈值同时检验时的等级参数
     :return: 一维numpy数组，其中每个元素为0-1的实数，最优值为1
     '''
+    #print(fo.shape)
     cr_list = []
     grade_num = len(grade_list)
-    ensemble_num = fo.shape[0]
+    ensemble_num = fo.shape[1]
     intersecti = np.zeros_like(ob)
     union = np.zeros_like(ob)
     for g in range(grade_num):
@@ -20,7 +21,7 @@ def cr(ob,fo,grade_list=[1e-300]):
         union[:] = ob1[:]
         for i in range(ensemble_num):
             fo1 = np.zeros_like(ob)
-            fo1[fo[i,:] >= grade_list[g]] = 1
+            fo1[fo[:,i] >= grade_list[g]] = 1
             intersecti[:] = intersecti[:] * fo1[:]
             union[:] = union[:] + fo1[:]
         union[union>0] = 1

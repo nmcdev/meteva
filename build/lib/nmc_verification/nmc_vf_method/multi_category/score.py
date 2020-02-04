@@ -94,7 +94,7 @@ def hss(ob,fo,grade_list = None):
     对于预报和观测值不为整数的情况，grade_list 不能设置为None。
     :return:
     '''
-    conf_mx = nmc_verification.nmc_vf_method.multi_category.table.contingency_table(ob,fo,grade_list)
+    conf_mx = nmc_verification.nmc_vf_method.multi_category.table.contingency_table_multicategory(ob,fo,grade_list)
     accuracy_score = accuracy(ob, fo, grade_list)
     total_num = ob.size
     NF_array = conf_mx[0:-1,-1]
@@ -118,7 +118,7 @@ def hk(ob, fo, grade_list=None):
     :return:
     '''
     # 多分类预报hk技巧评分
-    conf_mx = nmc_verification.nmc_vf_method.multi_category.table.contingency_table(ob,fo,grade_list)
+    conf_mx = nmc_verification.nmc_vf_method.multi_category.table.contingency_table_multicategory(ob,fo,grade_list)
     accuracy_score = accuracy(ob, fo, grade_list)
     total_num = ob.size
     NF_array = conf_mx[0:-1,-1]

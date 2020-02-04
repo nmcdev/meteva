@@ -1,5 +1,3 @@
-#!/usr/bin/python3.6
-# -*- coding:UTF-8 -*-
 import math
 import datetime
 from datetime import timedelta
