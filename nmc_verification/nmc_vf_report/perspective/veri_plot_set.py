@@ -201,7 +201,7 @@ class veri_plot_set:
         self.save_dir = save_dir
 
     # 柱状图参数设置
-    def bar(self, veri_result, label_is_diluting=False):
+    def bar(self, veri_result):
         coords = veri_result.coords
         dims = veri_result.dims
         not_file_dim = [self.subplot, self.legend, self.axis]
@@ -229,8 +229,28 @@ class veri_plot_set:
             axis_num = 1
             if self.axis is not None:
                 axis_num = len(plot_pare_dict[self.axis])
+            x0 = np.arange(axis_num)
 
             width_fig, hight_fig, row_num, column_num, com_legend = layout(subplot_num, legend_num, axis_num)
+
+            xticklabel = plot_pare_dict[self.axis]
+            xaxis_index = np.arange(0, len(x0))
+            if self.is_continuous(self.axis):
+                xaxis_index = self.set_xaxiS(xticklabel, width_fig, column_num)
+            else:
+                xticklabel = [str(i) for i in xticklabel]
+                max_len = len(max(xticklabel, key=len))
+                min_width_fig = axis_num * max_len / 6
+                if width_fig / column_num < min_width_fig:
+                    width_fig = width_fig*1.5
+                    if width_fig < min_width_fig:
+                        column_num = 1
+                        width_fig = min_width_fig
+                        row_num = subplot_num
+                    else:
+                        column_num = math.floor(width_fig / min_width_fig)
+                        row_num = math.ceil(subplot_num / column_num)
+
             fig, axs = plt.subplots(nrows=row_num, ncols=column_num, figsize=(width_fig, hight_fig))
             for s in range(subplot_num):
                 si = int(s / column_num)
@@ -243,8 +263,6 @@ class veri_plot_set:
                     ax = axs[si]
                 else:
                     ax = axs[si, sj]
-
-                x0 = np.arange(axis_num)
 
                 bar_width = 1 / (legend_num + 2)
                 para_dict_subplot = {}
@@ -269,14 +287,11 @@ class veri_plot_set:
                     if self.legend is not None:
                         ax.bar(x, values, bar_width * 0.8, color=colors[c], label=legends[c])
 
-                xticklabel = plot_pare_dict[self.axis]
                 if self.subplot is not None:
                     ax.set_title(para_dict_subplot[self.subplot])
-                index = np.arange(0, len(x0))
-                if label_is_diluting:
-                    index = self.set_xaxiS(xticklabel, width_fig, column_num)
-                ax.set_xticks(x0[index])
-                ax.set_xticklabels(np.array(xticklabel)[index])
+
+                ax.set_xticks(x0[xaxis_index])
+                ax.set_xticklabels(np.array(xticklabel)[xaxis_index])
                 y_max = np.max(values_subplot) * 1.5
 
                 ax.set_ylim(0, y_max)
@@ -290,6 +305,7 @@ class veri_plot_set:
             plt.savefig(save_path)
 
     def set_xaxiS(self, xticklabel, width_fig, column_num):
+
         xticklabel = [str(i) for i in xticklabel]
         sub_width = width_fig / column_num
         max_len = len(max(xticklabel, key=len))
@@ -299,3 +315,10 @@ class veri_plot_set:
         a = a.astype(np.int)
         index = list(set(a))
         return index
+
+    def is_continuous(self, axis):
+        time_coord = ['year', 'month', 'day', 'dtime']
+        if axis in time_coord:
+            return True
+        else:
+            return False
