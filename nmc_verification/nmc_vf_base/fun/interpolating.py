@@ -12,12 +12,10 @@ def interp_gs_nearest(grd,sta,used_coords = "xy"):
     :param sta:
     :return:
     '''
-    levels = grd["level"].values
-    times = grd["time"].values
-    dtimes = grd["dtime"].values
-    members = grd["member"].values
-    x = grd['lon'].values
-    y = grd['lat'].values
+    levels = copy.deepcopy(grd["level"].values)
+    times = copy.deepcopy(grd["time"].values)
+    dtimes = copy.deepcopy(grd["dtime"].values)
+    members = copy.deepcopy(grd["member"].values)
     column_list1 = ['lon', 'lat']
     column_list1.extend(members)
     column_list2 = ['level','time','dtime','id', 'lon', 'lat']
@@ -31,7 +29,7 @@ def interp_gs_nearest(grd,sta,used_coords = "xy"):
         for i in range(len(levels)):
             for j in range(len(times)):
                 for k in range(len(dtimes)):
-                    sta = sta1[["id","lon","lat"]]
+                    sta = sta1.loc[:,["id","lon","lat"]]
                     sta.loc[:,'time'] = times[j]
                     sta.loc[:,'dtime'] = dtimes[k]
                     sta.loc[:,'level'] = levels[i]
@@ -144,7 +142,7 @@ def interp_gs_linear(grd,sta,used_coords = "xy"):
         sta_all = None
         for j in range(len(times)):
             for k in range(len(levels)):
-                sta = copy.deepcopy(sta1[["dtime","id","lon","lat"]])
+                sta = sta1.loc[:,["dtime","id","lon","lat"]]
                 sta.loc[:,'time'] = times[j]
                 sta.loc[:,'level'] = levels[k]
                 for m in range(len(members)):

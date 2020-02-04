@@ -1,7 +1,5 @@
 import pandas as pd
 import numpy as np
-import copy
-from scipy.spatial import cKDTree
 import nmc_verification
 from scipy.ndimage import convolve
 import math

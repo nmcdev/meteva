@@ -4,11 +4,11 @@ plt.rcParams['font.sans-serif']=['SimHei'] #用来正常显示中文标签
 plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
 import numpy  as np
 from nmc_verification.nmc_vf_base.tool.plot_tools import add_china_map_2basemap
-#import nmc_met_class.basicdatatrans as bt
 from sklearn.linear_model import LinearRegression
 import nmc_verification
 from nmc_verification.nmc_vf_base import IV
 import math
+import copy
 
 def rain_24h_sg(sta_ob,grd_fo,  save_path=None):
     '''
@@ -90,7 +90,7 @@ def rain_24h_sg(sta_ob,grd_fo,  save_path=None):
     # plt.text(0, 0, "预报(mm)", fontsize=8)
 
     # 绘制填色站点值
-    sta_ob_in = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_grid_xy(sta_ob, grid=grid_fo)
+    sta_ob_in = nmc_verification.nmc_vf_base.in_grid_xy(sta_ob, grid=grid_fo)
     colors_sta = ['#FFFFFF', '#0055FF', '#00FFB4', '#F4FF00', '#FE1B00', '#910000', '#B800BA']
     dat = sta_ob_in.values[:, -1]
     dat[dat > 1000] = 0
@@ -366,7 +366,7 @@ def rain_24h_comprehensive_sg(sta_ob,grd_fo, save_path=None):
     me = nmc_verification.nmc_vf_method.continuous.score.me(ob, fo)
     mse = nmc_verification.nmc_vf_method.continuous.score.mse(ob, fo)
     rmse = nmc_verification.nmc_vf_method.continuous.score.rmse(ob, fo)
-    bias_c = nmc_verification.nmc_vf_method.continuous.score.bias(ob, fo)
+    bias_c = nmc_verification.nmc_vf_method.continuous.score.bias_m(ob, fo)
     cor = nmc_verification.nmc_vf_method.continuous.score.corr(ob, fo)
     hfmc = nmc_verification.nmc_vf_method.yes_or_no.score.hfmc(ob, fo, clevs[1:])
     ts = nmc_verification.nmc_vf_method.yes_or_no.score.ts(ob, fo, clevs[1:])
@@ -459,7 +459,7 @@ def rain_24h_comprehensive_chinaland_sg(sta_ob,grd_fo,  save_path=None):
     plt.colorbar(plot_grid, cax=colorbar_position_grid, orientation='horizontal')
     plt.text(0.035, 0.955, "预报(mm)", fontsize=9)
     # 绘制填色站点值
-    sta_ob_in = nmc_verification.nmc_vf_base.function.get_from_sta_data.sta_in_grid_xy(sta_ob, grid=grid_fo)
+    sta_ob_in = nmc_verification.nmc_vf_base.in_grid_xy(sta_ob, grid=grid_fo)
     colors_sta = ['#FFFFFF', '#0055FF', '#00FFB4', '#F4FF00', '#FE1B00', '#910000', '#B800BA']
     dat = sta_ob_in.values[:, -1]
     dat[dat > 1000] = 0
@@ -502,15 +502,14 @@ def rain_24h_comprehensive_chinaland_sg(sta_ob,grd_fo,  save_path=None):
     sta_fo = nmc_verification.nmc_vf_base.interp_gs_nearest(grd_fo, sta_ob_in)
     # print(sta_fo)
     data_name = nmc_verification.nmc_vf_base.get_stadata_names(sta_ob_in)
-    ob = sta_ob_in[data_name[0]].values
+    ob = sta_ob_in.loc[:,data_name[0]].values
     data_name = nmc_verification.nmc_vf_base.get_stadata_names(sta_fo)
-    fo = sta_fo[data_name[0]].values
+    fo = sta_fo.loc[:,data_name[0]].values
     ob_fo = ob + fo
     index = np.where(~np.isnan(ob_fo))
     ob = ob[index]
     fo = fo[index]
     ax2.plot(ob, fo, '.', color='k')
-
     maxy = max(np.max(ob), np.max(fo)) + 5
 
     # 绘制比例线
@@ -530,7 +529,6 @@ def rain_24h_comprehensive_chinaland_sg(sta_ob,grd_fo,  save_path=None):
     cor = np.corrcoef(ob, fo)
     rg_text1 = "R = " + '%.2f' % (cor[0, 1])
     rg_text2 = "y = " + '%.2f' % (clf.coef_[0]) + "* x + " + '%.2f' % (clf.intercept_)
-
 
     plt.xlim(0, maxy)
     plt.ylim(0, maxy)
@@ -629,7 +627,7 @@ def rain_24h_comprehensive_chinaland_sg(sta_ob,grd_fo,  save_path=None):
     me = nmc_verification.nmc_vf_method.continuous.score.me(ob, fo)
     mse = nmc_verification.nmc_vf_method.continuous.score.mse(ob, fo)
     rmse = nmc_verification.nmc_vf_method.continuous.score.rmse(ob, fo)
-    bias_c = nmc_verification.nmc_vf_method.continuous.score.bias(ob, fo)
+    bias_c = nmc_verification.nmc_vf_method.continuous.score.bias_m(ob, fo)
     cor = nmc_verification.nmc_vf_method.continuous.score.corr(ob, fo)
     hfmc = nmc_verification.nmc_vf_method.yes_or_no.score.hfmc(ob, fo, clevs[1:])
     ts = nmc_verification.nmc_vf_method.yes_or_no.score.ts(ob, fo, clevs[1:])
@@ -753,7 +751,7 @@ def temper_gg(grd_ob,grd_fo,save_path = None):
     #colors_grid = ["#00AAAA","#009500","#808000", "#BFBF00","#FFFF00","#FFD400","#FFAA00","#FF7F00","#FF0000","#FF002A","#FF0055","#FF0055"]
     error = grd_fo.values.squeeze() - grd_ob.values.squeeze()
     plot_grid = ax1.contourf(x, y, grd_ob.values.squeeze(), levels=clevs, cmap=cmap)  # 填色图
-    ax1.set_title("实况",fontsize=12,loc="left",y = 0.0)
+    ax1.set_title("实况",fontsize=18,loc="left",y = 0.0)
     colorbar_position_grid = fig.add_axes(ob_fo_colorbar_box)  # 位置[左,下,宽,高]
     plt.colorbar(plot_grid, cax=colorbar_position_grid, orientation='vertical')
     #plt.title("温度(℃)", fontsize=8,verticalalignment='bottom')
@@ -763,7 +761,7 @@ def temper_gg(grd_ob,grd_fo,save_path = None):
     ax2.set_xlim((grid0.slon, grid0.elon))
     ax2.set_ylim((grid0.slat, grid0.elat))
     ax2.contourf(x, y, grd_fo.values.squeeze(), levels = clevs,cmap=cmap)  # 填色图
-    ax2.set_title("预报", fontsize=12, loc="left",y = 0.0)
+    ax2.set_title("预报", fontsize=18, loc="left",y = 0.0)
 
     clevs1 = [-5,-4,-3,-2,-1.5,-1,-0.5,0,0.5,1,1.5,2,3,4,5]
 
@@ -775,7 +773,7 @@ def temper_gg(grd_ob,grd_fo,save_path = None):
 
     plot_grid1 = ax3.contourf(x, y,error , clevs1,cmap = "bwr")  # 填色图
     colorbar_position_grid1 = fig.add_axes(error_colorbar_box)  # 位置[左,下,宽,高]
-    ax3.set_title("预报 - 实况",fontsize=12, loc="left",y = 0.0)
+    ax3.set_title("预报 - 实况",fontsize=18, loc="left",y = 0.0)
     plt.colorbar(plot_grid1, cax=colorbar_position_grid1, orientation='vertical')
     plt.title("误差(℃)", fontsize=8, verticalalignment='bottom')
 
@@ -866,7 +864,7 @@ def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None):
     #colors_grid = ["#00AAAA","#009500","#808000", "#BFBF00","#FFFF00","#FFD400","#FFAA00","#FF7F00","#FF0000","#FF002A","#FF0055","#FF0055"]
 
     plot_grid = ax1.contourf(x, y, grd_ob.values.squeeze(), levels = clevs,cmap=cmap)  # 填色图
-    ax1.set_title("实况",fontsize=12,loc="left",y = 0.0)
+    ax1.set_title("实况",fontsize=18,loc="left",y = 0.0)
     colorbar_position_grid = fig.add_axes(ob_fo_colorbar_box)  # 位置[左,下,宽,高]
     plt.colorbar(plot_grid, cax=colorbar_position_grid, orientation='vertical')
     plt.title("温度(℃)", fontsize=8,verticalalignment='bottom')
@@ -876,7 +874,7 @@ def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None):
     ax2.set_xlim((grid0.slon, grid0.elon))
     ax2.set_ylim((grid0.slat, grid0.elat))
     ax2.contourf(x, y, grd_fo.values.squeeze(), levels = clevs,cmap=cmap)  # 填色图
-    ax2.set_title("预报", fontsize=12, loc="left",y = 0.0)
+    ax2.set_title("预报", fontsize=18, loc="left",y = 0.0)
 
     clevs1 = [-5,-4,-3,-2,-1.5,-1,-0.5,0,0.5,1,1.5,2,3,4,5]
     error = grd_fo.values.squeeze() - grd_ob.values.squeeze()
@@ -888,7 +886,7 @@ def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None):
 
     plot_grid1 = ax3.contourf(x, y,error , clevs1,cmap = "bwr")  # 填色图
     colorbar_position_grid1 = fig.add_axes(error_colorbar_box)  # 位置[左,下,宽,高]
-    ax3.set_title("预报 - 实况",fontsize=12, loc="left",y = 0.0)
+    ax3.set_title("预报 - 实况",fontsize=18, loc="left",y = 0.0,color = "k")
     plt.colorbar(plot_grid1, cax=colorbar_position_grid1, orientation='vertical')
     plt.title("误差(℃)", fontsize=8, verticalalignment='bottom')
 
@@ -907,38 +905,32 @@ def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None):
     # 散点回归图
     ax2 = plt.axes(rect4)
     # 保证这两个值的正确性
-
     ob = grd_ob.values.flatten()
     fo = grd_fo.values.flatten()
-
-    ax2.plot(ob, fo, '.', color='k')
-
-    # 绘制比例线
-    rate = np.sum(fo) / np.sum(ob)
-    ob_line = np.arange(0, np.max(ob), np.max(ob) / 30)
-    fo_rate = ob_line * rate
-    ax2.plot(ob_line[0:20], fo_rate[0:20], 'r')
-
-    # 绘制回归线
-    X = np.zeros((len(ob), 1))
-    X[:, 0] = ob[:]
-    #绘制回归线
-    clf = LinearRegression().fit(X, fo)
+    X = np.zeros((len(fo), 1))
+    X[:, 0] = fo
+    clf = LinearRegression().fit(X, ob)
+    num_max = max(np.max(ob), np.max(fo))
+    num_min = min(np.min(ob), np.min(fo))
+    dmm = num_max - num_min
+    if (num_min != 0):
+        num_min -= 0.1 * dmm
+    num_max += dmm * 0.1
+    dmm = num_max - num_min
+    ob_line = np.arange(num_min, num_max, dmm / 30)
     X = np.zeros((len(ob_line), 1))
-    X[:, 0] = ob_line[:]
+    X[:, 0] = ob_line
     fo_rg = clf.predict(X)
-    ax2.plot(ob_line, fo_rg, color='b', linestyle='dashed')
-    rg_text1 = "R = " + '%.2f' % (np.corrcoef(ob,fo)[0,1])
-    rg_text2 = "y = " + '%.2f' %(clf.coef_[0]) + "* x + " + '%.2f' %(clf.intercept_)
-    maxy = max(np.max(ob), np.max(fo)) + 5
-    plt.xlim(0, maxy)
-    plt.ylim(0, maxy)
-    plt.text(0.05*maxy, 0.9*maxy, rg_text1, fontsize=10)
-    plt.text(0.05*maxy, 0.8*maxy, rg_text2, fontsize=10)
-    # maxy = max(np.max(ob),np.max(fo))
-    ax2.set_xlabel("实况", fontsize=10)
-    ax2.set_ylabel("预报", fontsize=10)
-    ax2.set_title("散点回归图", fontsize=10)
+    ax2.plot(fo, ob, '.', color='b',markersize=1)
+    ax2.plot(ob_line, fo_rg, color="r")
+    ax2.plot(ob_line, ob_line, '--', color="k")
+    ax2.set_xlim(num_min, num_max)
+    ax2.set_ylim(num_min, num_max)
+    ax2.set_xlabel("预报",fontsize=10)
+    ax2.set_ylabel("观测",fontsize=10)
+    rg_text2 = "Y = " + '%.2f' % (clf.coef_[0]) + "* X + " + '%.2f' % (clf.intercept_)
+    ax2.text(num_min + 0.05 * dmm, num_min + 0.90 * dmm, rg_text2, fontsize=15, color="r")
+
     # 设置次刻度间隔
     xmi = 1
     if (np.max(ob) > 100): xmi = 2
@@ -972,7 +964,7 @@ def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None):
     ax5.legend(loc="upper right")
     ax5.set_xlabel("等级", fontsize=10)
     ax5.set_ylabel("站点数", fontsize=10)
-    ax5.set_title("频率统计图", fontsize=10)
+    #ax5.set_title("频率统计图", fontsize=10)
     ax5.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(1000))
     maxy = max(np.max(p_fo),np.max(p_ob)) * 1.4
     ax5.set_ylim(0,maxy)
@@ -989,7 +981,7 @@ def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None):
     mee = nmc_verification.nmc_vf_method.continuous.score.me(ob, fo)
     msee = nmc_verification.nmc_vf_method.continuous.score.mse(ob, fo)
     rmsee = nmc_verification.nmc_vf_method.continuous.score.rmse(ob, fo)
-    bias_ce = nmc_verification.nmc_vf_method.continuous.score.bias(ob, fo)
+    bias_ce = nmc_verification.nmc_vf_method.continuous.score.bias_m(ob, fo)
     cor = nmc_verification.nmc_vf_method.continuous.score.corr(ob,fo)
 
     ob_has = ob[ob >= 0.01]
@@ -1016,3 +1008,5 @@ def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None):
     else:
         plt.savefig(save_path, dpi=300)
     plt.close()
+
+

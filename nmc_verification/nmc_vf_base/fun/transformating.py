@@ -9,10 +9,10 @@ def trans_grd_to_sta(grd):
     :param grd: 网格预报数据
     :return: 站点数据
     '''
-    levels = grd["level"].values
-    times = grd["time"].values
-    dtimes = grd["dtime"].values
-    members = grd["member"].values
+    levels = copy.deepcopy(grd["level"].values)
+    times = copy.deepcopy(grd["time"].values)
+    dtimes = copy.deepcopy(grd["dtime"].values)
+    members = copy.deepcopy(grd["member"].values)
     x = grd['lon'].values
     y = grd['lat'].values
     grid_x, grid_y = np.meshgrid(x, y)
@@ -50,7 +50,7 @@ def trans_sta_to_grd(sta):
     :param sta:站点数据
     :return:返回格点网格数据
     """
-    lons = copy.deepcopy(sta['lon'].values)
+    lons = sta.loc[:,'lon'].values
     lons = list(set(lons))
     lons.sort()
     if len(lons) == 1:
@@ -63,7 +63,7 @@ def trans_sta_to_grd(sta):
 
 
 
-    lats =copy.deepcopy(sta['lat'].values)
+    lats =sta.loc[:,'lat'].values
     lats = list(set(lats))
     lats.sort()
     #print(lats)
@@ -77,7 +77,7 @@ def trans_sta_to_grd(sta):
 
     #print(glat)
 
-    times= copy.deepcopy(sta['time'].values)
+    times= sta.loc[:,'time'].values
     times = list(set(times))
     times.sort()
     if len(times) == 1:

@@ -1,5 +1,5 @@
-from .time_compare import *
-from .space_compare import *
+from .time_compare import temp_ob_and_multi_time_fo,tcdc_ob_and_multi_time_fo,vis_ob_and_multi_time_fo,wind_ob_and_multi_time_fo,rain03h_ob_and_multi_time_fo,ob_and_multi_time_fo,rain01h_ob_and_multi_time_fo,rh_ob_and_multi_time_fo
+from .space_compare import rain_24h_sg,rain_24h_comprehensive_sg,rain_24h_comprehensive_chinaland_sg,temper_comprehensive_gg,temper_gg
 from .score import score
 from .table import table
 from .plot import plot

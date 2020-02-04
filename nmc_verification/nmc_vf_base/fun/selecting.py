@@ -1,5 +1,4 @@
 import nmc_verification
-import copy
 import pandas as pd
 import numpy as np
 import math
@@ -46,7 +45,7 @@ def in_member_list(data,member_list,name_or_index = "name"):
             for member in member_list:
                 member_name_list.append(data_names[member])
         columns = ['level', 'time', 'dtime', 'id', 'lon', 'lat'] + member_name_list
-        sta1 = copy.deepcopy(data[columns])
+        sta1 = data.loc[:,columns]
         return sta1
     else:
         grid0 = nmc_verification.nmc_vf_base.basicdata.get_grid_of_data(data)
