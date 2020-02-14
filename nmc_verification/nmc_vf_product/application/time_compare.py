@@ -26,7 +26,9 @@ def read_stadata_from_gds_file_or_service(binary_root,ip,port,filename,station,g
 def gds_ob_multi_time_fo(para):
     now = datetime.datetime.now()
     now = datetime.datetime(now.year, now.month, now.day, now.hour, 0)
-    ip, port = nmc_verification.nmc_vf_base.read_gds_ip_port(para["ip_port_file"])
+    for file in para["ip_port_file"]:
+        if os.path.exists(file):
+            ip, port = nmc_verification.nmc_vf_base.read_gds_ip_port(file)
     df = pd.DataFrame({"id": para["station_id_list"],
                        "lon":para["station_lon_list"],
                        "lat":para["station_lat_list"]})
