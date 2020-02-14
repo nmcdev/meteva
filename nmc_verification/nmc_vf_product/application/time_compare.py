@@ -29,6 +29,7 @@ def gds_ob_multi_time_fo(para):
     for file in para["ip_port_file"]:
         if os.path.exists(file):
             ip, port = nmc_verification.nmc_vf_base.read_gds_ip_port(file)
+            break
     df = pd.DataFrame({"id": para["station_id_list"],
                        "lon":para["station_lon_list"],
                        "lat":para["station_lat_list"]})
