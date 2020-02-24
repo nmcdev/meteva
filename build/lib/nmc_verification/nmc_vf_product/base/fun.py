@@ -3,10 +3,333 @@ import copy
 import datetime
 import math
 import time
+import pandas as pd
 
-def group_data(sta_ob_and_fos,group_by,group_list_list):
+
+def group_data(sta_ob_and_fos,group_by,group_list_list = None):
 
     group_list_list1 = None
+    valid_group_list_list = []
+    sta_ob_and_fos_list = []
+    if group_by is None:
+        sta_ob_and_fos_list.append(sta_ob_and_fos)
+    else:
+        valid_group = ["level","time","year","month","day","dayofyear","hour",
+                       "ob_time","ob_year","ob_month","ob_day","ob_dayofyear","ob_hour",
+                       "dtime","dday","dhour","id"]
+        if not group_by in valid_group:
+            print("group_by 参数必须为如下列表中的选项：")
+            print(str(valid_group))
+            return None
+
+        direct_group = ["level","time","dtime","dday","dhour","id"]
+
+        if group_by in  direct_group:
+            grouped_dict = dict(list(sta_ob_and_fos.groupby(group_by)))
+            keys = grouped_dict.keys()
+            if group_list_list is None:
+                for key in keys:
+                    valid_group_list_list.append([key])
+                    sta_ob_and_fos_list.append(grouped_dict[key])
+            else:
+                key_set = set(keys)
+                for group_list0 in group_list_list:
+                    group_list1 = list(set(group_list0)^key_set)
+                    if len(group_list1)>0:
+                        valid_group_list_list.append(group_list1)
+                        if len(group_list1) ==1:
+                            sta_ob_and_fos_list.append(grouped_dict[group_list1[0]])
+                        else:
+                            sta_list = []
+                            for key in group_list1:
+                                sta_list.append(grouped_dict[key])
+                            sta_con = pd.concat(sta_list)
+                            sta_con.reset_index(drop=True)
+                            sta_ob_and_fos_list.append(sta_con)
+
+        elif group_by == "time":
+            if group_list_list is not None:
+                group_list_list1 = group_list_list
+            else:
+                time_list = copy.deepcopy(sta_ob_and_fos['time'].values)
+                time_list = list(set(time_list))
+                time_list.sort()
+                group_list_list1 = []
+                for time in time_list:
+                    group_list_list1.append([time])
+            for group_list in group_list_list1:
+                sta = nmc_verification.nmc_vf_base.in_time_list(sta_ob_and_fos,group_list)
+                if len(sta.index) !=0:
+                    valid_group_list_list.append(group_list)
+                    sta_ob_and_fos_list.append(sta)
+
+        elif group_by == "year":
+            if group_list_list is not None:
+                group_list_list1 = group_list_list
+            else:
+                year_list = sta_ob_and_fos['time'].map(lambda x: x.year)
+                year_list = list(set(year_list))
+                year_list.sort()
+                group_list_list1 = []
+                for year in year_list:
+                    group_list_list1.append([year])
+            for group_list in group_list_list1:
+                sta = nmc_verification.nmc_vf_base.in_year_list(sta_ob_and_fos,group_list)
+                if len(sta.index) !=0:
+                    valid_group_list_list.append(group_list)
+                    sta_ob_and_fos_list.append(sta)
+
+        elif group_by == "month":
+            if group_list_list is not None:
+                group_list_list1 = group_list_list
+            else:
+                month_list = sta_ob_and_fos['time'].map(lambda x: x.month)
+                month_list = list(set(month_list))
+                month_list.sort()
+                group_list_list1 = []
+                for month in month_list:
+                    group_list_list1.append([month])
+            for group_list in group_list_list1:
+                sta = nmc_verification.nmc_vf_base.in_month_list(sta_ob_and_fos,group_list)
+                if len(sta.index) !=0:
+                    valid_group_list_list.append(group_list)
+                    sta_ob_and_fos_list.append(sta)
+        elif group_by == "day":
+            if group_list_list is not None:
+                group_list_list1 = []
+                for group_list in group_list_list:
+                    group_list1 = []
+                    for time0 in group_list:
+                        time1 = datetime.datetime(time0.year,time0.month,time0.day,0,0)
+                        group_list1.append(time1)
+                    group_list_list1.append(group_list1)
+
+            else:
+                day_list = sta_ob_and_fos['time'].map(lambda x: datetime.datetime(x.year,x.month,x.day,0,0))
+                day_list = list(set(day_list))
+                day_list.sort()
+                group_list_list1 = []
+                for hour in day_list:
+                    group_list_list1.append([hour])
+            for group_list in group_list_list1:
+                sta = nmc_verification.nmc_vf_base.in_day_list(sta_ob_and_fos,group_list)
+                if len(sta.index) !=0:
+                    valid_group_list_list.append(group_list)
+                    sta_ob_and_fos_list.append(sta)
+        elif group_by == "dayofyear":
+            if group_list_list is not None:
+                group_list_list1 = group_list_list
+            else:
+                day_list = sta_ob_and_fos['time'].map(lambda x: x.dayofyear)
+                day_list = list(set(day_list))
+                day_list.sort()
+                group_list_list1 = []
+                for hour in day_list:
+                    group_list_list1.append([hour])
+            for group_list in group_list_list1:
+                sta = nmc_verification.nmc_vf_base.in_dayofyear_list(sta_ob_and_fos,group_list)
+                if len(sta.index) !=0:
+                    valid_group_list_list.append(group_list)
+                    sta_ob_and_fos_list.append(sta)
+        elif group_by == "hour":
+            if group_list_list is not None:
+                group_list_list1 = group_list_list
+            else:
+                hour_list = sta_ob_and_fos['time'].map(lambda x: x.hour)
+                hour_list = list(set(hour_list))
+                hour_list.sort()
+                group_list_list1 = []
+                for hour in hour_list:
+                    group_list_list1.append([hour])
+            for group_list in group_list_list1:
+                sta = nmc_verification.nmc_vf_base.in_hour_list(sta_ob_and_fos,group_list)
+                if len(sta.index) !=0:
+                    valid_group_list_list.append(group_list)
+                    sta_ob_and_fos_list.append(sta)
+
+        elif group_by == "ob_time":
+            dtimes = sta_ob_and_fos['dtime'].map(lambda x: datetime.timedelta(hours=x))
+            obtimes = sta_ob_and_fos['time'] + dtimes
+            if group_list_list is not None:
+                group_list_list1 = group_list_list
+            else:
+                time_list = list(set(obtimes))
+                time_list.sort()
+                group_list_list1 = []
+                for time in time_list:
+                    group_list_list1.append([time])
+            for group_list in group_list_list1:
+                sta = sta_ob_and_fos.loc[obtimes.isin(group_list)]
+                if len(sta.index) !=0:
+                    valid_group_list_list.append(group_list)
+                    sta_ob_and_fos_list.append(sta)
+
+        elif group_by == "ob_year":
+            dtimes = sta_ob_and_fos['dtime'].map(lambda x: datetime.timedelta(hours=x))
+            obtimes = sta_ob_and_fos['time'] + dtimes
+            obyears = obtimes.map(lambda x: x.year)
+            if group_list_list is not None:
+                group_list_list1 = group_list_list
+            else:
+                year_list = list(set(obyears))
+                year_list.sort()
+                group_list_list1 = []
+                for year in year_list:
+                    group_list_list1.append([year])
+            for group_list in group_list_list1:
+                sta = sta_ob_and_fos.loc[obyears.isin(group_list)]
+                if len(sta.index) !=0:
+                    valid_group_list_list.append(group_list)
+                    sta_ob_and_fos_list.append(sta)
+
+        elif group_by == "ob_month":
+            dtimes = sta_ob_and_fos['dtime'].map(lambda x: datetime.timedelta(hours=x))
+            obtimes = sta_ob_and_fos['time'] + dtimes
+            obmonths = obtimes.map(lambda x: x.month)
+            if group_list_list is not None:
+                group_list_list1 = group_list_list
+            else:
+                month_list = list(set(obmonths))
+                month_list.sort()
+                group_list_list1 = []
+                for month in month_list:
+                    group_list_list1.append([month])
+            for group_list in group_list_list1:
+                sta = sta_ob_and_fos.loc[obmonths.isin(group_list)]
+                if len(sta.index) !=0:
+                    valid_group_list_list.append(group_list)
+                    sta_ob_and_fos_list.append(sta)
+        elif group_by == "ob_day":
+            dtimes = sta_ob_and_fos['dtime'].map(lambda x: datetime.timedelta(hours=x))
+            obtimes = sta_ob_and_fos['time'] + dtimes
+            obdays = obtimes.map(lambda  x:datetime.datetime(x.year,x.month,x.day,0,0))
+            if group_list_list is not None:
+                group_list_list1 = []
+                for group_list in group_list_list:
+                    group_list1 = []
+                    for time0 in group_list:
+                        time1 = datetime.datetime(time0.year, time0.month, time0.day, 0, 0)
+                        group_list1.append(time1)
+                    group_list_list1.append(group_list1)
+            else:
+                day_list = list(set(obdays))
+                day_list.sort()
+                group_list_list1 = []
+                for day in day_list:
+                    group_list_list1.append([day])
+            for group_list in group_list_list1:
+                sta = sta_ob_and_fos.loc[obdays.isin(group_list)]
+                if len(sta.index) !=0:
+                    valid_group_list_list.append(group_list)
+                    sta_ob_and_fos_list.append(sta)
+        elif group_by == "ob_dayofyear":
+            dtimes = sta_ob_and_fos['dtime'].map(lambda x: datetime.timedelta(hours=x))
+            obtimes = sta_ob_and_fos['time'] + dtimes
+            obdays = obtimes.map(lambda  x:x.dayofyear)
+            if group_list_list is not None:
+                group_list_list1 = group_list_list
+            else:
+                day_list = list(set(obdays))
+                day_list.sort()
+                group_list_list1 = []
+                for day in day_list:
+                    group_list_list1.append([day])
+            for group_list in group_list_list1:
+                sta = sta_ob_and_fos.loc[obdays.isin(group_list)]
+                if len(sta.index) !=0:
+                    valid_group_list_list.append(group_list)
+                    sta_ob_and_fos_list.append(sta)
+        elif group_by == "ob_hour":
+            dtimes = sta_ob_and_fos['dtime'].map(lambda x: datetime.timedelta(hours=x))
+            obtimes = sta_ob_and_fos['time'] + dtimes
+            obhours = obtimes.map(lambda  x:x.hour)
+            if group_list_list is not None:
+                group_list_list1 = group_list_list
+            else:
+                hour_list = list(set(obhours))
+                hour_list.sort()
+                group_list_list1 = []
+                for hour in hour_list:
+                    group_list_list1.append([hour])
+            for group_list in group_list_list1:
+                sta = sta_ob_and_fos.loc[obhours.isin(group_list)]
+                if len(sta.index) !=0:
+                    valid_group_list_list.append(group_list)
+                    sta_ob_and_fos_list.append(sta)
+
+
+        elif group_by == "dtime":
+            if group_list_list is not None:
+                group_list_list1 = group_list_list
+            else:
+                dtime_list = copy.deepcopy(sta_ob_and_fos['dtime'].values)
+                dtime_list = list(set(dtime_list))
+                dtime_list.sort()
+                group_list_list1 = []
+                for dtime in dtime_list:
+                    group_list_list1.append([dtime])
+            for group_list in group_list_list1:
+                sta = nmc_verification.nmc_vf_base.in_dtime_list(sta_ob_and_fos,group_list)
+                if len(sta.index) !=0:
+                    valid_group_list_list.append(group_list)
+                    sta_ob_and_fos_list.append(sta)
+
+        elif group_by == "dday":
+            ddays = sta_ob_and_fos['dtime'].map(lambda x: math.ceil(x/24))
+            if group_list_list is not None:
+                group_list_list1 = group_list_list
+            else:
+                dday_list = list(set(ddays))
+                dday_list.sort()
+                group_list_list1 = []
+                for dday in dday_list:
+                    group_list_list1.append([dday])
+            for group_list in group_list_list1:
+                sta = sta_ob_and_fos.loc[ddays.isin(group_list)]
+                if len(sta.index) !=0:
+                    valid_group_list_list.append(group_list)
+                    sta_ob_and_fos_list.append(sta)
+        elif group_by == "dhour":
+            dhours = sta_ob_and_fos['dtime'].map(lambda x: x%24)
+            if group_list_list is not None:
+                group_list_list1 = group_list_list
+            else:
+                dhour_list = list(set(dhours))
+                dhour_list.sort()
+                group_list_list1 = []
+                for dhour in dhour_list:
+                    group_list_list1.append([dhour])
+            for group_list in group_list_list1:
+                sta = sta_ob_and_fos.loc[dhours.isin(group_list)]
+                if len(sta.index) !=0:
+                    valid_group_list_list.append(group_list)
+                    sta_ob_and_fos_list.append(sta)
+        elif group_by == "id":
+            if group_list_list is not None:
+                group_list_list1 = group_list_list
+            else:
+                id_list = copy.deepcopy(sta_ob_and_fos['id'].values)
+                id_list = list(set(id_list))
+                id_list.sort()
+                group_list_list1 = []
+                for id in id_list:
+                    group_list_list1.append([id])
+            for group_list in group_list_list1:
+                sta = nmc_verification.nmc_vf_base.in_id_list(sta_ob_and_fos,group_list)
+                if len(sta.index) !=0:
+                    valid_group_list_list.append(group_list)
+                    sta_ob_and_fos_list.append(sta)
+    #返回分组结果，和实际分组方式
+
+    if len(valid_group_list_list)==0:
+        valid_group_list_list = None
+    return sta_ob_and_fos_list,valid_group_list_list
+
+
+def group_data1(sta_ob_and_fos,group_by,group_list_list = None):
+
+    group_list_list1 = None
+    valid_group_list_list = []
     sta_ob_and_fos_list = []
     if group_by is None:
         sta_ob_and_fos_list.append(sta_ob_and_fos)
@@ -30,7 +353,9 @@ def group_data(sta_ob_and_fos,group_by,group_list_list):
                     group_list_list1.append([level])
             for group_list in group_list_list1:
                 sta = nmc_verification.nmc_vf_base.in_level_list(sta_ob_and_fos,group_list)
-                sta_ob_and_fos_list.append(sta)
+                if len(sta.index) !=0:
+                    valid_group_list_list.append(group_list)
+                    sta_ob_and_fos_list.append(sta)
         elif group_by == "time":
             if group_list_list is not None:
                 group_list_list1 = group_list_list
@@ -43,7 +368,9 @@ def group_data(sta_ob_and_fos,group_by,group_list_list):
                     group_list_list1.append([time])
             for group_list in group_list_list1:
                 sta = nmc_verification.nmc_vf_base.in_time_list(sta_ob_and_fos,group_list)
-                sta_ob_and_fos_list.append(sta)
+                if len(sta.index) !=0:
+                    valid_group_list_list.append(group_list)
+                    sta_ob_and_fos_list.append(sta)
 
         elif group_by == "year":
             if group_list_list is not None:
@@ -57,7 +384,9 @@ def group_data(sta_ob_and_fos,group_by,group_list_list):
                     group_list_list1.append([year])
             for group_list in group_list_list1:
                 sta = nmc_verification.nmc_vf_base.in_year_list(sta_ob_and_fos,group_list)
-                sta_ob_and_fos_list.append(sta)
+                if len(sta.index) !=0:
+                    valid_group_list_list.append(group_list)
+                    sta_ob_and_fos_list.append(sta)
 
         elif group_by == "month":
             if group_list_list is not None:
@@ -71,7 +400,9 @@ def group_data(sta_ob_and_fos,group_by,group_list_list):
                     group_list_list1.append([month])
             for group_list in group_list_list1:
                 sta = nmc_verification.nmc_vf_base.in_month_list(sta_ob_and_fos,group_list)
-                sta_ob_and_fos_list.append(sta)
+                if len(sta.index) !=0:
+                    valid_group_list_list.append(group_list)
+                    sta_ob_and_fos_list.append(sta)
         elif group_by == "day":
             if group_list_list is not None:
                 group_list_list1 = []
@@ -91,7 +422,9 @@ def group_data(sta_ob_and_fos,group_by,group_list_list):
                     group_list_list1.append([hour])
             for group_list in group_list_list1:
                 sta = nmc_verification.nmc_vf_base.in_day_list(sta_ob_and_fos,group_list)
-                sta_ob_and_fos_list.append(sta)
+                if len(sta.index) !=0:
+                    valid_group_list_list.append(group_list)
+                    sta_ob_and_fos_list.append(sta)
         elif group_by == "dayofyear":
             if group_list_list is not None:
                 group_list_list1 = group_list_list
@@ -104,7 +437,9 @@ def group_data(sta_ob_and_fos,group_by,group_list_list):
                     group_list_list1.append([hour])
             for group_list in group_list_list1:
                 sta = nmc_verification.nmc_vf_base.in_dayofyear_list(sta_ob_and_fos,group_list)
-                sta_ob_and_fos_list.append(sta)
+                if len(sta.index) !=0:
+                    valid_group_list_list.append(group_list)
+                    sta_ob_and_fos_list.append(sta)
         elif group_by == "hour":
             if group_list_list is not None:
                 group_list_list1 = group_list_list
@@ -117,7 +452,9 @@ def group_data(sta_ob_and_fos,group_by,group_list_list):
                     group_list_list1.append([hour])
             for group_list in group_list_list1:
                 sta = nmc_verification.nmc_vf_base.in_hour_list(sta_ob_and_fos,group_list)
-                sta_ob_and_fos_list.append(sta)
+                if len(sta.index) !=0:
+                    valid_group_list_list.append(group_list)
+                    sta_ob_and_fos_list.append(sta)
 
         elif group_by == "ob_time":
             dtimes = sta_ob_and_fos['dtime'].map(lambda x: datetime.timedelta(hours=x))
@@ -132,7 +469,9 @@ def group_data(sta_ob_and_fos,group_by,group_list_list):
                     group_list_list1.append([time])
             for group_list in group_list_list1:
                 sta = sta_ob_and_fos.loc[obtimes.isin(group_list)]
-                sta_ob_and_fos_list.append(sta)
+                if len(sta.index) !=0:
+                    valid_group_list_list.append(group_list)
+                    sta_ob_and_fos_list.append(sta)
 
         elif group_by == "ob_year":
             dtimes = sta_ob_and_fos['dtime'].map(lambda x: datetime.timedelta(hours=x))
@@ -148,7 +487,9 @@ def group_data(sta_ob_and_fos,group_by,group_list_list):
                     group_list_list1.append([year])
             for group_list in group_list_list1:
                 sta = sta_ob_and_fos.loc[obyears.isin(group_list)]
-                sta_ob_and_fos_list.append(sta)
+                if len(sta.index) !=0:
+                    valid_group_list_list.append(group_list)
+                    sta_ob_and_fos_list.append(sta)
 
         elif group_by == "ob_month":
             dtimes = sta_ob_and_fos['dtime'].map(lambda x: datetime.timedelta(hours=x))
@@ -164,7 +505,9 @@ def group_data(sta_ob_and_fos,group_by,group_list_list):
                     group_list_list1.append([month])
             for group_list in group_list_list1:
                 sta = sta_ob_and_fos.loc[obmonths.isin(group_list)]
-                sta_ob_and_fos_list.append(sta)
+                if len(sta.index) !=0:
+                    valid_group_list_list.append(group_list)
+                    sta_ob_and_fos_list.append(sta)
         elif group_by == "ob_day":
             dtimes = sta_ob_and_fos['dtime'].map(lambda x: datetime.timedelta(hours=x))
             obtimes = sta_ob_and_fos['time'] + dtimes
@@ -185,7 +528,9 @@ def group_data(sta_ob_and_fos,group_by,group_list_list):
                     group_list_list1.append([day])
             for group_list in group_list_list1:
                 sta = sta_ob_and_fos.loc[obdays.isin(group_list)]
-                sta_ob_and_fos_list.append(sta)
+                if len(sta.index) !=0:
+                    valid_group_list_list.append(group_list)
+                    sta_ob_and_fos_list.append(sta)
         elif group_by == "ob_dayofyear":
             dtimes = sta_ob_and_fos['dtime'].map(lambda x: datetime.timedelta(hours=x))
             obtimes = sta_ob_and_fos['time'] + dtimes
@@ -200,7 +545,9 @@ def group_data(sta_ob_and_fos,group_by,group_list_list):
                     group_list_list1.append([day])
             for group_list in group_list_list1:
                 sta = sta_ob_and_fos.loc[obdays.isin(group_list)]
-                sta_ob_and_fos_list.append(sta)
+                if len(sta.index) !=0:
+                    valid_group_list_list.append(group_list)
+                    sta_ob_and_fos_list.append(sta)
         elif group_by == "ob_hour":
             dtimes = sta_ob_and_fos['dtime'].map(lambda x: datetime.timedelta(hours=x))
             obtimes = sta_ob_and_fos['time'] + dtimes
@@ -215,7 +562,9 @@ def group_data(sta_ob_and_fos,group_by,group_list_list):
                     group_list_list1.append([hour])
             for group_list in group_list_list1:
                 sta = sta_ob_and_fos.loc[obhours.isin(group_list)]
-                sta_ob_and_fos_list.append(sta)
+                if len(sta.index) !=0:
+                    valid_group_list_list.append(group_list)
+                    sta_ob_and_fos_list.append(sta)
 
 
         elif group_by == "dtime":
@@ -230,7 +579,9 @@ def group_data(sta_ob_and_fos,group_by,group_list_list):
                     group_list_list1.append([dtime])
             for group_list in group_list_list1:
                 sta = nmc_verification.nmc_vf_base.in_dtime_list(sta_ob_and_fos,group_list)
-                sta_ob_and_fos_list.append(sta)
+                if len(sta.index) !=0:
+                    valid_group_list_list.append(group_list)
+                    sta_ob_and_fos_list.append(sta)
 
         elif group_by == "dday":
             ddays = sta_ob_and_fos['dtime'].map(lambda x: math.ceil(x/24))
@@ -244,7 +595,9 @@ def group_data(sta_ob_and_fos,group_by,group_list_list):
                     group_list_list1.append([dday])
             for group_list in group_list_list1:
                 sta = sta_ob_and_fos.loc[ddays.isin(group_list)]
-                sta_ob_and_fos_list.append(sta)
+                if len(sta.index) !=0:
+                    valid_group_list_list.append(group_list)
+                    sta_ob_and_fos_list.append(sta)
         elif group_by == "dhour":
             dhours = sta_ob_and_fos['dtime'].map(lambda x: x%24)
             if group_list_list is not None:
@@ -257,7 +610,9 @@ def group_data(sta_ob_and_fos,group_by,group_list_list):
                     group_list_list1.append([dhour])
             for group_list in group_list_list1:
                 sta = sta_ob_and_fos.loc[dhours.isin(group_list)]
-                sta_ob_and_fos_list.append(sta)
+                if len(sta.index) !=0:
+                    valid_group_list_list.append(group_list)
+                    sta_ob_and_fos_list.append(sta)
         elif group_by == "id":
             if group_list_list is not None:
                 group_list_list1 = group_list_list
@@ -270,9 +625,14 @@ def group_data(sta_ob_and_fos,group_by,group_list_list):
                     group_list_list1.append([id])
             for group_list in group_list_list1:
                 sta = nmc_verification.nmc_vf_base.in_id_list(sta_ob_and_fos,group_list)
-                sta_ob_and_fos_list.append(sta)
+                if len(sta.index) !=0:
+                    valid_group_list_list.append(group_list)
+                    sta_ob_and_fos_list.append(sta)
     #返回分组结果，和实际分组方式
-    return sta_ob_and_fos_list,group_list_list1
+
+    if len(valid_group_list_list)==0:
+        valid_group_list_list = None
+    return sta_ob_and_fos_list,valid_group_list_list
 
 
 def get_save_path(save_dir,method,group_by,group_list,model_name,type,discription = None):

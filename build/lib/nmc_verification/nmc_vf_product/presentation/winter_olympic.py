@@ -47,7 +47,7 @@ def ob_multi_fo_time(ob_element,model_name,model_level,station_id,max_dh):
     para = {
         "value_type": "wind",
         "local_root":"H:/test_data/input/nvb/binary1",
-        "ip_port_file": r"H:\test_data\input\nvb\ip_port.txt",
+        "ip_port_file": ["/home/forecaster/config_met_io.ini",r"H:\test_data\input\nvb\ip_port.txt"],
         "ob_dir": r"SURFACE/PLOT_10MIN_OLYMPIC/YYYYMMDDHH0000.000",
         "ob_s_name":"speed",
         "ob_d_name":"direction",
