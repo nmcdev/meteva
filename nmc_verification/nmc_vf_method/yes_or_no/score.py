@@ -366,7 +366,7 @@ def ets_hfmc(hfmc_array):
     ets_array = (hit - hit_random) / sum
     return ets_array
 
-def hfmc(Ob, Fo, grade_list=[1e-300]):
+def hfmc(Ob, Fo, grade_list=[1e-30]):
     '''
     预报列联表
     :param Ob: 实况数据  任意维numpy数组
@@ -393,3 +393,126 @@ def hfmc(Ob, Fo, grade_list=[1e-300]):
     return hfmc_array
 
 
+
+
+def hk_yesorno(Ob,Fo,grade_list=[1e-30]):
+    hfmc_array = hfmc(Ob, Fo, grade_list)
+    return hk_yesorno_hfmc(hfmc_array)
+
+def hk_yesorno_hfmc(hfmc_array):
+    hit = hfmc_array[...,0]
+    fal = hfmc_array[...,1]
+    mis = hfmc_array[...,2]
+    cn = hfmc_array[...,3]
+
+    sum_hm = hit + mis
+    sum_hm[sum_hm == 0] = 1e-10
+    sum_fc = fal + cn
+    sum_fc[sum_fc == 0] = 1e-10
+    hk = hit/sum_hm - fal/sum_fc
+    return hk
+
+
+def hss_yesorno(Ob,Fo,grade_list= [1e-30]):
+    hfmc_array = hfmc(Ob, Fo, grade_list)
+    return hss_yesorno_hfmc(hfmc_array)
+
+def hss_yesorno_hfmc(hfmc_array):
+    hit = hfmc_array[...,0]
+    fal = hfmc_array[...,1]
+    mis = hfmc_array[...,2]
+    cn = hfmc_array[...,3]
+
+    sum = hit+fal +mis + cn
+    correct_random = ((hit + mis) * (hit + fal) + (cn+mis)*(cn+fal))/sum
+    sum_rc = sum - correct_random
+    sum_rc[sum_rc == 0] = 1e-10
+    hss = (hit + cn - correct_random) / sum_rc
+
+    return hss
+
+def dts(Ob,Fo,grade_list= [1e-30]):
+    hfmc_array = hfmc(Ob, Fo, grade_list)
+    return dts_hfmc(hfmc_array)
+
+def dts_hfmc(hfmc_array):
+    hit = hfmc_array[...,0]
+    fal = hfmc_array[...,1]
+    mis = hfmc_array[...,2]
+    cn = hfmc_array[...,3]
+
+    sum1 = hit +mis + fal
+    sum1[sum1 ==0] = 1e-10
+    sum2 = mis + fal + cn
+    sum2[sum2 ==0] = 1e-10
+
+    dts_array =(hit / sum1 + cn/sum2)/2
+
+    return dts_array
+
+
+
+def FSS_time(Ob,Fo,grade_list = [1e-30],window_size = None):
+    '''
+    :param Ob: 二维numpy数组Ob[i,j]，其中i取值为0  - 站点数， j为取值为0 - 时效维度的size
+    :param Fo: 二维numpy数组Fo[i,j]，其中i取值为0  - 站点数， j为取值为0 - 时效维度的size
+    :param window_size:
+    :param grade_list:
+    :return:
+    '''
+    mid_array = mid_FSS_time(Ob,Fo,grade_list,window_size)
+    result = FSS_time_base_on_mid(mid_array)
+    return result
+
+def FSS_time_base_on_mid(mid_array):
+    '''
+
+    :param mid_array:
+    :return:
+    '''
+    result = 1 - mid_array[...,0]/(mid_array[...,1]+1e-30)
+    return result
+
+def merge_mid_FSS_time(mid_array1,mid_array2):
+    '''
+
+    :param mid_array1:
+    :param mid_array2:
+    :return:
+    '''
+    if mid_array1 is None:
+        return mid_array2
+    if mid_array2 is None:
+        return mid_array1
+    return mid_array1 + mid_array2
+
+def mid_FSS_time(Ob,Fo,grade_list = [1e-30],window_size = None):
+    '''
+    :param Ob: 二维numpy数组Ob[i,j]，其中i取值为0  - 站点数， j为取值为0 - 时效维度的size
+    :param Fo: 二维numpy数组Fo[i,j]，其中i取值为0  - 站点数， j为取值为0 - 时效维度的size
+    :param window_size:
+    :param grade_list:
+    :return:
+    '''
+    shape = Ob.shape
+    if len(shape) == 1:
+        Ob = Ob.reshape(1,shape[0])
+        Fo = Fo.reshape(1,shape[0])
+        shape = Ob.shape
+    if window_size is None:
+        window_size = shape[1]//3
+    left_size = shape[1] - window_size
+    ng = len(grade_list)
+    result = np.zeros((ng,window_size,left_size,2))
+    for i in range(1,1+window_size):
+        for j in range(left_size):
+            for g in range(ng):
+                ob1 = np.zeros((shape[0],i))
+                fo1 = np.zeros((shape[0],i))
+                ob1[Ob[:, j + window_size -i:j+window_size] >= grade_list] = 1
+                fo1[Fo[:, j + window_size -i:j+window_size] >= grade_list] = 1
+                ob_hap_p =np.sum(ob1,axis=1)
+                fo_hap_p =np.sum(fo1,axis=1)
+                result[g,i - 1, j,  0] = np.sum(np.power(ob_hap_p - fo_hap_p, 2))
+                result[g,i - 1, j,  1] = np.sum(np.power(ob_hap_p, 2)) + np.sum(np.power(fo_hap_p, 2))
+    return result
