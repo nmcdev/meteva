@@ -7,3 +7,6 @@ from . import diagnosing as diag
 from .selecting import *
 from .computing import *
 from .diagnosing import *
+from . import grouping as grp
+from .grouping import group
+

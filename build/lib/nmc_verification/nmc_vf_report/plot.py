@@ -1,7 +1,7 @@
 import xarray as xr
 import nmc_verification.nmc_vf_report.perspective.veri_plot_set as veri_plot_set
 
-def plot(veri_result,para_list,output_dir):
+def vplot(veri_result,para_list,output_dir):
     dims = []
     coords = {}
     shape = []

@@ -171,3 +171,47 @@ def get_time_of_path(path_model,path):
     else:
         ss = 0
     return datetime.datetime(yy,mm,dd,hh,ff,ss)
+
+
+def get_time_str_one_by_one(time1,time0 = None):
+    if time0 is None:
+        time2 = nmc_verification.nmc_vf_base.tool.time_tools.all_type_time_to_datetime(time1)
+        if time2.hour == 0 and time2.minute == 0:
+
+            time_str = time2.strftime('%Y{y}%m{m}%d{d}').format(y='年', m='月', d='日')
+        elif time2.minute == 0:
+            time_str = time2.strftime('%Y{y}%m{m}%d{d}%H{h}').format(y='年', m='月', d='日',h='时')
+        else:
+            time_str = time2.strftime('%Y{y}%m{m}%d{d}%H{h}%M{mi}').format(y='年', m='月', d='日',h='时',mi = '分')
+    else:
+        time00 = nmc_verification.nmc_vf_base.tool.time_tools.all_type_time_to_datetime(time0)
+        time2 = nmc_verification.nmc_vf_base.tool.time_tools.all_type_time_to_datetime(time1)
+        if time2.year != time00.year:
+            if time2.hour == 0 and time2.minute == 0:
+                time_str = time1.strftime('%Y{y}%m{m}%d{d}').format(y='年', m='月', d='日')
+            elif time1.minute == 0:
+                time_str = time1.strftime('%Y{y}%m{m}%d{d}%H{h}').format(y='年', m='月', d='日',h='时')
+            else:
+                time_str = time1.strftime('%Y{y}%m{m}%d{d}%H{h}%M{mi}').format(y='年', m='月', d='日',h='时',mi = '分')
+        elif time2.month != time00.month:
+            if time2.hour == 0 and time2.minute == 0:
+                time_str = time2.strftime('%m{m}%d{d}').format(m='月', d='日')
+            elif time2.minute == 0:
+                time_str = time2.strftime('%m{m}%d{d}%H{h}').format(m='月', d='日',h='时')
+            else:
+                time_str = time2.strftime('%m{m}%d{d}%H{h}%M{mi}').format(m='月', d='日',h='时',mi = '分')
+        elif time2.day != time00.day:
+            if time2.hour == 0 and time2.minute == 0:
+                time_str = time2.strftime('%d{d}').format(d='日')
+            elif time2.minute == 0:
+                time_str = time2.strftime('%d{d}%H{h}').format(d='日',h='时')
+            else:
+                time_str = time2.strftime('%d{d}%H{h}%M{mi}').format(d='日',h='时',mi = '分')
+        elif time2.hour != time00.hour:
+            if time2.minute == 0:
+                time_str = time2.strftime('%H{h}').format(h='时')
+            else:
+                time_str = time2.strftime('%H{h}%M{mi}').format(h='时',mi = '分')
+        else:
+            time_str = time2.strftime("%M分")
+    return time_str

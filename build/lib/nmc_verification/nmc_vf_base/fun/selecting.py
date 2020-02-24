@@ -1,5 +1,4 @@
 import nmc_verification
-import copy
 import pandas as pd
 import numpy as np
 import math
@@ -46,7 +45,7 @@ def in_member_list(data,member_list,name_or_index = "name"):
             for member in member_list:
                 member_name_list.append(data_names[member])
         columns = ['level', 'time', 'dtime', 'id', 'lon', 'lat'] + member_name_list
-        sta1 = copy.deepcopy(data[columns])
+        sta1 = data.loc[:,columns]
         return sta1
     else:
         grid0 = nmc_verification.nmc_vf_base.basicdata.get_grid_of_data(data)
@@ -96,23 +95,26 @@ def in_time_list(sta,time_list):
     sta1 = sta.loc[sta['time'].isin(time_list1)]
     return sta1
 
+
+
 #为拥有多year的站点数据，依次增加year所表示的list列表
 def in_year_list(sta,year_list):
-    years = sta['time'].map(lambda x: x.year)
-    sta1 = sta.loc[years.isin(year_list)]
+    fo_times = pd.Series(0, index=sta['time'])
+    sta1 = sta.loc[fo_times.index.year.isin(year_list)]
     return sta1
 
 #为拥有多month的站点数据，依次增加month所表示的list列表
 def in_month_list(sta,month_list):
-    months = sta['time'].map(lambda x: x.month)
-    sta1 = sta.loc[months.isin(month_list)]
+    fo_times = pd.Series(0, index=sta['time'])
+    sta1 = sta.loc[fo_times.index.month.isin(month_list)]
     return sta1
 
 #为拥有多xun的站点数据，依次增加xun所表示的list列表
 def in_xun_list(sta,xun_list):
-    mons = sta['time'].map(lambda x: x.month).values.astype(np.int16)
-    days = sta['time'].map(lambda y: y.day).values
-    xuns = np.ceil(days / 10).astype(np.int16)
+    fo_times = pd.Series(0, index=sta['time'])
+    mons = fo_times.index.month.astype(np.int16)
+    days = fo_times.index.day.astype(np.int16)
+    xuns = np.ceil(days / 10).values.astype(np.int16)
     xuns[xuns>3] = 3
     xuns += (mons - 1) * 3
     xuns = pd.Series(xuns)
@@ -121,9 +123,10 @@ def in_xun_list(sta,xun_list):
 
 #为拥有多hou的站点数据，依次增加hou所表示的list列表
 def in_hou_list(sta,hou_list):
-    mons = sta['time'].map(lambda x: x.month).values.astype(np.int16)
-    days = sta['time'].map(lambda y: y.day).values
-    hous = np.ceil(days / 5).astype(np.int16)
+    fo_times = pd.Series(0, index=sta['time'])
+    mons = fo_times.index.month.astype(np.int16)
+    days = fo_times.index.day.astype(np.int16)
+    hous = np.ceil(days / 5).values.astype(np.int16)
     hous[hous>6] = 6
     hous += (mons - 1) * 6
     hous = pd.Series(hous)
@@ -132,23 +135,26 @@ def in_hou_list(sta,hou_list):
 
 #为拥有多day的站点数据，依次增加day所表示的list列表
 def in_day_list(sta,day_list):
-    day_list1 = []
+    days_list = []
+    time0 = datetime.datetime(1900,1,1,0,0)
+    seconds = 3600*24
     for day0 in day_list:
-        day1 = datetime.datetime(day0.year,day0.month,day0.day,0,0)
-        day_list1.append(nmc_verification.nmc_vf_base.tool.time_tools.all_type_time_to_time64(day1))
-    days = sta['time'].map(lambda x: datetime.datetime(x.year,x.month,x.day,0,0))
-    sta1 = sta.loc[days.isin(day_list)]
+        day = (day0 - time0).total_seconds()//seconds
+        days_list.append(day)
+    fo_times = pd.Series(0, index=sta['time'])
+    indexs = (fo_times.index - time0)//np.timedelta64(1,"D")
+    sta1 = sta.loc[indexs.isin(days_list)]
     return sta1
 
 def in_dayofyear_list(sta,dayofyear_list):
-    days = sta['time'].map(lambda x: x.dayofyear)
-    sta1 = sta.loc[days.isin(dayofyear_list)]
+    fo_times = pd.Series(0, index=sta['time'])
+    sta1 = sta.loc[fo_times.index.dayofyear.isin(dayofyear_list)]
     return sta1
 
 #为拥有多hour的站点数据，依次增加hour所表示的list列表
 def in_hour_list(sta,hour_list):
-    hours = sta['time'].map(lambda x: x.hour)
-    sta1 = sta.loc[hours.isin(hour_list)]
+    fo_times = pd.Series(0, index=sta['time'])
+    sta1 = sta.loc[fo_times.index.hour.isin(hour_list)]
     return sta1
 
 
@@ -162,35 +168,33 @@ def in_ob_time_list(sta,time_list):
     time_list1 = []
     for time0 in time_list:
         time_list1.append(nmc_verification.nmc_vf_base.tool.time_tools.all_type_time_to_time64(time0))
-    dtimes = sta['dtime'].map(lambda x: datetime.timedelta(hours=x))
+    dtimes = sta["dtime"] * np.timedelta64(1, 'h')
     obtimes = sta['time'] + dtimes
     sta1 = sta.loc[obtimes.isin(time_list1)]
     return sta1
 
 #为拥有多year的站点数据，依次增加year所表示的list列表
 def in_ob_year_list(sta,year_list):
-    dtimes = sta['dtime'].map(lambda x: datetime.timedelta(hours=x))
-    obtimes = sta['time'] + dtimes
-    years = obtimes.map(lambda x: x.year)
-    sta1 = sta.loc[years.isin(year_list)]
+    dtimes = sta["dtime"] * np.timedelta64(1, 'h')
+    obtimes = pd.Series(0,index = sta['time'] + dtimes)
+    sta1 = sta.loc[obtimes.index.year.isin(year_list)]
     return sta1
 
 #为拥有多month的站点数据，依次增加month所表示的list列表
 def in_ob_month_list(sta,month_list):
-    dtimes = sta['dtime'].map(lambda x: datetime.timedelta(hours=x))
-    obtimes = sta['time'] + dtimes
-    months = obtimes.map(lambda x: x.month)
-    sta1 = sta.loc[months.isin(month_list)]
+    dtimes = sta["dtime"] * np.timedelta64(1, 'h')
+    obtimes = pd.Series(0,index = sta['time'] + dtimes)
+    sta1 = sta.loc[obtimes.index.month.isin(month_list)]
     return sta1
 
 
 #为拥有多xun的站点数据，依次增加xun所表示的list列表
 def in_ob_xun_list(sta,xun_list):
-    dtimes = sta['dtime'].map(lambda x: datetime.timedelta(hours=x))
-    obtimes = sta['time'] + dtimes
-    mons = obtimes.map(lambda x: x.month).values.astype(np.int16)
-    days = obtimes.map(lambda y: y.day).values
-    xuns = np.ceil(days / 10).astype(np.int16)
+    dtimes = sta["dtime"] * np.timedelta64(1, 'h')
+    obtimes = pd.Series(0,index = sta['time'] + dtimes)
+    mons = obtimes.index.month.astype(np.int16)
+    days = obtimes.index.day.astype(np.int16)
+    xuns = np.ceil(days / 10).values.astype(np.int16)
     xuns[xuns>3] = 3
     xuns += (mons - 1) * 3
     xuns = pd.Series(xuns)
@@ -199,11 +203,11 @@ def in_ob_xun_list(sta,xun_list):
 
 #为拥有多hou的站点数据，依次增加hou所表示的list列表
 def in_ob_hou_list(sta,hou_list):
-    dtimes = sta['dtime'].map(lambda x: datetime.timedelta(hours=x))
-    obtimes = sta['time'] + dtimes
-    mons = obtimes.map(lambda x: x.month).values.astype(np.int16)
-    days = obtimes.map(lambda y: y.day).values
-    hous = np.ceil(days / 5).astype(np.int16)
+    dtimes = sta["dtime"] * np.timedelta64(1, 'h')
+    obtimes = pd.Series(0,index = sta['time'] + dtimes)
+    mons = obtimes.index.month.astype(np.int16)
+    days = obtimes.index.day.astype(np.int16)
+    hous = np.ceil(days / 5).values.astype(np.int16)
     hous[hous>6] = 6
     hous += (mons - 1) * 6
     hous = pd.Series(hous)
@@ -212,34 +216,36 @@ def in_ob_hou_list(sta,hou_list):
 
 #为拥有多day的站点数据，依次增加day所表示的list列表
 def in_ob_dayofyear_list(sta,dayofyear_list):
-    dtimes = sta['dtime'].map(lambda x: datetime.timedelta(hours=x))
-    obtimes = sta['time'] + dtimes
-    days = obtimes.map(lambda x: x.dayofyear)
-    sta1 = sta.loc[days.isin(dayofyear_list)]
+    dtimes = sta["dtime"] * np.timedelta64(1, 'h')
+    obtimes = pd.Series(0,index = sta['time'] + dtimes)
+    sta1 = sta.loc[obtimes.index.dayofyear.isin(dayofyear_list)]
     return sta1
 
 def in_ob_day_list(sta,day_list):
-    dtimes = sta['dtime'].map(lambda x: datetime.timedelta(hours=x))
-    obtimes = sta['time'] + dtimes
-    day_list1 = []
+    dtimes = sta["dtime"] * np.timedelta64(1, 'h')
+    obtimes = pd.Series(0, index=sta['time'] + dtimes)
+    days_list = []
+    time0 = datetime.datetime(1900, 1, 1, 0, 0)
+    seconds = 3600 * 24
     for day0 in day_list:
-        day1 = datetime.datetime(day0.year,day0.month,day0.day,0,0)
-        day_list1.append(nmc_verification.nmc_vf_base.tool.time_tools.all_type_time_to_time64(day1))
-    days = obtimes.map(lambda x: datetime.datetime(x.year,x.month,x.day,0,0))
-    sta1 = sta.loc[days.isin(day_list)]
+        day = (day0 - time0).total_seconds() // seconds
+        days_list.append(day)
+    indexs = (obtimes.index - time0) // np.timedelta64(1, "D")
+    sta1 = sta.loc[indexs.isin(days_list)]
     return sta1
+
+
 
 #为拥有多hour的站点数据，依次增加hour所表示的list列表
 def in_ob_hour_list(sta,hour_list):
-    dtimes = sta['dtime'].map(lambda x: datetime.timedelta(hours=x))
-    obtimes = sta['time'] + dtimes
-    hours = obtimes.map(lambda x: x.hour)
-    sta1 = sta.loc[hours.isin(hour_list)]
+    dtimes = sta["dtime"] * np.timedelta64(1, 'h')
+    obtimes = pd.Series(0,index = sta['time'] + dtimes)
+    sta1 = sta.loc[obtimes.index.hour.isin(hour_list)]
     return sta1
 
 
 def between_ob_time_range(sta,start_time,end_time):
-    dtimes = sta['dtime'].map(lambda x: datetime.timedelta(hours=x))
+    dtimes = sta["dtime"] * np.timedelta64(1, 'h')
     obtimes = sta['time'] + dtimes
     sta1 = sta.loc[(obtimes  >= start_time) & (obtimes  <= end_time)]
     return sta1
@@ -252,13 +258,13 @@ def in_dtime_list(sta,dtime_list):
 
 #为拥有多dday的站点数据，依次增加dday所表示的list列表
 def in_dday_list(sta,dday_list):
-    days = sta['dtime'].map(lambda x: math.ceil(x/24))
+    days = np.ceil(sta['dtime'] / 24)
     sta1 = sta.loc[days.isin(dday_list)]
     return sta1
 
 #为拥有多dhour的站点数据，依次增加dhour所表示的list列表
 def in_dhour_list(sta,dhour_list):
-    hours = sta['dtime'].map(lambda x:  x % 24)
+    hours = sta['dtime']% 24
     sta1 = sta.loc[hours.isin(dhour_list)]
     return sta1
 
@@ -368,6 +374,12 @@ def by_loc_dict(sta,loc_dict):
     if "ob_hour" in loc_dict.keys():
         sta1 = in_ob_hour_list(sta1, loc_dict["ob_hour"])
 
+    if "dtime" in loc_dict.keys():
+        sta1 = in_dtime_list(sta1,loc_dict["dtime"])
+    if "dday" in loc_dict.keys():
+        sta1 = in_dday_list(sta1,loc_dict["dday"])
+    if "dhour" in loc_dict.keys():
+        sta1 = in_dday_list(sta1,loc_dict["dhour"])
     if "lon" in loc_dict.keys():
         sta1 = between_lon_range(sta1,loc_dict["lon"][0],loc_dict["lon"][1])
     if "lat" in loc_dict.keys():

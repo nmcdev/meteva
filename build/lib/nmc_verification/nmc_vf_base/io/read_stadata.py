@@ -332,9 +332,11 @@ def read_stadata_from_micaps1_2_8(filename, column, station=None, level=None,tim
 
 def read_gds_ip_port(filename):
     file = open(filename)
-    ip = file.readline()
+    for i in range(6):
+        file.readline()
+    ip = file.readline().split("=")[1]
     ip = ip.strip()
-    port = int(file.readline())
+    port = int(file.readline().split("=")[1])
     file.close()
     return ip,port
 
@@ -393,6 +395,9 @@ def read_stadata_from_gds(ip, port, filename,element_id,station = None, level=No
             # read the number of elements
             element_number = np.frombuffer(
                 byteArray[ind:(ind+2)], dtype='i2')[0]
+
+            if element_number == 0:
+                return None
             ind += 2
 
             # construct record structure
@@ -408,6 +413,9 @@ def read_stadata_from_gds(ip, port, filename,element_id,station = None, level=No
                 ind += 2
                 element_map[element_id] = element_type_map[element_type]
                 element_map_len[element_id] = int(element_type_map[element_type][1])
+
+
+
 
             dtype_str = element_map[element_id_str0]
 

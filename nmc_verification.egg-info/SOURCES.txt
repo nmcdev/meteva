@@ -118,3 +118,9 @@ nmc_verification/nmc_vf_report/perspective/veri_task.py
 nmc_verification/nmc_vf_report/perspective/veri_task1.py
 nmc_verification/nmc_vf_report/perspective/veri_task2.py
 nmc_verification/nmc_vf_report/perspective/veri_task_add_rmse.py
+nmc_verification/nmc_vf_report/verify/__init__.py
+nmc_verification/nmc_vf_report/verify/functions.py
+nmc_verification/nmc_vf_report/verify/para_example.py
+nmc_verification/nmc_vf_report/verify/test.py
+nmc_verification/nmc_vf_report/verify/veri_excel_set.py
+nmc_verification/nmc_vf_report/verify/verificate.py

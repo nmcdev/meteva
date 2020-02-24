@@ -101,7 +101,7 @@ def gds_ob_multi_time_fo(para):
             element_id = nmc_verification.nmc_vf_base.gds_element_id_dict[para["ob_d_name"]]
             sta_d = nmc_verification.nmc_vf_base.read_stadata_from_gds(ip, port, filename=path, element_id=element_id,station=station)
             if sta_d is None: continue
-            sta_ob_d_all = nmc_verification.nmc_vf_base.combine_join(sta_ob_s_all, sta_d)
+            sta_ob_d_all = nmc_verification.nmc_vf_base.combine_join(sta_ob_d_all, sta_d)
             if i >1:
                 time_end = time.time()
                 time_left = int((time_end - begin) * (len(ob_time_list1) - i - 1) / (i + 1)) + 1
@@ -110,7 +110,6 @@ def gds_ob_multi_time_fo(para):
         sta_ob_s_all = nmc_verification.nmc_vf_base.between_value_range(sta_ob_s_all, -1e10, 1e9)
         sta_ob_d_all = nmc_verification.nmc_vf_base.between_value_range(sta_ob_d_all, -1e10, 1e9)
         sta_ob_all = nmc_verification.nmc_vf_base.diag.speed_angle_to_wind(sta_ob_s_all, sta_ob_d_all)
-
         for id in id_list:
             output_path = para["output_dir"]
             if (output_path is not None):

@@ -5,7 +5,7 @@ from setuptools import find_packages, setup
 from codecs import open
 name = "nmc_verification"
 author ="liucouhua,wangbaoli,zhanglianyi"
-version ="1.1.28"
+version ="1.1.30"
 
 here = path.abspath(path.dirname(__file__))
 
