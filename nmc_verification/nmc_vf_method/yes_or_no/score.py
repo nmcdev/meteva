@@ -2,6 +2,23 @@ import numpy as np
 import copy
 from nmc_verification.nmc_vf_base import IV
 
+
+
+def hap_count(Ob,Fo, grade_list=[1e-30]):
+    '''
+    观测发生率，观测的正样本占总样本的比例
+    :param Ob: 实况数据  任意维numpy数组
+    :param Fo: 预测数据 任意维numpy数组,Fo.shape 和Ob.shape一致
+    :param grade_list: 多个阈值同时检验时的等级参数
+    :return:  0-1的实数，观测的正样本占总样本的比例
+    '''
+    result = []
+    for grade in grade_list:
+        result.append(Ob[Ob>grade].size)
+    result = np.array(result)
+    return result
+
+
 def s(Ob,Fo, grade_list=[1e-30]):
     '''
     观测发生率，观测的正样本占总样本的比例
@@ -10,8 +27,13 @@ def s(Ob,Fo, grade_list=[1e-30]):
     :param grade_list: 多个阈值同时检验时的等级参数
     :return:  0-1的实数，观测的正样本占总样本的比例
     '''
-    hfmc_array= hfmc(Ob, Fo,grade_list)
-    return s_hfmc(hfmc_array)
+    result = []
+    num = Ob.size
+    for grade in grade_list:
+        result.append(Ob[Ob>grade].size/num)
+    result = np.array(result)
+    return result
+
 
 def s_hfmc(hfmc_array):
     '''
