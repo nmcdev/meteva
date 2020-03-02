@@ -34,9 +34,12 @@ def u_v_to_wind(u,v):
         wind.values[1, :, :, :, :, :] = v.values[0, :, :, :, :, :]
         return wind
 
-def speed_angle_to_wind(speed,angle):
+def speed_angle_to_wind(speed,angle = None):
     if isinstance(speed, pd.DataFrame):
-        sta = nmc_verification.nmc_vf_base.combine_on_all_coords(speed, angle)
+        if angle is not None:
+            sta = nmc_verification.nmc_vf_base.combine_on_all_coords(speed, angle)
+        else:
+            sta = speed.copy()
         nmc_verification.nmc_vf_base.set_stadata_names(sta, ["speed", "angle"])
         #speed = sta["speed"].values.astype(np.float32)
         #angle = sta["angle"].values.astype(np.float32)
@@ -48,6 +51,9 @@ def speed_angle_to_wind(speed,angle):
         sta["v"] = v
         sta = sta.drop(["speed", "angle"], axis=1)
         return sta
+
+
+
     else:
         speed_v = speed.values.squeeze()
         angle_v = angle.values.squeeze()
