@@ -6,6 +6,7 @@ import numpy as np
 
 
 
+
 def score(sta_ob_and_fos,method,group_by = None,group_list_list = None,para1 = None,para2 = None):
     if type(method) == str:
         method =  globals().get(method)
@@ -74,19 +75,31 @@ def score(sta_ob_and_fos,method,group_by = None,group_list_list = None,para1 = N
 
         result = np.array(result) #将数据转换成数组
     else:
-        result = np.zeros((group_num,fo_num,para_num))
+        if fo_num ==0:
+            result = np.zeros((group_num,para_num))
+        else:
+            result = np.zeros((group_num,fo_num,para_num))
         for i in range(group_num):
+            #print(group_num)
             sta = sta_ob_and_fos_list[i]
             if(len(sta.index) == 0):
                 result[i,:] = nmc_verification.nmc_vf_base.IV
+
             else:
                 ob = sta[data_name[0]].values
-                for j in range(fo_num):
-                    fo = sta[data_name[j+1]].values
+                if fo_num>0:
+                    for j in range(fo_num):
+                        fo = sta[data_name[j+1]].values
+                        if para1 is None:
+                            result[i, j] = method(ob, fo)
+                        else:
+                            result[i,j] = method(ob, fo,para1)
+                else:
                     if para1 is None:
-                        result[i, j] = method(ob, fo)
+                        result[i] = method(ob, None)
                     else:
-                        result[i,j] = method(ob, fo,para1)
+                        result[i] = method(ob, None,para1)
+
     result = result.squeeze()
     return result,group_list_list1
 
