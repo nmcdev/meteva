@@ -7,7 +7,12 @@ import pandas as pd
 import numpy as np
 
 
-
+def get_time_str_list(time_list):
+    str1 = nmc_verification.nmc_vf_base.tool.time_tools.get_time_str_one_by_one(time_list[0])
+    time_str_list = [str1]
+    for i in range(1,len(time_list)):
+        time_str_list.append(nmc_verification.nmc_vf_base.tool.time_tools.get_time_str_one_by_one(time_list[i],time_list[i-1]))
+    return time_str_list
 
 def get_save_path(save_dir,method,group_by,group_list,model_name,type,discription = None):
 
@@ -162,22 +167,17 @@ def get_unique_coods(sta):
         discription = "\n("+discription[0:-1]+")"
     return discription
 
-class group_by:
-    level: "level"
-    time : "time"
-    year : "year"
-    month: "month"
-    day:"day"
-    dayofyear:"dayofyear"
-    hour :"hour"
-    ob_time:"ob_time"
-    ob_year:"ob_year"
-    ob_month:"ob_month"
-    ob_day:"ob_day"
-    ob_dayofyear:"ob_dayofyear"
-    ob_hour:"ob_hour"
-    dtime:"dtime"
-    dday:"dday"
-    dhour:"dhour"
-    id:"id"
 
+def get_group_name(group_list_list):
+    group_name = []
+    for group_list in group_list_list:
+        if isinstance(group_list,list):
+            str1 = str(group_list)
+            if len(str1)<10:
+                str2 = str1
+            else:
+                str2 = str1[0:3]+"..."+str1[-3:]
+        else:
+            str2 = str(group_list)
+        group_name.append(str2)
+    return group_name
