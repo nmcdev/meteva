@@ -5,7 +5,7 @@ from setuptools import find_packages, setup
 from codecs import open
 name = "nmc_verification"
 author ="liucouhua,wangbaoli,zhanglianyi"
-version ="1.1.30"
+version ="1.1.31"
 
 here = path.abspath(path.dirname(__file__))
 
@@ -45,7 +45,8 @@ setup(
                       'matplotlib>=3.0.1',
                       "httplib2>=0.12.0",
                       "protobuf>=3.6.1",
-                      "netCDF4>=1.5.1.2",
-                      "seaborn>=0.9.0"
+                      "netCDF4>=1.4.2",
+                      "seaborn>=0.9.0",
+                      "ipywidgets>=7.5.1"
                       ]
 )
