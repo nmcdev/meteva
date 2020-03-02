@@ -173,7 +173,6 @@ def read_stadata_from_txt(filename, columns , skiprows=0, drop_same_id=True):
         print(filename + " not exist")
         return None
 
-
 def read_stadata_from_sevp(filename0, element_id,level=None,time=None,data_name = "data0"):
     '''
     兼容多个时次的预报产品文件 txt格式
@@ -340,7 +339,7 @@ def read_gds_ip_port(filename):
     file.close()
     return ip,port
 
-def read_stadata_from_gds(ip, port, filename,element_id,station = None, level=None,time=None, dtime=None, data_name='data0'):
+def read_stadata_from_gds(ip, port, filename,element_id = None,station = None, level=None,time=None, dtime=None, data_name='data0'):
     '''
     :param ip: 为字符串形式，示例 “10.20.30.40”
     :param port: 为整数形式 示例 8080
@@ -355,8 +354,13 @@ def read_stadata_from_gds(ip, port, filename,element_id,station = None, level=No
     service = GDSDataService(ip, port)
 
     # get data file name
-    element_id_str0 = str(element_id)
+    element_id0 = element_id
+    if element_id is not None:
+        element_id_str0 = str(element_id)
+
     try:
+        filename = filename.replace("mdfs:///", "")
+        filename = filename.replace("\\","/")
         status, response = service.getData(directory, filename)
     except ValueError:
         print('Can not retrieve data' + filename + ' from ' + directory)
@@ -366,6 +370,7 @@ def read_stadata_from_gds(ip, port, filename,element_id,station = None, level=No
         ByteArrayResult.ParseFromString(response)
         if ByteArrayResult is not None:
             byteArray = ByteArrayResult.byteArray
+
             # define head structure
             head_dtype = [('discriminator', 'S4'), ('type', 'i2'),
                           ('description', 'S100'),
@@ -376,6 +381,7 @@ def read_stadata_from_gds(ip, port, filename,element_id,station = None, level=No
 
             # read head information
             head_info = np.frombuffer(byteArray[0:288], dtype=head_dtype)
+
             if time is None:
                 time = datetime.datetime(
                     head_info['year'][0], head_info['month'][0],
@@ -414,10 +420,20 @@ def read_stadata_from_gds(ip, port, filename,element_id,station = None, level=No
                 element_map[element_id] = element_type_map[element_type]
                 element_map_len[element_id] = int(element_type_map[element_type][1])
 
-
-
-
+            if element_id0 is None:
+                dict0 = {}
+                id_dict = nmc_verification.nmc_vf_base.gds_element_id_dict
+                for key in element_map.keys():
+                    if (int(key) in id_dict.values()):
+                        for ele in id_dict.keys():
+                            if int(key) == id_dict[ele]:
+                                dict0[ele] = key
+                if len(dict0.keys()) > 1:
+                    print("element_id can not be None for this file")
+                else:
+                    element_id_str0 = list(dict0.values())[0]
             dtype_str = element_map[element_id_str0]
+
 
             # loop every station to retrieve record
             record_head_dtype = [
@@ -497,6 +513,498 @@ def read_stadata_from_gds(ip, port, filename,element_id,station = None, level=No
         return None
 
 
+
+
+def read_stadata_from_gdsfile(filename,element_id = None,station = None, level=None,time=None, dtime=None, data_name='data0'):
+
+    element_id0 = element_id
+    if element_id is not None:
+        element_id_str0 = str(element_id)
+
+    if os.path.exists(filename):
+        element_id_str0 = str(element_id)
+        file = open(filename,"rb")
+        byteArray = file.read()
+        # define head structure
+        head_dtype = [('discriminator', 'S4'), ('type', 'i2'),
+                      ('description', 'S100'),
+                      ('level', 'f4'), ('levelDescription', 'S50'),
+                      ('year', 'i4'), ('month', 'i4'), ('day', 'i4'),
+                      ('hour', 'i4'), ('minute', 'i4'), ('second', 'i4'),
+                      ('Timezone', 'i4'), ('extent', 'S100')]
+
+        # read head information
+        head_info = np.frombuffer(byteArray[0:288], dtype=head_dtype)
+        if time is None:
+            time = datetime.datetime(
+                head_info['year'][0], head_info['month'][0],
+                head_info['day'][0], head_info['hour'][0],
+                head_info['minute'][0], head_info['second'][0])
+        if level is None:
+            level = head_info["level"][0]
+        if dtime is None:
+            filename1 = os.path.split(filename)[1].split(".")
+            dtime = int(filename1[1])
+        ind = 288
+        # read the number of stations
+        station_number = np.frombuffer(
+            byteArray[ind:(ind+4)], dtype='i4')[0]
+        ind += 4
+
+        # read the number of elements
+        element_number = np.frombuffer(
+            byteArray[ind:(ind+2)], dtype='i2')[0]
+
+        if element_number == 0:
+            return None
+        ind += 2
+
+        # construct record structure
+        element_type_map = {
+            1: 'b1', 2: 'i2', 3: 'i4', 4: 'i8', 5: 'f4', 6: 'f8', 7: 'S1'}
+        element_map = {}
+        element_map_len = {}
+        for i in range(element_number):
+            element_id = str(np.frombuffer(byteArray[ind:(ind+2)], dtype='i2')[0])
+            ind += 2
+            element_type = np.frombuffer(
+                byteArray[ind:(ind+2)], dtype='i2')[0]
+            ind += 2
+            element_map[element_id] = element_type_map[element_type]
+            element_map_len[element_id] = int(element_type_map[element_type][1])
+
+        if element_id0 is None:
+            dict0 = {}
+            id_dict = nmc_verification.nmc_vf_base.gds_element_id_dict
+            for key in element_map.keys():
+                if (int(key) in id_dict.values()):
+                    for ele in id_dict.keys():
+                        if int(key) == id_dict[ele]:
+                            dict0[ele] = key
+            if len(dict0.keys())>1:
+                print("element_id can not be None for this file" )
+            else:
+                element_id_str0 = list(dict0.values())[0]
+        dtype_str = element_map[element_id_str0]
+
+        # loop every station to retrieve record
+        record_head_dtype = [
+            ('id', 'i4'), ('lon', 'f4'), ('lat', 'f4'), ('numb', 'i2')]
+        records = []
+        if station is None or len(station.index) * 100 > station_number:
+            for i in range(station_number):
+                record_head = np.frombuffer(
+                    byteArray[ind:(ind+14)], dtype=record_head_dtype)
+                ind += 14
+                record = {
+                    'id': record_head['id'][0], 'lon': record_head['lon'][0],
+                    'lat': record_head['lat'][0]}
+                for j in range(record_head['numb'][0]):    # the record element number is not same, missing value is not included.
+                    element_id = str(np.frombuffer(byteArray[ind:(ind + 2)], dtype='i2')[0])
+                    ind += 2
+                    element_len = element_map_len[element_id]
+                    if element_id == element_id_str0:
+                        record[data_name] = np.frombuffer(
+                            byteArray[ind:(ind + element_len)],
+                            dtype=dtype_str)[0]
+                        records.append(record)
+                    ind += element_len
+            records = pd.DataFrame(records)
+            records.set_index('id')
+            # get time
+
+            records['time'] = time
+            records['level'] = level
+            records['dtime'] = dtime
+            new_columns = ['level', 'time', 'dtime', 'id', 'lon', 'lat', data_name]
+            records = records.reindex(columns=new_columns)
+            if station is None:
+                return records
+            else:
+                sta = nmc_verification.nmc_vf_base.put_stadata_on_station(records, station)
+                return sta
+        else:
+            sta = copy.deepcopy(station)
+            byte_num = len(byteArray)
+            i4_num = (byte_num - ind -4) //4
+            ids = np.zeros((i4_num,4),dtype=np.int32)
+
+            ids[:, 0] = np.frombuffer(byteArray[ind:(ind + i4_num * 4)], dtype='i4')
+            ids[:, 1] = np.frombuffer(byteArray[(ind +1):(ind + 1 + i4_num * 4)], dtype='i4')
+            ids[:, 2] = np.frombuffer(byteArray[(ind + 2):(ind + 2 + i4_num * 4)], dtype='i4')
+            ids[:, 3] = np.frombuffer(byteArray[(ind + 3):(ind + 3 + i4_num * 4)], dtype='i4')
+            ids = ids.flatten()
+            station_ids = station["id"].values
+            dat = np.zeros(station_ids.size)
+
+            for k in range(dat.size):
+                id1 = station_ids[k]
+                indexs = np.where(ids == id1)
+                if len(indexs[0]) >=1:
+                    for n in range(len(indexs)):
+                        ind1 =ind +  indexs[n][0]
+                        record_head = np.frombuffer(byteArray[ind1:(ind1 + 14)], dtype=record_head_dtype)
+                        if(record_head['lon'][0] >=-180 and record_head['lon'][0] <= 360 and
+                                record_head['lat'][0] >= -90 and record_head['lat'][0] <= 90 and record_head["numb"][0] < 1000):
+                            ind1 += 14
+                            for j in range(record_head['numb'][0]):  # the record element number is not same, missing value is not included.
+                                element_id = str(np.frombuffer(byteArray[ind1:(ind1 + 2)], dtype='i2')[0])
+                                ind1 += 2
+                                element_len = element_map_len[element_id]
+                                if element_id == element_id_str0:
+                                    sta.iloc[k,-1] = np.frombuffer(byteArray[ind1:(ind1 + element_len)],dtype=dtype_str)[0]
+                                ind1 += element_len
+            nmc_verification.nmc_vf_base.set_stadata_names(sta,[data_name])
+            sta['time'] = time
+            sta['level'] = level
+            sta['dtime'] = dtime
+            return sta
+    else:
+        print(filename + " not exist")
+
+
+def read_stawind_from_gds(ip,port,filename,station = None, level=None,time=None, dtime=None):
+    directory, filename = os.path.split(filename)
+    # connect to data service
+    service = GDSDataService(ip, port)
+
+    try:
+        filename = filename.replace("mdfs:///", "")
+        filename = filename.replace("\\","/")
+        print(filename)
+        status, response = service.getData(directory, filename)
+
+    except ValueError:
+        print('Can not retrieve data' + filename + ' from ' + directory)
+        return None
+    ByteArrayResult = DataBlock_pb2.ByteArrayResult()
+    if status == 200:
+        ByteArrayResult.ParseFromString(response)
+        if ByteArrayResult is not None:
+            byteArray = ByteArrayResult.byteArray
+
+            head_dtype = [('discriminator', 'S4'), ('type', 'i2'),
+                      ('description', 'S100'),
+                      ('level', 'f4'), ('levelDescription', 'S50'),
+                      ('year', 'i4'), ('month', 'i4'), ('day', 'i4'),
+                      ('hour', 'i4'), ('minute', 'i4'), ('second', 'i4'),
+                      ('Timezone', 'i4'), ('extent', 'S100')]
+            if(len(byteArray)<300):
+                return None
+            # read head information
+            head_info = np.frombuffer(byteArray[0:288], dtype=head_dtype)
+            if time is None:
+                time = datetime.datetime(
+                    head_info['year'][0], head_info['month'][0],
+                    head_info['day'][0], head_info['hour'][0],
+                    head_info['minute'][0], head_info['second'][0])
+            if level is None:
+                level = head_info["level"][0]
+            if dtime is None:
+                filename1 = os.path.split(filename)[1].split(".")
+                dtime = int(filename1[1])
+            ind = 288
+            # read the number of stations
+            station_number = np.frombuffer(
+                byteArray[ind:(ind+4)], dtype='i4')[0]
+            ind += 4
+
+            # read the number of elements
+            element_number = np.frombuffer(
+                byteArray[ind:(ind+2)], dtype='i2')[0]
+
+            if element_number == 0:
+                return None
+            ind += 2
+
+            # construct record structure
+            element_type_map = {
+                1: 'b1', 2: 'i2', 3: 'i4', 4: 'i8', 5: 'f4', 6: 'f8', 7: 'S1'}
+            element_map = {}
+            element_map_len = {}
+            for i in range(element_number):
+                element_id = str(np.frombuffer(byteArray[ind:(ind+2)], dtype='i2')[0])
+                ind += 2
+                element_type = np.frombuffer(
+                    byteArray[ind:(ind+2)], dtype='i2')[0]
+                ind += 2
+                element_map[element_id] = element_type_map[element_type]
+                element_map_len[element_id] = int(element_type_map[element_type][1])
+
+            dict0 = {}
+            id_dict = nmc_verification.nmc_vf_base.gds_element_id_dict
+
+
+
+            speed_id = -1
+            angle_id = -1
+            for key in element_map.keys():
+                if (int(key) in id_dict.values()):
+                    for ele in id_dict.keys():
+                        if int(key) == id_dict[ele]:
+                            dict0[ele] = key
+                            if ele.find("风速")>0:
+                                speed_id = key
+                                print(ele)
+                            if ele.find("风向")>0:
+                                angle_id = key
+                                print(ele)
+
+            if speed_id == -1 or angle_id == -1:
+                print("the file doesn't contains wind")
+            dtype_str_speed = element_map[speed_id]
+            dtype_str_angle = element_map[angle_id]
+
+            # loop every station to retrieve record
+            record_head_dtype = [
+                ('id', 'i4'), ('lon', 'f4'), ('lat', 'f4'), ('numb', 'i2')]
+            records = []
+            if station is None or len(station.index) * 100 > station_number:
+                for i in range(station_number):
+                    record_head = np.frombuffer(
+                        byteArray[ind:(ind+14)], dtype=record_head_dtype)
+                    ind += 14
+                    record = {
+                        'id': record_head['id'][0], 'lon': record_head['lon'][0],
+                        'lat': record_head['lat'][0]}
+                    for j in range(record_head['numb'][0]):    # the record element number is not same, missing value is not included.
+                        element_id = str(np.frombuffer(byteArray[ind:(ind + 2)], dtype='i2')[0])
+                        ind += 2
+                        element_len = element_map_len[element_id]
+                        hadwind = False
+                        if element_id == speed_id:
+                            record["speed"] = np.frombuffer(
+                                byteArray[ind:(ind + element_len)],
+                                dtype=dtype_str_speed)[0]
+                            hadwind = True
+                        if element_id == angle_id:
+                            record["angle"] = np.frombuffer(
+                                byteArray[ind:(ind + element_len)],
+                                dtype=dtype_str_angle)[0]
+                            hadwind = True
+                        if hadwind:
+                            records.append(record)
+                        ind += element_len
+                records = pd.DataFrame(records)
+                records.set_index('id')
+                # get time
+
+                records['time'] = time
+                records['level'] = level
+                records['dtime'] = dtime
+                new_columns = ['level', 'time', 'dtime', 'id', 'lon', 'lat', "speed","angle"]
+                records = records.reindex(columns=new_columns)
+                if station is None:
+                    return records
+                else:
+                    sta = nmc_verification.nmc_vf_base.put_stadata_on_station(records, station)
+                    return sta
+            else:
+                sta = copy.deepcopy(station)
+                nmc_verification.nmc_vf_base.set_stadata_names(sta,["speed"])
+                sta["angle"] = nmc_verification.nmc_vf_base.IV
+                byte_num = len(byteArray)
+                i4_num = (byte_num - ind -4) //4
+                ids = np.zeros((i4_num,4),dtype=np.int32)
+
+                ids[:, 0] = np.frombuffer(byteArray[ind:(ind + i4_num * 4)], dtype='i4')
+                ids[:, 1] = np.frombuffer(byteArray[(ind +1):(ind + 1 + i4_num * 4)], dtype='i4')
+                ids[:, 2] = np.frombuffer(byteArray[(ind + 2):(ind + 2 + i4_num * 4)], dtype='i4')
+                ids[:, 3] = np.frombuffer(byteArray[(ind + 3):(ind + 3 + i4_num * 4)], dtype='i4')
+                ids = ids.flatten()
+                station_ids = station["id"].values
+                dat = np.zeros(station_ids.size)
+
+                for k in range(dat.size):
+                    id1 = station_ids[k]
+                    indexs = np.where(ids == id1)
+                    if len(indexs[0]) >=1:
+                        for n in range(len(indexs)):
+                            ind1 =ind +  indexs[n][0]
+                            record_head = np.frombuffer(byteArray[ind1:(ind1 + 14)], dtype=record_head_dtype)
+                            if(record_head['lon'][0] >=-180 and record_head['lon'][0] <= 360 and
+                                    record_head['lat'][0] >= -90 and record_head['lat'][0] <= 90 and record_head["numb"][0] < 1000):
+                                ind1 += 14
+                                for j in range(record_head['numb'][0]):  # the record element number is not same, missing value is not included.
+                                    element_id = str(np.frombuffer(byteArray[ind1:(ind1 + 2)], dtype='i2')[0])
+                                    ind1 += 2
+                                    element_len = element_map_len[element_id]
+                                    if element_id == speed_id:
+                                        sta.iloc[k,-2] = np.frombuffer(byteArray[ind1:(ind1 + element_len)],dtype=dtype_str_speed)[0]
+                                    if element_id == angle_id:
+                                        sta.iloc[k,-1] = np.frombuffer(byteArray[ind1:(ind1 + element_len)],dtype=dtype_str_angle)[0]
+                                    ind1 += element_len
+                sta['time'] = time
+                sta['level'] = level
+                sta['dtime'] = dtime
+                return sta
+        else:
+            print(filename + " not exist")
+
+
+def read_stawind_from_gdsfile(filename,station = None, level=None,time=None, dtime=None):
+    if os.path.exists(filename):
+        file = open(filename,"rb")
+        byteArray = file.read()
+        # define head structure
+        head_dtype = [('discriminator', 'S4'), ('type', 'i2'),
+                      ('description', 'S100'),
+                      ('level', 'f4'), ('levelDescription', 'S50'),
+                      ('year', 'i4'), ('month', 'i4'), ('day', 'i4'),
+                      ('hour', 'i4'), ('minute', 'i4'), ('second', 'i4'),
+                      ('Timezone', 'i4'), ('extent', 'S100')]
+
+        # read head information
+        head_info = np.frombuffer(byteArray[0:288], dtype=head_dtype)
+        if time is None:
+            time = datetime.datetime(
+                head_info['year'][0], head_info['month'][0],
+                head_info['day'][0], head_info['hour'][0],
+                head_info['minute'][0], head_info['second'][0])
+        if level is None:
+            level = head_info["level"][0]
+        if dtime is None:
+            filename1 = os.path.split(filename)[1].split(".")
+            dtime = int(filename1[1])
+        ind = 288
+        # read the number of stations
+        station_number = np.frombuffer(
+            byteArray[ind:(ind+4)], dtype='i4')[0]
+        ind += 4
+
+        # read the number of elements
+        element_number = np.frombuffer(
+            byteArray[ind:(ind+2)], dtype='i2')[0]
+
+        if element_number == 0:
+            return None
+        ind += 2
+
+        # construct record structure
+        element_type_map = {
+            1: 'b1', 2: 'i2', 3: 'i4', 4: 'i8', 5: 'f4', 6: 'f8', 7: 'S1'}
+        element_map = {}
+        element_map_len = {}
+        for i in range(element_number):
+            element_id = str(np.frombuffer(byteArray[ind:(ind+2)], dtype='i2')[0])
+            ind += 2
+            element_type = np.frombuffer(
+                byteArray[ind:(ind+2)], dtype='i2')[0]
+            ind += 2
+            element_map[element_id] = element_type_map[element_type]
+            element_map_len[element_id] = int(element_type_map[element_type][1])
+
+        dict0 = {}
+        id_dict = nmc_verification.nmc_vf_base.gds_element_id_dict
+
+
+
+        speed_id = -1
+        angle_id = -1
+        for key in element_map.keys():
+            if (int(key) in id_dict.values()):
+                for ele in id_dict.keys():
+                    if int(key) == id_dict[ele]:
+                        dict0[ele] = key
+                        if ele.find("风速")>0:
+                            speed_id = key
+                            print(ele)
+                        if ele.find("风向")>0:
+                            angle_id = key
+                            print(ele)
+
+        if speed_id == -1 or angle_id == -1:
+            print("the file doesn't contains wind")
+        dtype_str_speed = element_map[speed_id]
+        dtype_str_angle = element_map[angle_id]
+
+        # loop every station to retrieve record
+        record_head_dtype = [
+            ('id', 'i4'), ('lon', 'f4'), ('lat', 'f4'), ('numb', 'i2')]
+        records = []
+        if station is None or len(station.index) * 100 > station_number:
+            for i in range(station_number):
+                record_head = np.frombuffer(
+                    byteArray[ind:(ind+14)], dtype=record_head_dtype)
+                ind += 14
+                record = {
+                    'id': record_head['id'][0], 'lon': record_head['lon'][0],
+                    'lat': record_head['lat'][0]}
+                for j in range(record_head['numb'][0]):    # the record element number is not same, missing value is not included.
+                    element_id = str(np.frombuffer(byteArray[ind:(ind + 2)], dtype='i2')[0])
+                    ind += 2
+                    element_len = element_map_len[element_id]
+                    hadwind = False
+                    if element_id == speed_id:
+                        record["speed"] = np.frombuffer(
+                            byteArray[ind:(ind + element_len)],
+                            dtype=dtype_str_speed)[0]
+                        hadwind = True
+                    if element_id == angle_id:
+                        record["angle"] = np.frombuffer(
+                            byteArray[ind:(ind + element_len)],
+                            dtype=dtype_str_angle)[0]
+                        hadwind = True
+                    if hadwind:
+                        records.append(record)
+                    ind += element_len
+            records = pd.DataFrame(records)
+            records.set_index('id')
+            # get time
+
+            records['time'] = time
+            records['level'] = level
+            records['dtime'] = dtime
+            new_columns = ['level', 'time', 'dtime', 'id', 'lon', 'lat', "speed","angle"]
+            records = records.reindex(columns=new_columns)
+            if station is None:
+                return records
+            else:
+                sta = nmc_verification.nmc_vf_base.put_stadata_on_station(records, station)
+                return sta
+        else:
+            sta = copy.deepcopy(station)
+            nmc_verification.nmc_vf_base.set_stadata_names(sta,["speed"])
+            sta["angle"] = nmc_verification.nmc_vf_base.IV
+            byte_num = len(byteArray)
+            i4_num = (byte_num - ind -4) //4
+            ids = np.zeros((i4_num,4),dtype=np.int32)
+
+            ids[:, 0] = np.frombuffer(byteArray[ind:(ind + i4_num * 4)], dtype='i4')
+            ids[:, 1] = np.frombuffer(byteArray[(ind +1):(ind + 1 + i4_num * 4)], dtype='i4')
+            ids[:, 2] = np.frombuffer(byteArray[(ind + 2):(ind + 2 + i4_num * 4)], dtype='i4')
+            ids[:, 3] = np.frombuffer(byteArray[(ind + 3):(ind + 3 + i4_num * 4)], dtype='i4')
+            ids = ids.flatten()
+            station_ids = station["id"].values
+            dat = np.zeros(station_ids.size)
+
+            for k in range(dat.size):
+                id1 = station_ids[k]
+                indexs = np.where(ids == id1)
+                if len(indexs[0]) >=1:
+                    for n in range(len(indexs)):
+                        ind1 =ind +  indexs[n][0]
+                        record_head = np.frombuffer(byteArray[ind1:(ind1 + 14)], dtype=record_head_dtype)
+                        if(record_head['lon'][0] >=-180 and record_head['lon'][0] <= 360 and
+                                record_head['lat'][0] >= -90 and record_head['lat'][0] <= 90 and record_head["numb"][0] < 1000):
+                            ind1 += 14
+                            for j in range(record_head['numb'][0]):  # the record element number is not same, missing value is not included.
+                                element_id = str(np.frombuffer(byteArray[ind1:(ind1 + 2)], dtype='i2')[0])
+                                ind1 += 2
+                                element_len = element_map_len[element_id]
+                                if element_id == speed_id:
+                                    sta.iloc[k,-2] = np.frombuffer(byteArray[ind1:(ind1 + element_len)],dtype=dtype_str_speed)[0]
+                                if element_id == angle_id:
+                                    sta.iloc[k,-1] = np.frombuffer(byteArray[ind1:(ind1 + element_len)],dtype=dtype_str_angle)[0]
+                                ind1 += element_len
+            sta['time'] = time
+            sta['level'] = level
+            sta['dtime'] = dtime
+            return sta
+    else:
+        return None
+
+
 def read_stadata_from_gds_griddata(ip,port,filename,station):
     # ip 为字符串形式，示例 “10.20.30.40”
     # port 为整数形式
@@ -507,6 +1015,8 @@ def read_stadata_from_gds_griddata(ip,port,filename,station):
         if(service is None):
             print("service is None")
             return
+        filename = filename.replace("mdfs:///", "")
+        filename = filename.replace("\\","/")
         directory,fileName = os.path.split(filename)
         status, response = service.getData(directory, fileName)
         ByteArrayResult = DataBlock_pb2.ByteArrayResult()
@@ -558,59 +1068,73 @@ def read_stadata_from_gds_griddata(ip,port,filename,station):
         return None
 
 
-def print_gds_file_values_names(ip,port,filename):
+
+def print_gds_file_values_names(filename,ip = None,port = None):
     # ip 为字符串形式，示例 “10.20.30.40”
     # port 为整数形式
     # filename 为字符串形式 示例 "ECMWF_HR/TCDC/19083108.000"
     value_id_list= []
-    service = GDSDataService(ip, port)
-    try:
-        directory, fileName = os.path.split(filename)
-        status, response = service.getData(directory, fileName)
-        ByteArrayResult = DataBlock_pb2.ByteArrayResult()
-        if status == 200:
-            ByteArrayResult.ParseFromString(response)
-            if ByteArrayResult is not None:
-                byteArray = ByteArrayResult.byteArray
-                nsta = struct.unpack("i", byteArray[288:292])[0]
-                id_num = struct.unpack("h", byteArray[292:294])[0]
-                id_tpye = {}
-                for i in range(id_num):
-                    element_id0 = struct.unpack("h", byteArray[294 + i * 4:296 + i * 4])[0]
-                    id_tpye[element_id0] = struct.unpack("h", byteArray[296 + i * 4:298 + i * 4])[0]
-                station_data_dict = OrderedDict()
-                index = 294 + id_num * 4
-                type_lenght_dict = {1: 1, 2: 2, 3: 4, 4: 4, 5: 4, 6: 8, 7: 1}
-                type_str_dict = {1: 'b', 2: 'h', 3: 'i', 4: 'l', 5: 'f', 6: 'd', 7: 'c'}
+    filename = filename.replace("mdfs:///", "")
+    filename = filename.replace("\\", "/")
 
-                for i in range(nsta):
-                    one_station_dat = {}
-                    one_station_dat["id"] = str(struct.unpack("i", byteArray[index: index + 4])[0])
-                    index += 4
-                    one_station_dat['lon'] = struct.unpack("f", byteArray[index: index + 4])[0]
-                    index += 4
-                    one_station_dat['lat'] = (struct.unpack("f", byteArray[index: index + 4])[0])
-                    index += 4
-                    value_num = struct.unpack("h", byteArray[index:index + 2])[0]
-                    index += 2
-                    values = {}
-                    for j in range(value_num):
-                        id = struct.unpack("h", byteArray[index:index + 2])[0]
-                        index += 2
-                        id_tpye0 = id_tpye[id]
-                        dindex = type_lenght_dict[id_tpye0]
-                        type_str = type_str_dict[id_tpye0]
-                        index += dindex
-                        value_id_list.append(id)
-            value_id_set = set(value_id_list)
-            id_dict = nmc_verification.nmc_vf_base.gds_element_id_dict
-            for value_id in value_id_set:
-                for ele in id_dict.keys():
-                    if value_id == id_dict[ele]:
-                        print(ele)
-    except:
-        exstr = traceback.format_exc()
-        print(exstr)
+    if ip is not None:
+        service = GDSDataService(ip, port)
+        try:
+            directory, fileName = os.path.split(filename)
+            status, response = service.getData(directory, fileName)
+            ByteArrayResult = DataBlock_pb2.ByteArrayResult()
+            if status == 200:
+                ByteArrayResult.ParseFromString(response)
+                if ByteArrayResult is not None:
+                    byteArray = ByteArrayResult.byteArray
+        except:
+            exstr = traceback.format_exc()
+            print(exstr)
+    else:
+        file = open(filename, "rb")
+        byteArray = file.read()
+
+    ind = 288
+    # read the number of stations
+    station_number = np.frombuffer(
+        byteArray[ind:(ind + 4)], dtype='i4')[0]
+    ind += 4
+
+    # read the number of elements
+    element_number = np.frombuffer(
+        byteArray[ind:(ind + 2)], dtype='i2')[0]
+
+    if element_number == 0:
+        return None
+    ind += 2
+
+    # construct record structure
+    element_type_map = {
+        1: 'b1', 2: 'i2', 3: 'i4', 4: 'i8', 5: 'f4', 6: 'f8', 7: 'S1'}
+    element_map = {}
+    element_map_len = {}
+    for i in range(element_number):
+        element_id = str(np.frombuffer(byteArray[ind:(ind + 2)], dtype='i2')[0])
+        ind += 2
+        element_type = np.frombuffer(
+            byteArray[ind:(ind + 2)], dtype='i2')[0]
+        ind += 2
+        element_map[element_id] = element_type_map[element_type]
+        element_map_len[element_id] = int(element_type_map[element_type][1])
+    id_dict = nmc_verification.nmc_vf_base.gds_element_id_dict
+
+    dict0 = {}
+    for key in element_map.keys():
+        if(int(key) in id_dict.values()):
+            for ele in id_dict.keys():
+                if int(key) == id_dict[ele]:
+                    dict0[ele] = int(key)
+                    print(ele + ":" + key)
+    return dict0
+
+
+
+
 
 def read_stadata_from_micaps16(filename):
     if os.path.exists(filename):
@@ -703,6 +1227,77 @@ def read_stadata_from_gds_griddata_file(filename,station):
         sta.loc[:, "level"] = 0
         sta.loc[:, "dtime"] = int(filename1[1])
         file.close()
+        return sta
+    else:
+        return None
+
+import time
+def read_stawind_from_gds_gridwind_file(filename,station):
+    begin = time.time()
+    if os.path.exists(filename):
+        file = open(filename, "rb")
+        position = file.seek(134)
+        content = file.read(32)
+        slon, elon, dlon, nlon, slat, elat, dlat, nlat = struct.unpack("fffifffi", content)
+        nsta = len(station.index)
+        ig = ((station['lon'].values - slon) // dlon).astype(dtype='int32')
+        jg = ((station['lat'].values - slat) // dlat).astype(dtype='int32')
+        dx = (station['lon'].values - slon) / dlon - ig
+        dy = (station['lat'].values - slat) / dlat - jg
+        c00 = (1 - dx) * (1 - dy)
+        c01 = dx * (1 - dy)
+        c10 = (1 - dx) * dy
+        c11 = dx * dy
+        ig1 = np.minimum(ig + 1, nlon - 1)
+        jg1 = np.minimum(jg + 1, nlat - 1)
+        i00 = (nlon * jg + ig)
+        i01 = nlon * jg + ig1
+        i10 = nlon * jg1 + ig
+        i11 = nlon * jg1 + ig1
+        udata = np.zeros(nsta)
+        vdata = np.zeros(nsta)
+        i_s0 = 278
+        i_s1 = i_s0 + nlon * nlat * 4
+
+        for i in range(nsta):
+            position = file.seek(i00[i] * 4 + i_s0)
+            content = file.read(4)
+            dat00 = np.frombuffer(content, dtype='float32')
+            position = file.seek(i01[i] * 4 + i_s0)
+            content = file.read(4)
+            dat01 = np.frombuffer(content, dtype='float32')
+            position = file.seek(i10[i] * 4 + i_s0)
+            content = file.read(4)
+            dat10 = np.frombuffer(content, dtype='float32')
+            position = file.seek(i11[i] * 4 + i_s0)
+            content = file.read(4)
+            dat11 = np.frombuffer(content, dtype='float32')
+            udata[i] = c00[i] * dat00 + c01[i] * dat01 + c10[i] * dat10 + c11[i] * dat11
+
+            position = file.seek(i00[i] * 4 + i_s1)
+            content = file.read(4)
+            dat00 = np.frombuffer(content, dtype='float32')
+            position = file.seek(i01[i] * 4 + i_s1)
+            content = file.read(4)
+            dat01 = np.frombuffer(content, dtype='float32')
+            position = file.seek(i10[i] * 4 + i_s1)
+            content = file.read(4)
+            dat10 = np.frombuffer(content, dtype='float32')
+            position = file.seek(i11[i] * 4 + i_s1)
+            content = file.read(4)
+            dat11 = np.frombuffer(content, dtype='float32')
+            vdata[i] = c00[i] * dat00 + c01[i] * dat01 + c10[i] * dat10 + c11[i] * dat11
+
+        sta = copy.deepcopy(station)
+        sta.iloc[:, -1] = udata[:]
+        sta["v"] = vdata
+        filename1 = os.path.split(filename)[1].split(".")
+        sta.loc[:, "time"] = datetime.datetime(2099, 1, 1, 8, 0)
+        sta.loc[:, "level"] = 0
+        sta.loc[:, "dtime"] = int(filename1[1])
+        nmc_verification.nmc_vf_base.set_stadata_names(sta,["speed","angle"])
+        file.close()
+        print(time.time() - begin)
         return sta
     else:
         return None
