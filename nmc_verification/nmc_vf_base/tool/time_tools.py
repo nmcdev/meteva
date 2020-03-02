@@ -175,7 +175,7 @@ def get_time_of_path(path_model,path):
 
 def get_time_str_one_by_one(time1,time0 = None):
     if time0 is None:
-        time2 = nmc_verification.nmc_vf_base.tool.time_tools.all_type_time_to_datetime(time1)
+        time2 = all_type_time_to_datetime(time1)
         if time2.hour == 0 and time2.minute == 0:
 
             time_str = time2.strftime('%Y{y}%m{m}%d{d}').format(y='年', m='月', d='日')
@@ -184,8 +184,8 @@ def get_time_str_one_by_one(time1,time0 = None):
         else:
             time_str = time2.strftime('%Y{y}%m{m}%d{d}%H{h}%M{mi}').format(y='年', m='月', d='日',h='时',mi = '分')
     else:
-        time00 = nmc_verification.nmc_vf_base.tool.time_tools.all_type_time_to_datetime(time0)
-        time2 = nmc_verification.nmc_vf_base.tool.time_tools.all_type_time_to_datetime(time1)
+        time00 = all_type_time_to_datetime(time0)
+        time2 = all_type_time_to_datetime(time1)
         if time2.year != time00.year:
             if time2.hour == 0 and time2.minute == 0:
                 time_str = time1.strftime('%Y{y}%m{m}%d{d}').format(y='年', m='月', d='日')

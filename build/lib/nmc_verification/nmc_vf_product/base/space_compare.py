@@ -438,7 +438,7 @@ def rain_24h_comprehensive_chinaland_sg(sta_ob,grd_fo,  save_path=None):
     grid_fo = nmc_verification.nmc_vf_base.get_grid_of_data(grd_fo)
     fig = plt.figure(figsize=(10, 7))
     # 平面对比图
-    rect1 = [0.00, 0.41, 0.7, 0.55]  # 左下宽高
+    rect1 = [0.05, 0.43, 0.65, 0.53]  # 左下宽高
     map_area = 70 * 0.41 * 0.55
     ax = plt.axes(rect1)
     # 设置地图背景
@@ -455,7 +455,7 @@ def rain_24h_comprehensive_chinaland_sg(sta_ob,grd_fo,  save_path=None):
     dat = grd_fo.values.squeeze()
     plot_grid = ax.contourf(x, y, dat, clevs, colors=colors_grid)  # 填色图
 
-    colorbar_position_grid = fig.add_axes([0.035, 0.93, 0.25, 0.015])  # 位置[左,下,宽,高]
+    colorbar_position_grid = fig.add_axes([0.085, 0.93, 0.25, 0.015])  # 位置[左,下,宽,高]
     plt.colorbar(plot_grid, cax=colorbar_position_grid, orientation='horizontal')
     plt.text(0.035, 0.955, "预报(mm)", fontsize=9)
     # 绘制填色站点值
@@ -619,7 +619,7 @@ def rain_24h_comprehensive_chinaland_sg(sta_ob,grd_fo,  save_path=None):
     plt.text(0, 0, text, fontsize=9)
 
     # 绘制统计检验结果
-    rect5 = [0.705, 0.01, 0.28, 0.97]  # 左下宽高
+    rect5 = [0.705, 0.08, 0.28, 0.85]  # 左下宽高
     ax5 = plt.axes(rect5)
     ax5.axes.set_axis_off()
 
@@ -675,7 +675,7 @@ def rain_24h_comprehensive_chinaland_sg(sta_ob,grd_fo,  save_path=None):
         else:
             bias_str = "%5.3f" % bias[i]
         text += "False alarm ratio:" + fal_rate_str + "  Bias:" + bias_str + "\n\n"
-    plt.text(0, 0.00, text, fontsize=11)
+    plt.text(0, 0.00, text, fontsize=10)
 
     # 图片显示或保存
     if (save_path is None):

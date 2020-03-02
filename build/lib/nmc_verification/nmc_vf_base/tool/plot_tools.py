@@ -168,12 +168,14 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = None):
             vmin = inte * ((int)(vmin / inte)-1)
             vmax = inte * ((int)(vmax / inte) + 2)
             clevs1 = np.arange(vmin,vmax,inte)
-
+        else:
+            clevs1 = clevs
         if cmap is None:
             cmap1 = plt.get_cmap("rainbow")
-
-    #im = ax.contourf(x, y, np.squeeze(grd.values),levels = clevs,cmap=cmap, transform=datacrs)
-    im = ax.contourf(x, y, np.squeeze(grd.values), levels=clevs1, cmap=cmap1)
+        else:
+            cmap1 = cmap
+    norm = BoundaryNorm(clevs1, ncolors=cmap1.N, clip=True)
+    im = ax.contourf(x, y, np.squeeze(grd.values), levels=clevs1, cmap=cmap1,norm = norm)
     left_low = (width - 1) / width
     colorbar_position = fig.add_axes([left_low, 0.11, 0.03, 0.77]) # 位置[左,下,宽,高]
     plt.colorbar(im,cax= colorbar_position)
@@ -245,7 +247,7 @@ def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = None
     rlon = x[-1] - x[0]
     rlat = y[-1] - y[0]
     height = 5
-    width = height * rlon / rlat + 1
+    width = height * rlon / rlat + 2
     fig = plt.figure(figsize=(width,height))
     grid0 = nmc_verification.nmc_vf_base.get_grid_of_data(grd)
     ax = plt.axes()
@@ -290,9 +292,13 @@ def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = None
             vmin = inte * ((int)(vmin / inte)-1)
             vmax = inte * ((int)(vmax / inte) + 2)
             clevs1 = np.arange(vmin,vmax,inte)
+        else:
+            clevs1 = clevs
 
         if cmap is None:
             cmap1 = plt.get_cmap("rainbow")
+        else:
+            cmap1 = plt.get_cmap(cmap)
 
     norm = BoundaryNorm(clevs1, ncolors=cmap1.N, clip=True)
     im = ax.pcolormesh(x, y, np.squeeze(grd.values), cmap=cmap1,norm=norm)

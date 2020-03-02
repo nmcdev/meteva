@@ -354,6 +354,7 @@ def read_griddata_from_nc(filename,grid = None,value_name = None,member = None,l
                 lons = ds0.coords[lon]
             else:
                 lons = ds0[lon]
+                print(lons)
                 drop_list.append(lon)
 
             dims = lons.dims
@@ -561,35 +562,8 @@ def read_griddata_from_gds_file(filename,grid = None):
             return None
         file = open(filename, 'rb')
         byteArray = file.read()
-        discriminator = struct.unpack("4s", byteArray[:4])[0].decode("gb2312")
-        t = struct.unpack("h", byteArray[4:6])
-        mName = struct.unpack("20s", byteArray[6:26])[0].decode("gb2312")
-        eleName = struct.unpack("50s", byteArray[26:76])[0].decode("gb2312")
-        description = struct.unpack("30s", byteArray[76:106])[0].decode("gb2312")
-        level, y, m, d, h, timezone, period = struct.unpack("fiiiiii", byteArray[106:134])
-        startLon, endLon, lonInterval, lonGridCount = struct.unpack("fffi", byteArray[134:150])
-        startLat, endLat, latInterval, latGridCount = struct.unpack("fffi", byteArray[150:166])
-        isolineStartValue, isolineEndValue, isolineInterval = struct.unpack("fff", byteArray[166:178])
-        gridCount = lonGridCount * latGridCount
-        description = mName.rstrip('\x00') + '_' + eleName.rstrip('\x00') + "_" + str(
-            level) + '(' + description.rstrip('\x00') + ')' + ":" + str(period)
-        if (gridCount == (len(byteArray) - 278) / 4):
-            if (startLat > 90): startLat = 90.0
-            if (startLat < -90): startLat = -90.0
-            if (endLat > 90): endLat = 90.0
-            if (endLat < -90): endLat = -90.0
-            grid0 = nmc_verification.nmc_vf_base.grid([startLon,endLon,lonInterval],[startLat,endLat,latInterval])
-            grd = nmc_verification.nmc_vf_base.grid_data(grid0)
-            grd.values = np.frombuffer(byteArray[278:], dtype='float32').reshape(1,1,1,1,grid0.nlat, grid0.nlon)
-            grd.attrs["dtime_type"] = "hour"
-            nmc_verification.nmc_vf_base.reset(grd)
-            if (grid is None):
-                grd.name = "data0"
-                return grd
-            else:
-                da = nmc_verification.nmc_vf_base.interp_gg_linear(grd, grid)
-                da.name = "data0"
-                return da
+        grd = byteArray_to_griddata(byteArray,grid)
+        return grd
     except Exception as e:
         print(e)
         return None
@@ -606,6 +580,8 @@ def read_griddata_from_gds(ip,port,filename,grid = None):
         if(service is None):
             print("service is None")
             return
+        filename = filename.replace("mdfs:///", "")
+        filename = filename.replace("\\","/")
         directory,fileName = os.path.split(filename)
         status, response = service.getData(directory, fileName)
         ByteArrayResult = DataBlock_pb2.ByteArrayResult()
@@ -613,37 +589,8 @@ def read_griddata_from_gds(ip,port,filename,grid = None):
             ByteArrayResult.ParseFromString(response)
             if ByteArrayResult is not None:
                 byteArray = ByteArrayResult.byteArray
-                discriminator = struct.unpack("4s", byteArray[:4])[0].decode("gb2312")
-                t = struct.unpack("h", byteArray[4:6])
-                mName = struct.unpack("20s", byteArray[6:26])[0].decode("gb2312")
-                eleName = struct.unpack("50s", byteArray[26:76])[0].decode("gb2312")
-                description = struct.unpack("30s", byteArray[76:106])[0].decode("gb2312")
-                level, y, m, d, h, timezone, period = struct.unpack("fiiiiii", byteArray[106:134])
-                startLon, endLon, lonInterval, lonGridCount = struct.unpack("fffi", byteArray[134:150])
-                startLat, endLat, latInterval, latGridCount = struct.unpack("fffi", byteArray[150:166])
-                isolineStartValue, isolineEndValue, isolineInterval = struct.unpack("fff", byteArray[166:178])
-                gridCount = lonGridCount * latGridCount
-                description = mName.rstrip('\x00') + '_' + eleName.rstrip('\x00') + "_" + str(
-                    level) + '(' + description.rstrip('\x00') + ')' + ":" + str(period)
-                if (gridCount == (len(byteArray) - 278) / 4):
-                    if (startLat > 90): startLat = 90.0
-                    if (startLat < -90): startLat = -90.0
-                    if (endLat > 90): endLat = 90.0
-                    if (endLat < -90): endLat = -90.0
-                    grid0 = nmc_verification.nmc_vf_base.grid([startLon, endLon, lonInterval],
-                                                              [startLat, endLat, latInterval])
-                    grd = nmc_verification.nmc_vf_base.grid_data(grid0)
-                    grd.values = np.frombuffer(byteArray[278:], dtype='float32').reshape(1, 1, 1, 1, grid0.nlat,
-                                                                                         grid0.nlon)
-                    grd.attrs["dtime_type"] = "hour"
-                    nmc_verification.nmc_vf_base.reset(grd)
-                    if (grid is None):
-                        grd.name = "data0"
-                        return grd
-                    else:
-                        da = nmc_verification.nmc_vf_base.interp_gg_linear(grd, grid)
-                        da.name = "data0"
-                        return da
+                grd = byteArray_to_griddata(byteArray)
+                return grd
         elif status == 416:
             print(filename + "超出可读时间")
             return None
@@ -662,6 +609,8 @@ def read_gridwind_from_gds(ip,port,filename,grid = None):
         if(service is None):
             print("service is None")
             return
+        filename = filename.replace("mdfs:///", "")
+        filename = filename.replace("\\","/")
         directory,fileName = os.path.split(filename)
         status, response =  service.getData(directory, fileName)
         ByteArrayResult = DataBlock_pb2.ByteArrayResult()
@@ -669,44 +618,87 @@ def read_gridwind_from_gds(ip,port,filename,grid = None):
             ByteArrayResult.ParseFromString(response)
             if ByteArrayResult is not None:
                 byteArray = ByteArrayResult.byteArray
-                discriminator = struct.unpack("4s", byteArray[:4])[0].decode("gb2312")
-                t = struct.unpack("h", byteArray[4:6])
-                mName = struct.unpack("20s", byteArray[6:26])[0].decode("gb2312")
-                eleName = struct.unpack("50s", byteArray[26:76])[0].decode("gb2312")
-                description = struct.unpack("30s", byteArray[76:106])[0].decode("gb2312")
-                level, y, m, d, h, timezone, period = struct.unpack("fiiiiii", byteArray[106:134])
-                startLon, endLon, lonInterval, lonGridCount = struct.unpack("fffi", byteArray[134:150])
-                startLat, endLat, latInterval, latGridCount = struct.unpack("fffi", byteArray[150:166])
-                isolineStartValue, isolineEndValue, isolineInterval = struct.unpack("fff", byteArray[166:178])
-                gridCount = lonGridCount * latGridCount
-                description = mName.rstrip('\x00') + '_' + eleName.rstrip('\x00') + "_" + str(
-                    level) + '(' + description.rstrip('\x00') + ')' + ":" + str(period)
-                if (gridCount == (len(byteArray) - 278) / 8):
-                    if (startLat > 90): startLat = 90.0
-                    if (startLat < -90): startLat = -90.0
-                    if (endLat > 90): endLat = 90.0
-                    if (endLat < -90): endLat = -90.0
-                    grid0 = nmc_verification.nmc_vf_base.grid([startLon, endLon, lonInterval], [startLat, endLat, latInterval])
-                    speed = nmc_verification.nmc_vf_base.grid_data(grid0)
-                    i_s = 278
-                    i_e = 278 + grid0.nlon * grid0.nlat * 4
-                    speed.values = np.frombuffer(byteArray[i_s:i_e], dtype='float32').reshape(1, 1, 1, 1, grid0.nlat, grid0.nlon)
-                    i_s += grid0.nlon * grid0.nlat * 4
-                    i_e += grid0.nlon * grid0.nlat * 4
-                    angle = nmc_verification.nmc_vf_base.grid_data(grid0)
-                    angle.values = np.frombuffer(byteArray[i_s:i_e], dtype='float32').reshape(1, 1, 1, 1, grid0.nlat, grid0.nlon)
-                    nmc_verification.nmc_vf_base.reset(speed)
-                    nmc_verification.nmc_vf_base.reset(angle)
-
-                    wind = nmc_verification.nmc_vf_base.diag.speed_angle_to_wind(speed, angle)
-                    if (grid is None):
-                        return wind
-                    else:
-                        return nmc_verification.nmc_vf_base.interp_gg_linear(wind, grid)
-
+                grd = byteArray_to_gridwind(byteArray,grid=grid)
+                return grd
     except Exception as e:
         print(e)
         return None
+
+
+def byteArray_to_griddata(byteArray,grid = None):
+    #discriminator = struct.unpack("4s", byteArray[:4])[0].decode("gb2312")
+    #t = struct.unpack("h", byteArray[4:6])
+    #mName = struct.unpack("20s", byteArray[6:26])[0].decode("gb2312")
+    #eleName = struct.unpack("50s", byteArray[26:76])[0].decode("gb2312")
+    #description = struct.unpack("30s", byteArray[76:106])[0].decode("gb2312")
+    level, y, m, d, h, timezone, period = struct.unpack("fiiiiii", byteArray[106:134])
+    startLon, endLon, lonInterval, lonGridCount = struct.unpack("fffi", byteArray[134:150])
+    startLat, endLat, latInterval, latGridCount = struct.unpack("fffi", byteArray[150:166])
+    #isolineStartValue, isolineEndValue, isolineInterval = struct.unpack("fff", byteArray[166:178])
+    gridCount = lonGridCount * latGridCount
+    #description = mName.rstrip('\x00') + '_' + eleName.rstrip('\x00') + "_" + str(
+    #    level) + '(' + description.rstrip('\x00') + ')' + ":" + str(period)
+    if (gridCount == (len(byteArray) - 278) / 4):
+        if (startLat > 90): startLat = 90.0
+        if (startLat < -90): startLat = -90.0
+        if (endLat > 90): endLat = 90.0
+        if (endLat < -90): endLat = -90.0
+        grid0 = nmc_verification.nmc_vf_base.grid([startLon, endLon, lonInterval],
+                                                  [startLat, endLat, latInterval])
+        grd = nmc_verification.nmc_vf_base.grid_data(grid0)
+        grd.values = np.frombuffer(byteArray[278:], dtype='float32').reshape(1, 1, 1, 1, grid0.nlat,
+                                                                             grid0.nlon)
+        grd.attrs["dtime_type"] = "hour"
+        nmc_verification.nmc_vf_base.reset(grd)
+        time1 = datetime.datetime(y,m,d,h,0)
+        nmc_verification.nmc_vf_base.set_griddata_coords(grd,gtime=[time1],dtime_list=[period],level_list=[level])
+    if (grid is None):
+        grd.name = "data0"
+        return grd
+    else:
+        da = nmc_verification.nmc_vf_base.interp_gg_linear(grd, grid)
+        da.name = "data0"
+        return da
+
+
+def byteArray_to_gridwind(byteArray,grid = None):
+    # print(len(byteArray))
+    #discriminator = struct.unpack("4s", byteArray[:4])[0].decode("gb2312")
+    #t = struct.unpack("h", byteArray[4:6])
+    #mName = struct.unpack("20s", byteArray[6:26])[0].decode("gb2312")
+    #eleName = struct.unpack("50s", byteArray[26:76])[0].decode("gb2312")
+    #description = struct.unpack("30s", byteArray[76:106])[0].decode("gb2312")
+    level, y, m, d, h, timezone, period = struct.unpack("fiiiiii", byteArray[106:134])
+    startLon, endLon, lonInterval, lonGridCount = struct.unpack("fffi", byteArray[134:150])
+    startLat, endLat, latInterval, latGridCount = struct.unpack("fffi", byteArray[150:166])
+    #isolineStartValue, isolineEndValue, isolineInterval = struct.unpack("fff", byteArray[166:178])
+    gridCount = lonGridCount * latGridCount
+    #description = mName.rstrip('\x00') + '_' + eleName.rstrip('\x00') + "_" + str(
+    #    level) + '(' + description.rstrip('\x00') + ')' + ":" + str(period)
+    if (gridCount == (len(byteArray) - 278) / 8):
+        if (startLat > 90): startLat = 90.0
+        if (startLat < -90): startLat = -90.0
+        if (endLat > 90): endLat = 90.0
+        if (endLat < -90): endLat = -90.0
+        grid0 = nmc_verification.nmc_vf_base.grid([startLon, endLon, lonInterval], [startLat, endLat, latInterval])
+        speed = nmc_verification.nmc_vf_base.grid_data(grid0)
+        i_s = 278
+        i_e = 278 + grid0.nlon * grid0.nlat * 4
+        speed.values = np.frombuffer(byteArray[i_s:i_e], dtype='float32').reshape(1, 1, 1, 1, grid0.nlat, grid0.nlon)
+        i_s += grid0.nlon * grid0.nlat * 4
+        i_e += grid0.nlon * grid0.nlat * 4
+        angle = nmc_verification.nmc_vf_base.grid_data(grid0)
+        angle.values = np.frombuffer(byteArray[i_s:i_e], dtype='float32').reshape(1, 1, 1, 1, grid0.nlat, grid0.nlon)
+        nmc_verification.nmc_vf_base.reset(speed)
+        nmc_verification.nmc_vf_base.reset(angle)
+
+        wind = nmc_verification.nmc_vf_base.diag.speed_angle_to_wind(speed, angle)
+        time1 = datetime.datetime(y, m, d, h, 0)
+        nmc_verification.nmc_vf_base.set_griddata_coords(wind,gtime=[time1],dtime_list=[period],level_list=[level])
+        if (grid is None):
+            return wind
+        else:
+            return nmc_verification.nmc_vf_base.diag.interp_gg_linear(wind, grid)
 
 
 def read_gridwind_from_gds_file(filename,grid = None):
@@ -716,42 +708,8 @@ def read_gridwind_from_gds_file(filename,grid = None):
             return None
         file = open(filename, 'rb')
         byteArray = file.read()
-        #print(len(byteArray))
-        discriminator = struct.unpack("4s", byteArray[:4])[0].decode("gb2312")
-        t = struct.unpack("h", byteArray[4:6])
-        mName = struct.unpack("20s", byteArray[6:26])[0].decode("gb2312")
-        eleName = struct.unpack("50s", byteArray[26:76])[0].decode("gb2312")
-        description = struct.unpack("30s", byteArray[76:106])[0].decode("gb2312")
-        level, y, m, d, h, timezone, period = struct.unpack("fiiiiii", byteArray[106:134])
-        startLon, endLon, lonInterval, lonGridCount = struct.unpack("fffi", byteArray[134:150])
-        startLat, endLat, latInterval, latGridCount = struct.unpack("fffi", byteArray[150:166])
-        isolineStartValue, isolineEndValue, isolineInterval = struct.unpack("fff", byteArray[166:178])
-        gridCount = lonGridCount * latGridCount
-        description = mName.rstrip('\x00') + '_' + eleName.rstrip('\x00') + "_" + str(
-            level) + '(' + description.rstrip('\x00') + ')' + ":" + str(period)
-        if (gridCount == (len(byteArray) - 278) / 8):
-            if(startLat > 90):startLat = 90.0
-            if(startLat < -90) : startLat = -90.0
-            if(endLat > 90) : endLat = 90.0
-            if(endLat < -90): endLat = -90.0
-            grid0 = nmc_verification.nmc_vf_base.grid([startLon,endLon,lonInterval],[startLat,endLat,latInterval])
-            speed = nmc_verification.nmc_vf_base.grid_data(grid0)
-            i_s = 278
-            i_e = 278 + grid0.nlon * grid0.nlat *4
-            speed.values = np.frombuffer(byteArray[i_s:i_e], dtype='float32').reshape(1,1,1,1,grid0.nlat,grid0.nlon)
-            i_s += grid0.nlon * grid0.nlat *4
-            i_e += grid0.nlon * grid0.nlat *4
-            angle = nmc_verification.nmc_vf_base.grid_data(grid0)
-            angle.values = np.frombuffer(byteArray[i_s:i_e], dtype='float32').reshape(1,1,1,1,grid0.nlat, grid0.nlon)
-            nmc_verification.nmc_vf_base.reset(speed)
-            nmc_verification.nmc_vf_base.reset(angle)
-
-            wind = nmc_verification.nmc_vf_base.diag.speed_angle_to_wind(speed,angle)
-            if (grid is None):
-                return wind
-            else:
-                return nmc_verification.nmc_vf_base.diag.interp_gg_linear(wind,grid)
-
+        wind = byteArray_to_gridwind(byteArray,grid=grid)
+        return wind
     except Exception as e:
         print(e)
         return None
@@ -896,9 +854,90 @@ def read_AWX_from_gds(ip,port,filename,grid = None):
                     grd.name = "data0"
                     return grd
                 else:
-                    da = nmc_verification.nmc_vf_base.function.gxy_gxy.interpolation_linear(grd, grid)
+                    da = nmc_verification.nmc_vf_base.interp_gg_linear(grd, grid)
                     da.name = "data0"
                     return da
+    except Exception as e:
+        print(e)
+        return None
+
+
+def AWX_byteArray_to_griddata(byteArray,grid = None):
+    sat96 = struct.unpack("12s", byteArray[:12])[0]
+    levl = np.frombuffer(byteArray[12:30], dtype='int16').astype(dtype="int32")
+    formatstr = struct.unpack("8s", byteArray[30:38])[0]
+    qualityflag = struct.unpack("h", byteArray[38:40])[0]
+    satellite = struct.unpack("8s", byteArray[40:48])[0]
+    lev2 = np.frombuffer(byteArray[48:104], dtype='int16').astype(dtype="int32")
+
+    recordlen = levl[4]
+    headnum = levl[5]
+    datanum = levl[6]
+    timenum = lev2[0:5]
+    nlon = lev2[7]
+    nlat = lev2[8]
+    range = lev2[12:16].astype("float32")
+    slat = range[0] / 100
+    elat = range[1] / 100
+    slon = range[2] / 100
+    elon = range[3] / 100
+
+    # nintels=lev2[20:22].astype("float32")
+    dlon = (elon - slon) / (nlon - 1)
+    dlat = (elat - slat) / (nlat - 1)
+
+    colorlen = lev2[24]
+    caliblen = lev2[25]
+    geololen = lev2[26]
+
+    # print(levl)
+    # print(lev2)
+    head_lenght = headnum * recordlen
+    data_lenght = datanum * recordlen
+    # print(head_lenght  + data_lenght)
+    # print( data_lenght)
+    # print(grd.nlon * grd.nlat)
+    # headrest = np.frombuffer(byteArray[:head_lenght], dtype='int8')
+    data_awx = np.frombuffer(byteArray[head_lenght:(head_lenght + data_lenght)], dtype='int8')
+
+    if colorlen <= 0:
+        calib = np.frombuffer(byteArray[104:(104 + 2048)], dtype='int16').astype(dtype="float32")
+    else:
+        # color = np.frombuffer(byteArray[104:(104+colorlen*2)], dtype='int16')
+        calib = np.frombuffer(byteArray[(104 + colorlen * 2):(104 + colorlen * 2 + 2048)],
+                              dtype='int16').astype(
+            dtype="float32")
+
+    realcalib = calib / 100.0
+    realcalib[calib < 0] = (calib[calib < 0] + 65536) / 100.0
+
+    awx_index = np.empty(len(data_awx), dtype="int32")
+    awx_index[:] = data_awx[:]
+    awx_index[data_awx < 0] = data_awx[data_awx < 0] + 256
+    awx_index *= 4
+    real_data_awx = realcalib[awx_index]
+    grid0 = nmc_verification.nmc_vf_base.grid([slon, elon, dlon], [slat, elat, dlat])
+    grd = nmc_verification.nmc_vf_base.grid_data(grid0)
+    grd.values = real_data_awx.reshape(1, 1, 1, 1, grid0.nlat, grid0.nlon)
+    grd.attrs["dtime_type"] = "hour"
+    nmc_verification.nmc_vf_base.reset(grd)
+    if (grid is None):
+        grd.name = "data0"
+        return grd
+    else:
+        da = nmc_verification.nmc_vf_base.interp_gg_linear(grd, grid)
+        da.name = "data0"
+        return da
+
+def read_griddata_from_AWX_file(filename,grid = None):
+    try:
+        if not os.path.exists(filename):
+            print(filename + " is not exist")
+            return None
+        file = open(filename, 'rb')
+        byteArray = file.read()
+        grd = AWX_byteArray_to_griddata(byteArray,grid)
+        return grd
     except Exception as e:
         print(e)
         return None

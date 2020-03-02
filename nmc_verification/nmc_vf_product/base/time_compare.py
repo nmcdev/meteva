@@ -37,6 +37,7 @@ def ob_and_multi_time_fo(sta_ob_all,sta_fo_all,pic_path = None,max_dh = None,cle
     else:
         dhs_fo = dhs_fo / datetime.timedelta(hours=1)
     dhs_fo_not0 = dhs_fo[dhs_fo!=0]
+
     dh_y = np.min(dhs_fo_not0)
 
     #以数据中最大的预报时效，确定整个窗口的横轴范围宽度
@@ -46,6 +47,7 @@ def ob_and_multi_time_fo(sta_ob_all,sta_fo_all,pic_path = None,max_dh = None,cle
         max_dh = int(dhs[-1])
     #以观预报时效间隔的最小单位
     ddhs = dhs[1:] - dhs[0:-1]
+
     ddhs = ddhs[ddhs!=0]
     dh_x = int(np.min(ddhs))
 
@@ -95,6 +97,7 @@ def ob_and_multi_time_fo(sta_ob_all,sta_fo_all,pic_path = None,max_dh = None,cle
         else:
             str1 = str(hour) + "时"
         yticks.append(str1)
+
     mask = np.zeros_like(dat.T)
     mask[dat.T == 9999] = True
 
@@ -118,10 +121,12 @@ def ob_and_multi_time_fo(sta_ob_all,sta_fo_all,pic_path = None,max_dh = None,cle
                     dvalue[i, j] = dat[i, j] - top_value
 
         maxd = np.max(np.abs(dvalue))
-        if(maxd >10):
-            fmt_str = ".0f"
-        else:
-            fmt_str = ".1f"
+        mind = np.min(dvalue)
+        fmt_str = ".0f"
+        #if(maxd >10 or mind):
+        #    fmt_str = ".0f"
+        #else:
+        #    fmt_str = ".1f"
         if cmap_error is None:
             cmap_error = "bwr"
         sns.heatmap(dvalue.T, ax=ax1, mask=mask, cmap=cmap_error, vmin=-maxd, vmax=maxd, center=None, robust=False, annot=True,
@@ -213,6 +218,7 @@ def wind_ob_and_multi_time_fo(sta_ob_all,sta_fo_all,pic_path = None,max_dh = Non
     #以最近的预报作为窗口中间的时刻
     times_fo = copy.deepcopy(sta_fo_all["time"].values)
     times_fo = list(set(times_fo))
+    #print(times_fo)
     if(len(times_fo)==1):
         print("仅有单个起报时间的预报，程序退出")
         return
@@ -372,6 +378,8 @@ def wind_ob_and_multi_time_fo(sta_ob_all,sta_fo_all,pic_path = None,max_dh = Non
     vmin = np.min(dat_speed[dat_speed != 9999])
     vmax = np.max(dat_speed[dat_speed != 9999])
     clev, cmap = nmc_verification.nmc_vf_base.tool.color_tools.get_clev_and_cmap_by_element_name("wind_speed")
+    print(vmax)
+    print(vmin)
     clev_part,cmap_part = nmc_verification.nmc_vf_base.tool.color_tools.get_part_clev_and_cmap(clev,cmap,vmax,vmin)
     vmax = clev_part[-1]
     vmin = 2 * clev_part[0] - clev_part[1]

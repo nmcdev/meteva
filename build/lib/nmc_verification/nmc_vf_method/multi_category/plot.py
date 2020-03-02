@@ -68,8 +68,8 @@ def frequency_histogram(ob, fo,grade_list = None, save_path=None,title = "频率
     p_ob = np.array(ob_num_list)/total_num
     p_fo = np.array(fo_num_list)/total_num
     x = np.arange(len(index_list))
-    plt.bar(x + 0.1, p_ob, width=0.2, facecolor="r", label="观测")
-    plt.bar(x - 0.1, p_fo, width=0.2, facecolor="b", label="预报")
+    plt.bar(x - 0.1, p_ob, width=0.2, facecolor="r", label="观测")
+    plt.bar(x + 0.1, p_fo, width=0.2, facecolor="b", label="预报")
     plt.legend()
     plt.xlabel("类别", fontsize=14)
 

@@ -286,7 +286,9 @@ def interp_gg_linear(grd, grid1,used_coords = "xy"):
         grid2 = nmc_verification.nmc_vf_base.basicdata.grid(grid1.glon, grid1.glat, grid0.gtime, grid0.dtimes, grid0.levels,
                                                            grid1.members)
         if (grid2.elon > grid_1.elon or grid2.slon < grid_1.slon or grid2.elat > grid_1.elat or grid2.slat < grid_1.slat):
-            print("object grid is out range of original grid")
+
+            print("object grid is should not out of ["+ str(grid_1.slon)+","+str(grid_1.elon)+"];["+str(grid_1.slat)+","+str(grid_1.elat)+"]")
+
             return None
         grd_new = nmc_verification.nmc_vf_base.grid_data(grid2)
         for i in range(len(levels)):

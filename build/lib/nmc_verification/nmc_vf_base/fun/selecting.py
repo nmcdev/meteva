@@ -141,8 +141,7 @@ def in_day_list(sta,day_list):
     for day0 in day_list:
         day = (day0 - time0).total_seconds()//seconds
         days_list.append(day)
-    fo_times = pd.Series(0, index=sta['time'])
-    indexs = (fo_times.index - time0)//np.timedelta64(1,"D")
+    indexs = (sta['time'] - time0)//np.timedelta64(1,"D")
     sta1 = sta.loc[indexs.isin(days_list)]
     return sta1
 
@@ -223,14 +222,14 @@ def in_ob_dayofyear_list(sta,dayofyear_list):
 
 def in_ob_day_list(sta,day_list):
     dtimes = sta["dtime"] * np.timedelta64(1, 'h')
-    obtimes = pd.Series(0, index=sta['time'] + dtimes)
+    obtimes = sta['time'] + dtimes
     days_list = []
     time0 = datetime.datetime(1900, 1, 1, 0, 0)
     seconds = 3600 * 24
     for day0 in day_list:
         day = (day0 - time0).total_seconds() // seconds
         days_list.append(day)
-    indexs = (obtimes.index - time0) // np.timedelta64(1, "D")
+    indexs = (obtimes - time0) // np.timedelta64(1, "D")
     sta1 = sta.loc[indexs.isin(days_list)]
     return sta1
 

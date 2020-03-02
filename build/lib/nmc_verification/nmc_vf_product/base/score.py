@@ -1,7 +1,9 @@
 from nmc_verification.nmc_vf_base import *
 from nmc_verification.nmc_vf_method import *
 from nmc_verification.nmc_vf_product.base.fun import *
+
 import numpy as np
+
 
 
 
@@ -12,7 +14,7 @@ def score(sta_ob_and_fos,method,group_by = None,group_list_list = None,para1 = N
         if group_by == "dtime":
             print("FSS_time 检验时，参数group_by不能选择dtime")
             return
-    sta_ob_and_fos_list,group_list_list1 = group_data(sta_ob_and_fos,group_by,group_list_list)
+    sta_ob_and_fos_list,group_list_list1 = group(sta_ob_and_fos,group_by,group_list_list)
     data_name = nmc_verification.nmc_vf_base.get_stadata_names(sta_ob_and_fos)
     fo_num = len(data_name) -1
     ensemble_score_method = [nmc_verification.nmc_vf_method.cr]
@@ -73,19 +75,31 @@ def score(sta_ob_and_fos,method,group_by = None,group_list_list = None,para1 = N
 
         result = np.array(result) #将数据转换成数组
     else:
-        result = np.zeros((group_num,fo_num,para_num))
+        if fo_num ==0:
+            result = np.zeros((group_num,para_num))
+        else:
+            result = np.zeros((group_num,fo_num,para_num))
         for i in range(group_num):
+            #print(group_num)
             sta = sta_ob_and_fos_list[i]
             if(len(sta.index) == 0):
                 result[i,:] = nmc_verification.nmc_vf_base.IV
+
             else:
                 ob = sta[data_name[0]].values
-                for j in range(fo_num):
-                    fo = sta[data_name[j+1]].values
+                if fo_num>0:
+                    for j in range(fo_num):
+                        fo = sta[data_name[j+1]].values
+                        if para1 is None:
+                            result[i, j] = method(ob, fo)
+                        else:
+                            result[i,j] = method(ob, fo,para1)
+                else:
                     if para1 is None:
-                        result[i, j] = method(ob, fo)
+                        result[i] = method(ob, None)
                     else:
-                        result[i,j] = method(ob, fo,para1)
+                        result[i] = method(ob, None,para1)
+
     result = result.squeeze()
     return result,group_list_list1
 

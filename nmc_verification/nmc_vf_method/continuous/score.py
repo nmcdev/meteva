@@ -2,6 +2,8 @@ import numpy as np
 from nmc_verification.nmc_vf_base.tool.math_tools import mean_iteration,sxy_iteration,ss_iteration
 from nmc_verification.nmc_vf_base import IV
 
+
+
 def sample_count(Ob,Fo  = None):
     '''
     计算检验的样本数
