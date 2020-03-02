@@ -3,4 +3,4 @@ from .space_compare import rain_24h_sg,rain_24h_comprehensive_sg,rain_24h_compre
 from .score import score
 from .table import table
 from .plot import plot
-from .fun import group_data
+from .fun import get_time_str_list

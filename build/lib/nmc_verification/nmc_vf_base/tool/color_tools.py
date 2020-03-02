@@ -60,6 +60,26 @@ def get_clev_and_cmap_from_file(path):
     cmap = colors.ListedColormap(cmap, 'indexed')
     return clev,cmap
 
+def clev_cmap_bias_1(vmax):
+    blue = np.array([0, 0, 255]) / 255
+    white = np.array([255, 255, 255]) / 255
+    red = np.array([255, 0, 0]) / 255
+    black = np.array([0, 0, 0]) / 255
+    clev_list = [0]
+    cmap_list = [blue]
+    for v in range(5):
+        clev_list.append(v * 0.2)
+        cmap_list.append(blue * (1 - v * 0.2) + white * v * 0.2)
+    for v in range(5):
+        clev_list.append(1 + v * 0.2)
+        cmap_list.append(white * (1 - v * 0.2) + red * v * 0.2)
+
+    for value in range(2, vmax + 1, 1):
+        clev_list.append(value)
+        cmap_list.append((red * (vmax - value) + black * (value - 2)) / (vmax - 2))
+    cmap = colors.ListedColormap(cmap_list, 'indexed')
+    return clev_list,cmap
+
 def get_steps_range(line):
     num = len(line)
     max_nstep = 0
@@ -304,9 +324,12 @@ def show_cmap_clev(cmap,clev = None):
     if clev is not None:
         max_tick = 10
         step = int(math.ceil(n_colors/max_tick))
-        x = np.arange(0,n_colors,step)
+        x = np.arange(0,n_colors,step).astype(np.int32)
+        print(x)
         ax.set_xticks(x)
-        labels = clev[x]
+        labels = []
+        for i in range(x.size):
+            labels.append(clev[x[i]])
         ax.set_xticklabels(labels)
     ax.imshow(im, cmap=cmap)
 

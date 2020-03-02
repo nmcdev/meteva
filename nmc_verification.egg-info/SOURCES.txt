@@ -18,6 +18,7 @@ nmc_verification/nmc_vf_base/fun/__init__.py
 nmc_verification/nmc_vf_base/fun/combining.py
 nmc_verification/nmc_vf_base/fun/computing.py
 nmc_verification/nmc_vf_base/fun/diagnosing.py
+nmc_verification/nmc_vf_base/fun/grouping.py
 nmc_verification/nmc_vf_base/fun/interpolating.py
 nmc_verification/nmc_vf_base/fun/selecting.py
 nmc_verification/nmc_vf_base/fun/transformating.py
@@ -79,6 +80,8 @@ nmc_verification/nmc_vf_method/yes_or_no/skill.py
 nmc_verification/nmc_vf_method/yes_or_no/table.py
 nmc_verification/nmc_vf_product/__init__.py
 nmc_verification/nmc_vf_product/application/__init__.py
+nmc_verification/nmc_vf_product/application/data_collection.py
+nmc_verification/nmc_vf_product/application/read_data_base_on_gds.py
 nmc_verification/nmc_vf_product/application/time_compare.py
 nmc_verification/nmc_vf_product/base/__init__.py
 nmc_verification/nmc_vf_product/base/fun.py

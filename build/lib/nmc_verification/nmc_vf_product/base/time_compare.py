@@ -178,7 +178,6 @@ def ob_and_multi_time_fo(sta_ob_all,sta_fo_all,pic_path = None,max_dh = None,cle
         print("图片已保存至"+pic_path)
     return
 
-
 def temp_ob_and_multi_time_fo(sta_ob_all,sta_fo_all,pic_path = None,max_dh = None,plot_error = True):
     clev, cmap= nmc_verification.nmc_vf_base.tool.color_tools.get_clev_and_cmap_by_element_name("temp")
     ob_and_multi_time_fo(sta_ob_all,sta_fo_all,pic_path,max_dh,clev,cmap,plot_error,cmap_error= "bwr")

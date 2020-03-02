@@ -1,5 +1,5 @@
 import xarray as xr
-import nmc_verification.nmc_vf_report.perspective.veri_plot_set as veri_plot_set
+import nmc_verification
 
 def vplot(veri_result,para_list,output_dir):
     dims = []
@@ -22,5 +22,5 @@ def vplot(veri_result,para_list,output_dir):
 
     vr_xr = xr.DataArray(veri_result, coords=coords, dims=dims)
     print(vr_xr)
-    vplot = veri_plot_set(subplot,legend,axis,output_dir)
+    vplot = nmc_verification.nmc_vf_report.perspective.veri_plot_set(subplot,legend,axis,output_dir)
     vplot.bar(vr_xr)

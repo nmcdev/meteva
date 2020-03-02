@@ -1,9 +1,9 @@
-from nmc_verification.nmc_vf_method import *
+from nmc_verification.nmc_vf_base.fun.grouping import *
 from nmc_verification.nmc_vf_product.base.fun import *
 import numpy as np
 
 def table(sta_ob_and_fos,method,group_by = None,group_list_list = None,save_dir = None,para1 = None):
-    sta_ob_and_fos_list,group_list_list1 = group_data(sta_ob_and_fos,group_by,group_list_list)
+    sta_ob_and_fos_list,group_list_list1 = group(sta_ob_and_fos,group_by,group_list_list)
     data_name = nmc_verification.nmc_vf_base.get_stadata_names(sta_ob_and_fos)
     fo_num = len(data_name) -1
     ensemble_score_method = [nmc_verification.nmc_vf_method.cr]
