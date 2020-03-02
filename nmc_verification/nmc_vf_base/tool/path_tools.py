@@ -221,7 +221,7 @@ def get_path_of_grd_nc_longname(root_dir,time,dhour,nc_Fname,fhour_add):
 
 
 def get_gds_file_list_in_one_dir(ip,port,dir):
-
+    dir = dir.replace("mdfs:///", "")
     service = GDSDataService(ip, port)
     # 获得指定目录下的所有文件
     status, response = service.getFileList(dir)
@@ -240,9 +240,11 @@ def get_gds_file_list_in_one_dir(ip,port,dir):
 
 def get_gds_all_dir(ip,port,path,all_path,service = None):
     # 初始化GDS客户端
+
     if service is None:
         service = GDSDataService(ip, port)
     # 获得指定目录下的所有文件
+    path = path.replace("mdfs:///", "")
     status, response = service.getFileList(path)
     MappingResult = DataBlock_pb2.MapResult()
     if status == 200:
