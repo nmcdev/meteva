@@ -4,12 +4,19 @@ import pandas as pd
 import numpy as np
 
 def group(sta_ob_and_fos,group_by,group_list_list = None):
-
     valid_group_list_list = []
     sta_ob_and_fos_list = []
     if group_by is None:
         sta_ob_and_fos_list.append(sta_ob_and_fos)
     else:
+        if group_list_list is not None:
+            group_list_list0 = []
+            for group_list in group_list_list:
+                if isinstance(group_list,list):
+                    group_list_list0.append(group_list)
+                else:
+                    group_list_list0.append([group_list])
+            group_list_list = group_list_list0
         valid_group = ["level","time","year","month","day","dayofyear","hour",
                        "ob_time","ob_year","ob_month","ob_day","ob_dayofyear","ob_hour",
                        "dtime","dday","dhour","id"]
@@ -279,7 +286,7 @@ def group(sta_ob_and_fos,group_by,group_list_list = None):
                         valid_group_list_list.append(group_list)
                         sta_ob_and_fos_list.append(sta)
     #返回分组结果，和实际分组方式
-
     if len(valid_group_list_list)==0:
         valid_group_list_list = None
-    return sta_ob_and_fos_list,valid_group_list_list
+    valid_group_list =  np.array(valid_group_list_list).squeeze().tolist()
+    return sta_ob_and_fos_list,valid_group_list
