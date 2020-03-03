@@ -1,5 +1,5 @@
 para = {
-    "fo_time_range": ["2019010108", "2019020108", "12h"],
+    "fo_time_range": ["2019012008", "2019021208", "12h"],
     "dtime": [1, 2, 3, "h"],
     "station": {
         "path": r"F:\ppt\sta_alt_1w.txt"
@@ -64,14 +64,21 @@ para = {
     ],
     "group_set": {
         "level": "fold",
-        "time": "fold",
-        "year": 'unfold',
-        "month": {'group': [[1]],
-                  'group_name': [['1月']]},
-        "xun": 'fold',
-        "hou": 'fold',
-        "day": {'group': [[1, 2, 3, 4, 5, 6], [7, 8, 9, 10, 11, 12, 13]],
-                'group_name': [['1-6d'], ['7-13d']]},
+        "time": "unfold",
+        # "year": 'unfold',
+
+        # "month": {'group': [[1]],
+        #           'group_name': [['1月']]},
+        'month': 'fold',
+        # "xun": 'fold',
+        # "hou": 'fold',
+        # "day": {'group': [[1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12], [13], [14], [15], [16], [17],
+        #                   [18]],
+        #         'group_name': [['1d'], ['2d'], ['3d'], ['4d'], ['5d'], ['6d'], ['7d'], ['8d'], ['9d'], ['10d'], ['11d'],
+        #                        ['12d'], ['13d'], ['14d'],
+        #                        ['15d'], ['16d'], ['17d'], ['18d']]
+        #         },
+        # 'day': 'fold',
         "hour": "fold",
         "dtime": {'group': [[1, 2], [3]],
                   'group_name': [['1h', '2h'], ['3h']]
@@ -81,13 +88,12 @@ para = {
             "group": [[1], [2], [3], [4], [5], [6], [7]],
             "group_name": [["新疆"], ["西北中东部"], ["华北"], ["东北"], ["黄淮江淮江南"], ["华南"], ["西南"]],
         },
-
     },
     "veri_set": [
         {
             "name": "ts_bias",
             "method": ["ts", "bias"],
-            "para1": [0.1, 5, 10, 20],
+            "para1": [0.1, 0.3, 0.6, 1],
             "para1Name": ["小雨", ">=5毫米", ">=10毫米", ">=20毫米"],
             "plot_type": "bar"
         },
@@ -119,7 +125,7 @@ para = {
         # "subplot": None,
         "legend": "member",
         # "legend": None,
-        "axis": "dim_type_region"
+        "axis": "time"
     },
     "save_dir": r"F:\veri_result\p8new"
 
@@ -182,13 +188,17 @@ def get_time_dims(para, is_fold_area=True):  # mpara, data_name_list,
     :return:
     '''
     group_set = copy.deepcopy(para['group_set'])
+
     # 获取维度信息
     if is_fold_area:
         group_set = close_area_grouping(group_set)
+
     coords = {}
     shape = []
     for coord in group_set.keys():
         if group_set[coord] != "fold":
+            # print(coord)
+            # print(group_set[coord])
             coords[coord] = ['、'.join(lable) for lable in group_set[coord]["group_name"]]
             shape.append(len(coords[coord]))
     return coords, shape
@@ -479,13 +489,18 @@ def one_score(para, param, mid_result_list_set, sum):
 def create_DataArray_dict(para, final_result_dict_list_array, new_shape_dict, new_coords_dict, new_indexes_dict):
     # 将数据通过上文得到的indexes# coords和shape和grades转化为DataArray 并且将dataArray放到字典中
 
+    # print(new_coords_dict)
     all_catrgory_grades_data_array_dict = {}
+
+
     for i in range(len(para['veri_set'])):
+
         category_of_grades = final_result_dict_list_array[i]
 
         category_of_shape = new_shape_dict[i]
         category_of_coords = new_coords_dict[i]
         category_of_indexes = new_indexes_dict[i]
+
         category_of_grades = category_of_grades.reshape(category_of_shape)
         category_of_data_array = xr.DataArray(category_of_grades, coords=category_of_coords, dims=category_of_indexes)
         all_catrgory_grades_data_array_dict[i] = category_of_data_array
@@ -522,14 +537,16 @@ def filter_valid_data(one_tiem_group_and_dtime_path):
 def calculate_score(para, all_path, final_result_dict_list_array, indexes_dict, coords_dict):
     # tms_array = np.zeros((len(all_path), 6))
     for one_time_group_path in all_path:
+        # print(one_time_group_path)
         for one_tiem_group_and_dtime_path in one_time_group_path:
-
+            # print(one_tiem_group_and_dtime_path)
             mid_result_list_set, sum = filter_valid_data(one_tiem_group_and_dtime_path)
-
-            # print(mid_result_list_set)
             # 获取area的indexes 和coords
             for i in range(len(para["veri_set"])):
                 score_list, area_indexes, coords = one_score(para, para["veri_set"][i], mid_result_list_set, sum)
+                # if i == 0:
+                    # print('+++++++++++++++++++++++++++++++++++++++')
+                    # print(score_list)
                 final_result_dict_list_array[i].append(score_list)
                 indexes_dict[i] = area_indexes
                 coords_dict[i] = coords
@@ -591,6 +608,13 @@ def filter_time_series(par_dict, time_Series2):
                     time_Series0 = time_Series2.loc[time_Series2.dt.hour == hour]
                     time_series1 = time_series1.append(time_Series0)
                 time_Series2 = time_series1
+            if key == 'time':
+                time_series1 = pd.Series()
+                for time in par_dict[key]:
+                    time_Series0 = time_Series2.loc[time_Series2 == time]
+                    time_series1 = time_series1.append(time_Series0)
+                time_Series2 = time_series1
+
     return time_Series2
 
 
@@ -614,10 +638,12 @@ def join_time_dtime_nc_path(dtime_group_list_list, time_df):
         one_time_group_path.append(one_tiem_group_and_dtime_path)
     return one_time_group_path
 
-
+# 更改
 def get_all_path(para, para_dict_list_list, time_Series, dtime_list, shape):
     all_path = []
+
     for par_dict in para_dict_list_list:
+
         time_Series2 = copy.deepcopy(time_Series)
         # 通过time分组来进行对time进行筛选，挑选出符合当前分组的time
         time_Series2 = filter_time_series(par_dict, time_Series2)
@@ -668,10 +694,13 @@ def get_time_Series(time1, fo_end_time, time_type, time_step):
 
 def time_unfold(para, time_series):
     new_time_series = copy.deepcopy(time_series)
+
     for key in para['group_set'].keys():
         if key == 'year' and para['group_set'][key] == 'unfold':
             year_series = new_time_series.dt.year
-            year_list = list(set(year_series))
+            new_year_list = year_series.tolist()
+            year_list = list(set(new_year_list))
+            year_list.sort(key=new_year_list.index)
             year_np = np.array(year_list)
 
             year_np = year_np.reshape([-1, 1])
@@ -691,7 +720,10 @@ def time_unfold(para, time_series):
 
         if key == 'month' and para['group_set'][key] == 'unfold':
             month_series = new_time_series.dt.day
-            month_list = list(set(month_series))
+            new_month_list = month_series.tolist()
+
+            month_list = list(set(new_month_list))
+            month_list.sort(key=new_month_list.index)
             month_np = np.array(month_list)
 
             month_np = month_np.reshape([-1, 1])
@@ -715,9 +747,10 @@ def time_unfold(para, time_series):
             xuns = np.ceil(days / 10).astype(np.int16)
             xuns[xuns > 3] = 3
             xuns += (mons - 1) * 3
-            xun_list = list(set(xuns))
+            xuns_list0 = list(xuns)
+            xun_list = list(set(xuns_list0))
+            xun_list.sort(key=xuns_list0.index)
             xun_np = np.array(xun_list)
-
             xun_np = xun_np.reshape([-1, 1])
             xun_list_list = xun_np.tolist()
             para['group_set'][key] = {}
@@ -739,7 +772,9 @@ def time_unfold(para, time_series):
             hous = np.ceil(days / 5).astype(np.int16)
             hous[hous > 6] = 6
             hous += (mons - 1) * 6
-            hous_list = list(set(hous))
+            hous_list0 = list(hous)
+            hous_list = list(set(hous_list0))
+            hous_list.sort(key=hous_list0.index)
             hous_np = np.array(hous_list)
 
             hous_np = hous_np.reshape([-1, 1])
@@ -759,7 +794,9 @@ def time_unfold(para, time_series):
 
         if key == 'day' and para['group_set'][key] == 'unfold':
             day_series = new_time_series.dt.day
-            day_list = list(set(day_series))
+            new_day_list = day_series.tolist()
+            day_list = list(set(new_day_list))
+            day_list.sort(key=new_day_list.index)
             day_np = np.array(day_list)
 
             day_np = day_np.reshape([-1, 1])
@@ -779,7 +816,9 @@ def time_unfold(para, time_series):
 
         if key == 'hour' and para['group_set'][key] == 'unfold':
             hour_series = new_time_series.dt.hour
-            hour_list = list(set(hour_series))
+            new_hour_list = hour_series.tolist()
+            hour_list = list(set(new_hour_list))
+            hour_list.sort(key=new_hour_list.index)
             hour_np = np.array(hour_list)
 
             hour_np = hour_np.reshape([-1, 1])
@@ -792,14 +831,38 @@ def time_unfold(para, time_series):
                 group_name_list = []
                 for hour in hour_list:
                     hour_name = str(hour) + '时'
-
                     group_name_list.append(hour_name)
                 group_name_list_list.append(group_name_list)
             para['group_set'][key]['group_name'] = group_name_list_list
+        if key == 'time' and para['group_set'][key] == 'unfold':
+            new_time_list = new_time_series.tolist()
+            time_list = list(set(new_time_list))
+            time_list.sort(key=new_time_list.index)
+            time_np = np.array(time_list)
+            time_np = time_np.reshape((-1, 1))
+            time_list_list = time_np.tolist()
+            new_time_np = copy.deepcopy(time_np)
+            new_time_list_list = new_time_np.astype(np.str).tolist()
+
+            para['group_set'][key] = {}
+            para['group_set'][key]['group'] = time_list_list
+            para['group_set'][key]['group_name'] = new_time_list_list
+            # new_hour_list_list = copy.deepcopy(time_list_list)
+            # group_name_list_list = []
+            # for hour_list in new_hour_list_list:
+            #     group_name_list = []
+            #     for hour in hour_list:
+            #         hour_name = str(hour) + '时'
+            #
+            #         group_name_list.append(hour_name)
+            #     group_name_list_list.append(group_name_list)
+            # para['group_set'][key]['group_name'] = group_name_list_list
+
+
     return para
 
 
-def verificate_with_middle_result(para):
+def verificate_with_middle_result(para, dpi=290):
     fo_start_time = nmc_verification.nmc_vf_base.tool.time_tools.str_to_time(para["fo_time_range"][0])
     fo_end_time = nmc_verification.nmc_vf_base.tool.time_tools.str_to_time(para["fo_time_range"][1])
     time_step = int(para["fo_time_range"][2][0:-1])
@@ -809,6 +872,7 @@ def verificate_with_middle_result(para):
     time1 = fo_start_time
     dtime_list = para["dtime"][0:-1]
     ob_time_and_fo_time_link(time1, fo_end_time, dtime_list, ob_time_dict, time_step)
+
     time1 = fo_start_time - datetime.timedelta(hours=time_step)
     # 获取时间维度的信息
     veri_group_num = len(para["veri_set"])
@@ -819,8 +883,11 @@ def verificate_with_middle_result(para):
         middle_veri[i]["para"] = get_middle_veri_para(para["veri_set"][i])
 
     time_series = get_time_Series(time1, fo_end_time, time_type, time_step)
+
     para = time_unfold(para, time_series)
+
     dims, shape = get_time_dims(para, is_fold_area=True)
+
     # 获取时间分组
     group_dict = copy.deepcopy(para['group_set'])
     time_name_list = ['time', 'year', "month", "xun", "hou", "day", "hour"]
@@ -833,7 +900,6 @@ def verificate_with_middle_result(para):
     final_result_dict_list_array, coords_dict, indexes_dict = create_empty_data_and_coords_and_indexes_dict(para)
 
     all_path, shape = get_all_path(para, para_dict_list_list, time_series, dtime_list, shape)
-
     final_result_dict_list_array, coords_dict, indexes_dict = calculate_score(para, all_path,
                                                                               final_result_dict_list_array,
                                                                               indexes_dict, coords_dict)
@@ -851,6 +917,7 @@ def verificate_with_middle_result(para):
 
     # 画图，将检验结果保存到excel中
     for key in all_catrgory_grades_data_array_dict.keys():
+        plot_type = para['veri_set'][key]['plot_type']
         veri_name = para["veri_set"][key]["name"]
         save_dir = para["save_dir"] + "/" + veri_name + "/"
         path = para["save_dir"] + "/" + veri_name + ".nc"
@@ -860,11 +927,14 @@ def verificate_with_middle_result(para):
                                                                             legend=para["plot_set"]["legend"],
                                                                             axis=para["plot_set"]["axis"],
                                                                             save_dir=save_dir)
-        plot_set.bar(all_catrgory_grades_data_array_dict[key])
+        plot_set.execute(all_catrgory_grades_data_array_dict[key], para, dpi=dpi,plot_type=plot_type)
+
         excel_set = nmc_verification.nmc_vf_report.perspective.veri_excel_set.veri_excel_set(
             sheet=para["plot_set"]["subplot"], row=para["plot_set"]["legend"],
             column=para["plot_set"]["axis"], save_dir=save_dir)
         excel_set.excel(all_catrgory_grades_data_array_dict[key])
+
+
 
 
 # def middle_veri_result_add(middle_already, middle_part, sample_same):
@@ -1135,7 +1205,7 @@ def creat_middle_result(para):
 
     # 获取group_set 中hour的集合
     hour_list = get_time_set_in_group_set(para, 'hour')
-    month_list = get_time_set_in_group_set(para, 'month')
+    # month_list = get_time_set_in_group_set(para, 'month')
     # 得到预报模式列表
     data_name_list = ["ob"]
     for model in para["forecasts"]:
@@ -1315,6 +1385,7 @@ def get_middle_veri_result(sta_list, para, area_coords, area_shape, model_coords
         hmfn_array = xr.DataArray(veri_array_4d,
                                   coords=dim_label,
                                   dims=dim_name)
+
         ds2 = xr.Dataset({"hmfn_array": hmfn_array})
         ds1 = ds1.update(ds2)
     if para['method'] == ['abcd']:
@@ -1788,8 +1859,7 @@ def verificate(para):
 # import nmc_verification.nmc_vf_report.perspective.veri_task3 as veri_task3
 
 start = time.time()
+creat_middle_result(para)
 verificate_with_middle_result(para)
-# creat_middle_result(para)
-
 end = time.time()
 print(end - start)
