@@ -3,9 +3,9 @@
 from os import path
 from setuptools import find_packages, setup
 from codecs import open
-name = "nmc_verification"
+name = "meteva"
 author ="liucouhua,wangbaoli,zhanglianyi"
-version ="1.1.31"
+version ="1.0.0"
 
 here = path.abspath(path.dirname(__file__))
 
