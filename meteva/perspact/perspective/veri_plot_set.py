@@ -5,11 +5,9 @@ import matplotlib.pyplot as plt
 plt.rcParams['font.sans-serif']=['SimHei'] #用来正常显示中文标签
 plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
 import numpy as np
-<<<<<<< Updated upstream:nmc_verification/nmc_vf_report/perspective/veri_plot_set.py
-import nmc_verification
-=======
+
 import meteva
->>>>>>> Stashed changes:meteva/perspact/perspective/veri_plot_set.py
+
 
 #参数数组转换为列表
 def para_array_to_list(key_num,para_array):
@@ -41,7 +39,7 @@ def para_array_to_list(key_num,para_array):
                 para_list.append(dict1)
     return para_list
 
-<<<<<<< Updated upstream:nmc_verification/nmc_vf_report/perspective/veri_plot_set.py
+
 
 def layout_bar(subplot_num,lengend_num,axis_num):
     # 设置一个子图的一些基本参数
@@ -77,9 +75,7 @@ def layout_bar(subplot_num,lengend_num,axis_num):
     return fig_w, fig_h, row_num, column_num, com_legend
 
 
-=======
->>>>>>> Stashed changes:meteva/perspact/perspective/veri_plot_set.py
-#自动布局模块
+
 def layout(subplot_num,legend_num,axis_num):
     #设置一个子图的一些基本参数
     up_low_edge_width = 0.2
@@ -110,12 +106,10 @@ def layout(subplot_num,legend_num,axis_num):
                 com_legend = True
             subplot_w = left_right_edge_width * 2 + axis_num * fit_width_bar * (legend_num + 2)
             fig_w = subplot_w * column_num
-<<<<<<< Updated upstream:nmc_verification/nmc_vf_report/perspective/veri_plot_set.py
-            if fig_w <fit_width_fig :fig_w = fit_width_fig
-=======
+
             if fig_w <fit_width_fig :
                 fig_w = fit_width_fig
->>>>>>> Stashed changes:meteva/perspact/perspective/veri_plot_set.py
+
             if fig_w < max_width_fig:
                 fig_h = subplot_h * row_num
                 return fig_w,fig_h,row_num,column_num,com_legend
@@ -151,10 +145,6 @@ class veri_plot_set:
     #初始化设置画图的默认参数
     def __init__(self,subplot = None,legend = None,axis = None,save_dir = ""):
         self.subplot = subplot
-<<<<<<< Updated upstream:nmc_verification/nmc_vf_report/perspective/veri_plot_set.py
-        self.legend = legend
-        self.axis = axis
-=======
 
         if legend == None:
             self.legend = self.subplot
@@ -165,45 +155,14 @@ class veri_plot_set:
         else:
             self.axis = axis
 
->>>>>>> Stashed changes:meteva/perspact/perspective/veri_plot_set.py
+
         self.save_dir = save_dir
     
     #柱状图参数设置
     def bar(self,veri_result):
         coords = veri_result.coords
         dims = veri_result.dims
-<<<<<<< Updated upstream:nmc_verification/nmc_vf_report/perspective/veri_plot_set.py
-        #print(dims)
 
-        not_file_dim = [self.subplot, self.legend, self.axis]
-        file_pare_dict = {}
-        plot_pare_dict = {}
-        for dim in dims:
-            if not dim in not_file_dim:
-                file_pare_dict[dim] = coords[dim].values.tolist()
-            else:
-                plot_pare_dict[dim] = coords[dim].values.tolist()
-        colors = ['r', 'b', 'g', 'm', 'c', 'y', 'orange']
-
-        if len(file_pare_dict) == 0:
-            # print(para_dict)
-            veri_result_plot = veri_result
-            # print(veri_result_plot)
-            subplot_num = len(plot_pare_dict[self.subplot])
-            legend_num = len(plot_pare_dict[self.legend])
-            axis_num = len(plot_pare_dict[self.axis])
-            width_fig, hight_fig, row_num, column_num, com_legend = layout_bar(subplot_num, legend_num, axis_num)
-            print(width_fig)
-            print(hight_fig)
-            print(row_num)
-            print(column_num)
-            print(com_legend)
-            fig, axs = plt.subplots(nrows=row_num, ncols=column_num, figsize=(width_fig, hight_fig))
-            for s in range(subplot_num):
-                si = int(s / column_num)
-                sj = s % column_num
-                if row_num == 1 and column_num == 1:
-=======
         not_file_dim = [self.subplot, self.legend, self.axis]
 
         file_pare_dict = {}
@@ -236,7 +195,7 @@ class veri_plot_set:
                 si = int(s / column_num)
                 sj = s % column_num
                 if row_num == 1 & column_num ==1:
->>>>>>> Stashed changes:meteva/perspact/perspective/veri_plot_set.py
+
                     ax = axs
                 elif row_num == 1:
                     ax = axs[sj]
@@ -246,12 +205,10 @@ class veri_plot_set:
                     ax = axs[si, sj]
 
                 x0 = np.arange(axis_num)
-<<<<<<< Updated upstream:nmc_verification/nmc_vf_report/perspective/veri_plot_set.py
-                bar_width = 1 / (legend_num + 2)
-=======
+
 
                 bar_width = 1/(legend_num + 2)
->>>>>>> Stashed changes:meteva/perspact/perspective/veri_plot_set.py
+
                 para_dict_subplot = {}
                 para_dict_subplot[self.subplot] = plot_pare_dict[self.subplot][s]
                 legends = plot_pare_dict[self.legend]
@@ -259,11 +216,7 @@ class veri_plot_set:
 
                 for c in range(legend_num):
                     x = x0 - 0.5 + (c + 1.5) * bar_width
-<<<<<<< Updated upstream:nmc_verification/nmc_vf_report/perspective/veri_plot_set.py
-                    para_dict_subplot[self.legend] = plot_pare_dict[self.legend][c]
-                    values = veri_result_plot.loc[para_dict_subplot].values
-                    ax.bar(x, values, bar_width * 0.8, color=colors[c], label=legends[c])
-=======
+
 
 
                     para_dict_subplot[self.legend] = plot_pare_dict[self.legend][c]
@@ -276,81 +229,14 @@ class veri_plot_set:
                     ax.bar(x,values,bar_width* 0.8,color =  colors[c], label=legends[c])
 
 
->>>>>>> Stashed changes:meteva/perspact/perspective/veri_plot_set.py
+
                 xticklabel = plot_pare_dict[self.axis]
 
                 ax.set_title(para_dict_subplot[self.subplot])
                 ax.set_xticks(x0)
                 ax.set_xticklabels(xticklabel)
                 y_max = np.max(values_subplot) * 1.5
-<<<<<<< Updated upstream:nmc_verification/nmc_vf_report/perspective/veri_plot_set.py
-                ax.set_ylim(0, y_max)
-                ax.legend()
-            save_path = self.save_dir
-            save_path += "\\verification_result.png"
-            nmc_verification.nmc_vf_base.tool.path_tools.creat_path(save_path)
-            plt.savefig(save_path)
 
-
-        else:
-            file_pare_list = para_array_to_list(0,file_pare_dict)
-
-
-            for para_dict in file_pare_list:
-                #print(para_dict)
-                veri_result_plot = veri_result.loc[para_dict]
-                #print(veri_result_plot)
-                subplot_num = len(plot_pare_dict[self.subplot])
-                legend_num = len(plot_pare_dict[self.legend])
-                axis_num = len(plot_pare_dict[self.axis])
-                width_fig, hight_fig, row_num, column_num,com_legend = layout_bar(subplot_num,legend_num,axis_num)
-                print(width_fig)
-                print(hight_fig)
-                print(row_num)
-                print(column_num)
-                print(com_legend)
-                fig,axs = plt.subplots(nrows=row_num, ncols=column_num, figsize=(width_fig, hight_fig))
-                for s in range(subplot_num):
-                    si = int(s / column_num)
-                    sj = s % column_num
-                    if row_num == 1 & column_num ==1:
-                        ax = axs
-                    elif row_num == 1:
-                        ax = axs[sj]
-                    elif column_num == 1:
-                        ax = axs[si]
-                    else:
-                        ax = axs[si, sj]
-
-                    x0 = np.arange(axis_num)
-                    bar_width = 1/(legend_num + 2)
-                    para_dict_subplot = {}
-                    para_dict_subplot[self.subplot] = plot_pare_dict[self.subplot][s]
-                    legends = plot_pare_dict[self.legend]
-                    values_subplot = veri_result_plot.loc[para_dict_subplot].values
-
-                    for c in range(legend_num):
-                        x = x0 - 0.5 + (c + 1.5) * bar_width
-                        para_dict_subplot[self.legend] = plot_pare_dict[self.legend][c]
-                        values = veri_result_plot.loc[para_dict_subplot].values
-                        ax.bar(x,values,bar_width* 0.8,color =  colors[c], label=legends[c])
-                    xticklabel = plot_pare_dict[self.axis]
-
-                    ax.set_title(para_dict_subplot[self.subplot])
-                    ax.set_xticks(x0)
-                    ax.set_xticklabels(xticklabel)
-                    y_max = np.max(values_subplot) * 1.5
-                    ax.set_ylim(0,y_max)
-                    ax.legend()
-                save_path = self.save_dir
-                for key in para_dict.keys():
-                    save_path += str(key) + "="+ str(para_dict[key]) + "_"
-                save_path += ".png"
-                nmc_verification.nmc_vf_base.tool.path_tools.creat_path(save_path)
-                plt.savefig(save_path)
-
-
-=======
                 ax.set_ylim(0,y_max)
                 ax.legend()
             save_path = self.save_dir
@@ -362,7 +248,7 @@ class veri_plot_set:
             plt.savefig(save_path)
 
 
->>>>>>> Stashed changes:meteva/perspact/perspective/veri_plot_set.py
+
 
 
 
