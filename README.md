@@ -16,6 +16,7 @@ Other required packages:
    httplib2>=0.12.0  
    protobuf>=3.6.1  
    netCDF4>=1.4.2  
+   pyshp>=2.1.0  
    seaborn>=0.9.0  
    ipywidgets>=7.5.1
 
