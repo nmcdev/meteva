@@ -2,6 +2,7 @@
 import copy
 import numpy as np
 import pandas as pd
+import meteva
 
 
 def sta_data(df,columns = None):
@@ -46,7 +47,10 @@ def sta_data(df,columns = None):
     else:
         for i in range(6,len(sta.columns)):
             sta.iloc[:,i] = (sta.values[:,i]).astype(np.float32)
+
+
     return sta
+
 
 def get_undim_data_names(sta):
     '''
@@ -91,10 +95,13 @@ def set_stadata_names(sta,data_name_list):
     :param data_name: 站点数据 要素名
     :return: 更改要素名名后的站点数据
     '''
-    coor_columns = ['level', 'time', 'dtime', 'id', 'lon', 'lat']
-    for data_name in data_name_list:
-        coor_columns.append(data_name)
-    sta.columns = coor_columns
+    if isinstance(data_name_list,list):
+        coor_columns = ['level', 'time', 'dtime', 'id', 'lon', 'lat']
+        for data_name in data_name_list:
+            coor_columns.append(data_name)
+        sta.columns = coor_columns
+    else:
+        print("输出名称设置不成功，数据名称列表参数需为list形式")
     return
 
 def set_stadata_coords(sta,level = None,time = None,dtime = None,id = None,lat = None,lon = None):
@@ -108,7 +115,8 @@ def set_stadata_coords(sta,level = None,time = None,dtime = None,id = None,lat =
     :return:  站点数据
     '''
     if time is not None:
-        sta.loc[:,'time'] = time
+        time1 = meteva.base.all_type_time_to_time64(time)
+        sta.loc[:,'time'] = time1
     if dtime is not None:
         sta.loc[:,'dtime'] = dtime
     if level is not None:
