@@ -221,11 +221,11 @@ def interp_gs_cubic(grd,sta,used_coords = "xy"):
     return sta1
 
 
-def interp_sg_idw(sta, grid1, background=None, effectR=1000, nearNum=8):
+def interp_sg_idw(sta, grid, background=None, effectR=1000, nearNum=8):
 
     data_name = meteva.base.get_stadata_names(sta)
     index0 = sta.index[0]
-    grid2 = meteva.base.basicdata.grid(grid1.glon, grid1.glat, [sta.loc[index0, 'time']],
+    grid2 = meteva.base.basicdata.grid(grid.glon, grid.glat, [sta.loc[index0, 'time']],
                                                        [sta.loc[index0, 'dtime']],
                                                        [sta.loc[index0, 'level']], data_name)
     xyz_sta = meteva.base.tool.math_tools.lon_lat_to_cartesian(sta['lon'].values,
@@ -256,11 +256,11 @@ def interp_sg_idw(sta, grid1, background=None, effectR=1000, nearNum=8):
     return grd
 
 
-def interp_gg_linear(grd, grid1,used_coords = "xy"):
+def interp_gg_linear(grd, grid,used_coords = "xy"):
     '''
     格点到格点插值
     :param grd:左边的网格数据信息
-    :param grid1 :右边的网格数据信息
+    :param grid :右边的网格数据信息
     :other_info:网格数据除了xy方向的数值之外，还有time,dtime，leve member 等维度的值，如果other_info= 'left’则返回结果中这些维度的值就采用grd里的值，
     否则采用grid里的值，默认为：left
     :return:双线性插值之后的结果
@@ -272,8 +272,8 @@ def interp_gg_linear(grd, grid1,used_coords = "xy"):
     times = grd["time"].values
     dtimes = grd["dtime"].values
     members = grd["member"].values
-    lons = grd['lon'].values
-    lats = grd['lat'].values
+    #lons = grd['lon'].values
+    #lats = grd['lat'].values
     grid0 = meteva.base.basicdata.get_grid_of_data(grd)
 
     grd_new = None
@@ -283,14 +283,16 @@ def interp_gg_linear(grd, grid1,used_coords = "xy"):
                 [grid0.slat, grid0.elat, grid0.dlat],grid0.gtime,grid0.dtimes,grid0.levels,grid0.members)
         else:
             grid_1 = grid0
-        grid2 = meteva.base.basicdata.grid(grid1.glon, grid1.glat, grid0.gtime, grid0.dtimes, grid0.levels,
-                                                           grid1.members)
+        grid2 = meteva.base.basicdata.grid(grid.glon, grid.glat, grid0.gtime, grid0.dtimes, grid0.levels,
+                                                           grid0.members)
         if (grid2.elon > grid_1.elon or grid2.slon < grid_1.slon or grid2.elat > grid_1.elat or grid2.slat < grid_1.slat):
 
             print("object grid is should not out of ["+ str(grid_1.slon)+","+str(grid_1.elon)+"];["+str(grid_1.slat)+","+str(grid_1.elat)+"]")
 
             return None
+
         grd_new = meteva.base.grid_data(grid2)
+        #print(grd_new)
         for i in range(len(levels)):
             for j in range(len(times)):
                 for k in range(len(dtimes)):
@@ -298,6 +300,7 @@ def interp_gg_linear(grd, grid1,used_coords = "xy"):
                         # 六维转换为二维的值
                         dat = grd.values[m,i,j,k,:,:]
                         if (grid0.dlon * grid0.nlon >= 360):
+                            dat1 = np.zeros((dat.shape[0],dat.shape[1]+1))
                             dat1[:,0:-1] = dat[:,:]
                             dat1[:, -1] = dat[:, 0]
                         else:
