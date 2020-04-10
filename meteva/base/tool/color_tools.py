@@ -8,6 +8,7 @@ import pkg_resources
 import math
 
 
+
 def clev_cmap_temper_2m():
     path = pkg_resources.resource_filename('meteva', "resources/colormaps/color_temp_2m.txt")
     return get_clev_and_cmap_from_file(path)
@@ -130,10 +131,6 @@ def get_cmap_from_picture(path,show = False):
     rgb_to_1d = np.zeros((im.shape[0],im.shape[1]))
     rgb_to_1d = im[:,:,0] * 256* 256 + im[:,:,1] * 256 + im[:,:,2]
 
-    plt.plot(im[50,:,0],'r')
-    plt.plot(im[50, :, 1], 'g')
-    plt.plot(im[50, :, 2], 'b')
-    plt.show()
 
     color_type_num_y = np.zeros(im.shape[0])
     for y in range(im.shape[0]):
@@ -270,6 +267,11 @@ def get_part_clev_and_cmap(clev_all,cmap_all,vmax,vmin):
     for i in range(len(clev_all)-1):
         if vmax > clev_all[i]:
             end_i = i+2
+    #print(start_i)
+    #print(end_i)
+    if end_i - start_i<=3:
+        end_i = start_i+3
+
     clev_part = clev_all[start_i:end_i]
     if hasattr(cmap_all,"colors"):
         cmap_colors = cmap_all.colors
