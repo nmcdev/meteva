@@ -4,8 +4,8 @@ from os import path
 from setuptools import find_packages, setup
 from codecs import open
 name = "meteva"
-author ="liucouhua,wangbaoli,zhanglianyi"
-version ="1.0.0"
+author ="liucouhua,daikan,wangbaoli"
+version ="1.0.7.1"
 
 here = path.abspath(path.dirname(__file__))
 
@@ -47,6 +47,7 @@ setup(
                       "protobuf>=3.6.1",
                       "netCDF4>=1.4.2",
                       "seaborn>=0.9.0",
-                      "ipywidgets>=7.5.1"
+                      "ipywidgets>=7.5.1",
+                      "pyshp>=2.1.0"
                       ]
 )
