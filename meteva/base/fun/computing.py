@@ -53,6 +53,7 @@ def smooth(grd,smooth_times = 1,used_coords = "xy"):
             for k in range(len(dtimes)):
                 for m in range(len(members)):
                     dat = grd.values[m,i,j,k,:,:]
+                    print(dat.shape)
                     kernel = np.array([[0.0625, 0.125, 0.0625],
                                        [0.125, 0.25, 0.125],
                                        [0.0625, 0.125, 0.0625]])
@@ -61,7 +62,6 @@ def smooth(grd,smooth_times = 1,used_coords = "xy"):
 
                     grd_new.values[m,i,j,k,:,:] = dat[:,:]
     return grd_new
-
 
 
 def moving_avarage(grd, half_window_size, skip=1):
@@ -82,8 +82,6 @@ def moving_avarage(grd, half_window_size, skip=1):
                                                   [grid0.slat, elat_skip, dlat_skip])
     dat0 = grd.values.squeeze()
     dat = np.zeros((step_num_lat, step_num_lon))
-
-
 
 
 #将两个站点dataframe相加在一起
@@ -151,6 +149,8 @@ def max_on_id(sta1_0, sta2_0, how="left"):
         # 删除重复行
         sta2 = sta2_0.drop_duplicates(['id'])
         sta1 = sta1_0.drop_duplicates(['id'])
+
+
         df = pd.merge(sta1, sta2, on='id', how=how)
         df.iloc[:, 0] = df.iloc[0, 0]
         df.iloc[:, 1] = df.iloc[0, 1]
@@ -168,19 +168,63 @@ def max_on_id(sta1_0, sta2_0, how="left"):
         drop_col = list(df.columns[len_c1:len_c1+5])
         df.drop(drop_col, axis=1, inplace=True)
 
-
         #对数据列判断最大
         datas = df.iloc[:,6:].values
+        datas[datas == meteva.base.IV] = -meteva.base.IV
         maxdata = np.max(datas,axis=1)
-        df.iloc[:,i] = maxdata
-
+        df.iloc[:,6] = maxdata
+        #print(df)
         #删除df2对应的数据列
         len_m = len(df.columns)
         columns_drop = list(df.columns[7:len_m])
         df.drop(columns_drop, axis=1, inplace=True)
         #重新命名列名称
         df.columns = columns
+
         return df
+
+
+
+def min_on_id(sta1_0, sta2_0, how="left"):
+    if sta1_0 is None:
+        return sta2_0
+    elif sta2_0 is None:
+        return sta1_0
+    else:
+        # 删除重复行
+        sta2 = sta2_0.drop_duplicates(['id'])
+        sta1 = sta1_0.drop_duplicates(['id'])
+        df = pd.merge(sta1, sta2, on='id', how=how)
+        df.iloc[:, 0] = df.iloc[0, 0]
+        df.iloc[:, 1] = df.iloc[0, 1]
+        df.iloc[:, 2] = df.iloc[0, 2]
+        #站点取df1，df2中非缺省的
+        columns = list(sta1.columns)
+        len_c1 = len(columns)
+        columns_m = list(df.columns)
+        for i in range(4,6):
+            name1 = columns_m[i]
+            name2 = columns_m[i+len_c1]
+            df.loc[df[name1].isnull(), name1] = df[df[name1].isnull()][name2]
+
+        #删除合并后第二组时空坐标信息
+        drop_col = list(df.columns[len_c1:len_c1+5])
+        df.drop(drop_col, axis=1, inplace=True)
+
+        #对数据列判断最大
+        datas = df.iloc[:,6:].values
+        mindata = np.min(datas,axis=1)
+        df.iloc[:,6] = mindata
+        #print(df)
+        #删除df2对应的数据列
+        len_m = len(df.columns)
+        columns_drop = list(df.columns[7:len_m])
+        df.drop(columns_drop, axis=1, inplace=True)
+        #重新命名列名称
+        df.columns = columns
+
+        return df
+
 
 #两个站点dataframe相减
 def minus_on_id(sta1_0, sta2_0, how="left", default=None):
