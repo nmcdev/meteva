@@ -113,7 +113,7 @@ def sta_value_ensemble_near_by_sta(sta_to,nearNum = 100,sta_from = None,drop_fri
     xyz_sta1 = lon_lat_to_cartesian(sta_from['lon'].values[:], sta_from['lat'].values[:],R = meteva.base.basicdata.ER)
     tree = cKDTree(xyz_sta0)
     _,indexs = tree.query(xyz_sta1, k=nearNum)
-    data_name = meteva.base.get_data_names(sta_from)[0]
+    data_name = meteva.base.get_stadata_names(sta_from)[0]
     input_dat = sta_from[data_name].values
     sta_ensemble = sta_to[meteva.base.get_coord_names()]
     for i in range(nearNum):

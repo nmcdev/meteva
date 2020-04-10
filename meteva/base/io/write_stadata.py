@@ -6,7 +6,7 @@ import pandas as pd
 import datetime
 import meteva
 
-def write_stadata_to_micaps3(sta0,save_path = "a.txt",creat_dir = False, type = -1,effectiveNum = 4):
+def write_stadata_to_micaps3(sta0,save_path = "a.txt",creat_dir = False, type = -1,effectiveNum = 4,show = False):
     """
     生成micaps3格式的文件
     :param sta0:站点数据信息
@@ -52,7 +52,8 @@ def write_stadata_to_micaps3(sta0,save_path = "a.txt",creat_dir = False, type = 
         df = df.reindex(columns = ['id','lon','lat','alt',data_name])
         effectiveNum_str = "%." + '%d'% effectiveNum + "f"
         df.to_csv(save_path,mode='a',header=None,sep = "\t",float_format=effectiveNum_str,index = None)
-        print('Create [%s] success' % save_path)
+        if show:
+            print('Create [%s] success' % save_path)
         return True
     except:
         exstr = traceback.format_exc()

@@ -155,7 +155,7 @@ def DataArray_to_grd(dataArray,member = None,level = None,time = None,dtime = No
     return da
 
 
-def read_griddata_from_micaps4(filename,grid=None):
+def read_griddata_from_micaps4(filename,grid=None,level = None,time = None,dtime = None,data_name = "data0",show = False):
     '''
     读取micaps4格式的格点数据，并将其保存为xarray中DataArray结构的六维数据信息
     :param filename:Micaps4格式的文件路径和文件名
@@ -180,7 +180,8 @@ def read_griddata_from_micaps4(filename,grid=None):
         day = int(strs[5])
         hour = int(strs[6])
         dts = int(strs[7])
-        levels = float(strs[8])
+        if level is None:
+            level = float(strs[8])
 
         #由于m4只提供年份的后两位，因此，做了个暂时的换算范围在1920-2019年的范围可以匹配成功
         if len(str(year1)) ==4:
@@ -204,22 +205,30 @@ def read_griddata_from_micaps4(filename,grid=None):
             dat = (np.array(strs[k:])).astype(float).reshape((1, 1, 1, 1, nlat1, nlon1))
             lon = np.arange(nlon1) * dlon1 + slon1
             lat = np.arange(nlat1) * dlat1 + slat1
-            dates = pd.to_datetime(ymd, format = "%Y%m%d%H%M" )
+            if time is None:
+                time = pd.to_datetime(ymd, format = "%Y%m%d%H%M" )
+            else:
+                time = meteva.base.tool.time_tools.all_type_time_to_time64(time)
             #print(dates)
             #times = pd.date_range(dates, periods=1)
-            dtimes = dts
+            if dtime is None:
+                dtime = dts
             #print(levels,times,dts)
-            da = xr.DataArray(dat, coords={'member': ['data0'], 'level': [levels], 'time': [dates], 'dtime': [dtimes],
+            da = xr.DataArray(dat, coords={'member': [data_name], 'level': [level], 'time': [time], 'dtime': [dtime],
                                            'lat': lat, 'lon': lon},
                               dims=['member', 'level', 'time', 'dtime', 'lat', 'lon'])
             da.attrs["dtime_type"] = "hour"
             da.name = "data0"
             meteva.base.reset(da)
             if grid is None:
+                if show:
+                    print("success read from " + filename)
                 return da
             else:
                 #如果传入函数有grid信息，就需要进行一次双线性插值，按照grid信息进行提取网格信息。
                 da1 = meteva.base.interp_gg_linear(da, grid)
+                if show:
+                    print("success read from " + filename)
                 return da1
         else:
             return None
@@ -230,7 +239,9 @@ def read_griddata_from_micaps4(filename,grid=None):
         return None
 
 #读取nc数据
-def read_griddata_from_nc(filename,grid = None,value_name = None,member = None,level = None,time = None,dt = None,lat = None,lon = None):
+def read_griddata_from_nc(filename,grid = None,
+            value_name = None,member_dim = None,level_dim = None,time_dim = None,dtime_dim = None,lat_dim = None,lon_dim = None,
+                         level=None, time=None, dtime=None, data_name="data0",show = False):
 
     """
     读取NC文件，并将其保存为xarray中DataArray结构的六维数据信息
@@ -244,19 +255,22 @@ def read_griddata_from_nc(filename,grid = None,value_name = None,member = None,l
     :param lon:经度,默认：None
     :return:返回一个DataArray结构的六维数据信息da1
     """
+    if not os.path.exists(filename):
+        print(filename+" not exists")
+        return
     try:
         ds0 = xr.open_dataset(filename)
         drop_list = []
         ds = xr.Dataset()
         #1判断要素成员member
-        if(member is None):
-            member = "member"
-        if member in list(ds0.coords) or member in list(ds0):
-            if member in ds0.coords:
-                members = ds0.coords[member]
+        if(member_dim is None):
+            member_dim = "member"
+        if member_dim in list(ds0.coords) or member_dim in list(ds0):
+            if member_dim in ds0.coords:
+                members = ds0.coords[member_dim]
             else:
-                members = ds0[member]
-                drop_list.append(member)
+                members = ds0[member_dim]
+                drop_list.append(member_dim)
 
             ds.coords["member"] = ("member", members)
             attrs_name = list(members.attrs)
@@ -266,17 +280,17 @@ def read_griddata_from_nc(filename,grid = None,value_name = None,member = None,l
             ds.coords["member"] = ("member", [0])
 
         #2判断层次level
-        if (level is None):
+        if (level_dim is None):
             if "level" in list(ds0.coords) or "level" in list(ds0):
-                level = "level"
+                level_dim = "level"
             elif "lev" in ds0.coords or "lev" in list(ds0):
-                level = "lev"
-        if level in ds0.coords or level in list(ds0):
-            if level in ds0.coords:
-                levels = ds0.coords[level]
+                level_dim = "lev"
+        if level_dim in ds0.coords or level_dim in list(ds0):
+            if level_dim in ds0.coords:
+                levels = ds0.coords[level_dim]
             else:
-                levels = ds0[level]
-                drop_list.append(level)
+                levels = ds0[level_dim]
+                drop_list.append(level_dim)
             ds.coords["level"] = ("level", levels)
             attrs_name = list(levels.attrs)
             for key in attrs_name:
@@ -285,15 +299,15 @@ def read_griddata_from_nc(filename,grid = None,value_name = None,member = None,l
             ds.coords["level"] = ("level", [0])
 
         # 3判断时间time
-        if(time is None):
+        if(time_dim is None):
             if "time" in ds0.coords or "time" in list(ds0):
-                time = "time"
+                time_dim = "time"
 
-        if time in ds0.coords or time in list(ds0):
-            if time in ds0.coords:
-                times = ds0.coords[time]
+        if time_dim in ds0.coords or time_dim in list(ds0):
+            if time_dim in ds0.coords:
+                times = ds0.coords[time_dim]
             else:
-                times = ds0[time]
+                times = ds0[time_dim]
             ds.coords["time"] = ("time", times)
             attrs_name = list(times.attrs)
             for key in attrs_name:
@@ -302,34 +316,34 @@ def read_griddata_from_nc(filename,grid = None,value_name = None,member = None,l
             ds.coords["time"] = ("time", [0])
 
         # 4判断时效dt
-        if (dt is None):
-            dt = "dtime"
-        if dt in ds0.coords or dt in list(ds0):
-            if dt in ds0.coords:
-                dts = ds0.coords[dt]
+        if (dtime_dim is None):
+            dtime_dim = "dtime"
+        if dtime_dim in ds0.coords or dtime_dim in list(ds0):
+            if dtime_dim in ds0.coords:
+                dts = ds0.coords[dtime_dim]
             else:
-                dts = ds0[dt]
-                drop_list.append(dt)
+                dts = ds0[dtime_dim]
+                drop_list.append(dtime_dim)
 
             ds.coords["dtime"] = ("dtime", dts)
             attrs_name = list(dts.attrs)
             for key in attrs_name:
-                ds.dt.attrs[key] = dts.attrs[key]
+                ds.dtime.attrs[key] = dts.attrs[key]
         else:
             ds.coords["dtime"] = ("dtime", [0])
 
         #5判断纬度lat
-        if(lat is None):
+        if(lat_dim is None):
             if "latitude" in ds0.coords or "latitude" in list(ds0):
-                lat = "latitude"
+                lat_dim = "latitude"
             elif "lat" in ds0.coords or "lat" in list(ds0):
-                lat = "lat"
-        if lat in ds0.coords or lat in list(ds0):
-            if lat in ds0.coords:
-                lats = ds0.coords[lat]
+                lat_dim = "lat"
+        if lat_dim in ds0.coords or lat_dim in list(ds0):
+            if lat_dim in ds0.coords:
+                lats = ds0.coords[lat_dim]
             else:
-                lats = ds0[lat]
-                drop_list.append(lat)
+                lats = ds0[lat_dim]
+                drop_list.append(lat_dim)
             dims = lats.dims
             if len(dims) == 1:
                 ds.coords["lat"] = ("lat", lats)
@@ -344,18 +358,18 @@ def read_griddata_from_nc(filename,grid = None,value_name = None,member = None,l
             ds.coords["lat"] = ("lat",[0])
 
         #6判断经度lon
-        if(lon is None):
+        if(lon_dim is None):
             if "longitude" in ds0.coords or "longitude" in list(ds0):
-                lon = "longitude"
+                lon_dim = "longitude"
             elif "lon" in ds0.coords or "lon" in list(ds0):
-                lon = "lon"
-        if lon in ds0.coords or lon in list(ds0):
-            if lon in ds0.coords:
-                lons = ds0.coords[lon]
+                lon_dim = "lon"
+        if lon_dim in ds0.coords or lon_dim in list(ds0):
+            if lon_dim in ds0.coords:
+                lons = ds0.coords[lon_dim]
             else:
-                lons = ds0[lon]
+                lons = ds0[lon_dim]
                 print(lons)
-                drop_list.append(lon)
+                drop_list.append(lon_dim)
 
             dims = lons.dims
             if len(dims) == 1:
@@ -435,6 +449,8 @@ def read_griddata_from_nc(filename,grid = None,value_name = None,member = None,l
         attrs_name = list(ds0.attrs)
         for key in attrs_name:
             ds.attrs[key] = ds0.attrs[key]
+
+        ds0.close()
         da1 = ds[name]
         da1.name = "data"
         if da1.coords['time'] is None:
@@ -442,18 +458,42 @@ def read_griddata_from_nc(filename,grid = None,value_name = None,member = None,l
         if da1.coords['dtime'] is None:
             da1.coords['dtime'] = [0]
 
+
+        if isinstance(da1.coords["dtime"].values[0], np.timedelta64):
+            dtime_int_m = (da1.coords["dtime"]/np.timedelta64(1, 'm'))
+            dtime_int_dm = dtime_int_m%60
+            maxdm  = np.max(dtime_int_dm)
+            if maxdm ==0:
+                #print(dtime_int)
+                da1.coords["dtime"] = (dtime_int_m/60).astype(np.int16)
+            else:
+                da1.coords["dtime"] = (dtime_int_m +10000).astype(np.int16)
+
         attrs_name = list(da1.attrs)
         if "dtime_type" in attrs_name:
             da1.attrs["dtime_type"]= "hour"
 
         meteva.base.reset(da1)
+        if time is not None and len(da1.coords["time"])==1:
+            meteva.base.set_griddata_coords(da1,gtime=[time])
+        if dtime is not None and len(da1.coords["dtime"])==1:
+            meteva.base.set_griddata_coords(da1,dtime_list=[dtime])
+        if level is not None and len(da1.coords["level"])==1:
+            meteva.base.set_griddata_coords(da1,level_list=[level])
+        if data_name is not None and len(da1.coords["member"])==1:
+            meteva.base.set_griddata_coords(da1,member_list=[data_name])
+
         if grid is None:
             da1.name = "data0"
+            if show:
+                print("success read from " + filename)
             return da1
         else:
             # 如果传入函数有grid信息，就需要进行一次双线性插值，按照grid信息进行提取网格信息。
             da2 = meteva.base.interp_gg_linear(da1, grid)
             da2.name = "data0"
+            if show:
+                print("success read from " + filename)
             return da2
     except (Exception, BaseException) as e:
         exstr = traceback.format_exc()
@@ -555,14 +595,16 @@ def read_griddata_from_nc1(filename,grid = None,value_name = None,member = None,
         print(exstr)
 
 
-def read_griddata_from_gds_file(filename,grid = None):
+def read_griddata_from_gds_file(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
     try:
         if not os.path.exists(filename):
             print(filename + " is not exist")
             return None
         file = open(filename, 'rb')
         byteArray = file.read()
-        grd = byteArray_to_griddata(byteArray,grid)
+        grd = byteArray_to_griddata(byteArray,grid,level,time,dtime,data_name)
+        if show:
+            print("success read from " + filename)
         return grd
     except Exception as e:
         print(e)
@@ -570,7 +612,7 @@ def read_griddata_from_gds_file(filename,grid = None):
 
 
 
-def read_griddata_from_gds(ip,port,filename,grid = None):
+def read_griddata_from_gds(ip,port,filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
     # ip 为字符串形式，示例 “10.20.30.40”
     # port 为整数形式
     # filename 为字符串形式 示例 "ECMWF_HR/TCDC/19083108.000"
@@ -585,11 +627,14 @@ def read_griddata_from_gds(ip,port,filename,grid = None):
         directory,fileName = os.path.split(filename)
         status, response = service.getData(directory, fileName)
         ByteArrayResult = DataBlock_pb2.ByteArrayResult()
+
         if status == 200:
             ByteArrayResult.ParseFromString(response)
             if ByteArrayResult is not None:
                 byteArray = ByteArrayResult.byteArray
-                grd = byteArray_to_griddata(byteArray)
+                grd = byteArray_to_griddata(byteArray,grid,level,time,dtime,data_name)
+                if show:
+                    print("success read from " + filename)
                 return grd
         elif status == 416:
             print(filename + "超出可读时间")
@@ -599,7 +644,7 @@ def read_griddata_from_gds(ip,port,filename,grid = None):
         return None
 
 
-def read_gridwind_from_gds(ip,port,filename,grid = None):
+def read_gridwind_from_gds(ip,port,filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
     # ip 为字符串形式，示例 “10.20.30.40”
     # port 为整数形式
     # filename 为字符串形式 示例 "ECMWF_HR/TCDC/19083108.000"
@@ -618,40 +663,86 @@ def read_gridwind_from_gds(ip,port,filename,grid = None):
             ByteArrayResult.ParseFromString(response)
             if ByteArrayResult is not None:
                 byteArray = ByteArrayResult.byteArray
-                grd = byteArray_to_gridwind(byteArray,grid=grid)
+                grd = byteArray_to_gridwind(byteArray,grid,level,time,dtime,data_name)
+                if show:
+                    print("success read from " + filename)
                 return grd
     except Exception as e:
         print(e)
         return None
 
 
-def byteArray_to_griddata(byteArray,grid = None):
+def byteArray_to_griddata(byteArray,grid = None,level = None,time = None,dtime = None,data_name = "data0"):
     #discriminator = struct.unpack("4s", byteArray[:4])[0].decode("gb2312")
-    #t = struct.unpack("h", byteArray[4:6])
+    data_type = np.frombuffer(byteArray[4:6], dtype="i2")[0]
+
     #mName = struct.unpack("20s", byteArray[6:26])[0].decode("gb2312")
     #eleName = struct.unpack("50s", byteArray[26:76])[0].decode("gb2312")
     #description = struct.unpack("30s", byteArray[76:106])[0].decode("gb2312")
-    level, y, m, d, h, timezone, period = struct.unpack("fiiiiii", byteArray[106:134])
-    startLon, endLon, lonInterval, lonGridCount = struct.unpack("fffi", byteArray[134:150])
-    startLat, endLat, latInterval, latGridCount = struct.unpack("fffi", byteArray[150:166])
+    level1, y, m, d, h, timezone, period = struct.unpack("fiiiiii", byteArray[106:134])
+    startLon, endLon, lonInterval, nlon = struct.unpack("fffi", byteArray[134:150])
+    startLat, endLat, latInterval, nlat = struct.unpack("fffi", byteArray[150:166])
     #isolineStartValue, isolineEndValue, isolineInterval = struct.unpack("fff", byteArray[166:178])
-    gridCount = lonGridCount * latGridCount
+
+    nmem = np.frombuffer(byteArray[180:182], dtype="i2")[0]
     #description = mName.rstrip('\x00') + '_' + eleName.rstrip('\x00') + "_" + str(
     #    level) + '(' + description.rstrip('\x00') + ')' + ":" + str(period)
-    if (gridCount == (len(byteArray) - 278) / 4):
-        if (startLat > 90): startLat = 90.0
-        if (startLat < -90): startLat = -90.0
-        if (endLat > 90): endLat = 90.0
-        if (endLat < -90): endLat = -90.0
+    if data_type == 4:
+        data_dtype1 = [('data', 'f4', (nlat, nlon))]
+        data_len = nlat * nlon * 4
+    elif data_type == 11:
+        data_dtype1 = [('data', 'f4', (2, nlat, nlon))]
+        data_len = 2 * nlat * nlon * 4
+
+
+    grd = None
+    if (startLat > 90): startLat = 90.0
+    if (startLat < -90): startLat = -90.0
+    if (endLat > 90): endLat = 90.0
+    if (endLat < -90): endLat = -90.0
+    lonInterval = (endLon - startLon) / (nlon - 1)
+    latInterval = (endLat - startLat) / (nlat - 1)
+    if nmem ==0:
+        if (data_len  == (len(byteArray) - 278) ):
+            grid0 = meteva.base.grid([startLon, endLon, lonInterval],
+                                                      [startLat, endLat, latInterval])
+            grd = meteva.base.grid_data(grid0)
+            grd.values = np.frombuffer(byteArray[278:], dtype='float32').reshape(1, 1, 1, 1, grid0.nlat,
+                                                                         grid0.nlon)
+    else:
         grid0 = meteva.base.grid([startLon, endLon, lonInterval],
-                                                  [startLat, endLat, latInterval])
+                                 [startLat, endLat, latInterval],member_list= np.arange(nmem).tolist())
         grd = meteva.base.grid_data(grid0)
-        grd.values = np.frombuffer(byteArray[278:], dtype='float32').reshape(1, 1, 1, 1, grid0.nlat,
-                                                                             grid0.nlon)
+        ind = 0
+        for imem in range(nmem):
+            #head_info_mem = np.frombuffer(
+            #    byteArray[ind:(ind + 278)], dtype=head_dtype)
+            ind += 278
+            data_mem = np.frombuffer(
+                byteArray[ind:(ind + data_len)], dtype=data_dtype1)
+            ind += data_len
+            #number = head_info_mem['perturbationNumber'][0]
+            grd.values[imem,0,0,0, :, :] = np.squeeze(data_mem['data'])
+
+
+    if grd is not None:
         grd.attrs["dtime_type"] = "hour"
         meteva.base.reset(grd)
-        time1 = datetime.datetime(y,m,d,h,0)
-        meteva.base.set_griddata_coords(grd,gtime=[time1],dtime_list=[period],level_list=[level])
+        if time is None:
+            time = datetime.datetime(y, m, d, h, 0)
+        else:
+            time = meteva.base.tool.time_tools.all_type_time_to_time64(time)
+        if level is None:
+            level = level1
+        if dtime is None:
+            dtime = period
+
+        if nmem==1:
+            member_list = [data_name]
+        else:
+            member_list = np.arange(nmem).tolist()
+        meteva.base.set_griddata_coords(grd,gtime=[time],dtime_list=[dtime],level_list=[level],member_list=member_list)
+
     if (grid is None):
         grd.name = "data0"
         return grd
@@ -661,60 +752,123 @@ def byteArray_to_griddata(byteArray,grid = None):
         return da
 
 
-def byteArray_to_gridwind(byteArray,grid = None):
-    # print(len(byteArray))
+def byteArray_to_gridwind(byteArray,grid = None,level = None,time = None,dtime = None,data_name = "data0"):
     #discriminator = struct.unpack("4s", byteArray[:4])[0].decode("gb2312")
-    #t = struct.unpack("h", byteArray[4:6])
+    data_type = np.frombuffer(byteArray[4:6], dtype="i2")[0]
+
     #mName = struct.unpack("20s", byteArray[6:26])[0].decode("gb2312")
     #eleName = struct.unpack("50s", byteArray[26:76])[0].decode("gb2312")
     #description = struct.unpack("30s", byteArray[76:106])[0].decode("gb2312")
-    level, y, m, d, h, timezone, period = struct.unpack("fiiiiii", byteArray[106:134])
-    startLon, endLon, lonInterval, lonGridCount = struct.unpack("fffi", byteArray[134:150])
-    startLat, endLat, latInterval, latGridCount = struct.unpack("fffi", byteArray[150:166])
+    level1, y, m, d, h, timezone, period = struct.unpack("fiiiiii", byteArray[106:134])
+    startLon, endLon, lonInterval, nlon = struct.unpack("fffi", byteArray[134:150])
+    startLat, endLat, latInterval, nlat = struct.unpack("fffi", byteArray[150:166])
     #isolineStartValue, isolineEndValue, isolineInterval = struct.unpack("fff", byteArray[166:178])
-    gridCount = lonGridCount * latGridCount
+
+    nmem = np.frombuffer(byteArray[180:182], dtype="i2")[0]
     #description = mName.rstrip('\x00') + '_' + eleName.rstrip('\x00') + "_" + str(
     #    level) + '(' + description.rstrip('\x00') + ')' + ":" + str(period)
-    if (gridCount == (len(byteArray) - 278) / 8):
-        if (startLat > 90): startLat = 90.0
-        if (startLat < -90): startLat = -90.0
-        if (endLat > 90): endLat = 90.0
-        if (endLat < -90): endLat = -90.0
-        grid0 = meteva.base.grid([startLon, endLon, lonInterval], [startLat, endLat, latInterval])
-        speed = meteva.base.grid_data(grid0)
-        i_s = 278
-        i_e = 278 + grid0.nlon * grid0.nlat * 4
-        speed.values = np.frombuffer(byteArray[i_s:i_e], dtype='float32').reshape(1, 1, 1, 1, grid0.nlat, grid0.nlon)
-        i_s += grid0.nlon * grid0.nlat * 4
-        i_e += grid0.nlon * grid0.nlat * 4
-        angle = meteva.base.grid_data(grid0)
-        angle.values = np.frombuffer(byteArray[i_s:i_e], dtype='float32').reshape(1, 1, 1, 1, grid0.nlat, grid0.nlon)
-        meteva.base.reset(speed)
-        meteva.base.reset(angle)
+    if data_type == 4:
+        data_dtype1 = [('data', 'f4', (nlat, nlon))]
+        data_len = nlat * nlon * 4
+    elif data_type == 11:
+        data_dtype1 = [('data', 'f4', (nlat, nlon))]
+        data_len = nlat * nlon * 4
 
-        wind = meteva.base.diag.speed_angle_to_wind(speed, angle)
-        time1 = datetime.datetime(y, m, d, h, 0)
-        meteva.base.set_griddata_coords(wind,gtime=[time1],dtime_list=[period],level_list=[level])
-        if (grid is None):
-            return wind
+
+    grd = None
+    if (startLat > 90): startLat = 90.0
+    if (startLat < -90): startLat = -90.0
+    if (endLat > 90): endLat = 90.0
+    if (endLat < -90): endLat = -90.0
+    lonInterval = (endLon - startLon) / (nlon - 1)
+    latInterval = (endLat - startLat) / (nlat - 1)
+    wind = None
+    print(nmem)
+    if nmem ==0:
+        if (data_len * 2 == (len(byteArray) - 278)):
+            grid0 = meteva.base.grid([startLon, endLon, lonInterval], [startLat, endLat, latInterval])
+            speed = meteva.base.grid_data(grid0)
+            i_s = 278
+            i_e = 278 + grid0.nlon * grid0.nlat * 4
+            speed.values = np.frombuffer(byteArray[i_s:i_e], dtype='float32').reshape(1, 1, 1, 1, grid0.nlat, grid0.nlon)
+            i_s += grid0.nlon * grid0.nlat * 4
+            i_e += grid0.nlon * grid0.nlat * 4
+            angle = meteva.base.grid_data(grid0)
+            angle.values = np.frombuffer(byteArray[i_s:i_e], dtype='float32').reshape(1, 1, 1, 1, grid0.nlat, grid0.nlon)
+            meteva.base.reset(speed)
+            meteva.base.reset(angle)
+
+            wind = meteva.base.diag.speed_angle_to_wind(speed, angle)
+
+            if time is None:
+                time = datetime.datetime(y, m, d, h, 0)
+            else:
+                time = meteva.base.tool.time_tools.all_type_time_to_time64(time)
+            if level is None:
+                level = level1
+            if dtime is None:
+                dtime = period
+
+            meteva.base.set_griddata_coords(wind,gtime=[time],dtime_list=[dtime],level_list=[level],member_list=["u"+data_name,"v"+data_name])
+            if (grid is None):
+                return wind
+            else:
+                return meteva.base.diag.interp_gg_linear(wind, grid)
+    else:
+        member_list = []
+        for im in range(nmem):
+            member_list.append("u"+str(im))
+            member_list.append("v" + str(im))
+        grid_en = meteva.base.grid([startLon, endLon, lonInterval], [startLat, endLat, latInterval],member_list= member_list)
+        wind_en = meteva.base.grid_data(grid_en)
+        for im in range(nmem):
+            grid0 = meteva.base.grid([startLon, endLon, lonInterval], [startLat, endLat, latInterval])
+            speed = meteva.base.grid_data(grid0)
+            i_s = 278 +data_len * im
+            i_e = 278 + data_len * (im+1)
+            speed.values = np.frombuffer(byteArray[i_s:i_e], dtype="float32").reshape(1, 1, 1, 1, grid0.nlat, grid0.nlon)
+            i_s = 278 +data_len * (im+1)
+            i_e = 278 + data_len * (im+2)
+            angle = meteva.base.grid_data(grid0)
+            angle.values = np.frombuffer(byteArray[i_s:i_e], dtype="float32").reshape(1, 1, 1, 1, grid0.nlat, grid0.nlon)
+            meteva.base.reset(speed)
+            meteva.base.reset(angle)
+
+            wind = meteva.base.diag.speed_angle_to_wind(speed, angle)
+            wind_en.values[im*2:im*2+2,0,0,0,:,:] = wind.values[:,0,0,0,:,:]
+        if time is None:
+            time = datetime.datetime(y, m, d, h, 0)
         else:
-            return meteva.base.diag.interp_gg_linear(wind, grid)
+            time = meteva.base.tool.time_tools.all_type_time_to_time64(time)
+        if level is None:
+            level = level1
+        if dtime is None:
+            dtime = period
+
+        meteva.base.set_griddata_coords(wind, gtime=[time], dtime_list=[dtime], level_list=[level],
+                                        member_list=["u" + data_name, "v" + data_name])
+        if (grid is None):
+            return wind_en
+        else:
+            return meteva.base.diag.interp_gg_linear(wind_en, grid)
 
 
-def read_gridwind_from_gds_file(filename,grid = None):
+def read_gridwind_from_gds_file(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
     try:
         if not os.path.exists(filename):
             print(filename + " is not exist")
             return None
         file = open(filename, 'rb')
         byteArray = file.read()
-        wind = byteArray_to_gridwind(byteArray,grid=grid)
+        wind = byteArray_to_gridwind(byteArray,grid=grid,level = level,time = time,dtime = dtime,data_name = data_name)
+        if show:
+            print("success read from " + filename)
         return wind
     except Exception as e:
         print(e)
         return None
 
-def read_gridwind_from_micaps2(filename,grid = None):
+def read_gridwind_from_micaps2(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show =False):
     if os.path.exists(filename):
         try:
             column = meteva.base.m2_element_column.风向
@@ -729,7 +883,9 @@ def read_gridwind_from_micaps2(filename,grid = None):
             if grid is None:
                 return wind
             else:
-                wind1 = meteva.base.interp_gg_linear(wind,grid=grid)
+                wind1 = meteva.base.interp_gg_linear(wind,grid=grid,level = level,time = time,dtime= dtime,data_name = data_name)
+                if show:
+                    print("success read from " + filename)
                 return wind1
         except (Exception, BaseException) as e:
             exstr = traceback.format_exc()
@@ -740,7 +896,7 @@ def read_gridwind_from_micaps2(filename,grid = None):
         print(filename + " not exists")
         return None
 
-def read_gridwind_from_micaps11(filename,grid = None):
+def read_gridwind_from_micaps11(filename,grid = None,level = None,time = None,dtime = None,data_name = "",show = False):
     if os.path.exists(filename):
         file = open(filename, 'r')
         str1 = file.read()
@@ -762,10 +918,14 @@ def read_gridwind_from_micaps11(filename,grid = None):
             grid_v = meteva.base.grid_data(grid0,dat_v)
             wind = meteva.base.diag.u_v_to_wind(grid_u,grid_v)
             meteva.base.reset(wind)
+            meteva.base.set_griddata_coords(wind, gtime=[time], dtime_list=[dtime], level_list=[level],
+                                            member_list=["u" + data_name, "v" + data_name])
             if grid is None:
                 return wind
             else:
-                wind1 = meteva.base.interp_gg_linear(wind, grid=grid)
+                wind1 = meteva.base.interp_gg_linear(wind, grid)
+                if show:
+                    print("success read from " + filename)
                 return wind1
         else:
             print(filename + " format wrong")
@@ -775,7 +935,7 @@ def read_gridwind_from_micaps11(filename,grid = None):
         return None
 
 
-def read_AWX_from_gds(ip,port,filename,grid = None):
+def read_AWX_from_gds(ip,port,filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
     # ip 为字符串形式，示例 “10.20.30.40”
     # port 为整数形式
     # filename 为字符串形式 示例 "ECMWF_HR/TCDC/19083108.000"
@@ -850,19 +1010,24 @@ def read_AWX_from_gds(ip,port,filename,grid = None):
                 grd.values = real_data_awx.reshape(1,1,1,1,grid0.nlat, grid0.nlon)
                 grd.attrs["dtime_type"] = "hour"
                 meteva.base.reset(grd)
+                meteva.base.set_griddata_coords(grd,gtime=[time],dtime_list=[dtime],level_list=[level],member_list=[data_name])
                 if (grid is None):
                     grd.name = "data0"
+                    if show:
+                        print("success read from " + filename)
                     return grd
                 else:
                     da = meteva.base.interp_gg_linear(grd, grid)
                     da.name = "data0"
+                    if show:
+                        print("success read from " + filename)
                     return da
     except Exception as e:
         print(e)
         return None
 
 
-def AWX_byteArray_to_griddata(byteArray,grid = None):
+def AWX_byteArray_to_griddata(byteArray,grid = None,level = None,time = None,dtime = None,data_name = "data0"):
     sat96 = struct.unpack("12s", byteArray[:12])[0]
     levl = np.frombuffer(byteArray[12:30], dtype='int16').astype(dtype="int32")
     formatstr = struct.unpack("8s", byteArray[30:38])[0]
@@ -921,6 +1086,7 @@ def AWX_byteArray_to_griddata(byteArray,grid = None):
     grd.values = real_data_awx.reshape(1, 1, 1, 1, grid0.nlat, grid0.nlon)
     grd.attrs["dtime_type"] = "hour"
     meteva.base.reset(grd)
+    meteva.base.set_griddata_coords(grd,gtime=[time],dtime_list=[dtime],level_list=[level],member_list=[data_name])
     if (grid is None):
         grd.name = "data0"
         return grd
@@ -929,20 +1095,22 @@ def AWX_byteArray_to_griddata(byteArray,grid = None):
         da.name = "data0"
         return da
 
-def read_griddata_from_AWX_file(filename,grid = None):
+def read_griddata_from_AWX_file(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
     try:
         if not os.path.exists(filename):
             print(filename + " is not exist")
             return None
         file = open(filename, 'rb')
         byteArray = file.read()
-        grd = AWX_byteArray_to_griddata(byteArray,grid)
+        grd = AWX_byteArray_to_griddata(byteArray,grid,level = level,time = time,dtime = dtime,data_name = data_name)
+        if show:
+            print("success read from " + filename)
         return grd
     except Exception as e:
         print(e)
         return None
 
-def read_griddata_from_binary(filename,grid = None):
+def read_griddata_from_binary(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
     try:
         if not os.path.exists(filename):
             print(filename + " is not exist")
@@ -954,6 +1122,11 @@ def read_griddata_from_binary(filename,grid = None):
         grid0 = meteva.base.grid([head[0],head[1],head[2]],[head[3],head[4],head[5]])
         dat  = np.frombuffer(bytes[24:], dtype='float32')
         grd = meteva.base.grid_data(grid0,dat)
+        if grid is not None:
+            grd = meteva.base.interp_gg_linear(grd,grid1=grid)
+        meteva.base.set_griddata_coords(grd,gtime=[time],dtime_list=[dtime],level_list=[level],member_list=[data_name])
+        if show:
+            print("success read from " + filename)
         return grd
     except Exception as e:
         print(e)

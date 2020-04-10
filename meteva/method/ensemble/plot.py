@@ -37,7 +37,7 @@ def box_plot_ensemble(ob, fo,member_list = None, save_path=None,title ="频率�
         labels = ["观测"]
         labels.extend(member_list)
 
-    bplot = plt.boxplot((data),showfliers =True,patch_artist=True,labels=labels)
+    bplot = plt.boxplot((data),showfliers =True,patch_artist=True,labels=labels,sym = '.')
     for i, item in enumerate(bplot["boxes"]):
         if i == 0:
             item.set_facecolor("pink")

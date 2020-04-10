@@ -156,14 +156,18 @@ def combine_on_obTime_id(sta_ob,sta_fo_list):
     :param sta_fo_list:
     :return:
     '''
-    dtime_list = list(set(sta_fo_list[0]['dtime'].values.tolist()))
-    sta_combine = []
-    for dtime in dtime_list:
-        sta = copy.deepcopy(sta_ob)
-        sta["time"] = sta["time"] - datetime.timedelta(hours= dtime)
-        sta["dtime"] = dtime
-        sta_combine.append(sta)
-    sta_combine = pd.concat(sta_combine, axis=0)
+
+    if sta_ob is None:
+        sta_combine = None
+    else:
+        dtime_list = list(set(sta_fo_list[0]['dtime'].values.tolist()))
+        sta_combine = []
+        for dtime in dtime_list:
+            sta = copy.deepcopy(sta_ob)
+            sta["time"] = sta["time"] - datetime.timedelta(hours= dtime)
+            sta["dtime"] = dtime
+            sta_combine.append(sta)
+        sta_combine = pd.concat(sta_combine, axis=0)
     for sta_fo in sta_fo_list:
         sta_combine = combine_on_level_time_dtime_id(sta_combine,sta_fo)
 
@@ -197,3 +201,30 @@ def combine_on_bak_idandobTime1(sta_list):
 
         intersection_of_data = combine_on_all_coords(intersection_of_data, sta)
     return intersection_of_data
+
+
+def combine_expand_IV(sta,sta_with_IV):
+    '''
+        将观测
+        :param sta_ob:
+        :param sta_fo_list:
+        :return:
+        '''
+
+    sta_expand = []
+    sta_with_IV1 = copy.deepcopy(sta_with_IV)
+    for i in range(4):
+        if sta_with_IV.iloc[0,i] == meteva.base.IV or pd.isnull(sta_with_IV.iloc[0,i]):
+
+            value_list = list(set(sta.iloc[:,i].values.tolist()))
+            #print(value_list)
+            for value in value_list:
+                sta1 = copy.deepcopy(sta_with_IV1)
+                sta1.iloc[:,i] = value
+                sta_expand.append(sta1)
+            #print(len(sta_expand))
+            sta_with_IV1 = pd.concat(sta_expand, axis=0)
+    #print(sta_with_IV1)
+
+    sta_combine = combine_on_level_time_dtime_id(sta, sta_with_IV1)
+    return sta_combine

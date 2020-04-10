@@ -10,7 +10,7 @@ from meteva.base import IV
 import math
 import copy
 
-def rain_24h_sg(sta_ob,grd_fo,  save_path=None):
+def rain_24h_sg(sta_ob,grd_fo,save_path=None,add_county_line = False):
     '''
     #绘制24小时降水实况与预报对比图
     :param grd_fo: 输入的网格数据，包含一个平面的网格场
@@ -54,6 +54,8 @@ def rain_24h_sg(sta_ob,grd_fo,  save_path=None):
     ax = plt.axes(rect1)
     # 设置地图背景
     add_china_map_2basemap(ax, name='province', edgecolor='k', lw=0.3,encoding = 'gbk')  #"省界"
+    if add_county_line:
+        add_china_map_2basemap(ax, name="county", edgecolor='k', lw=0.2, encoding='gbk')  # "省界"
     ax.set_xlim((grid_fo.slon, grid_fo.elon))
     ax.set_ylim((grid_fo.slat, grid_fo.elat))
 
@@ -126,7 +128,7 @@ def rain_24h_sg(sta_ob,grd_fo,  save_path=None):
     plt.close()
     return
 
-def rain_24h_comprehensive_sg(sta_ob,grd_fo, save_path=None):
+def rain_24h_comprehensive_sg(sta_ob,grd_fo, save_path=None,add_county_line = False):
     '''
     #绘制24小时降水实况与预报综合对比检验图，画幅中央为预报实况的对比，左右两侧为各类检验指标
     :param grd_fo: 输入的网格数据，包含一个平面的网格场
@@ -169,6 +171,8 @@ def rain_24h_comprehensive_sg(sta_ob,grd_fo, save_path=None):
     ax = plt.axes(rect1)
     # 设置地图背景
     add_china_map_2basemap(ax, name='province', edgecolor='k', lw=0.3,encoding = 'gbk')  #"省界"
+    if add_county_line:
+        add_china_map_2basemap(ax, name="county", edgecolor='k', lw=0.2, encoding='gbk')  # "省界"
     ax.set_xlim((grid_fo.slon, grid_fo.elon))
     ax.set_ylim((grid_fo.slat, grid_fo.elat))
 
@@ -346,14 +350,25 @@ def rain_24h_comprehensive_sg(sta_ob,grd_fo, save_path=None):
 
     ob_has = ob[ob >= 0.01]
     fo_has = fo[fo >= 0.01]
+    mean_fo = 0
+    max_fo = 0
+    mean_ob = 0
+    max_ob = 0
+    if len(fo_has)>1:
+        mean_fo = np.mean(fo_has)
+        max_fo = np.max(fo_has)
+    if len(ob_has)>1:
+        mean_ob = np.mean(ob_has)
+        max_fo = np.max(ob_has)
+
     text = "降水站点实况和预报 n=" + str(len(ob)) + "\n"
     text += "=============================================\n"
     text += "                         观测           预报\n"
     text += "---------------------------------------------\n"
     text += "有降水站点数(>=0.01)     " + "%4d" % len(ob_has) + "           %4d" % len(fo_has) + "\n"
     text += "有降水站点数百分比%    " + "%6.1f" % (len(ob_has) / len(ob)) + "%15.1f" % (len(fo_has) / len(fo)) + "\n"
-    text += "平均降水量(排除无降水) " + "%6.1f" % (np.mean(ob_has)) + "%15.1f" % (np.mean(fo_has)) + "\n"
-    text += "最大降水量             " + "%6.1f" % (np.max(ob_has)) + "%15.1f" % (np.max(fo_has))+"\n"
+    text += "平均降水量(排除无降水) " + "%6.1f" % (mean_ob) + "%15.1f" % (mean_fo) + "\n"
+    text += "最大降水量             " + "%6.1f" % (max_ob) + "%15.1f" % (max_fo)+"\n"
     text += "---------------------------------------------"
     plt.text(0, 0, text, fontsize=9)
 
@@ -426,7 +441,7 @@ def rain_24h_comprehensive_sg(sta_ob,grd_fo, save_path=None):
 
     return
 
-def rain_24h_comprehensive_chinaland_sg(sta_ob,grd_fo,  save_path=None):
+def rain_24h_comprehensive_chinaland_sg(sta_ob,grd_fo,  save_path=None,add_county_line = False):
     '''
     #绘制24小时降水实况与预报综合对比检验图，专为为全国区域设置的画面布局，画面更加紧凑
     :param grd_fo: 输入的网格数据，包含一个平面的网格场
@@ -444,6 +459,8 @@ def rain_24h_comprehensive_chinaland_sg(sta_ob,grd_fo,  save_path=None):
     # 设置地图背景
     map_extent = [73, 135, 18, 54]
     add_china_map_2basemap(ax, name='province', edgecolor='k', lw=0.3,encoding = 'gbk')  #"省界"
+    if add_county_line:
+        add_china_map_2basemap(ax, name="county", edgecolor='k', lw=0.2, encoding='gbk')  # "县界"
     ax.set_xlim((73, 135))
     ax.set_ylim((18, 54))
 
@@ -608,15 +625,28 @@ def rain_24h_comprehensive_chinaland_sg(sta_ob,grd_fo,  save_path=None):
 
     ob_has = ob[ob >= 0.01]
     fo_has = fo[fo >= 0.01]
+    mean_fo = 0
+    max_fo = 0
+    mean_ob = 0
+    max_ob = 0
+    if len(fo_has)>1:
+        mean_fo = np.mean(fo_has)
+        max_fo = np.max(fo_has)
+    if len(ob_has)>1:
+        mean_ob = np.mean(ob_has)
+        max_fo = np.max(ob_has)
+
     text = "降水站点实况和预报 n=" + str(len(ob)) + "\n"
-    text += "=======================================================\n"
-    text += "                         observation      Predication\n"
-    text += "-------------------------------------------------------\n"
-    text += "有降水站点数(>=0.01)        " + "%4d" % len(ob_has) + "                %4d" % len(fo_has) + "\n"
-    text += "有降水站点数百分比%     " + "%8.2f" % (len(ob_has) / len(ob)) + "%20.2f" % (len(fo_has) / len(fo)) + "\n"
-    text += "平均降水量(排除无降水)  " + "%8.2f" % (np.mean(ob_has)) + "%20.2f" % (np.mean(fo_has)) + "\n"
-    text += "最大降水量              " + "%8.2f" % (np.max(ob_has)) + "%20.2f" % (np.max(fo_has))
+    text += "=============================================\n"
+    text += "                         观测           预报\n"
+    text += "---------------------------------------------\n"
+    text += "有降水站点数(>=0.01)     " + "%4d" % len(ob_has) + "           %4d" % len(fo_has) + "\n"
+    text += "有降水站点数百分比%    " + "%6.1f" % (len(ob_has) / len(ob)) + "%15.1f" % (len(fo_has) / len(fo)) + "\n"
+    text += "平均降水量(排除无降水) " + "%6.1f" % (mean_ob) + "%15.1f" % (mean_fo) + "\n"
+    text += "最大降水量             " + "%6.1f" % (max_ob) + "%15.1f" % (max_fo)+"\n"
+    text += "---------------------------------------------"
     plt.text(0, 0, text, fontsize=9)
+
 
     # 绘制统计检验结果
     rect5 = [0.705, 0.08, 0.28, 0.85]  # 左下宽高
@@ -686,7 +716,7 @@ def rain_24h_comprehensive_chinaland_sg(sta_ob,grd_fo,  save_path=None):
     plt.close()
     return
 
-def temper_gg(grd_ob,grd_fo,save_path = None):
+def temper_gg(grd_ob,grd_fo,save_path = None,add_county_line = False):
 
     ob_min = np.min(grd_ob.values)
     fo_min = np.min(grd_fo.values)
@@ -740,6 +770,8 @@ def temper_gg(grd_ob,grd_fo,save_path = None):
     # 设置地图背景
     ax1 = plt.axes(rect1)
     add_china_map_2basemap(ax1, name='province', edgecolor='k', lw=0.3,encoding = 'gbk')  #"省界"
+    if add_county_line:
+        add_china_map_2basemap(ax1, name="county", edgecolor='k', lw=0.2, encoding='gbk')  # "县界"
     ax1.set_xlim((grid0.slon, grid0.elon))
     ax1.set_ylim((grid0.slat, grid0.elat))
 
@@ -758,6 +790,8 @@ def temper_gg(grd_ob,grd_fo,save_path = None):
 
     ax2 = plt.axes(rect2)
     add_china_map_2basemap(ax2, name='province', edgecolor='k', lw=0.3,encoding = 'gbk')  #"省界"
+    if add_county_line:
+        add_china_map_2basemap(ax2, name="county", edgecolor='k', lw=0.2, encoding='gbk')  # "县界"
     ax2.set_xlim((grid0.slon, grid0.elon))
     ax2.set_ylim((grid0.slat, grid0.elat))
     ax2.contourf(x, y, grd_fo.values.squeeze(), levels = clevs,cmap=cmap)  # 填色图
@@ -768,6 +802,8 @@ def temper_gg(grd_ob,grd_fo,save_path = None):
 
     ax3 = plt.axes(rect3)
     add_china_map_2basemap(ax3, name='province', edgecolor='k', lw=0.3,encoding = 'gbk')  #"省界"
+    if add_county_line:
+        add_china_map_2basemap(ax3, name="county", edgecolor='k', lw=0.2, encoding='gbk')  # "县界"
     ax3.set_xlim((grid0.slon, grid0.elon))
     ax3.set_ylim((grid0.slat, grid0.elat))
 
@@ -798,7 +834,7 @@ def temper_gg(grd_ob,grd_fo,save_path = None):
         plt.savefig(save_path, dpi=300)
     plt.close()
 
-def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None):
+def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None,add_county_line = False):
 
     ob_min = np.min(grd_ob.values)
     fo_min = np.min(grd_fo.values)
@@ -853,6 +889,8 @@ def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None):
 
     ax1 = plt.axes(rect1)
     add_china_map_2basemap(ax1, name='province', edgecolor='k', lw=0.3,encoding = 'gbk')  #"省界"
+    if add_county_line:
+        add_china_map_2basemap(ax1, name="county", edgecolor='k', lw=0.2, encoding='gbk')  # "县界"
     ax1.set_xlim((grid0.slon, grid0.elon))
     ax1.set_ylim((grid0.slat, grid0.elat))
 
@@ -871,6 +909,8 @@ def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None):
 
     ax2 = plt.axes(rect2)
     add_china_map_2basemap(ax2, name='province', edgecolor='k', lw=0.3,encoding = 'gbk')  #"省界"
+    if add_county_line:
+        add_china_map_2basemap(ax2, name="county", edgecolor='k', lw=0.2, encoding='gbk')  # "县界"
     ax2.set_xlim((grid0.slon, grid0.elon))
     ax2.set_ylim((grid0.slat, grid0.elat))
     ax2.contourf(x, y, grd_fo.values.squeeze(), levels = clevs,cmap=cmap)  # 填色图
@@ -881,6 +921,8 @@ def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None):
 
     ax3 = plt.axes(rect3)
     add_china_map_2basemap(ax3, name='province', edgecolor='k', lw=0.3,encoding = 'gbk')  #"省界"
+    if add_county_line:
+        add_china_map_2basemap(ax3, name="county", edgecolor='k', lw=0.2, encoding='gbk')  # "县界"
     ax3.set_xlim((grid0.slon, grid0.elon))
     ax3.set_ylim((grid0.slat, grid0.elat))
 
@@ -984,8 +1026,7 @@ def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None):
     bias_ce = meteva.method.continuous.score.bias_m(ob, fo)
     cor = meteva.method.continuous.score.corr(ob,fo)
 
-    ob_has = ob[ob >= 0.01]
-    fo_has = fo[fo >= 0.01]
+
     text = "格点检验统计量 n=" + str(len(ob)) + "\n"
     text += "==============================================\n"
     text += "                     实况               预报   \n"

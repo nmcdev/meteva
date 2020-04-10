@@ -5,7 +5,7 @@ import meteva
 import os
 import traceback
 
-def write_griddata_to_micaps4(da,save_path = "a.txt",creat_dir = False,effectiveNum = 6):
+def write_griddata_to_micaps4(da,save_path = "a.txt",creat_dir = False,effectiveNum = 6,show = False):
     """
     输出micaps4格式文件
     :param da:xarray多维数据信息
@@ -87,14 +87,15 @@ def write_griddata_to_micaps4(da,save_path = "a.txt",creat_dir = False,effective
 
         np.savetxt(save_path, grid_values, delimiter=' ',
                    fmt=format_str, header=title, comments='')
-        print('Create [%s] success' % save_path)
+        if show:
+            print('Create [%s] success' % save_path)
         return True
     except:
         exstr = traceback.format_exc()
         print(exstr)
         return False
 
-def write_griddata_to_nc(da,save_path = "a.txt",creat_dir = False,effectiveNum = 3):
+def write_griddata_to_nc(da,save_path = "a.txt",creat_dir = False,effectiveNum = 3,show = False):
     try:
         dir = os.path.split(os.path.abspath(save_path))[0]
         if not os.path.isdir(dir):
@@ -109,16 +110,18 @@ def write_griddata_to_nc(da,save_path = "a.txt",creat_dir = False,effectiveNum =
                             'dtype': 'int32',
                             'scale_factor': scale_factor,
                              'zlib': True,
+                            '_FillValue':999999.0
                             }
                         }
         da.to_netcdf(save_path,encoding = encodingdict)
-        print('Create [%s] success' % save_path)
+        if show:
+            print('Create [%s] success' % save_path)
         return True
     except:
         exstr = traceback.format_exc()
         print(exstr)
         return False
-def write_griddata_to_micaps11(wind,save_path = "a.txt",creat_dir = False,effectiveNum = 3):
+def write_griddata_to_micaps11(wind,save_path = "a.txt",creat_dir = False,effectiveNum = 3,show = False):
     try:
         dir = os.path.split(os.path.abspath(save_path))[0]
         if not os.path.isdir(dir):
@@ -156,7 +159,8 @@ def write_griddata_to_micaps11(wind,save_path = "a.txt",creat_dir = False,effect
 
         np.savetxt(save_path, grid_values, delimiter=' ',
                    fmt=format_str, header=title, comments='')
-        print('Create [%s] success' % save_path)
+        if show:
+            print('Create [%s] success' % save_path)
         return True
     except:
         exstr = traceback.format_exc()

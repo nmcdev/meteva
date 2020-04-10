@@ -2,8 +2,6 @@ import numpy as np
 from meteva.base.tool.math_tools import mean_iteration,sxy_iteration,ss_iteration
 from meteva.base import IV
 
-
-
 def sample_count(Ob,Fo  = None):
     '''
     计算检验的样本数
@@ -33,6 +31,40 @@ def fo_mean(Ob,Fo):
     :return: 实数
     '''
     return np.mean(Fo)
+
+def tc_count(Ob,Fo,threshold):
+    '''
+    计算准确率的中间结果
+    :param Ob:
+    :param Fo:
+    :param threshold:
+    :return:
+    '''
+    total_count = Ob.size
+    error = np.abs(Fo - Ob)
+    index = np.where(error<= threshold)
+    correct_count = len(index[0])
+    return np.array([total_count,correct_count])
+
+def correct_rate(Ob,Fo,threshold):
+    '''
+    计算准确率
+    :param Ob:
+    :param Fo:
+    :param threshold:
+    :return:
+    '''
+    tc_array = tc_count(Ob,Fo,threshold)
+    return tc_array[1]/tc_array[0]
+
+def correct_rate_tc(tc_count_array):
+    '''
+
+    :param tc_count_array:
+    :return:
+    '''
+    cr1 = tc_count_array[...,1]/tc_count_array[...,0]
+    return cr1
 
 
 def tase(Ob,Fo):
@@ -164,7 +196,6 @@ def bias_tmmsss(tmmsss_array):
         bias0 = mean_ob/mean_fo
         bias0[mean_ob == IV] = IV
     return bias0
-
 
 def corr(Ob, Fo):
     '''

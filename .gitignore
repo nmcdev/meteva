@@ -1,0 +1,8 @@
+# ignore all target directories
+build/*
+# ignore all target directories
+dist/*
+# ignore all target directories
+doc/*
+# ignore all files ending with pyc
+*.pyc
