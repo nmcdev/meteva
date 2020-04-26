@@ -6,7 +6,64 @@ import numpy as np
 import copy
 import pandas as pd
 
+
+def accumulate_time(sta_ob,span = 24,step = None,keep_all = False):
+    '''观测数据累加'''
+    times= sta_ob.loc[:,'time'].values
+    times = list(set(times))
+    times.sort()
+    times = np.array(times)
+    dtimes = times[1:] - times[0:-1]
+    min_dtime = np.min(dtimes)
+    rain_ac = None
+    if span is None:
+        if step is None:
+            print("range or step must be set")
+            return
+    else:
+        dtimes = span * np.timedelta64(1, 'h')
+        step = int(dtimes/min_dtime)
+    for i in range(step):
+        rain1 = sta_ob.copy()
+        rain1["time"] = rain1["time"] + min_dtime * i
+        rain_ac = meteva.base.add_on_level_time_dtime_id(rain_ac,rain1,how="inner")
+    if not keep_all:
+        dtimes = times[:] - times[-1]
+        dh = (dtimes/min_dtime).astype(np.int32)
+        new_times = times[dh%step ==0]
+        rain_ac = meteva.base.in_time_list(rain_ac,new_times)
+    return rain_ac
+
+def accumulate_dtime(sta_ob,span = 24,step = None,keep_all = False):
+    '''观测数据累加'''
+    times= sta_ob.loc[:,'time'].values
+    times = list(set(times))
+    times.sort()
+    times = np.array(times)
+    dtimes = times[1:] - times[0:-1]
+    min_dtime = np.min(dtimes)
+    rain_ac = None
+    if span is None:
+        if step is None:
+            print("range or step must be set")
+            return
+    else:
+        dtimes = span * np.timedelta64(1, 'h')
+        step = int(dtimes/min_dtime)
+    for i in range(step):
+        rain1 = sta_ob.copy()
+        rain1["time"] = rain1["time"] + min_dtime * i
+        rain_ac = meteva.base.add_on_level_time_dtime_id(rain_ac,rain1,how="inner")
+    if not keep_all:
+        dtimes = times[:] - times[-1]
+        dh = (dtimes/min_dtime).astype(np.int32)
+        new_times = times[dh%step ==0]
+        rain_ac = meteva.base.in_time_list(rain_ac,new_times)
+    return rain_ac
+
+
 def t_rh_to_tw(t,rh):
+    '''根据温度和相对湿度计算湿球温度'''
     sta = meteva.base.combine_on_all_coords(t,rh)
     meteva.base.set_stadata_names(sta,["t","rh"])
     T = sta["t"].values
@@ -67,7 +124,42 @@ def speed_angle_to_wind(speed,angle = None):
         wind.values[1, :, :, :, :, :] = speed_v[:, :] * np.sin(angle_v[:, :] * math.pi /180)
         return wind
 
+def t_dtp_to_rh(temp,dtp):
+    if isinstance(temp,pd.DataFrame):
+        sta = meteva.base.combine_on_all_coords(temp, dtp)
+        meteva.base.set_stadata_names(sta, ["t", "dtp"])
+        T = sta["t"].values
+        if(T[0]>120):
+            T -= 273.16
+        D = sta["dtp"].values
+        if D[0] >120:
+            D -= 273.16
+        e0 = 6.11 * np.exp(17.15 * T/(235 + T))
+        e1 = 6.11 * np.exp(17.15 * D / (235 + D))
 
+        rh = 100 * e1/e0
+        sta["rh"] = rh
+        sta = sta.drop(["t", "dtp"], axis=1)
+        return sta
+    else:
+        grid0 = meteva.base.get_grid_of_data(temp)
+
+        if temp.values[0,0,0,0,0,0] >120:
+            T = temp.values - 273.16
+        else:
+            T = temp.values
+        if dtp.values[0,0,0,0,0,0] >120:
+            D = dtp.values - 273.16
+        else:
+            D = dtp.values
+
+        e0 = 6.11 * np.exp(17.15 * T/(235 + T))
+        e1 = 6.11 * np.exp(17.15 * D / (235 + D))
+
+        rh = 100 * e0/e1
+        grd = meteva.base.grid_data(grid0,rh)
+
+        return grd
 
 def sta_index_ensemble_near_by_sta(sta_to,nearNum = 100,sta_from = None,drop_frist = False):
     if(sta_to is None):
@@ -155,7 +247,6 @@ def sta_index_ensemble_near_by_grid(sta, grid,nearNum = 1):
     grd_en.values = inds.reshape((nearNum,1,1,1,grid1.nlat,grid1.nlon))
     return grd_en
 
-
 def mean_of_sta(sta,used_coords = ["member"]):
     sta_mean = sta[meteva.base.get_coord_names()]
     sta_data = sta[meteva.base.get_stadata_names(sta)]
@@ -195,7 +286,6 @@ def min_of_sta(sta,used_coords = ["member"]):
     min1 = np.min(value, axis=1)
     sta_min['min'] = min1
     return sta_min
-
 
 #获取网格数据的平均值
 def mean_of_grd(grd,used_coords = ["member"]):
