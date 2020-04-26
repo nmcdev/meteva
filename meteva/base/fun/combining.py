@@ -58,7 +58,7 @@ def that_the_name_exists(list, value):
         return value
 
 #  两个站点信息合并为一个，以站号为公共部分，在原有的dataframe的基础上增加列数
-def combine_on_all_coords(sta, sta1):
+def combine_on_all_coords(sta, sta1,how = "inner"):
     '''
     merge_on_all_dim 合并两个sta_dataframe并且使要素名不重复
     :param sta: 一个站点dataframe
@@ -84,7 +84,7 @@ def combine_on_all_coords(sta, sta1):
                 ago_name = copy.deepcopy(sta_value_column)
                 sta_value_column = that_the_name_exists(sta1_value_columns, sta_value_column)
                 sta.rename(columns={ago_name: sta_value_column})
-        df = pd.merge(sta, sta1, on=columns, how='inner')
+        df = pd.merge(sta, sta1, on=columns, how=how)
         return df
 
 def combine_on_leve_time_id(sta,sta1):
@@ -118,7 +118,7 @@ def combine_on_leve_time_id(sta,sta1):
         df = pd.merge(sta, sta2, on=columns, how='inner')
         return df
 
-def combine_on_level_time_dtime_id(sta, sta1):
+def combine_on_level_time_dtime_id(sta, sta1,how = 'inner'):
     '''
     merge_on_all_dim 合并两个sta_dataframe并且使要素名不重复
     :param sta: 一个站点dataframe
@@ -145,11 +145,17 @@ def combine_on_level_time_dtime_id(sta, sta1):
                 ago_name = copy.deepcopy(sta_value_column)
                 sta_value_column = that_the_name_exists(sta2_value_columns, sta_value_column)
                 sta.rename(columns={ago_name: sta_value_column})
-        sta2.drop(["lon","lat"], axis=1, inplace=True)
-        df = pd.merge(sta, sta2, on=columns, how='inner')
+        if(how == "inner"):
+            sta2.drop(["lon","lat"], axis=1, inplace=True)
+            df = pd.merge(sta, sta2, on=columns, how=how)
+        else:
+            sta3 = sta.copy()
+            sta3.drop(["lon","lat"], axis=1, inplace=True)
+            df = pd.merge(sta3, sta2, on=columns, how=how)
+            df = meteva.base.sta_data(df)
         return df
 
-def combine_on_obTime_id(sta_ob,sta_fo_list):
+def combine_on_obTime_id(sta_ob,sta_fo_list,need_match_ob = False):
     '''
     将观测
     :param sta_ob:
@@ -161,19 +167,31 @@ def combine_on_obTime_id(sta_ob,sta_fo_list):
         sta_combine = None
     else:
         dtime_list = list(set(sta_fo_list[0]['dtime'].values.tolist()))
+        #print(dtime_list)
         sta_combine = []
         for dtime in dtime_list:
             sta = copy.deepcopy(sta_ob)
             sta["time"] = sta["time"] - datetime.timedelta(hours= dtime)
             sta["dtime"] = dtime
             sta_combine.append(sta)
+
         sta_combine = pd.concat(sta_combine, axis=0)
+
+    sta_combine_fo = None
     for sta_fo in sta_fo_list:
-        sta_combine = combine_on_level_time_dtime_id(sta_combine,sta_fo)
+        sta_combine_fo = combine_on_level_time_dtime_id(sta_combine_fo, sta_fo)
+
+    if need_match_ob:
+        sta_combine = combine_on_level_time_dtime_id(sta_combine, sta_combine_fo, how="inner")
+    else:
+        sta_combine = combine_on_level_time_dtime_id(sta_combine,sta_combine_fo,how="right")
+        sta_combine = sta_combine.fillna(meteva.base.IV)
 
     return sta_combine
 
-def combine_on_obTime(sta_ob,sta_fo_list):
+
+
+def combine_on_obTime(sta_ob,sta_fo_list,need_match_ob = False):
     dtime_list = list(set(sta_fo_list[0]['dtime'].values.tolist()))
     sta_combine = []
     for dtime in dtime_list:
@@ -182,8 +200,19 @@ def combine_on_obTime(sta_ob,sta_fo_list):
         sta["dtime"] = dtime
         sta_combine.append(sta)
     sta_combine = pd.concat(sta_combine,axis=0)
+
+    sta_combine_fo = None
     for sta_fo in sta_fo_list:
-        sta_combine = combine_on_all_coords(sta_combine,sta_fo)
+        sta_combine_fo = combine_on_all_coords(sta_combine_fo, sta_fo)
+
+
+    if need_match_ob:
+        sta_combine = combine_on_all_coords(sta_combine, sta_combine_fo, how="inner")
+    else:
+        sta_combine = combine_on_all_coords(sta_combine,sta_combine_fo,how="right")
+        sta_combine = sta_combine.fillna(meteva.base.IV)
+
+
 
     return sta_combine
 
