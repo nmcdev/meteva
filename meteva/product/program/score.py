@@ -152,18 +152,17 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,para1 = None,para2
     return result,group_list_list1,sta_result
 
 
-'''
-df = pd.DataFrame({"level":[850,500],
-                   "time":[datetime.datetime(2018,1,1,8,0),datetime.datetime(2019,12,20,20,0)],
-                   "dtime":[12,36],
-                   "id":[54511,54512],
-                   "lon":[100,110],
-                  "lat":[30,40],
-                  "ob":[0,2],
-                  "fo1":[1,1],
-                  "fo2":[2,3]})
-sta = meteva.base.sta_data(df)
-print(sta)
-veri = score(sta,nvm.mae,group_by="ob_day")
-print(veri)
-'''
+
+def score_id_scatter(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_list_list = None,para1 = None,para2 = None,save_dir = None,save_path = None,title = None):
+    pass
+
+
+def score_id_contourf(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_list_list = None,para1 = None,para2 = None,save_dir = None,save_path = None,title = None):
+    pass
+
+
+def score_time_dtime_line():
+    pass
+
+def score_time_dtime_mesh():
+    pass
