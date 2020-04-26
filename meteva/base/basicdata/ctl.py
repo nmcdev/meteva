@@ -15,7 +15,7 @@ class ctl:
         self.nlat = 1
         self.nlevel = 1
         self.ntime = 1
-        self.nvar = 1
+        self.values = []
         self.nensemble = 1
         self.data_Path = ""
 
