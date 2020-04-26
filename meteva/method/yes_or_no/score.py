@@ -343,6 +343,56 @@ def ts(Ob, Fo, grade_list=[1e-30]):
     hfmc_array =hfmc(Ob, Fo, grade_list)
     return ts_hfmc(hfmc_array)
 
+
+def hfmdt(Ob,Fo,dtime,grade_list = [1e-30]):
+    hfmdt_array = np.zeros((len(grade_list),4))
+    tn = Ob.size
+
+    for i in range(len(grade_list)):
+        threshold = grade_list[i]
+        obhap = np.zeros_like(Ob)
+        obhap[Ob >= threshold] = 1
+        fohap = np.zeros_like(Fo)
+        fohap[Fo >= threshold] = 1
+        hit_threshold = (obhap * fohap)
+        mis_threshold = (obhap * (1 - fohap))
+        fal_threshold = ((1 - obhap) * fohap)
+        cn_threshold = hit_threshold * dtime - fal_threshold * 0.2 * dtime
+        hfmdt_array[i, 0] = hit_threshold.sum()
+        hfmdt_array[i, 1] = fal_threshold.sum()
+        hfmdt_array[i, 2] = mis_threshold.sum()
+        hfmdt_array[i, 3] = cn_threshold.sum()
+    return hfmdt_array
+
+def effective_dtime_hfmdt(hfmdt_array):
+    '''
+
+    :param hfmdt_array:
+    :return:
+    '''
+    efdt = hfmdt_array[...,3]
+    hit = hfmdt_array[...,0]
+    fal = hfmdt_array[...,1]
+    mis = hfmdt_array[...,2]
+    sum = hit +mis + fal
+    sum[sum ==0] = 1e-10
+    edt_array =efdt / sum
+    return edt_array
+
+def effective_dtime(Ob,Fo,dtime,grade_list = [1e-30]):
+    '''
+
+    :param Ob: ob
+    :param Fo: fo
+    :param dtime: 预报时效
+    :param grade_list: 等级
+    :return:  有效预报时效
+    '''
+    hfmdt_array = hfmdt(Ob,Fo,dtime,grade_list)
+    edt_array =effective_dtime_hfmdt(hfmdt_array)
+    return edt_array
+
+
 def ts_hfmc(hfmc_array):
     '''
     ts评分
