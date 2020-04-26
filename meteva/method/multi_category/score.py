@@ -1,6 +1,7 @@
 import meteva
 import numpy as np
 from meteva.base import IV
+from meteva.method.yes_or_no.score import ts_hfmc,ets_hfmc,bias_hfmc,far_hfmc,mr_hfmc
 
 def tc(ob, fo, grade_list=None):
     '''
@@ -31,21 +32,69 @@ def tc(ob, fo, grade_list=None):
     correct_num = np.sum(fo1 == ob1)
     return np.array([ob.size, correct_num])
 
-def tcof(ob,fo,grade_list):
-
+def tcof(ob,fo,grade_list = None):
     '''
     多分类评分中间统计量
     :param ob: 实况数据 任意维numpy数组
     :param fo: 预测数据 任意维numpy数组,Fo.shape 和Ob.shape一致
     :param grade_list: 一个从小到大排列的实数列表，以其中列出的数值划分出的多个区间作为分类标签。
-    :return: 一维数组，包括（总样本数，正确样本数，观测的
+    :return: 一维数组，包括（总样本数，正确样本数，观测的样本数、预报的样本数）
     '''
     tc1 = tc(ob, fo, grade_list)
     ft = meteva.method.multi_category.table.frequency_table(ob, fo, grade_list)
+    if(grade_list is None):
+        grade_list = list(set(np.hstack((ob, fo))))
+        if len(grade_list) > 30:
+            print("自动识别的样本类别超过30种，判断样本为连续型变量，grade_list不能缺省")
+            return
     tcof1 = np.zeros((len(grade_list)+2,2))
     tcof1[0,:] = tc1
     tcof1[1:,:] = ft.T
     return tcof1
+
+
+def hfmc_multi(ob,fo,grade_list = None):
+    '''
+    多分类评分中间统计量
+    :param ob: 实况数据 任意维numpy数组
+    :param fo: 预测数据 任意维numpy数组,Fo.shape 和Ob.shape一致
+    :param grade_list: 一个从小到大排列的实数列表，以其中列出的数值划分出的多个区间作为分类标签。
+    :return: 一维数组，包括（总样本数，正确样本数，观测的样本数、预报的样本数）
+    '''
+    total_count = ob.size
+    if(grade_list is None):
+        grade_list1 = list(set(ob.flatten()))
+        grade_list2 = list(set(fo.flatten()))
+        grade_list1.extend(grade_list2)
+        grade_list = list(set(grade_list1))
+        grade_list.sort()
+        if len(grade_list) > 30:
+            print("自动识别的样本类别超过30种，判断样本为连续型变量，grade_list不能缺省")
+            return
+        hfmc_m = np.zeros((len(grade_list),4))
+        for i in range(len(grade_list)):
+            grade =  grade_list[i]
+            hit_index_list = np.where((ob == grade) & (fo == grade))
+            hfmc_m[i,0] = len(hit_index_list[0])
+            fal_index_list = np.where((ob != grade) & (fo == grade))
+            hfmc_m[i,1] = len(fal_index_list[0])
+            mis_index_list = np.where((ob == grade) & (fo != grade))
+            hfmc_m[i,2] = len(mis_index_list[0])
+            hfmc_m[i, 3] =total_count -  hfmc_m[i, 0] -hfmc_m[i, 1]-hfmc_m[i, 2]
+    else:
+        hfmc_m = np.zeros((len(grade_list)+1,4))
+        gle = [-1e300]
+        gle.extend(grade_list)
+        gle.append(1e300)
+        for i in range(len(gle) - 1):
+            hit_index_list = np.where((ob >= gle[i]) & (ob < gle[i+ 1 ]) &(fo >= gle[i]) & (fo < gle[i + 1]))
+            hfmc_m[i,0] = len(hit_index_list[0])
+            fal_index_list = np.where(((ob < gle[i]) | (ob >= gle[i+ 1 ])) &(fo >= gle[i]) & (fo < gle[i + 1]))
+            hfmc_m[i,1] = len(fal_index_list[0])
+            mis_index_list = np.where((ob >= gle[i]) & (ob < gle[i+ 1 ]) &((fo < gle[i]) | (fo >= gle[i + 1])))
+            hfmc_m[i,2] = len(mis_index_list[0])
+            hfmc_m[i, 3] = total_count - hfmc_m[i, 0] - hfmc_m[i, 1] - hfmc_m[i, 2]
+    return hfmc_m
 
 def accuracy(ob, fo, grade_list=None):
     '''
@@ -62,6 +111,7 @@ def accuracy(ob, fo, grade_list=None):
     correct_count = tc1[1]
     accuracy_score = correct_count / total_count
     return accuracy_score
+
 
 def accuracy_tc(tc_array):
     '''
@@ -83,6 +133,35 @@ def accuracy_tcof(tcof_array):
     correct_count = tcof_array[...,0,1]
     accuracy_score = correct_count / total_count
     return accuracy_score
+
+
+def ts_multi(ob,fo,grade_list = None):
+    hfmc_array = hfmc_multi(ob,fo,grade_list)
+    ts_array = ts_hfmc(hfmc_array)
+    return ts_array
+
+
+def ets_multi(ob,fo,grade_list = None):
+    hfmc_array = hfmc_multi(ob,fo,grade_list)
+    ets_array = ets_hfmc(hfmc_array)
+    return ets_array
+
+def bias_multi(ob,fo,grade_list = None):
+    hfmc_array = hfmc_multi(ob,fo,grade_list)
+    bias_array = bias_hfmc(hfmc_array)
+    return bias_array
+
+def mr_multi(ob,fo,grade_list = None):
+    hfmc_array = hfmc_multi(ob,fo,grade_list)
+    mr_array = mr_hfmc(hfmc_array)
+    return mr_array
+
+def far_multi(ob,fo,grade_list = None):
+    hfmc_array = hfmc_multi(ob,fo,grade_list)
+    far_array = far_hfmc(hfmc_array)
+    return far_array
+
+
 
 def hss(ob,fo,grade_list = None):
     '''
