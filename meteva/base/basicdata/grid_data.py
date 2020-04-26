@@ -142,6 +142,118 @@ def grid_data(grid,data=None):
     return grd
 
 
+
+def DataArray_to_grd(dataArray,member = None,level = None,time = None,dtime = None,lat = None,lon = None):
+    da = copy.deepcopy(dataArray)
+    dim_order = {}
+    new_coods = {}
+
+    if member is None:
+        da  = da.expand_dims("member")
+        dim_order["member"] = "member"
+        new_coods["member"] = [0]
+    elif type(member) == str:
+        if member in da.coords:
+            dim_order["member"] = member
+            new_coods["member"] = da.coords[member]
+        else:
+            da = da.expand_dims("member")
+            dim_order["member"] = "member"
+            new_coods["member"] = [0]
+    else:
+        dim_order["member"] = member.dims[0]
+        new_coods["member"] = member.values.tolist()
+
+    if level is None:
+        da = da.expand_dims("level")
+        dim_order["level"] = "level"
+        new_coods["level"] = [0]
+    elif type(level) == str:
+        if level in da.coords:
+            dim_order["level"] = level
+            new_coods["level"] = da.coords[level]
+        else:
+            da = da.expand_dims("level")
+            dim_order["level"] = "level"
+            new_coods["level"] = [0]
+    else:
+        dim_order["level"] = level.dims[0]
+        new_coods["level"] = level.values.tolist()
+
+
+    if time is None:
+        da = da.expand_dims("time")
+        dim_order["time"] = "time"
+        new_coods["time"] = pd.date_range("2099-1-1", periods=1)
+    elif type(time) == str:
+        if time in da.coords:
+            dim_order["time"] = time
+            new_coods["time"] = da.coords[time]
+        else:
+            da = da.expand_dims("time")
+            dim_order["time"] = "time"
+            new_coods["time"] = pd.date_range("2099-1-1", periods=1)
+    else:
+        dim_order["time"] = time.dims[0]
+        new_coods["time"] = time.values.tolist()
+
+    if dtime is None:
+        da = da.expand_dims("dtime")
+        dim_order["dtime"] = "dtime"
+        new_coods["dtime"] = [0]
+    elif type(dtime) == str:
+        if dtime in da.coords:
+            dim_order["dtime"] = dtime
+            new_coods["dtime"] = da.coords[dtime]
+        else:
+            da = da.expand_dims("dtime")
+            dim_order["dtime"] = "dtime"
+            new_coods["dtime"] = [0]
+    else:
+        dim_order["level"] = dtime.dims[0]
+        new_coods["dtime"] = dtime.values.tolist()
+
+    if lat is None:
+        da = da.expand_dims("lat")
+        dim_order["lat"] = "latitude"
+        new_coods["lat"] = [0]
+    elif type(lat) == str:
+        if lat in da.coords:
+            dim_order["lat"] = lat
+            new_coods["lat"] = da.coords[lat]
+        else:
+            da = da.expand_dims("lat")
+            dim_order["lat"] = "latitude"
+            new_coods["lat"] = [0]
+    else:
+        dim_order["lat"] = lat.dims[0]
+        new_coods["lat"] = lat.values.tolist()
+
+    if lon is None:
+        da = da.expand_dims("lon")
+        dim_order["lon"] = "longitude"
+        new_coods["lon"] = [0]
+    elif type(lon) == str:
+        if lon in da.coords:
+            dim_order["lon"] = lon
+            new_coods["lon"] = da.coords[lon]
+        else:
+            da = da.expand_dims("lon")
+            dim_order["lon"] = "longitude"
+            new_coods["lon"] = [0]
+    else:
+        dim_order["lon"] = lon.dims[0]
+        new_coods["lon"] = lon.values.tolist()
+    da = da.transpose(dim_order["member"], dim_order["level"], dim_order["time"],
+                      dim_order["dtime"], dim_order["lat"], dim_order["lon"])
+
+    da = xr.DataArray(da.values, coords=new_coods, dims=["member","level","time","dtime","latitude","longitude"])
+    da.name ="data"
+    return da
+
+
+
+
 def reset(grd):
     lats = grd["lat"].values
 
