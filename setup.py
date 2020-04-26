@@ -5,7 +5,7 @@ from setuptools import find_packages, setup
 from codecs import open
 name = "meteva"
 author ="liucouhua,daikan,wangbaoli"
-version ="1.0.7.1"
+version ="1.0.9.3"
 
 here = path.abspath(path.dirname(__file__))
 

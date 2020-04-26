@@ -14,12 +14,11 @@ def get_time_str_one_by_one(time1,time0 = None,row = 1):
         if time0 is None:
             time2 = meteva.base.tool.time_tools.all_type_time_to_datetime(time1)
             if time2.hour == 0 and time2.minute == 0:
-
                 time_str = time2.strftime('%d{d}\n%Y{y}%m{m}').format(y='年', m='月', d='日')
             elif time2.minute == 0:
-                time_str = time2.strftime('%H{h}\n%Y{y}%m{m}%d{d}').format(y='年', m='月', d='日',h='时')
+                time_str = time2.strftime('%H{h}\n%d{d}\n%Y{y}%m{m}').format(y='年', m='月', d='日',h='时')
             else:
-                time_str = time2.strftime('%M{mi}\n%Y{y}%m{m}%d{d}%H{h}').format(y='年', m='月', d='日',h='时',mi = '分')
+                time_str = time2.strftime('%M{mi}\n%H{h}\n%Y{y}%m{m}%d{d}').format(y='年', m='月', d='日',h='时',mi = '分')
         else:
             time00 = meteva.base.tool.time_tools.all_type_time_to_datetime(time0)
             time2 = meteva.base.tool.time_tools.all_type_time_to_datetime(time1)
@@ -27,23 +26,23 @@ def get_time_str_one_by_one(time1,time0 = None,row = 1):
                 if time2.hour == 0 and time2.minute == 0:
                     time_str = time1.strftime('%d{d}\n%Y{y}%m{m}').format(y='年', m='月', d='日')
                 elif time1.minute == 0:
-                    time_str = time1.strftime('%H{h}\n%Y{y}%m{m}%d{d}').format(y='年', m='月', d='日',h='时')
+                    time_str = time1.strftime('%H{h}\n%d{d}\n%Y{y}%m{m}').format(y='年', m='月', d='日',h='时')
                 else:
-                    time_str = time1.strftime('%M{mi}\n%Y{y}%m{m}%d{d}%H{h}').format(y='年', m='月', d='日',h='时',mi = '分')
+                    time_str = time1.strftime('%M{mi}\n%H{h}\n%Y{y}%m{m}%d{d}').format(y='年', m='月', d='日',h='时',mi = '分')
             elif time2.month != time00.month:
                 if time2.hour == 0 and time2.minute == 0:
                     time_str = time2.strftime('%d{d}\n%m{m}').format(m='月', d='日')
                 elif time2.minute == 0:
                     time_str = time2.strftime('%H{h}\n%m{m}%d{d}').format(m='月', d='日',h='时')
                 else:
-                    time_str = time2.strftime('%M{mi}\n%m{m}%d{d}%H{h}').format(m='月', d='日',h='时',mi = '分')
+                    time_str = time2.strftime('%M{mi}\n%H{h}\n%m{m}%d{d}').format(m='月', d='日',h='时',mi = '分')
             elif time2.day != time00.day:
                 if time2.hour == 0 and time2.minute == 0:
                     time_str = time2.strftime('%d{d}').format(d='日')
                 elif time2.minute == 0:
                     time_str = time2.strftime('%H{h}\n%d{d}').format(d='日',h='时')
                 else:
-                    time_str = time2.strftime('%M{mi}\n%d{d}%H{h}').format(d='日',h='时',mi = '分')
+                    time_str = time2.strftime('%M{mi}\n%H{h}\n%d{d}').format(d='日',h='时',mi = '分')
             elif time2.hour != time00.hour:
                 if time2.minute == 0:
                     time_str = time2.strftime('%H{h}').format(h='时')

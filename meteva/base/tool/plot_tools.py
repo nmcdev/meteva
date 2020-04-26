@@ -249,6 +249,8 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = None,a
         file1,extension = os.path.splitext(save_path)
         extension = extension[1:]
         plt.savefig(save_path,format = extension)
+    else:
+        show = True
     if show:
         plt.show()
     plt.close()
@@ -393,30 +395,47 @@ def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = None
         file1,extension = os.path.splitext(save_path)
         extension = extension[1:]
         plt.savefig(save_path,format = extension)
+    else:
+        show = True
     if show:
         plt.show()
     plt.close()
 
 
-def scatter_sta(sta,grid0 = None, value_column=0, save_path=None, title=None, clevs=None, cmap=None,
-                fix_size = True,add_county_line = False,show = False,print_max = 1):
+def scatter_sta(sta,map_extend = None, value_column=0, save_path=None, title=None, clevs=None, cmap=None,
+                fix_size = True,add_county_line = False,show = False,print_max = 1,mean_value = None,threshold = None):
 
     if save_path is None:
         show = True
-
-
-    if grid0 is not None:
-        slon = grid0.slon
-        slat = grid0.slat
-        elon = grid0.elon
-        elat = grid0.elat
-        rlon = grid0.elon - grid0.slon
-        rlat = grid0.elat - grid0.slat
+    if isinstance(map_extend,list):
+        slon = map_extend[0]
+        elon = map_extend[1]
+        slat = map_extend[2]
+        elat = map_extend[3]
+        rlon = elon - slon
+        rlat = elat - slat
+    elif isinstance(map_extend,meteva.base.grid):
+        slon = map_extend.slon
+        slat = map_extend.slat
+        elon = map_extend.elon
+        elat = map_extend.elat
+        rlon = map_extend.elon - map_extend.slon
+        rlat = map_extend.elat - map_extend.slat
     else:
-        slon = np.min(sta.loc[:,"lon"].values)-0.01
-        slat = np.min(sta.loc[:,"lat"].values)-0.01
-        elon = np.max(sta.loc[:,"lon"].values)+0.01
-        elat = np.max(sta.loc[:,"lat"].values)+0.01
+        slon0 = np.min(sta.loc[:,"lon"].values)
+        slat0 = np.min(sta.loc[:,"lat"].values)
+        elon0 = np.max(sta.loc[:,"lon"].values)
+        elat0 = np.max(sta.loc[:,"lat"].values)
+        dlon0 = (elon0 - slon0) * 0.03
+        if dlon0 >1:
+            dlon0 = 1
+        dlat0 = (elon0 - slon0) * 0.03
+        if dlat0 >1:
+            dlat0 = 1
+        slon = slon0 - dlon0
+        elon = elon0 + dlon0
+        slat = slat0 - dlat0
+        elat = elat0 + dlat0
         rlon = elon - slon
         rlat = elat - slat
 
@@ -484,7 +503,6 @@ def scatter_sta(sta,grid0 = None, value_column=0, save_path=None, title=None, cl
             clevs1 = np.arange(vmin, vmax, inte)
         else:
             clevs1 = clevs
-
         if cmap is None:
             cmap1 = plt.get_cmap("rainbow")
         else:
@@ -512,7 +530,12 @@ def scatter_sta(sta,grid0 = None, value_column=0, save_path=None, title=None, cl
         area = np.abs(sta.loc[:, data_name].values)
         index = np.argmax(area)
         maxvalue = area[index]
-        mean_area = np.sum(area)/area.size
+        if mean_value is None:
+            mean_area = np.sum(area)/area.size
+        else:
+            mean_area = mean_value
+        if(threshold is not None):
+            area[area<threshold] = 0.1
         area = pointsize * area/mean_area
         im = ax.scatter(x, y, c=colors, cmap=cmap1, norm=norm, s=area)
         #print(area.argsort()[-3][::-1])
@@ -586,6 +609,8 @@ def scatter_sta(sta,grid0 = None, value_column=0, save_path=None, title=None, cl
         file1,extension = os.path.splitext(save_path)
         extension = extension[1:]
         plt.savefig(save_path,format = extension)
+    else:
+        show = True
     if show:
         plt.show()
     plt.close()
