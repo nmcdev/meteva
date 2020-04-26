@@ -6,6 +6,19 @@ from meteva.base.io import DataBlock_pb2
 from meteva.base.io.GDS_data_service import GDSDataService
 from multiprocessing import Process,cpu_count
 
+def get_hour_dhour_list(gds_file_list):
+    hour_list = []
+    dh_list = []
+    for path in gds_file_list:
+        dati = get_dati_of_path(path)
+        hour_list.append(dati.hour)
+        file, ftype = os.path.splitext(path)
+        dh_list.append(int(ftype[1:]))
+    hour_list1 = list(set(hour_list))
+    hour_list1.sort()
+    dh_list1 = list(set(dh_list))
+    dh_list1.sort()
+    return hour_list1,dh_list1
 
 def get_dati_of_path(path):
     dir,filename = os.path.split(path)
