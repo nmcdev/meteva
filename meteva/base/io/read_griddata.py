@@ -46,115 +46,6 @@ def grid_ragular(slon,dlon,elon,slat,dlat,elat):
     return slon1,dlon1,elon1,slat1,dlat1,elat1,nlon1,nlat1
 
 
-def DataArray_to_grd(dataArray,member = None,level = None,time = None,dtime = None,lat = None,lon = None):
-    da = copy.deepcopy(dataArray)
-    dim_order = {}
-    new_coods = {}
-
-    if member is None:
-        da  = da.expand_dims("member")
-        dim_order["member"] = "member"
-        new_coods["member"] = [0]
-    elif type(member) == str:
-        if member in da.coords:
-            dim_order["member"] = member
-            new_coods["member"] = da.coords[member]
-        else:
-            da = da.expand_dims("member")
-            dim_order["member"] = "member"
-            new_coods["member"] = [0]
-    else:
-        dim_order["member"] = member.dims[0]
-        new_coods["member"] = member.values.tolist()
-
-    if level is None:
-        da = da.expand_dims("level")
-        dim_order["level"] = "level"
-        new_coods["level"] = [0]
-    elif type(level) == str:
-        if level in da.coords:
-            dim_order["level"] = level
-            new_coods["level"] = da.coords[level]
-        else:
-            da = da.expand_dims("level")
-            dim_order["level"] = "level"
-            new_coods["level"] = [0]
-    else:
-        dim_order["level"] = level.dims[0]
-        new_coods["level"] = level.values.tolist()
-
-
-    if time is None:
-        da = da.expand_dims("time")
-        dim_order["time"] = "time"
-        new_coods["time"] = pd.date_range("2099-1-1", periods=1)
-    elif type(time) == str:
-        if time in da.coords:
-            dim_order["time"] = time
-            new_coods["time"] = da.coords[time]
-        else:
-            da = da.expand_dims("time")
-            dim_order["time"] = "time"
-            new_coods["time"] = pd.date_range("2099-1-1", periods=1)
-    else:
-        dim_order["time"] = time.dims[0]
-        new_coods["time"] = time.values.tolist()
-
-    if dtime is None:
-        da = da.expand_dims("dtime")
-        dim_order["dtime"] = "dtime"
-        new_coods["dtime"] = [0]
-    elif type(dtime) == str:
-        if dtime in da.coords:
-            dim_order["dtime"] = dtime
-            new_coods["dtime"] = da.coords[dtime]
-        else:
-            da = da.expand_dims("dtime")
-            dim_order["dtime"] = "dtime"
-            new_coods["dtime"] = [0]
-    else:
-        dim_order["level"] = dtime.dims[0]
-        new_coods["dtime"] = dtime.values.tolist()
-
-    if lat is None:
-        da = da.expand_dims("lat")
-        dim_order["lat"] = "latitude"
-        new_coods["lat"] = [0]
-    elif type(lat) == str:
-        if lat in da.coords:
-            dim_order["lat"] = lat
-            new_coods["lat"] = da.coords[lat]
-        else:
-            da = da.expand_dims("lat")
-            dim_order["lat"] = "latitude"
-            new_coods["lat"] = [0]
-    else:
-        dim_order["lat"] = lat.dims[0]
-        new_coods["lat"] = lat.values.tolist()
-
-    if lon is None:
-        da = da.expand_dims("lon")
-        dim_order["lon"] = "longitude"
-        new_coods["lon"] = [0]
-    elif type(lon) == str:
-        if lon in da.coords:
-            dim_order["lon"] = lon
-            new_coods["lon"] = da.coords[lon]
-        else:
-            da = da.expand_dims("lon")
-            dim_order["lon"] = "longitude"
-            new_coods["lon"] = [0]
-    else:
-        dim_order["lon"] = lon.dims[0]
-        new_coods["lon"] = lon.values.tolist()
-    da = da.transpose(dim_order["member"], dim_order["level"], dim_order["time"],
-                      dim_order["dtime"], dim_order["lat"], dim_order["lon"])
-
-    da = xr.DataArray(da.values, coords=new_coods, dims=["member","level","time","dtime","latitude","longitude"])
-    da.name ="data"
-    return da
-
-
 def read_griddata_from_micaps4(filename,grid=None,level = None,time = None,dtime = None,data_name = "data0",show = False):
     '''
     读取micaps4格式的格点数据，并将其保存为xarray中DataArray结构的六维数据信息
@@ -577,7 +468,7 @@ def read_griddata_from_nc1(filename,grid = None,value_name = None,member = None,
                     size = size * shape[i]
                 if size > 1:
                     break
-        da1 = DataArray_to_grd(da,member,level,time,dt,lat,lon)
+        da1 = meteva.base.basicdata.DataArray_to_grd(da,member,level,time,dt,lat,lon)
 
         meteva.base.reset(da1)
         if grid is None:
@@ -703,6 +594,7 @@ def byteArray_to_griddata(byteArray,grid = None,level = None,time = None,dtime =
     lonInterval = (endLon - startLon) / (nlon - 1)
     latInterval = (endLat - startLat) / (nlat - 1)
     if nmem ==0:
+        nmem = 1
         if (data_len  == (len(byteArray) - 278) ):
             grid0 = meteva.base.grid([startLon, endLon, lonInterval],
                                                       [startLat, endLat, latInterval])
@@ -908,9 +800,21 @@ def read_gridwind_from_micaps11(filename,grid = None,level = None,time = None,dt
         elon = float(strs[11])
         slat = float(strs[12])
         elat = float(strs[13])
-        grid0 =meteva.base.grid([slon,elon,dlon],[slat,elat,dlat])
-        if len(strs) - 15 >= 2 * grid0.nlon * grid0.nlat:
+        nlon = float(strs[14])
+        nlat = float(strs[15])
+        if (nlat - 1) * dlat == (elat - slat) and (nlon - 1) * dlon == (elon - slon):
             k = 16
+            grid0 =meteva.base.grid([slon,elon,dlon],[slat,elat,dlat])
+        else:
+            dlon = float(strs[9])
+            dlat = float(strs[10])
+            slon = float(strs[11])
+            elon = float(strs[12])
+            slat = float(strs[13])
+            elat = float(strs[14])
+            k = 17
+            grid0 =meteva.base.grid([slon,elon,dlon],[slat,elat,dlat])
+        if (len(strs) - k +1) >= 2 * grid0.nlon * grid0.nlat:
             dat_u= (np.array(strs[k:(k + grid0.nlon * grid0.nlat)])).astype(float).reshape((grid0.nlat,grid0.nlon))
             k += grid0.nlon * grid0.nlat
             dat_v = (np.array(strs[k:(k + grid0.nlon * grid0.nlat)])).astype(float).reshape((grid0.nlat, grid0.nlon))
@@ -928,6 +832,7 @@ def read_gridwind_from_micaps11(filename,grid = None,level = None,time = None,dt
                     print("success read from " + filename)
                 return wind1
         else:
+
             print(filename + " format wrong")
             return None
     else:
