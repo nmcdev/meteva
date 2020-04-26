@@ -10,11 +10,148 @@ import copy
 import math
 import pandas as pd
 
-def time_list_line_error(sta_ob_and_fos0,s = None,save_dir = None,show = False,title = "不同起报时间预报误差图"):
-    pass
 
-def time_list_line(sta_ob_and_fos0,s = None,save_dir = None,show = False,title = "观测和不同起报时间预报对比图"):
+def time_list_line_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,show = False,title = "不同起报时间预报误差图"):
+    sta_ob_and_fos1 = meteva.base.sele_by_dict(sta_ob_and_fos0, s)
+    sta_ob_and_fos1 = meteva.base.sele_by_para(sta_ob_and_fos1,drop_IV=True)
+    ids = list(set(sta_ob_and_fos1.loc[:,"id"]))
+    for id in ids:
+        sta_ob_and_fos = meteva.base.in_id_list(sta_ob_and_fos1,[id])
+        times_fo = sta_ob_and_fos.loc[:, "time"].values
+        times_fo = list(set(times_fo))
+        times_fo.sort()
+        times_fo = np.array(times_fo)
+        dhs_fo = (times_fo[1:] - times_fo[0:-1])
+        if isinstance(dhs_fo[0], np.timedelta64):
+            dhs_fo = dhs_fo / np.timedelta64(1, 'h')
+        else:
+            dhs_fo = dhs_fo / datetime.timedelta(hours=1)
+        dhs_fo_not0 = dhs_fo[dhs_fo != 0]
+        dh_y = np.min(dhs_fo_not0)
 
+        dhs = list(set(sta_ob_and_fos.loc[:, "dtime"].values))
+        dhs.sort()
+        dhs = np.array(dhs)
+        # 以观预报时效间隔的最小单位
+        ddhs = dhs[1:] - dhs[0:-1]
+        dh_x = int(np.min(ddhs))
+
+        width = len(dhs) * 1.2
+        height = len(times_fo) * 1.0
+        #print(width)
+        if height > 8:
+            height = 8
+        if width > 12:
+            width = 12
+        fig = plt.figure(figsize=(width, height),dpi = 300)
+        grid_plt = plt.GridSpec(len(times_fo), 1, hspace=0)
+
+        time_f0 = times_fo[0]
+        data_names = meteva.base.get_stadata_names(sta_ob_and_fos)
+        error_array = np.zeros((len(sta_ob_and_fos.index),len(data_names)-1))
+        for i in range(len(data_names)-1):
+            error_array[:,i] = sta_ob_and_fos.values[:, 7+i] - sta_ob_and_fos.values[:, 6]
+        vmax0 = np.max(error_array)
+        vmin0 = np.min(error_array) - 0.1
+        maxerr = np.maximum(vmax0,-vmin0)
+        vmax = maxerr * 1.05
+        vmin = -maxerr * 1.05
+        #vmax = (vmax - vmin) * 1.2 + vmin
+        dif = (vmax - vmin)/2
+        inte = math.pow(10, math.floor(math.log10(dif)))
+        # 用基本间隔，将最大最小值除于间隔后小数点部分去除，最后把间隔也整数化
+        r = dif / inte
+        if(r<1.5):
+            inte = inte * 0.5
+        elif r < 3 and r >= 1.5:
+            inte = inte * 1
+        elif r < 4.5 and r >= 3:
+            inte = inte * 2
+        elif r < 5.5 and r >= 4.5:
+            inte = inte * 3
+        elif r < 7 and r >= 5.5:
+            inte = inte * 3
+        elif r >= 7:
+            inte = inte * 4
+        yticks = np.array([-inte,0,inte])
+
+        dtimes = sta_ob_and_fos["dtime"] * np.timedelta64(1, 'h')
+        obtimes = sta_ob_and_fos['time'] + dtimes
+        obtimes[-1] = times_fo[0]
+        time_all = list(set(obtimes))
+        time_all.sort()
+        #print(time_all)
+        dtime_all = pd.Series(time_all) - times_fo[0]
+        x_all = dtime_all/np.timedelta64(1, 'h')
+        x_all = x_all.values
+        #print(x_all)
+        dx_all = x_all[1:] - x_all[:-1]
+        dx_all = dx_all[dx_all!=0]
+        mindx_all = np.min(dx_all)
+        step0 = int(len(x_all) / 30) + 1
+        step1 = int(24/(mindx_all*step0))
+        if step1 > 0:
+            step = int(24/step1/mindx_all)
+        else:
+            step = step0
+        x_plot = x_all[::step]
+        time_plot = time_all[::step]
+        time_strs = meteva.product.program.get_time_str_list(time_plot, row=2)
+        time_strs_null = []
+        for i in range(len(time_strs)):
+            time_strs_null.append("")
+
+        for i in range(len(times_fo)):
+            ax = plt.subplot(grid_plt[i:i + 1, 0])
+            time_f1 = times_fo[-i - 1]
+            dhour0 = (time_f1 - time_f0) / np.timedelta64(1, 'h')
+            sta = meteva.base.in_time_list(sta_ob_and_fos, [time_f1])
+            sta = sta.sort_values("dtime")
+            x = dhour0 + sta.loc[:, "dtime"].values
+            for name in data_names[1:]:
+                value = sta.loc[:, name].values - sta.iloc[:, 6].values
+                plt.plot(x, value, label=name,marker = ".")
+                plt.ylim(vmin, vmax)
+                plt.yticks(yticks)
+                plt.xlim(x_all[0],x_all[-1])
+                plt.grid(linestyle='-.')
+
+
+            time_f1 = meteva.base.tool.time_tools.all_type_time_to_datetime(time_f1)
+            time_str = time_f1.strftime('%d{d}%H{h}').format(d='日', h='时')+"        "
+            plt.ylabel(time_str, rotation='horizontal')
+            if i ==0:
+                plt.legend(loc="upper left", ncol=len(data_names),fontsize = 16)
+                s1 = s
+                if s1 is None:
+                    s1 = {}
+                    s1["id"] = id
+                title1 = meteva.product.program.get_title_from_dict(meteva.product.time_list_line_error, s1, None, None,
+                                                                    None)
+                title1 = title1.replace("\n","")
+                plt.title(title1)
+            plt.hlines(0,x_plot[0],x_plot[-1],"g")
+            if i == len(times_fo) - 1:
+                plt.xticks(x_plot, time_strs)
+            else:
+                plt.xticks(x_plot,time_strs_null)
+
+        if save_path is None:
+            if save_dir is None:
+                show = True
+            else:
+                save_path = save_dir + str(id) + ".png"
+
+        if save_path is not None:
+            meteva.base.tool.path_tools.creat_path(save_path)
+            plt.savefig(save_path)
+            print("图片已保存至" + save_path)
+        if show:
+            plt.show()
+        plt.close()
+
+
+def time_list_line(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,show = False,title = "观测和不同起报时间预报对比图"):
     sta_ob_and_fos1 = meteva.base.sele_by_dict(sta_ob_and_fos0, s)
     ids = list(set(sta_ob_and_fos1.loc[:,"id"]))
     for id in ids:
@@ -38,20 +175,22 @@ def time_list_line(sta_ob_and_fos0,s = None,save_dir = None,show = False,title =
         ddhs = dhs[1:] - dhs[0:-1]
         dh_x = int(np.min(ddhs))
 
-        width = len(dhs) * 2
-        height = len(times_fo) * 1.5
+        width = len(dhs) * 1.2
+        height = len(times_fo) * 1
         #print(width)
-        if height > 12:
-            height = 12
-        if width > 18:
-            width = 18
-        fig = plt.figure(figsize=(width, height))
+        if height > 8:
+            height = 8
+        if width > 12:
+            width = 12
+        fig = plt.figure(figsize=(width, height),dpi = 300)
         grid_plt = plt.GridSpec(len(times_fo), 1, hspace=0)
 
         time_f0 = times_fo[0]
         data_names = meteva.base.get_stadata_names(sta_ob_and_fos)
-        vmax = np.max(sta_ob_and_fos.values[:, 6:])
-        vmin = np.min(sta_ob_and_fos.values[:, 6:]) - 0.1
+        values = sta_ob_and_fos.iloc[:, 6:].values.flatten()
+        values = values[values != meteva.base.IV]
+        vmax = np.max(values)
+        vmin = np.min(values) - 0.1
         vmax = (vmax - vmin) * 1.2 + vmin
 
 
@@ -103,7 +242,8 @@ def time_list_line(sta_ob_and_fos0,s = None,save_dir = None,show = False,title =
                 s1 = s
                 if s1 is None:
                     s1 = {}
-                    s1["id"] = id
+                s1["id"] = id
+
                 title1 = meteva.product.program.get_title_from_dict(meteva.product.time_list_line, s1, None, None,
                                                                     None)
                 title1 = title1.replace("\n","")
@@ -113,10 +253,13 @@ def time_list_line(sta_ob_and_fos0,s = None,save_dir = None,show = False,title =
             else:
                 plt.xticks(x_plot,time_strs_null)
 
-        if save_dir is None:
-            show = True
-        else:
-            save_path = save_dir + str(id) + ".png"
+        if save_path is None:
+            if save_dir is None:
+                show = True
+            else:
+                save_path = save_dir + str(id) + ".png"
+
+        if save_path is not None:
             meteva.base.tool.path_tools.creat_path(save_path)
             plt.savefig(save_path)
             print("图片已保存至" + save_path)
@@ -125,7 +268,7 @@ def time_list_line(sta_ob_and_fos0,s = None,save_dir = None,show = False,title =
         plt.close()
 
 
-def time_list_mesh(sta_ob_all0,sta_fo_all0,s = None,save_dir = None,
+def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
                    clev = None,cmap = None,plot_error = True,cmap_error= None,show = False,title = "预报准确性和稳定性对比图"):
     '''
     :param sta_ob_all: 输入的观测站点数据序列，它为一个pandas数据列表，是包含一个站点的多个时刻的观测
@@ -137,8 +280,20 @@ def time_list_mesh(sta_ob_all0,sta_fo_all0,s = None,save_dir = None,
     :param save_path:   检验图片输出的路径
     :return:
     '''
+    sta_ob_and_fos1 = meteva.base.sele_by_dict(sta_ob_and_fos0, s)
+    data_names = meteva.base.get_stadata_names(sta_ob_and_fos1)
+    sta_ob_all0 = meteva.base.sele_by_para(sta_ob_and_fos1,member=[data_names[0]])
 
-    sta_fo_all1 = meteva.base.sele_by_dict(sta_fo_all0, s)
+    dtimes = sta_ob_all0["dtime"] * np.timedelta64(1, 'h')
+    sta_ob_all0["time"] = sta_ob_all0["time"] + dtimes
+    sta_ob_all0["dtime"] = 0
+    sta_ob_all0.drop_duplicates()
+    if(len(data_names)>2):
+        fo_name = data_names[1:]
+    else:
+        fo_name = [data_names[1]]
+    sta_fo_all1 = meteva.base.sele_by_para(sta_ob_and_fos1,member=fo_name)
+
     ids_fos = list(set(sta_fo_all1.loc[:,"id"]))
     ids_obs = list(set(sta_ob_all0.loc[:,"id"]))
     for id in ids_obs:
@@ -180,11 +335,12 @@ def time_list_mesh(sta_ob_all0,sta_fo_all0,s = None,save_dir = None,
             data_name = meteva.base.get_undim_data_names(sta_fo_all2)[0]
             sta_ob_all3 = copy.deepcopy(sta_ob_all2)
             meteva.base.set_stadata_names(sta_ob_all3,[data_name])
+            sta_ob_all3["dtime"] = -1
             sta_all = meteva.base.combine_join(sta_ob_all3, sta_fo_all2)
             col = (int)(2 * max_dh / dh_x + 1)
             hf_col = (int)(max_dh/dh_x)
             row = (int)(max_dh / dh_y)
-            dat = np.ones((col, row)) * 9999
+            dat = np.ones((col, row)) * meteva.base.IV
 
             time0 = time_mid - datetime.timedelta(hours=max_dh)
             start_ob_i = 0
@@ -194,9 +350,12 @@ def time_list_mesh(sta_ob_all0,sta_fo_all0,s = None,save_dir = None,
                     dh = j * dh_y  + (i - hf_col) * dh_x
                     if j==0 and dh == 0:
                         start_ob_i = i
-                    if dh < dh_y and dh >0:
+                    #if dh < dh_y and dh >0:
+                    #    time_fo = time_fo + datetime.timedelta(hours = dh)
+                    #    dh = 0
+                    if dh <0 and dh>= - dh_y:
                         time_fo = time_fo + datetime.timedelta(hours = dh)
-                        dh = 0
+                        dh = -1
                     sta = sta_all.loc[sta_all["time"] == time_fo]
                     sta = sta.loc[sta["dtime"] == dh]
                     if (len(sta.index) > 0):
@@ -225,10 +384,10 @@ def time_list_mesh(sta_ob_all0,sta_fo_all0,s = None,save_dir = None,
                 yticks.append(str1)
 
             mask = np.zeros_like(dat.T)
-            mask[dat.T == 9999] = True
+            mask[dat.T == meteva.base.IV] = True
 
-            vmin = np.min(dat[dat != 9999])
-            vmax = np.max(dat[dat != 9999])
+            vmin = np.min(dat[dat != meteva.base.IV])
+            vmax = np.max(dat[dat != meteva.base.IV])
 
             if plot_error:
                 height = 16 * row / col + 3
@@ -237,13 +396,13 @@ def time_list_mesh(sta_ob_all0,sta_fo_all0,s = None,save_dir = None,
 
                 dvalue = np.zeros_like(dat)
                 for i in range(col):
-                    top_value = 9999
+                    top_value = meteva.base.IV
                     for j in range(row):
-                        if dat[i, j] != 9999:
+                        if dat[i, j] != meteva.base.IV:
                             top_value = dat[i, j]
                             break
                     for j in range(row):
-                        if dat[i, j] != 9999:
+                        if dat[i, j] != meteva.base.IV:
                             dvalue[i, j] = dat[i, j] - top_value
 
                 maxd = np.max(np.abs(dvalue))
@@ -266,7 +425,7 @@ def time_list_mesh(sta_ob_all0,sta_fo_all0,s = None,save_dir = None,
                 title = '不同时效预报误差和稳定性对比（误差）'+"("+data_name+")"+ "{\'id\':"+str(id)+"}"
                 ax1.set_title(title, loc='left', fontweight='bold', fontsize='large')
                 for k in range(row + 1):
-                    x1 = start_ob_i - k * dh_y / dh_x
+                    x1 = start_ob_i - (k+1) * dh_y / dh_x
                     y1 = k
                     rect = patches.Rectangle((x1, y1), dh_y / dh_x, 1, linewidth=2, edgecolor='k', facecolor='none')
                     ax1.add_patch(rect)
@@ -302,15 +461,16 @@ def time_list_mesh(sta_ob_all0,sta_fo_all0,s = None,save_dir = None,
 
 
             for k in range(row+1):
-                x1 = start_ob_i - k * dh_y/dh_x
+                x1 = start_ob_i - (k+1) * dh_y/dh_x
                 y1 = k
                 rect = patches.Rectangle((x1, y1), dh_y/dh_x, 1, linewidth=2, edgecolor='k', facecolor='none')
                 ax2.add_patch(rect)
-
-            if save_dir is None:
-                show = True
-            else:
-                save_path = save_dir +"/" +data_name+"_"+str(id) + ".png"
+            if(save_path is None):
+                if save_dir is None:
+                    show = True
+                else:
+                    save_path = save_dir +"/" +data_name+"_"+str(id) + ".png"
+            if save_path is not None:
                 meteva.base.tool.path_tools.creat_path(save_path)
                 plt.savefig(save_path)
                 print("图片已保存至"+save_path)
@@ -319,40 +479,44 @@ def time_list_mesh(sta_ob_all0,sta_fo_all0,s = None,save_dir = None,
             plt.close()
     return
 
-def time_list_mesh_temp(sta_ob_all,sta_fo_all,s = None,save_dir = None,plot_error = True,show = False):
+def time_list_mesh_temp(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,show = False):
     clev, cmap= meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("temp")
-    time_list_mesh(sta_ob_all,sta_fo_all,s,save_dir,clev,cmap,plot_error,cmap_error= "bwr",show = show)
+    time_list_mesh(sta_ob_and_fos0,s,save_dir,save_path,clev,cmap,plot_error,cmap_error= "bwr",show = show)
 
-def time_list_mesh_rain01h(sta_ob_all,sta_fo_all,s = None,save_dir = None,plot_error = True,show = False):
+def time_list_mesh_rain01h(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,show = False):
     clev, cmap= meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("rain_1h")
     clev_error, cmap_error = meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("rain_1h_error")
-    time_list_mesh(sta_ob_all,sta_fo_all,s,save_dir,clev,cmap,plot_error,cmap_error= cmap_error,show = show)
+    time_list_mesh(sta_ob_and_fos0,s,save_dir,save_path,clev,cmap,plot_error,cmap_error= cmap_error,show = show)
 
-def time_list_mesh_rain03h(sta_ob_all,sta_fo_all,s = None,save_dir = None,plot_error = True,show = False):
+def time_list_mesh_rain03h(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,show = False):
     clev, cmap= meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("rain_3h")
     clev_error, cmap_error = meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("rain_3h_error")
-    time_list_mesh(sta_ob_all,sta_fo_all,s,save_dir,clev,cmap,plot_error,cmap_error= cmap_error,show = show)
+    time_list_mesh(sta_ob_and_fos0,s,save_dir,save_path,clev,cmap,plot_error,cmap_error= cmap_error,show = show)
 
-def time_list_mesh_rh(sta_ob_all,sta_fo_all,s = None,save_dir = None,plot_error = True,show = False):
+def time_list_mesh_rh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,show = False):
     clev, cmap= meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("rh")
     clev_error, cmap_error = meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("rh_error")
-    time_list_mesh(sta_ob_all, sta_fo_all,s,save_dir, clev, cmap, plot_error, cmap_error=cmap_error,show = show)
+    time_list_mesh(sta_ob_and_fos0,s,save_dir,save_path, clev, cmap, plot_error, cmap_error=cmap_error,show = show)
 
-def time_list_mesh_vis(sta_ob_all,sta_fo_all,s = None,save_dir = None,plot_error = True,show = False):
+def time_list_mesh_vis(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,show = False):
     clev, cmap= meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("vis")
     clev_error,cmap_error = meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("vis_error")
-    time_list_mesh(sta_ob_all,sta_fo_all,s,save_dir,clev,cmap,plot_error,cmap_error= cmap_error)
+    time_list_mesh(sta_ob_and_fos0,s,save_dir,save_path,clev,cmap,plot_error,cmap_error= cmap_error)
 
-def time_list_mesh_tcdc(sta_ob_all,sta_fo_all,s = None,save_dir = None,plot_error = True,show = False):
+def time_list_mesh_tcdc(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,show = False):
     clev, cmap= meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("tcdc")
     clev_error, cmap_error = meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name(
         "tcdc_error")
-    time_list_mesh(sta_ob_all,sta_fo_all,s,save_dir,clev,cmap,plot_error,cmap_error= cmap_error,show = show)
+    time_list_mesh(sta_ob_and_fos0,s,save_dir,save_path,clev,cmap,plot_error,cmap_error= cmap_error,show = show)
 
-def time_list_mesh_wind(sta_ob_all0,sta_fo_all0,s = None,save_dir = None,plot_error = True,show = False,save_path = None,title = "预报准确性和稳定性对比图"):
+def time_list_mesh_wind(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,show = False,title = "预报准确性和稳定性对比图"):
+
+    sta_ob_and_fos1 = meteva.base.sele_by_dict(sta_ob_and_fos0, s)
+    data_names = meteva.base.get_stadata_names(sta_ob_and_fos1)
+    sta_ob_all0 = meteva.base.sele_by_para(sta_ob_and_fos1,member=data_names[0:2])
+    sta_fo_all1 = meteva.base.sele_by_para(sta_ob_and_fos1, member=data_names[2:])
 
 
-    sta_fo_all1 = meteva.base.sele_by_dict(sta_fo_all0, s)
     ids_fos = list(set(sta_fo_all1.loc[:,"id"]))
     ids_obs = list(set(sta_ob_all0.loc[:,"id"]))
     for id in ids_obs:
@@ -394,17 +558,19 @@ def time_list_mesh_wind(sta_ob_all0,sta_fo_all0,s = None,save_dir = None,plot_er
 
 
             data_names = meteva.base.get_stadata_names(sta_fo_all2)
+
             #print(data_names)
             sta_ob_all1 = copy.deepcopy(sta_ob_all2)
             #print(sta_ob_all1)
             meteva.base.set_stadata_names(sta_ob_all1,data_names)
+            sta_ob_all1["dtime"] = -1
             sta_all = meteva.base.combine_join(sta_ob_all1, sta_fo_all2)
             col = (int)(2 * max_dh / dh_x + 1)
             hf_col = (int)(max_dh/dh_x)
             row = (int)(max_dh / dh_y)
-            dat_u = np.ones((row,col)) * 9999
-            dat_v = np.ones(dat_u.shape)* 9999
-            dat_speed = np.ones(dat_u.shape)*9999
+            dat_u = np.ones((row,col)) * meteva.base.IV
+            dat_v = np.ones(dat_u.shape)* meteva.base.IV
+
 
             time0 = time_mid - datetime.timedelta(hours=max_dh)
             start_ob_i = 0
@@ -415,15 +581,17 @@ def time_list_mesh_wind(sta_ob_all0,sta_fo_all0,s = None,save_dir = None,plot_er
                     dh = j * dh_y  + (i - hf_col) * dh_x
                     if j==0 and dh == 0:
                         start_ob_i = i
-                    if dh < dh_y and dh >0:
+                    #if dh < dh_y and dh >0:
+                    if dh < 0 and dh >= - dh_y:
                         time_fo = time_fo + datetime.timedelta(hours = dh)
-                        dh = 0
+                        dh = -1
                     sta = sta_all.loc[sta_all["time"] == time_fo]
                     sta = sta.loc[sta["dtime"] == dh]
                     if (len(sta.index) > 0):
                         dat_u[j,i] = sta[data_names[0]].values[0]
                         dat_v[j,i] = sta[data_names[1]].values[0]
-                        dat_speed[j,i] = math.sqrt(dat_u[j,i] **2 + dat_v[j,i] **2)
+            dat_speed = np.sqrt(dat_u * dat_u + dat_v*dat_v)
+            dat_speed[dat_u == meteva.base.IV] = meteva.base.IV
             xticks = []
             x = np.arange(col)
             for i in range(col):
@@ -447,7 +615,7 @@ def time_list_mesh_wind(sta_ob_all0,sta_fo_all0,s = None,save_dir = None,plot_er
                     str1 = str(hour) + "时"
                 yticks.append(str1)
             mask = np.zeros_like(dat_speed)
-            mask[dat_speed == 9999] = True
+            mask[dat_speed == meteva.base.IV] = True
 
             if plot_error:
                 height = 16 * row / col + 3
@@ -460,33 +628,33 @@ def time_list_mesh_wind(sta_ob_all0,sta_fo_all0,s = None,save_dir = None,plot_er
 
                 #"风速误差"
                 for i in range(col):
-                    top_value = 9999
+                    top_value = meteva.base.IV
                     for j in range(row):
-                        if dat_speed[j,i] != 9999:
+                        if dat_speed[j,i] != meteva.base.IV:
                             top_value = dat_speed[j,i]
                             break
                     for j in range(row):
-                        if dat_speed[j,i] != 9999:
+                        if dat_speed[j,i] != meteva.base.IV:
                             diff_speed[j,i] = dat_speed[j,i] - top_value
                 #u 分量误差
                 for i in range(col):
-                    top_value = 9999
+                    top_value = meteva.base.IV
                     for j in range(row):
-                        if dat_u[j,i] != 9999:
+                        if dat_u[j,i] != meteva.base.IV:
                             top_value = dat_u[j,i]
                             break
                     for j in range(row):
-                        if dat_u[j,i] != 9999:
+                        if dat_u[j,i] != meteva.base.IV:
                             diff_u[j,i] = dat_u[j,i] - top_value
                 #v 分量误差
                 for i in range(col):
-                    top_value = 9999
+                    top_value = meteva.base.IV
                     for j in range(row):
-                        if dat_v[j,i] != 9999:
+                        if dat_v[j,i] != meteva.base.IV:
                             top_value = dat_v[j,i]
                             break
                     for j in range(row):
-                        if dat_v[j,i] != 9999:
+                        if dat_v[j,i] != meteva.base.IV:
                             diff_v[j,i] = dat_v[j,i] - top_value
 
                 maxd = np.max(np.abs(diff_speed))
@@ -504,14 +672,14 @@ def time_list_mesh_wind(sta_ob_all0,sta_fo_all0,s = None,save_dir = None,plot_er
                 ax1.set_title(title, loc='left', fontweight='bold', fontsize='large')
                 xx, yy = np.meshgrid(x + 0.5, y + 0.5)
                 speed_1d = dat_speed.flatten()
-                xx_1d = xx.flatten()[speed_1d != 9999]
-                yy_1d = yy.flatten()[speed_1d != 9999]
-                u_1d = diff_u.flatten()[speed_1d != 9999]
-                v_1d = diff_v.flatten()[speed_1d != 9999]
+                xx_1d = xx.flatten()[speed_1d != meteva.base.IV]
+                yy_1d = yy.flatten()[speed_1d != meteva.base.IV]
+                u_1d = diff_u.flatten()[speed_1d != meteva.base.IV]
+                v_1d = diff_v.flatten()[speed_1d != meteva.base.IV]
                 ax1.barbs(xx_1d, yy_1d, u_1d, v_1d, barb_increments={'half': 2, 'full': 4, 'flag': 20})
 
                 for k in range(row + 1):
-                    x_1 = start_ob_i - k * dh_y / dh_x
+                    x_1 = start_ob_i - (k+1) * dh_y / dh_x
                     y_1 = k
                     rect = patches.Rectangle((x_1, y_1), dh_y / dh_x, 1, linewidth=2, edgecolor='k', facecolor='none')
                     #currentAxis.add_patch(rect)
@@ -523,8 +691,8 @@ def time_list_mesh_wind(sta_ob_all0,sta_fo_all0,s = None,save_dir = None,plot_er
                 f, ax2 = plt.subplots(figsize=(16, height), nrows=1, edgecolor='black')
                 plt.subplots_adjust(left=0.1, bottom=0.15, right=0.98, top=0.90)
 
-            vmin = np.min(dat_speed[dat_speed != 9999])
-            vmax = np.max(dat_speed[dat_speed != 9999])
+            vmin = np.min(dat_speed[dat_speed != meteva.base.IV])
+            vmax = np.max(dat_speed[dat_speed != meteva.base.IV])
             clev, cmap = meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("wind_speed")
             #print(vmax)
             #print(vmin)
@@ -542,14 +710,14 @@ def time_list_mesh_wind(sta_ob_all0,sta_fo_all0,s = None,save_dir = None,plot_er
             ax2.set_title(title, loc='left', fontweight='bold', fontsize='large')
             xx,yy = np.meshgrid(x+0.5,y+0.5)
             speed_1d = dat_speed.flatten()
-            xx_1d = xx.flatten()[speed_1d !=9999]
-            yy_1d = yy.flatten()[speed_1d !=9999]
-            u_1d = dat_u.flatten()[speed_1d !=9999]
-            v_1d = dat_v.flatten()[speed_1d !=9999]
+            xx_1d = xx.flatten()[speed_1d !=meteva.base.IV]
+            yy_1d = yy.flatten()[speed_1d !=meteva.base.IV]
+            u_1d = dat_u.flatten()[speed_1d !=meteva.base.IV]
+            v_1d = dat_v.flatten()[speed_1d !=meteva.base.IV]
             ax2.barbs(xx_1d, yy_1d,u_1d,v_1d, barb_increments={'half': 2, 'full': 4, 'flag': 20})
 
             for k in range(row+1):
-                x = start_ob_i - k * dh_y/dh_x
+                x = start_ob_i - (k+1) * dh_y/dh_x
                 y = k
                 rect = patches.Rectangle((x, y), dh_y/dh_x, 1, linewidth=2, edgecolor='k', facecolor='none')
                 ax2.add_patch(rect)
