@@ -18,7 +18,6 @@ def hap_count(Ob,Fo, grade_list=[1e-30]):
     result = np.array(result)
     return result
 
-
 def s(Ob,Fo, grade_list=[1e-30]):
     '''
     观测发生率，观测的正样本占总样本的比例
@@ -33,7 +32,6 @@ def s(Ob,Fo, grade_list=[1e-30]):
         result.append(Ob[Ob>grade].size/num)
     result = np.array(result)
     return result
-
 
 def s_hfmc(hfmc_array):
     '''

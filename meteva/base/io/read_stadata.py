@@ -14,7 +14,7 @@ from collections import OrderedDict
 import datetime
 import math
 
-def read_station(filename,show = False):
+def read_station(filename,show = False,keep_alt = False):
     '''
     :param filename: 站点文件路径，它可以是micaps第1、2、3、8类文件
     :return: 站点数据，其中time,dtime,level属性为设置的缺省值，数据内容都设置为0
@@ -26,22 +26,104 @@ def read_station(filename,show = False):
         strs = head.split()
 
         if strs[1] == "3":
-            sta = read_stadata_from_micaps3(filename)
+            if keep_alt:
+                sta = read_sta_alt_from_micaps3(filename)
+            else:
+                sta = read_stadata_from_micaps3(filename)
         elif strs[1] == "16":
             sta = read_stadata_from_micaps16(filename)
         elif strs[1] == "1" or str[1] == "2" or str[1] == "8":
-            sta = read_stadata_from_micaps1_2_8(filename,column=4)
+            sta = read_stadata_from_micaps1_2_8(filename,column=3)
         else:
             print(filename + "is not micaps第1、2、3、8类文件")
     else:
         print(filename + " not exist")
     if sta is not None:
         data_name = sta.columns[-1]
-        sta[data_name] = 0
+        if not keep_alt:
+            sta[data_name] = 0
+        else:
+            meteva.base.set_stadata_names(sta,["alt"])
         meteva.base.set_stadata_coords(sta,time = datetime.datetime(2099,1,1,8,0),level = 0,dtime= 0)
         if show:
             print("success read from "+filename)
         return sta
+
+
+def read_sta_alt_from_micaps3(filename, station=None, drop_same_id=True,show = False):
+    '''
+    读取micaps3格式文件转换为pandas中dataframe结构的数据
+
+    :param reserve_time_dtime_level:保留时间，时效和层次，默认为rue
+    :param data_name:dataframe中数值的values列的名称
+    :return:返回一个dataframe结构的多列站点数据。
+    :param filename: 文件路径
+    :param station: 站号，默认：None
+    :param drop_same_id: 是否要删除相同id的行  默认为True
+    :return:
+    '''
+    try:
+        if os.path.exists(filename):
+            file = open(filename, 'r')
+            skip_num = 0
+            strs = []
+            nline = 0
+            nregion = 0
+            nstart = 0
+            while 1 > 0:
+                skip_num += 1
+                str1 = file.readline()
+                strs.extend(str1.split())
+
+                if (len(strs) > 8):
+                    nline = int(strs[8])
+                if (len(strs) > 11 + nline):
+                    nregion = int(strs[11 + nline])
+                    nstart = nline + 2 * nregion + 14
+                    if (len(strs) == nstart):
+                        break
+            file.close()
+
+            file_sta = open(filename)
+
+            sta1 = pd.read_csv(file_sta, skiprows=skip_num, sep="\s+", header=None, usecols=[0, 1, 2, 3])
+            sta1.columns = ['id', 'lon', 'lat', 'alt']
+            sta1.drop_duplicates(keep='first', inplace=True)
+            if drop_same_id:
+                sta1 = sta1.drop_duplicates(['id'])
+            # sta = bd.sta_data(sta1)
+            sta = meteva.base.basicdata.sta_data(sta1)
+            # print(sta)
+
+            y2 = ""
+            if len(strs[3]) == 2:
+                year = int(strs[3])
+                if year >= 50:
+                    y2 = '19'
+                else:
+                    y2 = '20'
+            if len(strs[3]) == 1: strs[3] = "0" + strs[3]
+            if len(strs[4]) == 1: strs[4] = "0" + strs[4]
+            if len(strs[5]) == 1: strs[5] = "0" + strs[5]
+            if len(strs[6]) == 1: strs[6] = "0" + strs[6]
+
+            time_str = y2 + strs[3] + strs[4] + strs[5] + strs[6]
+            time_file = meteva.base.tool.time_tools.str_to_time(time_str)
+            sta.loc[:,"time"] = time_file
+            sta.loc[:,"dtime"] = 0
+            sta.loc[:,"level"] = 0 #int(strs[7])
+
+            if (station is not None):
+                sta = meteva.base.put_stadata_on_station(sta, station)
+            if show:
+                print("success read from " + filename)
+            return sta
+        else:
+            return None
+    except:
+        exstr = traceback.format_exc()
+        print(exstr)
+        return None
 
 def read_stadata_from_micaps3(filename, station=None,  level=None,time=None, dtime=None, data_name='data0', drop_same_id=True,show = False):
     '''

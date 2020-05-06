@@ -3,9 +3,9 @@ from meteva.method import *
 from meteva.product.program.fun import *
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 
-
-def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,para1 = None,para2 = None):
+def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,para1 = None,para2 = None,plot = "line",show = True):
 
     if s is not None:
         if g is not None:
@@ -149,6 +149,17 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,para1 = None,para2
                             df[data_name[1 + j]] = result[:,j,0]
 
             sta_result = sta_data(df)
+    if show:
+        if plot == "line":
+            if g == "dtime":
+                x = np.arange(len(group_list_list1))
+                plt.plot(result,label = data_name[1])
+                plt.xticks(x,group_list_list1)
+                plt.xlabel("预报时效")
+                plt.ylabel("ME")
+                plt.legend()
+                plt.show()
+
     return result,group_list_list1,sta_result
 
 
