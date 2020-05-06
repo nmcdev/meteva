@@ -9,4 +9,3 @@ OMEGA = 0.00072722
 IV = 999999
 station_国家站 = pkg_resources.resource_filename('meteva', "resources/stations/sta2411_alt.txt")
 station_国家站_考核区域站 = pkg_resources.resource_filename('meteva', "resources/stations/stat10461.txt")
-station_国家站_全部区域站 = pkg_resources.resource_filename('meteva', "resources/stations/sta58475.dat")

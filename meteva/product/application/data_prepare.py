@@ -1,7 +1,5 @@
 import meteva
-import meteva.base as meb
-import meteva.method as mem
-import meteva.product as mpd
+import meteva
 import numpy as np
 import datetime
 import copy
@@ -41,12 +39,12 @@ para= {
     }
 
 def creat_week_dataset(para):
-    ip,port = meb.read_gds_ip_port(para["ip_port_file"])
+    ip,port = meteva.base.read_gds_ip_port(para["ip_port_file"])
     now = datetime.datetime.now()
     now = datetime.datetime(now.year,now.month,now.day,now.hour,0)
     today = datetime.datetime(now.year,now.month,now.day,0,0)
-    station = meb.read_station(para["station_file"])
-    station["data0"] = meb.IV
+    station = meteva.base.read_station(para["station_file"])
+    station["data0"] = meteva.base.IV
     veri_day_count =para["veri_day_count"]
 
     #读取grapes数据
@@ -56,8 +54,8 @@ def creat_week_dataset(para):
     data_name = "grapes"
     sta_list = []
     dir_gds0,file = os.path.split(dir_gds)
-    gds_file_list = meb.tool.path_tools.get_gds_file_list_in_one_dir(ip,port,dir_gds0)
-    hour_list,dhour_list = mpd.get_hour_dhour_list(gds_file_list)
+    gds_file_list = meteva.base.tool.path_tools.get_gds_file_list_in_one_dir(ip,port,dir_gds0)
+    hour_list,dhour_list = meteva.product.application.get_hour_dhour_list(gds_file_list)
     max_dd = veri_day_count + int(dhour_list[-1]/24)
     if max_dd > veri_day_count * 2:
         max_dd = veri_day_count
@@ -66,32 +64,32 @@ def creat_week_dataset(para):
         sta_1f = None
         for hour in hour_list:
             time2 =  datetime.datetime(day2.year,day2.month,day2.day,hour,0)
-            path_hdf = meb.tool.path_tools.get_path(dir_hdf,time2)
+            path_hdf = meteva.base.tool.path_tools.get_path(dir_hdf,time2)
             if os.path.exists(path_hdf):
                 sta_1f = pd.read_hdf(path_hdf,"df")
             else:
                 sta_list_1f  = []
                 all_exist = True
                 for dh in dhour_list:
-                    path_nc = meb.tool.path_tools.get_path(dir_nc,time2,dh)
+                    path_nc = meteva.base.tool.path_tools.get_path(dir_nc,time2,dh)
                     grd = None
                     if os.path.exists(path_nc):
-                        grd = meb.read_griddata_from_nc(path_nc)
+                        grd = meteva.base.read_griddata_from_nc(path_nc)
                     else:
-                        path_gds = meb.tool.path_tools.get_path(dir_gds,time2,dh)
+                        path_gds = meteva.base.tool.path_tools.get_path(dir_gds,time2,dh)
                         if path_gds in gds_file_list:
                             #判断是否在gds服务器中
-                            grd = meb.read_griddata_from_gds(ip,port,path_gds)
+                            grd = meteva.base.read_griddata_from_gds(ip,port,path_gds)
                     if grd is not None:
-                        sta = meb.interp_gs_linear(grd,station)
-                        meb.set_stadata_coords(sta,time = time2,dtime = dh,level = 0)
-                        meb.set_stadata_names(sta,[data_name])
+                        sta = meteva.base.interp_gs_linear(grd,station)
+                        meteva.base.set_stadata_coords(sta,time = time2,dtime = dh,level = 0)
+                        meteva.base.set_stadata_names(sta,[data_name])
                         sta_list_1f.append(sta)
                     else:
                         all_exist = False
                 if(len(sta_list_1f)>0):
                     sta_1f = pd.concat(sta_list_1f,axis = 0)
-                    meb.creat_path(path_hdf)
+                    meteva.base.creat_path(path_hdf)
                     if(all_exist):
                         sta_1f.to_hdf(path_hdf,"df")
         if sta_1f is not None:

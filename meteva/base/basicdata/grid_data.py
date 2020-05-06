@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import datetime
 import re
+import copy
 
 def set_griddata_coords(grd,name = None,gtime = None,dtime_list = None,level_list = None, member_list = None):
     """
@@ -141,9 +142,227 @@ def grid_data(grid,data=None):
     grd.name = "data0"
     return grd
 
+def xarray_to_griddata(xr0,value_name = None,member_dim = None,level_dim = None,time_dim = None,dtime_dim = None,lat_dim = None,lon_dim = None):
+    drop_list = []
+    ds = xr.Dataset()
+    if isinstance(xr0,xr.DataArray):
+        ds0 = xr.Dataset({'data0': xr0})
+    else:
+        ds0 = xr0
+    # 1判断要素成员member
+    if (member_dim is None):
+        member_dim = "member"
+    if member_dim in list(ds0.coords) or member_dim in list(ds0):
+        if member_dim in ds0.coords:
+            members = ds0.coords[member_dim]
+        else:
+            members = ds0[member_dim]
+            drop_list.append(member_dim)
+
+        ds.coords["member"] = ("member", members)
+        attrs_name = list(members.attrs)
+        for key in attrs_name:
+            ds.member.attrs[key] = members.attrs[key]
+    else:
+        ds.coords["member"] = ("member", [0])
+
+    # 2判断层次level
+    if (level_dim is None):
+        if "level" in list(ds0.coords) or "level" in list(ds0):
+            level_dim = "level"
+        elif "lev" in ds0.coords or "lev" in list(ds0):
+            level_dim = "lev"
+    if level_dim in ds0.coords or level_dim in list(ds0):
+        if level_dim in ds0.coords:
+            levels = ds0.coords[level_dim]
+        else:
+            levels = ds0[level_dim]
+            drop_list.append(level_dim)
+        ds.coords["level"] = ("level", levels)
+        attrs_name = list(levels.attrs)
+        for key in attrs_name:
+            ds.level.attrs[key] = levels.attrs[key]
+    else:
+        ds.coords["level"] = ("level", [0])
+
+    # 3判断时间time
+    if (time_dim is None):
+        if "time" in ds0.coords or "time" in list(ds0):
+            time_dim = "time"
+
+    if time_dim in ds0.coords or time_dim in list(ds0):
+        if time_dim in ds0.coords:
+            times = ds0.coords[time_dim]
+        else:
+            times = ds0[time_dim]
+        ds.coords["time"] = ("time", times)
+        attrs_name = list(times.attrs)
+        for key in attrs_name:
+            ds.time.attrs[key] = times.attrs[key]
+    else:
+        ds.coords["time"] = ("time", [0])
+
+    # 4判断时效dt
+    if (dtime_dim is None):
+        dtime_dim = "dtime"
+    if dtime_dim in ds0.coords or dtime_dim in list(ds0):
+        if dtime_dim in ds0.coords:
+            dts = ds0.coords[dtime_dim]
+        else:
+            dts = ds0[dtime_dim]
+            drop_list.append(dtime_dim)
+
+        ds.coords["dtime"] = ("dtime", dts)
+        attrs_name = list(dts.attrs)
+        for key in attrs_name:
+            ds.dtime.attrs[key] = dts.attrs[key]
+    else:
+        ds.coords["dtime"] = ("dtime", [0])
+
+    # 5判断纬度lat
+    if (lat_dim is None):
+        if "latitude" in ds0.coords or "latitude" in list(ds0):
+            lat_dim = "latitude"
+        elif "lat" in ds0.coords or "lat" in list(ds0):
+            lat_dim = "lat"
+    if lat_dim in ds0.coords or lat_dim in list(ds0):
+        if lat_dim in ds0.coords:
+            lats = ds0.coords[lat_dim]
+        else:
+            lats = ds0[lat_dim]
+            drop_list.append(lat_dim)
+        dims = lats.dims
+        if len(dims) == 1:
+            ds.coords["lat"] = ("lat", lats)
+        else:
+            if "lon" in dims[0].lower() or "x" in dims.lower():
+                lats = lats.values.T
+            ds.coords["lat"] = (("lat", "lon"), lats)
+        attrs_name = list(lats.attrs)
+        for key in attrs_name:
+            ds.lat.attrs[key] = lats.attrs[key]
+    else:
+        ds.coords["lat"] = ("lat", [0])
+
+    # 6判断经度lon
+    if (lon_dim is None):
+        if "longitude" in ds0.coords or "longitude" in list(ds0):
+            lon_dim = "longitude"
+        elif "lon" in ds0.coords or "lon" in list(ds0):
+            lon_dim = "lon"
+    if lon_dim in ds0.coords or lon_dim in list(ds0):
+        if lon_dim in ds0.coords:
+            lons = ds0.coords[lon_dim]
+        else:
+            lons = ds0[lon_dim]
+            print(lons)
+            drop_list.append(lon_dim)
+
+        dims = lons.dims
+        if len(dims) == 1:
+            ds.coords["lon"] = ("lon", lons)
+        else:
+            if "lon" in dims[0].lower() or "x" in dims.lower():
+                lons = lons.values.T
+            ds.coords["lon"] = (("lat", "lon"), lons)
+        attrs_name = list(lons.attrs)
+        for key in attrs_name:
+            ds.lon.attrs[key] = lons.attrs[key]
+    else:
+        ds.coords["lon"] = ("lon", [0])
+
+    da = None
+    if value_name is not None:
+        da = ds0[value_name]
+        name = value_name
+    else:
+        name_list = list((ds0))
+        for name in name_list:
+            if name in drop_list: continue
+            da = ds0[name]
+            shape = da.values.shape
+            size = 1
+            for i in range(len(shape)):
+                size = size * shape[i]
+            if size > 1:
+                break
+
+    dims = da.dims
+    dim_order = {}
+
+    for dim in dims:
+        if "member" in dim.lower():
+            dim_order["member"] = dim
+        elif dim.lower().find("time") == 0:
+            dim_order["time"] = dim
+        elif dim.lower().find("dt") == 0:
+            dim_order["dtime"] = dim
+        elif dim.lower().find("lev") == 0:
+            dim_order["level"] = dim
+        elif dim.lower().find("lat") == 0 or 'y' == dim.lower():
+            dim_order["lat"] = dim
+        elif dim.lower().find("lon") == 0 or 'x' == dim.lower():
+            dim_order["lon"] = dim
+
+    if "member" not in dim_order.keys():
+        dim_order["member"] = "member"
+        da = da.expand_dims("member")
+    if "time" not in dim_order.keys():
+        dim_order["time"] = "time"
+        da = da.expand_dims("time")
+    if "level" not in dim_order.keys():
+        dim_order["level"] = "level"
+        da = da.expand_dims("level")
+    if "dtime" not in dim_order.keys():
+        dim_order["dtime"] = "dtime"
+        da = da.expand_dims("dtime")
+    if "lat" not in dim_order.keys():
+        dim_order["lat"] = "lat"
+        da = da.expand_dims("lat")
+    if "lon" not in dim_order.keys():
+        dim_order["lon"] = "lon"
+        da = da.expand_dims("lon")
+
+    # print(da)
+    da = da.transpose(dim_order["member"], dim_order["level"], dim_order["time"],
+                      dim_order["dtime"], dim_order["lat"], dim_order["lon"])
+    # print(name)
+    ds[name] = (("member", "level", "time", "dtime", "lat", "lon"), da)
+    attrs_name = list(da.attrs)
+    for key in attrs_name:
+        ds[name].attrs[key] = da.attrs[key]
+    attrs_name = list(ds0.attrs)
+    for key in attrs_name:
+        ds.attrs[key] = ds0.attrs[key]
+
+    ds0.close()
+    da1 = ds[name]
+
+    if da1.coords['time'] is None:
+        da1.coords['time'] = pd.date_range("2099-1-1", periods=1)
+    if da1.coords['dtime'] is None:
+        da1.coords['dtime'] = [0]
+
+    if isinstance(da1.coords["dtime"].values[0], np.timedelta64):
+        dtime_int_m = (da1.coords["dtime"] / np.timedelta64(1, 'm'))
+        dtime_int_dm = dtime_int_m % 60
+        maxdm = np.max(dtime_int_dm)
+        if maxdm == 0:
+            # print(dtime_int)
+            da1.coords["dtime"] = (dtime_int_m / 60).astype(np.int16)
+        else:
+            da1.coords["dtime"] = (dtime_int_m + 10000).astype(np.int16)
+
+    attrs_name = list(da1.attrs)
+    if "dtime_type" in attrs_name:
+        da1.attrs["dtime_type"] = "hour"
+
+    reset(da1)
+    return da1
 
 
-def DataArray_to_grd(dataArray,member = None,level = None,time = None,dtime = None,lat = None,lon = None):
+
+def DataArray_to_grd(dataArray,member = None,level = None,time = None,dtime = None,lat = None,lon= None):
     da = copy.deepcopy(dataArray)
     dim_order = {}
     new_coods = {}

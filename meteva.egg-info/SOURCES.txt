@@ -107,6 +107,7 @@ meteva/perspact/verify/verificate.py
 meteva/product/__init__.py
 meteva/product/application/__init__.py
 meteva/product/application/data_collection.py
+meteva/product/application/data_prepare.py
 meteva/product/application/read_data_base_on_gds.py
 meteva/product/application/time_compare.py
 meteva/product/presentation/__init__.py

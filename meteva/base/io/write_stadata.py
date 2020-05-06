@@ -46,10 +46,21 @@ def write_stadata_to_micaps3(sta0,save_path = "a.txt",creat_dir = False, type = 
         str1=("diamond 3 " + save_path[start:end] + "\n"+ time_str + str(level) +" 0 0 0 0\n1 " + str(nsta) + "\n")
         br.write(str1)
         br.close()
-        data_name = meteva.base.basicdata.get_stadata_names(sta)[0]
-        df = copy.deepcopy(sta[['id','lon','lat',data_name]])
-        df['alt'] = 0
-        df = df.reindex(columns = ['id','lon','lat','alt',data_name])
+        data_names = meteva.base.basicdata.get_stadata_names(sta)
+        if "alt" not in data_names:
+            data_name = meteva.base.basicdata.get_stadata_names(sta)[0]
+            df = copy.deepcopy(sta[['id','lon','lat',data_name]])
+            df['alt'] = 0
+            df = df.reindex(columns=['id', 'lon', 'lat', 'alt', data_name])
+        else:
+            colums = ['id','lon','lat','alt']
+            for name in data_names:
+                if name != "alt":
+                    colums.append(name)
+                    break
+            df = sta.loc[:,colums]
+            if len(colums) == 4:
+                df["data0"] = 0
         effectiveNum_str = "%." + '%d'% effectiveNum + "f"
         df.to_csv(save_path,mode='a',header=None,sep = "\t",float_format=effectiveNum_str,index = None)
         if show:
