@@ -10,7 +10,7 @@ import pandas as pd
 
 
 def error_boxplot(sta_ob_and_fos0,s = None, g = None, gll=None,
-                  group_name_list=None,threshold = 2,save_dir=None,show = False,title="误差综合分析图"):
+                  group_name_list=None,threshold = 2,save_dir=None,save_path = None,show = False,dpi = 200,title="误差综合分析图"):
     '''
 
     :param sta_ob_and_fos0:
@@ -80,8 +80,7 @@ def error_boxplot(sta_ob_and_fos0,s = None, g = None, gll=None,
         if width < 6:
             width = 6
         height = 8
-        fig = plt.figure(figsize=(width, height))
-
+        fig = plt.figure(figsize=(width, height),dpi = dpi)
         grid_plt = plt.GridSpec(6, 1, hspace=0)
         x = np.arange(1, len(tcount) + 1)
 
@@ -91,6 +90,7 @@ def error_boxplot(sta_ob_and_fos0,s = None, g = None, gll=None,
             item.set_facecolor("lightblue")
         plt.subplots_adjust(left=0.5 / width, right=1 - 0.1 / width)
         plt.ylabel("误差值", fontsize=14)
+        plt.yticks(fontsize = 12)
         plt.plot(x,me_list,'g',label = '平均误差',zorder = 3)
         plt.plot(x, mae_list, 'b', label='平均绝对误差',zorder = 3)
         plt.plot(x, rmse_list, 'r', label='均方根误差',zorder = 3)
@@ -119,20 +119,27 @@ def error_boxplot(sta_ob_and_fos0,s = None, g = None, gll=None,
         plt.xlabel(xlabel_1, fontsize=14)
         plt.xlim(0.5, len(tcount) + 0.5)
         plt.ylim(0, np.max(tcount) * 1.5)
-        plt.xticks(x, group_name_list)
+        plt.xticks(x, group_name_list,fontsize = 12)
+        plt.yticks(fontsize=12)
         plt.ylabel("样本数", fontsize=14)
         ax2 = ax2.twinx()
         plt.plot(x, right_rate*100, "r", linewidth=2)
         plt.ylim(0, 100)
+        plt.yticks(fontsize=12)
         plt.ylabel("准确率(%)", fontsize=14)
 
 
-        if save_dir is None:
-            show = True
-        else:
-            save_path = save_dir +"/"+ data_names[v+1]
-            plt.savefig(save_path)
-            print("检验结果已以图片形式保存至" + save_path)
+        if save_path is None:
+            if save_dir is None:
+                show = True
+            else:
+                save_path = save_dir + "/" + data_names[v + 1] + ".png"
+
+        if save_path is not None:
+            meteva.base.tool.path_tools.creat_path(save_path)
+            plt.savefig(save_path,bbox_inches='tight')
+            print("图片已保存至" + save_path)
+            save_path = None
         if show:
             plt.show()
         plt.close()
@@ -140,8 +147,10 @@ def error_boxplot(sta_ob_and_fos0,s = None, g = None, gll=None,
 
 
 
+
+
 def error_boxplot_abs(sta_ob_and_fos0,s = None, g = None, gll=None,
-                  group_name_list=None,threshold = 2,save_dir=None,show = False,title="误差综合分析图"):
+                  group_name_list=None,threshold = 2,save_dir=None,save_path = None,show = False,dpi = 200,title="误差综合分析图"):
 
     if s is not None:
         if g is not None:
@@ -207,9 +216,7 @@ def error_boxplot_abs(sta_ob_and_fos0,s = None, g = None, gll=None,
         if width < 6:
             width = 6
         height = 8
-        fig = plt.figure(figsize=(width, height))
-
-        fig = plt.figure(figsize=(width, height))
+        fig = plt.figure(figsize=(width, height),dpi = dpi)
         grid_plt = plt.GridSpec(5, 1, hspace=0)
         x = np.arange(1, len(tcount) + 1)
         ax1 = plt.subplot(grid_plt[0:4, 0])
@@ -218,6 +225,7 @@ def error_boxplot_abs(sta_ob_and_fos0,s = None, g = None, gll=None,
             item.set_facecolor("lightblue")
         plt.subplots_adjust(left=0.5 / width, right=1 - 0.1 / width)
         plt.ylabel("误差绝对值", fontsize=16)
+        plt.yticks(fontsize=12)
         plt.ylim(np.min(me_list) *1.1,maxerror *1.1)
         plt.plot(x,me_list,'g',label = '平均误差',zorder = 3)
         plt.plot(x, mae_list, 'b', label='平均绝对误差',zorder = 3)
@@ -243,20 +251,26 @@ def error_boxplot_abs(sta_ob_and_fos0,s = None, g = None, gll=None,
         plt.xlabel(xlabel_1, fontsize=14)
         plt.xlim(0.5, len(tcount) + 0.5)
         plt.ylim(0, np.max(tcount) * 1.5)
-        plt.xticks(x, group_name_list)
+        plt.xticks(x, group_name_list,fontsize = 12)
+        plt.yticks(fontsize=12)
         plt.ylabel("样本数", fontsize=14)
         ax3 = ax2.twinx()
         plt.plot(x, right_rate * 100, "r", linewidth=2)
         plt.ylim(0, 100)
+        plt.yticks(fontsize=12)
         plt.ylabel("准确率(%)", fontsize=14)
 
-        if save_dir is None:
-            show = True
-        else:
-            save_path = save_dir
-            plt.savefig(save_path)
-            print("检验结果已以图片形式保存至" + save_path)
+        if save_path is None:
+            if save_dir is None:
+                show = True
+            else:
+                save_path = save_dir + "/" + data_names[v + 1] + ".png"
 
+        if save_path is not None:
+            meteva.base.tool.path_tools.creat_path(save_path)
+            plt.savefig(save_path,bbox_inches='tight')
+            print("图片已保存至" + save_path)
+            save_path = None
         if show:
             plt.show()
         plt.close()
