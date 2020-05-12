@@ -8,12 +8,35 @@ from ..io.GDS_data_service import GDSDataService
 import re
 
 #获取最新的路径
+
+
+#获取最新的gds路径
+def get_latest_gds_path(ip,port,dir,time,dtime,dt_cell = "hour",dt_step = 1,farthest = 240):
+    dir1,filemodel = os.path.split(dir)
+    file_list = get_gds_file_list_in_one_dir(ip,port,dir1)
+    for ddt in range(0,farthest,dt_step):
+        if dt_cell.lower() == "hour":
+            time1 = time - datetime.timedelta(hours=ddt)
+        elif dt_cell.lower() == "minute":
+            time1 = time - datetime.timedelta(minutes=ddt)
+        filename = get_path(filemodel, time1, dtime + ddt, dt_cell)
+        if filename in file_list:
+            path = dir1 + "/" + filename
+            return path
+
+#获取最新的路径
 def get_latest_path(dir,time,dt,dt_cell = "hour",dt_step = 1, farthest = 240):
     for ddt in range(0,240,dt_step):
-        path = get_path(dir,time,dt - ddt,dt_cell)
+        if dt_cell.lower()=="hour":
+            time1 = time - datetime.timedelta(hours=ddt)
+        elif dt_cell.lower()=="minute":
+            time1 = time - datetime.timedelta(minutes=ddt)
+
+        path = get_path(dir,time1,dt + ddt,dt_cell)
         if(os.path.exists(path)):
             return path
     return None
+
 
 #获取路径
 def get_path(dir,time,dt = None,dt_cell = "hour"):
