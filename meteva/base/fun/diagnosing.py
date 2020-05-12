@@ -161,6 +161,60 @@ def t_dtp_to_rh(temp,dtp):
 
         return grd
 
+
+
+def t_rh_p_to_q(temp,rh,pressure):
+    '''
+    根据温度、相对湿度和气压计算比湿
+    :param temp: 温度，可以是摄氏度，也可以是绝对温度
+    :param rh:  相对湿度，可以是0-100，也可以是0-1
+    :param level: 气压，单位百帕,可以是整数，站点数据或网格数据
+    :return:
+    '''
+    if isinstance(temp,pd.DataFrame):
+        if not isinstance(pressure,pd.DataFrame):
+            level_s = temp.copy()
+            level_s.iloc[:,-1] = pressure
+        else:
+            level_s = pressure
+        sta1 = meteva.base.combine_on_all_coords(temp, rh)
+        sta2 = meteva.base.combine_on_all_coords(sta1, level_s)
+        meteva.base.set_stadata_names(sta2, ["t", "rh","p"])
+        T = sta2["t"].values
+        R = sta2["rh"].values
+        P = sta2["p"].values
+        if(T[0]>120):
+            T -= 273.16
+        e0 = 6.11 * np.exp(5420 * (1.0 / 273.15 - 1 / (T + 273.15))) * 622
+        max_rh = np.max(R)
+        if max_rh >1.0:
+            R /= 100
+        q = e0 * R/P
+        sta2["q"] = q
+        sta = sta2.drop(["t", "rh","p"], axis=1)
+        return sta
+    else:
+        grid0 = meteva.base.get_grid_of_data(temp)
+        if temp.values[0,0,0,0,0,0] >120:
+            T = temp.values - 273.16
+        else:
+            T = temp.values
+        max_rh = np.max(rh.values)
+        if max_rh >1.0:
+            R = rh.values /100
+        else:
+            R = rh.values
+        e0 = 6.11 * np.exp(5420 * (1.0 / 273.15 - 1 / (T + 273.15))) * 622
+        if isinstance(pressure,int):
+            P = pressure
+        else:
+            P = pressure.values
+        q = e0 * R/P
+        grd = meteva.base.grid_data(grid0,q)
+        return grd
+
+
+
 def sta_index_ensemble_near_by_sta(sta_to,nearNum = 100,sta_from = None,drop_frist = False):
     if(sta_to is None):
         return None
