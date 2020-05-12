@@ -152,6 +152,9 @@ def combine_on_level_time_dtime_id(sta, sta1,how = 'inner'):
             sta3 = sta.copy()
             sta3.drop(["lon","lat"], axis=1, inplace=True)
             df = pd.merge(sta3, sta2, on=columns, how=how)
+            if(len(df.index) == 0):
+                print("no matched line")
+                return None
             df = meteva.base.sta_data(df)
         return df
 
