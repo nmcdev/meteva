@@ -231,3 +231,11 @@ def get_grid_of_data(grid_data0):
     grid01 = grid(glon, glat, gtime, gdt, level_list, member_list)
     return grid01
 
+
+def reset_grid(grid0):
+    if grid0.dlat <0:
+        grid0.dlat = - grid0.dlat
+        tran = grid0.slat
+        grid0.slat = grid0.elat
+        grid0.elat = tran
+    return
