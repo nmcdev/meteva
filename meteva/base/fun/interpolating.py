@@ -221,8 +221,8 @@ def interp_gs_cubic(grd,sta,used_coords = "xy"):
     return sta1
 
 
-def interp_sg_idw(sta, grid, background=None, effectR=1000, nearNum=8):
-
+def interp_sg_idw(sta0, grid, background=None, effectR=1000, nearNum=8):
+    sta = meteva.base.sele_by_para(sta0,drop_IV=True)
     data_name = meteva.base.get_stadata_names(sta)
     index0 = sta.index[0]
     grid2 = meteva.base.basicdata.grid(grid.glon, grid.glat, [sta.loc[index0, 'time']],
@@ -257,7 +257,7 @@ def interp_sg_idw(sta, grid, background=None, effectR=1000, nearNum=8):
 
 
 
-def interp_gg_linear(grd, grid,used_coords = "xy"):
+def interp_gg_linear(grd, grid,used_coords = "xy",outer_value = None):
     '''
     格点到格点插值
     :param grd:左边的网格数据信息
@@ -276,12 +276,20 @@ def interp_gg_linear(grd, grid,used_coords = "xy"):
     icycle = int(360/grid0.dlon)
     iscycle = (grid0.dlon * grid0.nlon >= 360)
     if used_coords == "xy":
+        is_out = False
         if not iscycle:
             if (grid.elon > grid0.elon or grid.slon < grid0.slon or grid.elat > grid0.elat or grid.slat < grid0.slat):
-                print("object grid is should not out of ["+ str(grid0.slon)+","+str(grid0.elon)+"];["+str(grid0.slat)+","+str(grid0.elat)+"]")
-                return None
-        grd_new = meteva.base.grid_data(grid)
-        #print(grd_new)
+                if outer_value is None:
+                    print("当目标网格超出数据网格时，outer_value参数必须赋值")
+                    return None
+                is_out = True
+
+        if is_out:
+            grid_new0 = meteva.base.get_inner_grid(grid,grid0)
+            grid_new = meteva.base.grid(grid_new0.glon, grid_new0.glat, grid0.gtime, grid0.dtimes, grid0.levels, grid0.members)
+        else:
+            grid_new = meteva.base.grid(grid.glon, grid.glat, grid0.gtime, grid0.dtimes, grid0.levels, grid0.members)
+        grd_new = meteva.base.grid_data(grid_new)
         for i in range(len(levels)):
             for j in range(len(times)):
                 for k in range(len(dtimes)):
@@ -289,10 +297,10 @@ def interp_gg_linear(grd, grid,used_coords = "xy"):
                         # 六维转换为二维的值
                         dat = grd.values[m,i,j,k,:,:]
                         #插值处理
-                        x = ((np.arange(grid.nlon) * grid.dlon + grid.slon - grid0.slon) / grid0.dlon)
+                        x = ((np.arange(grid_new.nlon) * grid_new.dlon + grid_new.slon - grid0.slon) / grid0.dlon)
                         ig = x[:].astype(dtype='int16')
                         dx = x - ig
-                        y = (np.arange(grid.nlat) * grid.dlat + grid.slat - grid0.slat) / grid0.dlat
+                        y = (np.arange(grid_new.nlat) * grid_new.dlat + grid_new.slat - grid0.slat) / grid0.dlat
                         jg = y[:].astype(dtype='int16')
                         dy = y - jg
                         ii, jj = np.meshgrid(ig, jg)
@@ -310,6 +318,9 @@ def interp_gg_linear(grd, grid,used_coords = "xy"):
                         c11 = ddx * ddy
                         dat2 = (c00 *dat[jj, ii] + c10 * dat[jj1, ii] + c01 * dat[jj, ii1] + c11 * dat[jj1, ii1])
                         grd_new.values[m,i,j,k,:,:] = dat2
+        if is_out:
+            grid_new1 = meteva.base.grid(grid.glon, grid.glat, grid0.gtime, grid0.dtimes, grid0.levels, grid0.members)
+            grd_new = meteva.base.expand_to_contain_another_grid(grd_new,grid_new1,outer_value=outer_value)
     return grd_new
 
 
