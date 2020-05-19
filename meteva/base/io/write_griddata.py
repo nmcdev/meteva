@@ -5,7 +5,7 @@ import meteva
 import os
 import traceback
 
-def write_griddata_to_micaps4(da,save_path = "a.txt",creat_dir = False,effectiveNum = 6,show = False):
+def write_griddata_to_micaps4(da,save_path = "a.txt",creat_dir = False,effectiveNum = 6,show = False,title = None):
     """
     输出micaps4格式文件
     :param da:xarray多维数据信息
@@ -66,29 +66,27 @@ def write_griddata_to_micaps4(da,save_path = "a.txt",creat_dir = False,effective
         end = len(save_path)
         start = max(0, end - 16)
 
-        title = ("diamond 4 " + save_path[start:end] + "\n"
-                 +year + " "+ month + " " + day+ " " +hour+ " " + hour_range +" " + str(level)+"\n"
-                + str(grid.dlon) + " " + str(grid.dlat) + " " + str(grid.slon) + " " + str(grid.elon) + " "
-                + str(grid.slat) + " " + str(grid.elat) + " " + str(grid.nlon) + " " + str(grid.nlat) + " "
-                + str(inte) + " " + str(vmin) + " " + str(vmax) + " 1 0")
+        if title is None:
+            title = ("diamond 4 " + save_path[start:end] + "\n"
+                     + year + " " + month + " " + day + " " + hour + " " + hour_range + " " + str(level) + "\n"
+                     + str(grid.dlon) + " " + str(grid.dlat) + " " + str(grid.slon) + " " + str(grid.elon) + " "
+                     + str(grid.slat) + " " + str(grid.elat) + " " + str(grid.nlon) + " " + str(grid.nlat) + " "
+                     + str(inte) + " " + str(vmin) + " " + str(vmax) + " 1 0")
+        else:
+            title = ("diamond 4 "+ title +"\n"
+            + year + " " + month + " " + day + " " + hour + " " + hour_range + " " + str(level) + "\n"
+            + str(grid.dlon) + " " + str(grid.dlat) + " " + str(grid.slon) + " " + str(grid.elon) + " "
+            + str(grid.slat) + " " + str(grid.elat) + " " + str(grid.nlon) + " " + str(grid.nlat) + " "
+            + str(inte) + " " + str(vmin) + " " + str(vmax) + " 1 0")
 
 
-        # 第一行标题
-        title0 = 'diamond 4 %s\n' % stime
-        # 第二行标题
-        title1 = '%s %s %s %s %s 999 %s %s %s %s %s %s %d %d 4 %s %s 2 0.00' \
-                 % (year, month, day, hour, hour_range,
-                    dlon, dlat,
-                    slon, elon, slat,
-                    elat, nlon, nlat, vmax, vmin)
-        #title = title0 + title1
         # 二维数组写入micaps文件
         format_str = "%." + str(effectiveNum) + "f "
 
         np.savetxt(save_path, grid_values, delimiter=' ',
                    fmt=format_str, header=title, comments='')
         if show:
-            print('Create [%s] success' % save_path)
+            print('成功输出至'+ save_path)
         return True
     except:
         exstr = traceback.format_exc()
@@ -115,13 +113,13 @@ def write_griddata_to_nc(da,save_path = "a.txt",creat_dir = False,effectiveNum =
                         }
         da.to_netcdf(save_path,encoding = encodingdict)
         if show:
-            print('Create [%s] success' % save_path)
+            print('成功输出至' + save_path)
         return True
     except:
         exstr = traceback.format_exc()
         print(exstr)
         return False
-def write_griddata_to_micaps11(wind,save_path = "a.txt",creat_dir = False,effectiveNum = 3,show = False):
+def write_griddata_to_micaps11(wind,save_path = "a.txt",creat_dir = False,effectiveNum = 3,show = False,title = None):
     try:
         dir = os.path.split(os.path.abspath(save_path))[0]
         if not os.path.isdir(dir):
@@ -150,17 +148,25 @@ def write_griddata_to_micaps11(wind,save_path = "a.txt",creat_dir = False,effect
 
         end = len(save_path)
         start = max(0, end - 16)
-        title  = ("diamond 11 " + save_path[start:end] + "\n"
-                +year + " "+ month + " " + day+ " " +hour +" " + str(level)+"\n"
-                + str(grid0.dlon) + " " + str(grid0.dlat) + " " + str(grid0.slon) + " " + str(grid0.elon) + " "
-                + str(grid0.slat) + " " + str(grid0.elat) + " " + str(grid0.nlon) + " " + str(grid0.nlat))
+
+        if title is None:
+            title = ("diamond 11 " + save_path[start:end] + "\n"
+                     + year + " " + month + " " + day + " " + hour + " " + str(level) + "\n"
+                     + str(grid0.dlon) + " " + str(grid0.dlat) + " " + str(grid0.slon) + " " + str(grid0.elon) + " "
+                     + str(grid0.slat) + " " + str(grid0.elat) + " " + str(grid0.nlon) + " " + str(grid0.nlat))
+        else:
+
+            title  = ("diamond 11 " + title+ "\n"
+                    +year + " "+ month + " " + day+ " " +hour +" " + str(level)+"\n"
+                    + str(grid0.dlon) + " " + str(grid0.dlat) + " " + str(grid0.slon) + " " + str(grid0.elon) + " "
+                    + str(grid0.slat) + " " + str(grid0.elat) + " " + str(grid0.nlon) + " " + str(grid0.nlat))
 
         format_str = "%." + str(effectiveNum) + "f "
 
         np.savetxt(save_path, grid_values, delimiter=' ',
                    fmt=format_str, header=title, comments='')
         if show:
-            print('Create [%s] success' % save_path)
+            print('成功输出至' + save_path)
         return True
     except:
         exstr = traceback.format_exc()
