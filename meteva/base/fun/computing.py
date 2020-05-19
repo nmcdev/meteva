@@ -371,3 +371,10 @@ def multiply_on_id(sta1_0, sta2_0, how="left", default=None):
     df.columns = columns
 
     return df
+
+def reset_value_as_IV(sta,iv_value):
+    sta1 = sta.copy()
+    data_names = meteva.base.get_stadata_names(sta1)
+    for name in data_names:
+        sta1.loc[sta1.loc[:,name] == iv_value,name] = meteva.base.IV
+    return sta1
