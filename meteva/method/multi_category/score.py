@@ -52,7 +52,6 @@ def tcof(ob,fo,grade_list = None):
     tcof1[1:,:] = ft.T
     return tcof1
 
-
 def hfmc_multi(ob,fo,grade_list = None):
     '''
     多分类评分中间统计量
@@ -111,7 +110,6 @@ def accuracy(ob, fo, grade_list=None):
     correct_count = tc1[1]
     accuracy_score = correct_count / total_count
     return accuracy_score
-
 
 def accuracy_tc(tc_array):
     '''

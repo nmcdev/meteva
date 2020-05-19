@@ -10,7 +10,7 @@ from meteva.base import IV
 import math
 import copy
 
-def rain_24h_sg(sta_ob,grd_fo,save_path=None,show  = False,add_county_line = False):
+def rain_24h_sg(sta_ob,grd_fo,save_path=None,show  = False,dpi = 200,add_county_line = False):
     '''
     #绘制24小时降水实况与预报对比图
     :param grd_fo: 输入的网格数据，包含一个平面的网格场
@@ -123,7 +123,7 @@ def rain_24h_sg(sta_ob,grd_fo,save_path=None,show  = False,add_county_line = Fal
 
     # 图片显示或保存
     if(save_path is not None):
-        plt.savefig(save_path, dpi=300)
+        plt.savefig(save_path, dpi=dpi,bbox_inches='tight')
     else:
         show = True
     if show:
@@ -131,7 +131,7 @@ def rain_24h_sg(sta_ob,grd_fo,save_path=None,show  = False,add_county_line = Fal
     plt.close()
     return
 
-def rain_24h_comprehensive_sg(sta_ob,grd_fo, save_path=None,show = False,add_county_line = False):
+def rain_24h_comprehensive_sg(sta_ob,grd_fo, save_path=None,show = False,dpi = 200,add_county_line = False):
     '''
     #绘制24小时降水实况与预报综合对比检验图，画幅中央为预报实况的对比，左右两侧为各类检验指标
     :param grd_fo: 输入的网格数据，包含一个平面的网格场
@@ -441,7 +441,7 @@ def rain_24h_comprehensive_sg(sta_ob,grd_fo, save_path=None,show = False,add_cou
 
     # 图片显示或保存
     if(save_path is not None):
-        plt.savefig(save_path, dpi=300)
+        plt.savefig(save_path, dpi=dpi,bbox_inches='tight')
     else:
         show = True
     if show:
@@ -450,7 +450,7 @@ def rain_24h_comprehensive_sg(sta_ob,grd_fo, save_path=None,show = False,add_cou
 
     return
 
-def rain_24h_comprehensive_chinaland_sg(sta_ob,grd_fo,  save_path=None,show = False,add_county_line = False):
+def rain_24h_comprehensive_chinaland_sg(sta_ob,grd_fo,  save_path=None,show = False,dpi = 200,add_county_line = False):
     '''
     #绘制24小时降水实况与预报综合对比检验图，专为为全国区域设置的画面布局，画面更加紧凑
     :param grd_fo: 输入的网格数据，包含一个平面的网格场
@@ -722,7 +722,7 @@ def rain_24h_comprehensive_chinaland_sg(sta_ob,grd_fo,  save_path=None,show = Fa
 
     # 图片显示或保存
     if(save_path is not None):
-        plt.savefig(save_path, dpi=300)
+        plt.savefig(save_path, dpi=dpi,bbox_inches='tight')
     else:
         show = True
     if show:
@@ -730,7 +730,7 @@ def rain_24h_comprehensive_chinaland_sg(sta_ob,grd_fo,  save_path=None,show = Fa
     plt.close()
     return
 
-def temper_gg(grd_ob,grd_fo,save_path = None,show = False,add_county_line = False):
+def temper_gg(grd_ob,grd_fo,save_path = None,show = False,dpi = 200,add_county_line = False):
 
     ob_min = np.min(grd_ob.values)
     fo_min = np.min(grd_fo.values)
@@ -847,14 +847,14 @@ def temper_gg(grd_ob,grd_fo,save_path = None,show = False,add_county_line = Fals
 
     # 图片显示或保存
     if(save_path is not None):
-        plt.savefig(save_path, dpi=300)
+        plt.savefig(save_path, dpi=dpi,bbox_inches='tight')
     else:
         show = True
     if show:
         plt.show()
     plt.close()
 
-def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None,show = False,add_county_line = False):
+def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None,show = False,dpi = 200,add_county_line = False):
 
     ob_min = np.min(grd_ob.values)
     fo_min = np.min(grd_fo.values)
@@ -1067,7 +1067,7 @@ def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None,show = False,add_coun
 
     # 图片显示或保存
     if(save_path is not None):
-        plt.savefig(save_path, dpi=300)
+        plt.savefig(save_path, dpi=dpi,bbox_inches='tight')
     else:
         show = True
     if show:

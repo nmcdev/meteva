@@ -119,7 +119,7 @@ def add_china_map_2basemap(ax,name ="province", facecolor='none',
     ax.add_collection(lines)
 
 
-def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = None,add_county_line = False,show = False):
+def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = None,add_county_line = False,show = False,dpi = 200):
 
     if save_path is None:
         show = True
@@ -134,7 +134,7 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = None,a
     left_plots_width  = 0.8
     right_plots_width = 0.8
     width = (height - title_hight - legend_hight) * rlon / rlat + left_plots_width + right_plots_width
-    fig = plt.figure(figsize=(width, height))
+    fig = plt.figure(figsize=(width, height),dpi = dpi)
     rect1 = [left_plots_width / width, legend_hight/height, (width - right_plots_width - left_plots_width) / width, 1-title_hight/height]
     ax = plt.axes(rect1)
 
@@ -186,7 +186,7 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = None,a
             cmap1 = plt.get_cmap("rainbow")
         else:
             cmap1 = cmap
-    norm = BoundaryNorm(clevs1, ncolors=cmap1.N, clip=True)
+    norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
     im = ax.contourf(x, y, np.squeeze(grd.values), levels=clevs1, cmap=cmap1,norm = norm)
     left_low = (width +0.1 - right_plots_width) / width
     colorbar_position = fig.add_axes([left_low, legend_hight / height, 0.02, 1 - title_hight / height])  # 位置[左,下,宽,高]
@@ -216,7 +216,7 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = None,a
         xticks_label.append(str(xticks[x]))
     xticks_label[-1] += "°E"
     ax.set_xticks(xticks)
-    ax.set_xticklabels(xticks_label,fontsize = 14)
+    ax.set_xticklabels(xticks_label,fontsize = 12)
 
     vmax = y[-1]
     vmin = y[0]
@@ -242,13 +242,13 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = None,a
         yticks_label.append(str(yticks[y]))
     yticks_label[-1] += "°N"
     ax.set_yticks(yticks)
-    ax.set_yticklabels(yticks_label,fontsize = 14)
+    ax.set_yticklabels(yticks_label,fontsize = 12)
 
 
     if(save_path is not None):
         file1,extension = os.path.splitext(save_path)
         extension = extension[1:]
-        plt.savefig(save_path,format = extension)
+        plt.savefig(save_path,format = extension,bbox_inches='tight')
     else:
         show = True
     if show:
@@ -256,7 +256,7 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = None,a
     plt.close()
 
 
-def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = None,add_county_line = False,show = False):
+def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = None,add_county_line = False,show = False,dpi = 200):
 
     if save_path is None:
         show = True
@@ -273,7 +273,7 @@ def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = None
     left_plots_width  = 0.8
     right_plots_width = 0.8
     width = (height - title_hight - legend_hight) * rlon / rlat + left_plots_width + right_plots_width
-    fig = plt.figure(figsize=(width, height))
+    fig = plt.figure(figsize=(width, height),dpi = dpi)
     rect1 = [left_plots_width / width, legend_hight/height, (width - right_plots_width - left_plots_width) / width, 1-title_hight/height]
     ax = plt.axes(rect1)
 
@@ -329,8 +329,7 @@ def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = None
             cmap1 = plt.get_cmap("rainbow")
         else:
             cmap1 = plt.get_cmap(cmap)
-
-    norm = BoundaryNorm(clevs1, ncolors=cmap1.N, clip=True)
+    norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
     im = ax.pcolormesh(x, y, np.squeeze(grd.values), cmap=cmap1,norm=norm)
     left_low = (width + 0.1 - right_plots_width) / width
     colorbar_position = fig.add_axes([left_low, legend_hight / height, 0.02, 1-title_hight/height])  # 位置[左,下,宽,高]
@@ -360,7 +359,7 @@ def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = None
         xticks_label.append(str(xticks[x]))
     xticks_label[-1] += "°E"
     ax.set_xticks(xticks)
-    ax.set_xticklabels(xticks_label,fontsize = 14)
+    ax.set_xticklabels(xticks_label,fontsize = 12)
 
 
 
@@ -388,13 +387,13 @@ def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = None
         yticks_label.append(str(yticks[y]))
     yticks_label[-1] += "°N"
     ax.set_yticks(yticks)
-    ax.set_yticklabels(yticks_label,fontsize = 14)
+    ax.set_yticklabels(yticks_label,fontsize = 12)
 
 
     if(save_path is not None):
         file1,extension = os.path.splitext(save_path)
         extension = extension[1:]
-        plt.savefig(save_path,format = extension)
+        plt.savefig(save_path,format = extension,bbox_inches='tight')
     else:
         show = True
     if show:
@@ -403,7 +402,7 @@ def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = None
 
 
 def scatter_sta(sta,map_extend = None, value_column=0, save_path=None, title=None, clevs=None, cmap=None,
-                fix_size = True,add_county_line = False,show = False,print_max = 1,mean_value = None,threshold = None):
+                fix_size = True,add_county_line = False,show = False,print_max = 1,mean_value = None,threshold = None,dpi = 200):
 
     if save_path is None:
         show = True
@@ -448,7 +447,7 @@ def scatter_sta(sta,map_extend = None, value_column=0, save_path=None, title=Non
     map_width = width - left_plots_width - right_plots_width
     map_area = (hight - title_hight - legend_hight) *map_width
 
-    fig = plt.figure(figsize=(width, hight))
+    fig = plt.figure(figsize=(width, hight),dpi = dpi)
     rect1 = [left_plots_width / width, legend_hight / hight, (width - right_plots_width - left_plots_width) / width,
              1 - title_hight / hight]
     ax = plt.axes(rect1)
@@ -608,7 +607,7 @@ def scatter_sta(sta,map_extend = None, value_column=0, save_path=None, title=Non
     if(save_path is not None):
         file1,extension = os.path.splitext(save_path)
         extension = extension[1:]
-        plt.savefig(save_path,format = extension)
+        plt.savefig(save_path,format = extension,bbox_inches='tight')
     else:
         show = True
     if show:

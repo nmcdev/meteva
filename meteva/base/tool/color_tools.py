@@ -316,7 +316,7 @@ def show_cmap_clev(cmap,clev = None):
     """
     n_colors = len(cmap.colors)
     width = 8
-    heigh = 1
+    heigh = 2
     n_h = int(heigh * n_colors/width)
     im = np.outer(np.ones(n_h), np.arange(n_colors))
 

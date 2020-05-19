@@ -15,6 +15,9 @@ def all_type_time_to_time64(time0):
         return None
 
 def all_type_time_to_datetime(time0):
+    if isinstance(time0,int):
+        time1 = datetime.datetime.utcfromtimestamp(time0 / 1000000000)
+        return time1
     time64 = all_type_time_to_time64(time0)
     time1 = time64.astype(datetime.datetime)
     if isinstance(time1,int):

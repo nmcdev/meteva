@@ -275,6 +275,9 @@ def in_ob_hour_list(sta,hour_list):
 
 
 def between_ob_time_range(sta,start_time,end_time):
+    start_time = meteva.base.tool.time_tools.all_type_time_to_time64(start_time)
+    end_time = meteva.base.tool.time_tools.all_type_time_to_time64(end_time)
+
     dtimes = sta["dtime"] * np.timedelta64(1, 'h')
     obtimes = sta['time'] + dtimes
     sta1 = sta.loc[(obtimes  >= start_time) & (obtimes  <= end_time)]

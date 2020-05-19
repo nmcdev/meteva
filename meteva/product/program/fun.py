@@ -6,9 +6,6 @@ import time
 import pandas as pd
 import numpy as np
 
-
-
-
 def get_time_str_one_by_one(time1,time0 = None,row = 1):
     if row == 2:
         if time0 is None:
@@ -141,6 +138,17 @@ def get_title_from_dict(method,s,g,group_list,model_name,title = None):
                     s_str = "\n{" + s_str+"}"
                 else:
                     s_str ="\n{" + grid_str +"}"
+            if "id" in r.keys():
+                id0 = r["id"]
+                del r["id"]
+                id_str = "id:"+ str(id0) +"(" + meteva.base.tool.station_id_name_dict[id0]+")"
+                if len(r.keys()) > 0:
+                    s_str = str(r) + ""
+                    s_str = s_str.replace("{", "").replace("}", "")
+                    s_str = id_str+ "," +s_str
+                    s_str = "\n{" + s_str + "}"
+                else:
+                    s_str = "\n{" + id_str + "}"
             else:
                 if len(r.keys())>0:
                     s_str = "\n"+str(r)+""
@@ -402,3 +410,44 @@ def get_x_label(groupy_by):
         return "预报时效包含的天数"
     elif groupy_by == "dday":
         return "预报时效整除24小时后的余数"
+
+def get_x_ticks(ticks,width):
+
+    tick0 = ticks[0]
+    nt = len(ticks)
+    if isinstance(tick0,datetime.datetime) or isinstance(tick0,np.datetime64):
+        ticks1 = []
+        if  isinstance(tick0,datetime.datetime):
+            for tick in ticks:
+                ticks1.append(meteva.base.time_tools.all_type_time_to_time64(tick))
+        else:
+            ticks1 = ticks
+        times = np.array(ticks1)
+        dtimes = (times[1:] - times[0:-1])
+        dhs =  dtimes / np.timedelta64(1, 'h')
+        dhs_set = set(dhs.tolist())
+        dh_max = (times[-1] - times[0]) / np.timedelta64(1, 'h')
+        # 判断是否为有规律的
+        if(dhs.size / len(dhs_set) >3):
+            #有规律
+            dhs_units = np.array(list(dhs_set))
+            dhs_units.sort()
+            dhs_u0 = dhs_units[0]
+            nt1 = dh_max/dhs_u0
+            w_one_tick = 0.1
+            w_unfold = w_one_tick * nt1
+            step0 = int(math.ceil(w_unfold / width))
+            step1 = int(24 / (dhs_u0 * step0))
+            if step1 > 0:
+                step = int(24 / step1 / dhs_u0)
+                print(step)
+            else:
+                step = step0
+            time2 = meteva.base.tool.time_tools.all_type_time_to_datetime(time)
+
+        else:
+            #无规律，需穷举
+            ticks_str_list = get_time_str_list(times,row=2)
+            return ticks_str_list
+    else:
+        pass

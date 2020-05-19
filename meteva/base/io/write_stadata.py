@@ -6,7 +6,7 @@ import pandas as pd
 import datetime
 import meteva
 
-def write_stadata_to_micaps3(sta0,save_path = "a.txt",creat_dir = False, type = -1,effectiveNum = 4,show = False):
+def write_stadata_to_micaps3(sta0,save_path = "a.txt",creat_dir = False, type = -1,effectiveNum = 4,show = False,title = None):
     """
     生成micaps3格式的文件
     :param sta0:站点数据信息
@@ -43,7 +43,11 @@ def write_stadata_to_micaps3(sta0,save_path = "a.txt",creat_dir = False, type = 
         if type<0 or level == np.NaN or level ==pd.NaT:
             level = int(type)
 
-        str1=("diamond 3 " + save_path[start:end] + "\n"+ time_str + str(level) +" 0 0 0 0\n1 " + str(nsta) + "\n")
+        if title is None:
+            str1=("diamond 3 " + save_path[start:end] + "\n"+ time_str + str(level) +" 0 0 0 0\n1 " + str(nsta) + "\n")
+        else:
+            str1 = ("diamond 3 " + title + "\n" + time_str + str(level) + " 0 0 0 0\n1 " + str(
+                nsta) + "\n")
         br.write(str1)
         br.close()
         data_names = meteva.base.basicdata.get_stadata_names(sta)
@@ -64,7 +68,7 @@ def write_stadata_to_micaps3(sta0,save_path = "a.txt",creat_dir = False, type = 
         effectiveNum_str = "%." + '%d'% effectiveNum + "f"
         df.to_csv(save_path,mode='a',header=None,sep = "\t",float_format=effectiveNum_str,index = None)
         if show:
-            print('Create [%s] success' % save_path)
+            print('成功输出至' + save_path)
         return True
     except:
         exstr = traceback.format_exc()

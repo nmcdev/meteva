@@ -1,5 +1,4 @@
 import meteva
-import meteva
 import numpy as np
 import datetime
 import copy
@@ -10,98 +9,203 @@ import math
 import matplotlib as mpl
 import os
 
-para= {
-    "ip_port_file":r"H:\test_data\input\meb\ip_port.txt",
-    "local_hdf_dir":"O:/data/mdfs",
-    "local_sta_dir": "O:/data/sta",
-    "local_grid_dir":"O:/data/grid",
-    "veri_day_count":7,
+para_example= {
+    "day_num":7,
+    "end_time":datetime.datetime.now(),
     "station_file":meteva.base.station_国家站,
-    "sta_data":{},
-    "grid_data":{
-        "SCMOC":[
-                 ["NWFD_SCMOC/TMP/2M_ABOVE_GROUND","instant",0],
-                 ["NWFD_SCMOC/MAXIMUM_TEMPERATURE/2M_ABOVE_GROUND","instant",0],
-                 ["NWFD_SCMOC/MINIMUM_TEMPERATURE/2M_ABOVE_GROUND","instant",0],
-                 ["NWFD_SCMOC/RAIN03","accumulate",24]
-        ],
-        "GRAPES":[
-                  ["GRAPES_GFS/TMP/2M_ABOVE_GROUND",None],
-                  ["GRAPES_GFS/MAXIMUM_TEMPERATURE/2M_ABOVE_GROUND/","max",24],
-                  ["GRAPES_GFS/MINIMUM_TEMPERATURE/2M_ABOVE_GROUND/","min",24],
-                  ["GRAPES_GFS/APCP","delta",24]
-        ],
-        "ECMWF":[
-
-        ]
+    "defalut_value":999999,
+    "hdf_file_name":"week.h5",
+    "ob_data":{
+        "hdf_dir":r"O:\data\hdf\SURFACE\QC_BY_FSOL\TMP_ALL_STATION",
+        "dir_ob": r"O:\data\sta\SURFACE\QC_BY_FSOL\TMP_ALL_STATION\YYYYMMDD\YYYYMMDDHH0000.000",
+        "operation":None,
+        "operation_para_dict":{}
     },
-    "data_name":"ob"
-    }
+    "fo_data":{
+        "SCMOC":{
+            "hdf_dir": r"O:\data\hdf\NWFD_SCMOC\TMP\2M_ABOVE_GROUND",
+            "dir_fo": r"O:\data\grid\NWFD_SCMOC\TMP\2M_ABOVE_GROUND\YYYYMMDD\YYMMDDHH.TTT.nc",
+            "operation": None,
+            "operation_para_dict":{}
+        },
+        "ECMWF":{
+            "hdf_dir": r"O:\data\hdf\ECMWF_HR\TMP_2M",
+            "dir_fo": r"O:\data\grid\ECMWF_HR\TMP_2M\YYYYMMDD\YYMMDDHH.TTT.nc",
+            "operation": None,
+            "operation_para_dict":{}
+        }
+    },
+    "output_dir":r"O:\data\hdf\combined\temp_2m"
+}
 
-def creat_week_dataset(para):
-    ip,port = meteva.base.read_gds_ip_port(para["ip_port_file"])
-    now = datetime.datetime.now()
-    now = datetime.datetime(now.year,now.month,now.day,now.hour,0)
-    today = datetime.datetime(now.year,now.month,now.day,0,0)
+
+def prepare_dataset(para):
     station = meteva.base.read_station(para["station_file"])
-    station["data0"] = meteva.base.IV
-    veri_day_count =para["veri_day_count"]
+    station.iloc[:,-1] = para["defalut_value"]
+    day_num = para["day_num"]
+    end_time = para["end_time"]
+    hdf_file_list = []
+    hdf_file = para["ob_data"]["hdf_dir"] +"/"+ para["hdf_file_name"]
+    hdf_file_list.append(hdf_file)
+    creat_ob_dataset(hdf_file,para["ob_data"]["dir_ob"],station=station,
+                     end_time = end_time,day_num=day_num,operation=para["ob_data"]["operation"],
+                     operation_para_list = para["ob_data"]["operation_para_dict"],data_name="ob")
+    models = para["fo_data"].keys()
+    for model in models:
+        hdf_file = para["fo_data"][model]["hdf_dir"] + "/" + para["hdf_file_name"]
+        hdf_file_list.append(hdf_file)
+        creat_fo_dataset(hdf_file,para["fo_data"][model]["dir_fo"],station,
+                         end_time = end_time,day_num = day_num,
+                         operation = para["fo_data"][model]["operation"],
+                         operation_para_list = para["fo_data"][model]["operation_para_dict"],data_name = model)
 
-    #读取grapes数据
-    dir_hdf = "YYMMDDHH.h5"
-    dir_nc = r"O:\data\grid\GRAPES_GFS\TMP\2M_ABOVE_GROUND\YYYYMMDD\YYMMDDHH.TTT.nc"
-    dir_gds = r"GRAPES_GFS\TMP\2M_ABOVE_GROUND\YYMMDDHH.TTT"
-    data_name = "grapes"
+    output_file = para["output_dir"] + "/" + para["hdf_file_name"]
+    meteva.base.path_tools.creat_path(output_file)
+    combine_ob_fos_dataset(output_file,hdf_file_list)
+
+
+
+def creat_fo_dataset(hdf_path, dir_fo, station, day_num,end_time = None, operation=None, operation_para_list=0,data_name = None):
+    data0 = None
+    if os.path.exists(hdf_path):
+        data0 = pd.read_hdf(hdf_path, "df")
+    # print(data0)
     sta_list = []
-    dir_gds0,file = os.path.split(dir_gds)
-    gds_file_list = meteva.base.tool.path_tools.get_gds_file_list_in_one_dir(ip,port,dir_gds0)
-    hour_list,dhour_list = meteva.product.application.get_hour_dhour_list(gds_file_list)
-    max_dd = veri_day_count + int(dhour_list[-1]/24)
-    if max_dd > veri_day_count * 2:
-        max_dd = veri_day_count
-    for dd in range(max_dd):
-        day2 = today - datetime.timedelta(days = dd)
-        sta_1f = None
-        for hour in hour_list:
-            time2 =  datetime.datetime(day2.year,day2.month,day2.day,hour,0)
-            path_hdf = meteva.base.tool.path_tools.get_path(dir_hdf,time2)
-            if os.path.exists(path_hdf):
-                sta_1f = pd.read_hdf(path_hdf,"df")
-            else:
-                sta_list_1f  = []
-                all_exist = True
-                for dh in dhour_list:
-                    path_nc = meteva.base.tool.path_tools.get_path(dir_nc,time2,dh)
-                    grd = None
-                    if os.path.exists(path_nc):
-                        grd = meteva.base.read_griddata_from_nc(path_nc)
-                    else:
-                        path_gds = meteva.base.tool.path_tools.get_path(dir_gds,time2,dh)
-                        if path_gds in gds_file_list:
-                            #判断是否在gds服务器中
-                            grd = meteva.base.read_griddata_from_gds(ip,port,path_gds)
+    if end_time is None:
+        now = datetime.datetime.now()
+    else:
+        now = end_time
+    today = datetime.datetime(now.year, now.month, now.day, 0, 0)
+    before = today - datetime.timedelta(days=day_num)
+    tomorrow = today + datetime.timedelta(days=1)
+    exist_dtimes = {}
+    if data0 is None:
+        hours = np.arange(0, 24, 1).tolist()
+        dtimes = np.arange(0, 721, 1).tolist()
+    else:
+        data_left = meteva.base.sele_by_para(data0, time_range=[before, tomorrow])
+        sta_list.append(data_left)
+        id0 = station["id"].values[0]
+        data_id0 = meteva.base.sele_by_para(data0, id=id0)
+        # print(data_id0)
+        times = data_id0.loc[:, "time"].values.tolist()
+        times = list(set(times))
+        times.sort()
+        # print(times)
+        hours = []
+        time1_list = []
+        for i in range(len(times)):
+            # print(times[i])
+            time1 = meteva.base.time_tools.all_type_time_to_datetime(times[i])
+            hours.append(time1.hour)
+            time1_list.append(time1)
+        hours = list(set(hours))
+        hours.sort()
+
+        dtimes = data_id0.loc[:, "dtime"].values.tolist()
+        dtimes = list(set(dtimes))
+        dtimes.sort()
+        for time0 in time1_list:
+            data_id0_time0 = meteva.base.sele_by_para(data_id0, time=time0)
+            # print(data_id0_time0)
+            ehours = data_id0_time0.loc[:, "dtime"].values.tolist()
+            # print(ehours)
+            exist_dtimes[time0] = ehours
+    # print(hours)
+    # print(dtimes)
+    # print(exist_dtimes)
+    for dd in range(day_num):
+        for hh in range(len(hours)):
+            hour = hours[hh]
+            # print(hour)
+            time1 = today - datetime.timedelta(days=dd) + datetime.timedelta(hours=hour)
+            for dt in dtimes:
+                if time1 in exist_dtimes.keys():
+                    exist_dtime = exist_dtimes[time1]
+                    if dt in exist_dtime:
+                        continue
+                path = meteva.base.get_path(dir_fo, time1, dt)
+                if os.path.exists(path):
+                    print(path)
+                    grd = meteva.base.read_griddata_from_nc(path, time=time1, dtime=dt,data_name= data_name)
                     if grd is not None:
-                        sta = meteva.base.interp_gs_linear(grd,station)
-                        meteva.base.set_stadata_coords(sta,time = time2,dtime = dh,level = 0)
-                        meteva.base.set_stadata_names(sta,[data_name])
-                        sta_list_1f.append(sta)
-                    else:
-                        all_exist = False
-                if(len(sta_list_1f)>0):
-                    sta_1f = pd.concat(sta_list_1f,axis = 0)
-                    meteva.base.creat_path(path_hdf)
-                    if(all_exist):
-                        sta_1f.to_hdf(path_hdf,"df")
-        if sta_1f is not None:
-            sta_list.append(sta_1f)
-    grapes_all = pd.concat(sta_list,axis = 0)
+                        sta = meteva.base.interp_gs_linear(grd, station)
+                        sta_list.append(sta)
 
-def combine_data_from_hdf(hdf_file_list,s = None):
+    sta_all = pd.concat(sta_list, axis=0)
+
+    print(hdf_path)
+    meteva.base.creat_path(hdf_path)
+    sta_all.to_hdf(hdf_path, "df")
+
+def creat_ob_dataset(hdf_path, dir_ob, station, day_num,end_time = None, operation=None, operation_para_list=0,data_name = None):
+    data0 = None
+    if os.path.exists(hdf_path):
+        data0 = pd.read_hdf(hdf_path, "df")
+    # print(data0)
     sta_list = []
-    for file in hdf_file_list:
-        sta = pd.read_hdf(file,"df")
-        sta_list.append(sta)
-    print(len(sta_list))
-    sta_all = meteva.base.combine_on_obTime_id(sta_list[0],sta_list[1:])
-    sta_all_s = meteva.base.sele_by_dict(sta_all,s)
-    return sta_all_s
+    if end_time is None:
+        now = datetime.datetime.now()
+    else:
+        now = end_time
+    today = datetime.datetime(now.year, now.month, now.day, 0, 0)
+    before = today - datetime.timedelta(days=day_num)
+    tomorrow = today + datetime.timedelta(days=1)
+    time1_list = []
+    if data0 is None:
+        hours = np.arange(0, 24, 1).tolist()
+    else:
+        data_left = meteva.base.sele_by_para(data0, time_range=[before, tomorrow])
+        sta_list.append(data_left)
+        id0 = station["id"].values[0]
+        data_id0 = meteva.base.sele_by_para(data0, id=id0)
+        # print(data_id0)
+        times = data_id0.loc[:, "time"].values.tolist()
+        times = list(set(times))
+        times.sort()
+        # print(times)
+        hours = []
+        for i in range(len(times)):
+            #print(times[i])
+            time1 = meteva.base.time_tools.all_type_time_to_datetime(times[i])
+            hours.append(time1.hour)
+            time1_list.append(time1)
+        hours = list(set(hours))
+        hours.sort()
+
+    for dd in range(day_num):
+        for hh in range(len(hours)):
+            hour = hours[hh]
+            # print(hour)
+            time1 = today - datetime.timedelta(days=dd) + datetime.timedelta(hours=hour)
+            if time1 in time1_list:
+                continue
+            path = meteva.base.get_path(dir_ob, time1)
+            if os.path.exists(path):
+                print(path)
+                sta = meteva.base.read_stadata_from_gdsfile(path, station=station, time=time1,data_name= data_name)
+                if sta is not None:
+                    sta_list.append(sta)
+    sta_all = pd.concat(sta_list, axis=0)
+    meteva.base.creat_path(hdf_path)
+    print(hdf_path)
+    sta_all.to_hdf(hdf_path, "df")
+
+def load_ob_fos_dataset(ob_fos_path_list,ob_fos_name_list = None,reset_level = True):
+    sta_all_list = []
+    level_ob =0
+    for i in range(len(ob_fos_path_list)):
+        sta_all = pd.read_hdf(ob_fos_path_list[i],"df")
+        if ob_fos_name_list is not None:
+            meteva.base.set_stadata_names(sta_all,[ob_fos_name_list[i]])
+        if reset_level and i==0:
+            level_ob = sta_all.iloc[0,0]
+        if reset_level and i !=0:
+            meteva.base.set_stadata_coords(sta_all,level = level_ob)
+        sta_all_list.append(sta_all)
+    sta_all_merged = meteva.base.combine_on_obTime_id(sta_all_list[0],sta_all_list[1:])
+    return sta_all_merged
+
+def combine_ob_fos_dataset(output_path,ob_fos_path_list,ob_fos_name_list = None,reset_level = True):
+    sta_all_merged = load_ob_fos_dataset(ob_fos_path_list, ob_fos_name_list=ob_fos_name_list,reset_level= reset_level)
+    sta_all_merged.to_hdf(output_path, "df")

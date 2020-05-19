@@ -1300,7 +1300,7 @@ def read_stadata_from_micaps16(filename,level = None,time= None,dtime = None,dat
 
 def read_stadata_from_csv(filename,show = False):
     file = open(filename,"r")
-    sta = pd.read_csv(file,parse_dates=['time'])
+    sta = pd.read_csv(file,parse_dates=['time'],sep = "\s+")
     sta.drop(sta.columns[[0]], axis=1, inplace=True)
     sta.dropna(axis=0, how='any', inplace=True)
     if show:
