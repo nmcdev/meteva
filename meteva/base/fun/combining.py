@@ -4,6 +4,7 @@ import copy
 import meteva
 import datetime
 import time
+import math
 
 # 两个站点信息合并为一个，在原有的dataframe的基础上增加行数
 def combine_join(sta, sta1):
@@ -260,3 +261,58 @@ def combine_expand_IV(sta,sta_with_IV):
 
     sta_combine = combine_on_level_time_dtime_id(sta, sta_with_IV1)
     return sta_combine
+
+def get_inner_grid(grid0,grid1,used_coords = "xy"):
+    si = 0
+    sj = 0
+    ei = 0
+    ej = 0
+    if(grid1.slon > grid0.slon):
+        si = int(math.ceil((grid1.slon - grid0.slon)/grid0.dlon))
+    if(grid1.slat > grid0.slat):
+        sj = int(math.ceil((grid1.slat - grid0.slat)/grid0.dlat))
+    if(grid1.elon < grid0.elon):
+        ei = int(math.ceil((grid0.elon - grid1.elon)/grid0.dlon))
+    if(grid1.elat < grid0.elat):
+        ej = int(math.ceil((grid0.elat - grid1.elat)/grid0.dlat))
+    slon = grid0.slon + si * grid0.dlon
+    slat = grid0.slat + sj * grid0.dlat
+    elon = grid0.elon - ei * grid0.dlon
+    elat = grid0.elat - ej * grid0.dlat
+    grid_inner = meteva.base.grid([slon,elon,grid0.dlon],[slat,elat,grid0.dlat],grid0.gtime,grid0.dtimes,grid0.levels,grid0.members)
+    return grid_inner
+
+def get_outer_grid(grid0,grid1,used_coords = "xy"):
+    si = 0
+    sj = 0
+    ei = 0
+    ej = 0
+    if (grid1.slon < grid0.slon):
+        si = int(math.ceil((grid0.slon - grid1.slon) / grid0.dlon))
+    if (grid1.slat < grid0.slat):
+        sj = int(math.ceil((grid0.slat - grid1.slat) / grid0.dlat))
+    if (grid1.elon > grid0.elon):
+        ei = int(math.ceil((-grid0.elon + grid1.elon) / grid0.dlon))
+    if (grid1.elat > grid0.elat):
+        ej = int(math.ceil((-grid0.elat + grid1.elat) / grid0.dlat))
+    slon = grid0.slon - si * grid0.dlon
+    slat = grid0.slat - sj * grid0.dlat
+    elon = grid0.elon + ei * grid0.dlon
+    elat = grid0.elat + ej * grid0.dlat
+    grid_outer = meteva.base.grid([slon,elon,grid0.dlon],[slat,elat,grid0.dlat],grid0.gtime,grid0.dtimes,grid0.levels,grid0.members)
+    return grid_outer
+
+def expand_to_contain_another_grid(grd0,grid1,used_coords = "xy",outer_value = 0):
+    grid0 = meteva.base.get_grid_of_data(grd0)
+    grid_outer = get_outer_grid(grid0,grid1,used_coords = used_coords)
+    grd1 = meteva.base.grid_data(grid_outer)
+    grd1.values[...] = outer_value
+
+    si = 0
+    sj = 0
+    if (grid1.slon < grid0.slon):
+        si = int(math.ceil((grid0.slon - grid1.slon) / grid0.dlon))
+    if (grid1.slat < grid0.slat):
+        sj = int(math.ceil((grid0.slat - grid1.slat) / grid0.dlat))
+    grd1.values[:,:,:,:,sj:(sj + grid0.nlat), si:(si + grid0.nlon)] = grd0.values[...]
+    return grd1
