@@ -5,7 +5,7 @@ from setuptools import find_packages, setup
 from codecs import open
 name = "meteva"
 author ="liucouhua,daikan,wangbaoli"
-version ="1.1.1.1"
+version ="1.1.4.0"
 
 here = path.abspath(path.dirname(__file__))
 
@@ -42,7 +42,7 @@ setup(
                       'pandas>=0.20.0',
                       'xarray>=0.11.0',
                       'scikit-learn>=0.21.2',
-                      'matplotlib>=3.0.1',
+                      'matplotlib>=3.1.2',
                       "httplib2>=0.12.0",
                       "protobuf>=3.6.1",
                       "netCDF4>=1.4.2",

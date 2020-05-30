@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,para1 = None,para2 = None,plot = "line",show = True):
+def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,para1 = None,para2 = None,plot = "line",show = False):
 
     if s is not None:
         if g is not None:
