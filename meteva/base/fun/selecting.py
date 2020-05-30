@@ -36,6 +36,8 @@ def not_equal_to(sta,dele_value):
 
 #为拥有多元素值的站点数据，在最后依次增加要素值的列表名
 def in_member_list(data,member_list,name_or_index = "name"):
+    if not isinstance(member_list,list) and not isinstance(member_list,np.ndarray):
+        member_list = [member_list]
     if isinstance(data, pd.DataFrame):
         data_names = meteva.base.get_stadata_names(data)
         member_name_list = []
@@ -85,6 +87,9 @@ def in_member_list(data,member_list,name_or_index = "name"):
 
 #为拥有多level层的站点数据，依次增加level层所表示的list列表
 def in_level_list(data,level_list):
+    if not isinstance(level_list,list) and not isinstance(level_list,np.ndarray):
+        level_list = [level_list]
+
     if isinstance(data, pd.DataFrame):
         sta1 = data.loc[data['level'].isin(level_list)]
         return sta1
@@ -112,13 +117,18 @@ def in_level_list(data,level_list):
 
 #为拥有多id的站点数据，依次增加id所表示的list列表
 def in_id_list(sta,id_list):
+    if not isinstance(id_list,list) and not isinstance(id_list,np.ndarray):
+        id_list = [id_list]
     sta1 = sta.loc[sta['id'].isin(id_list)]
     return sta1
 
 
 #为拥有多time层的站点数据，依次增加time层所表示的list列表
 def in_time_list(sta,time_list):
+    if not isinstance(time_list,list) and not isinstance(time_list,np.ndarray):
+        time_list = [time_list]
     time_list1 = []
+
     for time0 in time_list:
         time_list1.append(meteva.base.tool.time_tools.all_type_time_to_time64(time0))
     sta1 = sta.loc[sta['time'].isin(time_list1)]
@@ -128,18 +138,24 @@ def in_time_list(sta,time_list):
 
 #为拥有多year的站点数据，依次增加year所表示的list列表
 def in_year_list(sta,year_list):
+    if not isinstance(year_list,list) and not isinstance(year_list,np.ndarray):
+        year_list = [year_list]
     fo_times = pd.Series(0, index=sta['time'])
     sta1 = sta.loc[fo_times.index.year.isin(year_list)]
     return sta1
 
 #为拥有多month的站点数据，依次增加month所表示的list列表
 def in_month_list(sta,month_list):
+    if not isinstance(month_list,list) and not isinstance(month_list,np.ndarray):
+        month_list = [month_list]
     fo_times = pd.Series(0, index=sta['time'])
     sta1 = sta.loc[fo_times.index.month.isin(month_list)]
     return sta1
 
 #为拥有多xun的站点数据，依次增加xun所表示的list列表
 def in_xun_list(sta,xun_list):
+    if not isinstance(xun_list,list) and not isinstance(xun_list,np.ndarray):
+        xun_list = [xun_list]
     fo_times = pd.Series(0, index=sta['time'])
     mons = fo_times.index.month.astype(np.int16)
     days = fo_times.index.day.astype(np.int16)
@@ -152,6 +168,8 @@ def in_xun_list(sta,xun_list):
 
 #为拥有多hou的站点数据，依次增加hou所表示的list列表
 def in_hou_list(sta,hou_list):
+    if not isinstance(hou_list,list) and not isinstance(hou_list,np.ndarray):
+        hou_list = [hou_list]
     fo_times = pd.Series(0, index=sta['time'])
     mons = fo_times.index.month.astype(np.int16)
     days = fo_times.index.day.astype(np.int16)
@@ -164,6 +182,8 @@ def in_hou_list(sta,hou_list):
 
 #为拥有多day的站点数据，依次增加day所表示的list列表
 def in_day_list(sta,day_list):
+    if not isinstance(day_list,list) and not isinstance(day_list,np.ndarray):
+        day_list = [day_list]
     days_list = []
     time0 = datetime.datetime(1900,1,1,0,0)
     seconds = 3600*24
@@ -175,12 +195,16 @@ def in_day_list(sta,day_list):
     return sta1
 
 def in_dayofyear_list(sta,dayofyear_list):
+    if not isinstance(dayofyear_list,list) and not isinstance(dayofyear_list,np.ndarray):
+        dayofyear_list = [dayofyear_list]
     fo_times = pd.Series(0, index=sta['time'])
     sta1 = sta.loc[fo_times.index.dayofyear.isin(dayofyear_list)]
     return sta1
 
 #为拥有多hour的站点数据，依次增加hour所表示的list列表
 def in_hour_list(sta,hour_list):
+    if not isinstance(hour_list,list) and not isinstance(hour_list,np.ndarray):
+        hour_list = [hour_list]
     fo_times = pd.Series(0, index=sta['time'])
     sta1 = sta.loc[fo_times.index.hour.isin(hour_list)]
     return sta1
@@ -195,6 +219,8 @@ def between_time_range(sta,start_time,end_time):
 ############
 #为拥有多time层的站点数据，依次增加time层所表示的list列表
 def in_ob_time_list(sta,time_list):
+    if not isinstance(time_list,list) and not isinstance(time_list,np.ndarray):
+        time_list = [time_list]
     time_list1 = []
     for time0 in time_list:
         time_list1.append(meteva.base.tool.time_tools.all_type_time_to_time64(time0))
@@ -205,6 +231,8 @@ def in_ob_time_list(sta,time_list):
 
 #为拥有多year的站点数据，依次增加year所表示的list列表
 def in_ob_year_list(sta,year_list):
+    if not isinstance(year_list,list) and not isinstance(year_list,np.ndarray):
+        year_list = [year_list]
     dtimes = sta["dtime"] * np.timedelta64(1, 'h')
     obtimes = pd.Series(0,index = sta['time'] + dtimes)
     sta1 = sta.loc[obtimes.index.year.isin(year_list)]
@@ -212,6 +240,8 @@ def in_ob_year_list(sta,year_list):
 
 #为拥有多month的站点数据，依次增加month所表示的list列表
 def in_ob_month_list(sta,month_list):
+    if not isinstance(month_list,list) and not isinstance(month_list,np.ndarray):
+        month_list = [month_list]
     dtimes = sta["dtime"] * np.timedelta64(1, 'h')
     obtimes = pd.Series(0,index = sta['time'] + dtimes)
     sta1 = sta.loc[obtimes.index.month.isin(month_list)]
@@ -220,6 +250,8 @@ def in_ob_month_list(sta,month_list):
 
 #为拥有多xun的站点数据，依次增加xun所表示的list列表
 def in_ob_xun_list(sta,xun_list):
+    if not isinstance(xun_list,list) and not isinstance(xun_list,np.ndarray):
+        xun_list = [xun_list]
     dtimes = sta["dtime"] * np.timedelta64(1, 'h')
     obtimes = pd.Series(0,index = sta['time'] + dtimes)
     mons = obtimes.index.month.astype(np.int16)
@@ -233,6 +265,8 @@ def in_ob_xun_list(sta,xun_list):
 
 #为拥有多hou的站点数据，依次增加hou所表示的list列表
 def in_ob_hou_list(sta,hou_list):
+    if not isinstance(hou_list,list) and not isinstance(hou_list,np.ndarray):
+        hou_list = [hou_list]
     dtimes = sta["dtime"] * np.timedelta64(1, 'h')
     obtimes = pd.Series(0,index = sta['time'] + dtimes)
     mons = obtimes.index.month.astype(np.int16)
@@ -246,12 +280,16 @@ def in_ob_hou_list(sta,hou_list):
 
 #为拥有多day的站点数据，依次增加day所表示的list列表
 def in_ob_dayofyear_list(sta,dayofyear_list):
+    if not isinstance(dayofyear_list,list) and not isinstance(dayofyear_list,np.ndarray):
+        dayofyear_list = [dayofyear_list]
     dtimes = sta["dtime"] * np.timedelta64(1, 'h')
     obtimes = pd.Series(0,index = sta['time'] + dtimes)
     sta1 = sta.loc[obtimes.index.dayofyear.isin(dayofyear_list)]
     return sta1
 
 def in_ob_day_list(sta,day_list):
+    if not isinstance(day_list,list) and not isinstance(day_list,np.ndarray):
+        day_list = [day_list]
     dtimes = sta["dtime"] * np.timedelta64(1, 'h')
     obtimes = sta['time'] + dtimes
     days_list = []
@@ -268,6 +306,8 @@ def in_ob_day_list(sta,day_list):
 
 #为拥有多hour的站点数据，依次增加hour所表示的list列表
 def in_ob_hour_list(sta,hour_list):
+    if not isinstance(hour_list,list) and not isinstance(hour_list,np.ndarray):
+        hour_list = [hour_list]
     dtimes = sta["dtime"] * np.timedelta64(1, 'h')
     obtimes = pd.Series(0,index = sta['time'] + dtimes)
     sta1 = sta.loc[obtimes.index.hour.isin(hour_list)]
@@ -286,23 +326,31 @@ def between_ob_time_range(sta,start_time,end_time):
 
 #为拥有多dtime的站点数据，依次增加dtime所表示的list列表
 def in_dtime_list(sta,dtime_list):
+    if not isinstance(dtime_list,list) and not isinstance(dtime_list,np.ndarray):
+        dtime_list = [dtime_list]
     sta1 = sta.loc[sta['dtime'].isin(dtime_list)]
     return sta1
 
 #为拥有多dday的站点数据，依次增加dday所表示的list列表
 def in_dday_list(sta,dday_list):
+    if not isinstance(dday_list,list) and not isinstance(dday_list,np.ndarray):
+        dday_list = [dday_list]
     days = np.ceil(sta['dtime'] / 24)
     sta1 = sta.loc[days.isin(dday_list)]
     return sta1
 
 #为拥有多dhour的站点数据，依次增加dhour所表示的list列表
 def in_dhour_list(sta,dhour_list):
+    if not isinstance(dhour_list,list) and not isinstance(dhour_list,np.ndarray):
+        dhour_list = [dhour_list]
     hours = sta['dtime']% 24
     sta1 = sta.loc[hours.isin(dhour_list)]
     return sta1
 
 #为拥有多dminute的站点数据，依次增加minute所表示的list列表
 def in_dminute_list(sta,dminute_list):
+    if not isinstance(dminute_list,list) and not isinstance(dminute_list,np.ndarray):
+        dminute_list = [dminute_list]
     minutes = sta['dtime'].map(lambda x: x - 10000)
     sta1 = sta.loc[minutes.isin(dminute_list)]
     return sta1
@@ -365,6 +413,8 @@ def in_grid_xyz(sta,grid):
 
 
 def in_last_list(sta,last_list,drop_last = True):
+    if not isinstance(last_list,list) and not isinstance(last_list,np.ndarray):
+        last_list = [last_list]
     columns = list(sta.columns)
     sta1 = sta.loc[sta[columns[-1]].isin(last_list)]
     if drop_last:
@@ -696,86 +746,50 @@ def sele_by_para(data,member = None,level = None,time = None,time_range = None,y
     '''
     sta1 = data
     if member is not None:
-        if not isinstance(member,list):
-            member = [member]
         sta1 = in_member_list(sta1,member)
     if level is not None:
-        if not isinstance(level,list):
-            level = [level]
         sta1 = in_level_list(sta1,level)
     if time is not None:
-        if not isinstance(time,list):
-            time = [time]
         sta1 = in_time_list(sta1, time)
     if time_range is not None:
         if not isinstance(time_range,list):
             print("time_range参数需为列表形式的包含起始时刻和结束时刻的时间参数，时间可以是datetime格式，datetime64或者字符串形式（例如2019010108）")
         sta1 = between_time_range(sta1, time_range[0],time_range[1])
     if year is not None:
-        if not isinstance(year,list):
-            year = [year]
         sta1 = in_year_list(sta1,year)
     if month is not None:
-        if not isinstance(month,list):
-            month = [month]
         sta1 = in_month_list(sta1,month)
     if day is not None:
-        if not isinstance(day,list):
-            day = [day]
         sta1 = in_day_list(sta1,day)
     if dayofyear is not None:
-        if not isinstance(dayofyear,list):
-            dayofyear = [dayofyear]
         sta1 = in_dayofyear_list(sta1,dayofyear)
     if hour is not None:
-        if not isinstance(hour,list):
-            hour = [hour]
         sta1 = in_hour_list(sta1, hour)
-
     if ob_time is not None:
-        if not isinstance(ob_time,list):
-            ob_time = [ob_time]
         sta1 = in_ob_time_list(sta1, ob_time)
     if ob_time_range is not None:
         if not isinstance(ob_time_range,list):
             print("ob_time_range参数需为列表形式的包含起始时刻和结束时刻的时间参数，时间可以是datetime格式，datetime64或者字符串形式（例如2019010108）")
         sta1 = between_ob_time_range(sta1, ob_time_range[0],ob_time_range[1])
     if ob_year is not None:
-        if not isinstance(ob_year,list):
-            ob_year = [ob_year]
         sta1 = in_ob_year_list(sta1,ob_year)
     if ob_month is not None:
-        if not isinstance(ob_month,list):
-            ob_month = [ob_month]
         sta1 = in_ob_month_list(sta1,ob_month)
     if ob_day is not None:
-        if not isinstance(ob_day,list):
-            ob_day = [ob_day]
         sta1 = in_ob_day_list(sta1,ob_day)
     if ob_dayofyear is not None:
-        if not isinstance(ob_dayofyear,list):
-            ob_dayofyear = [ob_dayofyear]
         sta1 = in_ob_dayofyear_list(sta1,ob_dayofyear)
     if ob_hour is not None:
-        if not isinstance(ob_hour,list):
-            ob_hour = [ob_hour]
         sta1 = in_ob_hour_list(sta1, ob_hour)
-
     if dtime is not None:
-        if not isinstance(dtime,list):
-            dtime = [dtime]
         sta1 = in_dtime_list(sta1,dtime)
     if dtime_range is not None:
         if not isinstance(dtime_range,list):
             print("dtime_range参数需为列表形式的包含起始时效（整数）和结束时效（整数）的参数")
         sta1 = between_dtime_range(sta1, dtime_range[0],dtime_range[1])
     if dday is not None:
-        if not isinstance(dday,list):
-            dday = [dday]
         sta1 = in_dday_list(sta1,dday)
     if dhour is not None:
-        if not isinstance(dhour,list):
-            dhour = [dhour]
         sta1 = in_dhour_list(sta1,dhour)
     if lon is not None:
         if not isinstance(lon,list):
@@ -786,20 +800,15 @@ def sele_by_para(data,member = None,level = None,time = None,time_range = None,y
             print("lat参数需为列表形式的包含起始纬度（浮点数）和结束纬度（浮点）的参数")
         sta1 = between_lat_range(sta1,lat[0],lat[1])
     if id is not None:
-        if not isinstance(id,list):
-            id = [id]
         sta1 = in_id_list(sta1,id)
-
     if grid is not None:
         sta1 = in_grid(sta1,grid)
     if gxy is not None:
         sta1 = in_grid_xy(sta1,gxy)
     if gxyz is not None:
         sta1 = in_grid_xyz(sta1,gxyz)
-
     if stadata is not None:
         sta1 = by_stadata(sta1,stadata)
-
     if value is not None:
         if not isinstance(value, list):
             print("value参数需为列表形式的包含起始值和结束值的参数")
@@ -808,17 +817,8 @@ def sele_by_para(data,member = None,level = None,time = None,time_range = None,y
         sta1 = not_IV(sta1)
     if last_range is not None:
         sta1 = between_last_range(sta1,last_range[0],last_range[1],drop_last)
-
-
-
     if last is not None:
-        if not isinstance(last,list):
-            last = [last]
         sta1 = in_last_list(sta1,last,drop_last)
-
-
-
-
     return sta1
 
 

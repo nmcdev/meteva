@@ -34,7 +34,7 @@ def write_stadata_to_micaps3(sta0,save_path = "a.txt",creat_dir = False, type = 
             time_str = meteva.base.tool.time_tools.time_to_str(time)
             time_str = time_str[0:4] + " " +time_str[4:6] + " " + time_str[6:8] + " " + time_str[8:10] + " "
         else:
-            time_str = "2099 01 01 0 0 "
+            time_str = "2099 01 01 0 "
 
         if np.isnan(sta['level'].iloc[0]):
             level = 0

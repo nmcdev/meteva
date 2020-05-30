@@ -68,6 +68,7 @@ def rmse_scatter(sta_ob_and_fos,s = None,g = None,gll = None,group_name_list= No
                 else:
                     fileName  = title1.replace("\n","").replace(":","")
                     save_path = save_dir + "/"+fileName+".png"
+            meteva.base.creat_path(save_path)
             meteva.base.tool.plot_tools.scatter_sta(rmse_sta,value_column = di,save_path= save_path,show = show,
                                                     clevs= clevs1,fix_size=False,title=title1,print_max = print_max
                                                     ,mean_value = mean_value,add_county_line=add_county_line,threshold=threshold,map_extend=map_extend,dpi = dpi)
@@ -140,7 +141,7 @@ def mae_scatter(sta_ob_and_fos,s = None,g = None,gll = None,group_name_list= Non
                 else:
                     fileName  = title1.replace("\n","").replace(":","")
                     save_path = save_dir + "/"+fileName+".png"
-
+            meteva.base.creat_path(save_path)
             meteva.base.tool.plot_tools.scatter_sta(rmse_sta,value_column = di,
                                                     save_path= save_path,show= show,fix_size=False,clevs=clevs1,title=title1,print_max = print_max,
                                                     mean_value = mean_value, threshold = threshold,add_county_line = add_county_line,map_extend= map_extend,dpi = dpi)
@@ -215,7 +216,7 @@ def me_scatter(sta_ob_and_fos,s= None,g = None,gll = None,group_name_list= None,
                     fileName  = title1.replace("\n","").replace(":","")
                     save_path = save_dir + "/"+fileName+".png"
 
-
+            meteva.base.creat_path(save_path)
             meteva.base.tool.plot_tools.scatter_sta(rmse_sta, value_column=di, save_path=save_path,show = show, fix_size=False,
                                                         clevs=clevs1, title=title1,print_max = print_max,
                                                     mean_value=mean_value, threshold=threshold,add_county_line = add_county_line,map_extend = map_extend,dpi = dpi)

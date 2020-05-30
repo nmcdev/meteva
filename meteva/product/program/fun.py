@@ -141,7 +141,10 @@ def get_title_from_dict(method,s,g,group_list,model_name,title = None):
             if "id" in r.keys():
                 id0 = r["id"]
                 del r["id"]
-                id_str = "id:"+ str(id0) +"(" + meteva.base.tool.station_id_name_dict[id0]+")"
+                if id0 in meteva.base.tool.station_id_name_dict.keys():
+                    id_str = "id:"+ str(id0) +"(" + meteva.base.tool.station_id_name_dict[id0]+")"
+                else:
+                    id_str = "id:" + str(id0)
                 if len(r.keys()) > 0:
                     s_str = str(r) + ""
                     s_str = s_str.replace("{", "").replace("}", "")
@@ -343,7 +346,6 @@ def get_unique_coods(sta):
         discription = "\n("+discription[0:-1]+")"
     return discription
 
-
 def get_group_name(group_list_list):
     if group_list_list is None:
         return ["all"]
@@ -410,11 +412,10 @@ def get_x_label(groupy_by):
         return "预报时效包含的天数"
     elif groupy_by == "dday":
         return "预报时效整除24小时后的余数"
-
 def get_x_ticks(ticks,width):
-
+    w_one_tick = 0.5
+    max_tick_num = int(width / w_one_tick)
     tick0 = ticks[0]
-    nt = len(ticks)
     if isinstance(tick0,datetime.datetime) or isinstance(tick0,np.datetime64):
         ticks1 = []
         if  isinstance(tick0,datetime.datetime):
@@ -422,6 +423,8 @@ def get_x_ticks(ticks,width):
                 ticks1.append(meteva.base.time_tools.all_type_time_to_time64(tick))
         else:
             ticks1 = ticks
+        ticks1 = list(set(ticks1))
+        ticks1.sort()
         times = np.array(ticks1)
         dtimes = (times[1:] - times[0:-1])
         dhs =  dtimes / np.timedelta64(1, 'h')
@@ -433,21 +436,88 @@ def get_x_ticks(ticks,width):
             dhs_units = np.array(list(dhs_set))
             dhs_units.sort()
             dhs_u0 = dhs_units[0]
-            nt1 = dh_max/dhs_u0
-            w_one_tick = 0.1
-            w_unfold = w_one_tick * nt1
-            step0 = int(math.ceil(w_unfold / width))
-            step1 = int(24 / (dhs_u0 * step0))
-            if step1 > 0:
-                step = int(24 / step1 / dhs_u0)
-                print(step)
+            nt = dh_max/dhs_u0
+            sp_rate = int(math.ceil(nt/max_tick_num))
+            dhs_u1 = dhs_u0 * sp_rate
+            if dhs_u1 ==1:
+                hour_list = np.arange(24).tolist()
+            elif dhs_u1 <=3:
+                hour_list = np.arange(2,24,3).tolist()
+            elif dhs_u1 <=6:
+                hour_list = np.arange(2,24,6).tolist()
+            elif dhs_u1 <=12:
+                hour_list = np.arange(8,24,12).tolist()
+            elif dhs_u1 <=24:
+                hour_list = [8]
             else:
-                step = step0
-            time2 = meteva.base.tool.time_tools.all_type_time_to_datetime(time)
+                hour_list = [8]
+            pd_times = pd.Series(0, index=times)
+            index1 = np.where(pd_times.index.hour.isin(hour_list))
+            times_used = times[index1]
 
+            xticks = (times_used - times[0]) / np.timedelta64(1, 'h')
+            xtick_labels = get_time_str_list(times_used,row=2)
+            #print(xticks)
         else:
             #无规律，需穷举
-            ticks_str_list = get_time_str_list(times,row=2)
-            return ticks_str_list
+            xtick_labels = get_time_str_list(times,row=2)
+            xticks = np.arange(xtick_labels)
     else:
         pass
+    return xticks, xtick_labels
+
+
+def get_y_ticks(ticks,height):
+    w_one_tick = 0.3
+    max_tick_num = int(height / w_one_tick)
+    tick0 = ticks[0]
+    if isinstance(tick0,datetime.datetime) or isinstance(tick0,np.datetime64):
+        ticks1 = []
+        if  isinstance(tick0,datetime.datetime):
+            for tick in ticks:
+                ticks1.append(meteva.base.time_tools.all_type_time_to_time64(tick))
+        else:
+            ticks1 = ticks
+        ticks1 = list(set(ticks1))
+        ticks1.sort()
+        times = np.array(ticks1)
+        dtimes = (times[1:] - times[0:-1])
+        dhs =  dtimes / np.timedelta64(1, 'h')
+        dhs_set = set(dhs.tolist())
+        dh_max = (times[-1] - times[0]) / np.timedelta64(1, 'h')
+        # 判断是否为有规律的
+        if(dhs.size / len(dhs_set) >3):
+            #有规律
+            dhs_units = np.array(list(dhs_set))
+            dhs_units.sort()
+            dhs_u0 = dhs_units[0]
+            nt = dh_max/dhs_u0
+            sp_rate = int(math.ceil(nt/max_tick_num))
+            dhs_u1 = dhs_u0 * sp_rate
+            if dhs_u1 ==1:
+                hour_list = np.arange(24).tolist()
+            elif dhs_u1 <=3:
+                hour_list = np.arange(2,24,3).tolist()
+            elif dhs_u1 <=6:
+                hour_list = np.arange(2,24,6).tolist()
+            elif dhs_u1 <=12:
+                hour_list = np.arange(8,24,12).tolist()
+            elif dhs_u1 <=24:
+                hour_list = [8]
+            else:
+                hour_list = [8]
+            pd_times = pd.Series(0, index=times)
+            index1 = np.where(pd_times.index.hour.isin(hour_list))
+            times_used = times[index1]
+            yticks = (times_used - times[0]) / np.timedelta64(1, 'h') / dhs_u0
+            print(yticks)
+            ytick_labels = get_time_str_list(times_used,row=1)
+            print(yticks)
+            print(ytick_labels)
+        else:
+            #无规律，需穷举
+            ytick_labels = get_time_str_list(times,row=2)
+            yticks = np.arange(ytick_labels)
+    else:
+        pass
+    return yticks, ytick_labels

@@ -95,13 +95,15 @@ def set_stadata_names(sta,data_name_list):
     :param data_name: 站点数据 要素名
     :return: 更改要素名名后的站点数据
     '''
-    if isinstance(data_name_list,list):
-        coor_columns = ['level', 'time', 'dtime', 'id', 'lon', 'lat']
-        for data_name in data_name_list:
-            coor_columns.append(data_name)
-        sta.columns = coor_columns
-    else:
-        print("输出名称设置不成功，数据名称列表参数需为list形式")
+    if not isinstance(data_name_list,list):
+        data_name_list = [data_name_list]
+    #if isinstance(data_name_list,list):
+    coor_columns = ['level', 'time', 'dtime', 'id', 'lon', 'lat']
+    for data_name in data_name_list:
+        coor_columns.append(data_name)
+    sta.columns = coor_columns
+    #else:
+    #    print("输出名称设置不成功，数据名称列表参数需为list形式")
     return
 
 def set_stadata_coords(sta,level = None,time = None,dtime = None,id = None,lat = None,lon = None):

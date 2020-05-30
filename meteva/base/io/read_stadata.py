@@ -14,41 +14,60 @@ from collections import OrderedDict
 import datetime
 import math
 
-def read_station(filename,show = False,keep_alt = False):
+
+
+def read_station(filename,show = False,keep_alt = False,encoding="GBK"):
     '''
     :param filename: 站点文件路径，它可以是micaps第1、2、3、8类文件
     :return: 站点数据，其中time,dtime,level属性为设置的缺省值，数据内容都设置为0
     '''
-    sta = None
-    if os.path.exists(filename):
-        file = open(filename,'r')
-        head = file.readline()
-        strs = head.split()
-
-        if strs[1] == "3":
-            if keep_alt:
-                sta = read_sta_alt_from_micaps3(filename)
-            else:
-                sta = read_stadata_from_micaps3(filename)
-        elif strs[1] == "16":
-            sta = read_stadata_from_micaps16(filename)
-        elif strs[1] == "1" or str[1] == "2" or str[1] == "8":
-            sta = read_stadata_from_micaps1_2_8(filename,column=3)
-        else:
-            print(filename + "is not micaps第1、2、3、8类文件")
+    if not os.path.exists(filename):
+        print(filename+"文件不存在")
+        return None
     else:
-        print(filename + " not exist")
-    if sta is not None:
-        data_name = sta.columns[-1]
-        if not keep_alt:
-            sta[data_name] = 0
-        else:
-            meteva.base.set_stadata_names(sta,["alt"])
-        meteva.base.set_stadata_coords(sta,time = datetime.datetime(2099,1,1,8,0),level = 0,dtime= 0)
-        if show:
-            print("success read from "+filename)
-        return sta
+        try:
+            encoding = "GBK"
+            file = open(filename,encoding="GBK")
+            head = file.readline()
+            file.close()
+        except:
+            try:
+                encoding = "UTF-8"
+                file = open(filename,encoding="UTF-8")
+                head = file.readline()
+                file.close()
+            except:
+                print(filename + "文件编码不是GBK或UTF-8格式，程序暂时不能识别")
+                return None
+        try:
+            file = open(filename, encoding=encoding)
+            sta = None
+            head = file.readline()
+            strs = head.split()
+            if strs[1] == "3":
+                if keep_alt:
+                    sta = read_sta_alt_from_micaps3(filename)
+                else:
+                    sta = read_stadata_from_micaps3(filename)
+            elif strs[1] == "16":
+                sta = read_stadata_from_micaps16(filename)
+            elif strs[1] == "1" or str[1] == "2" or str[1] == "8":
+                sta = read_stadata_from_micaps1_2_8(filename,column=3)
+            else:
+                print(filename + "is not micaps第1、2、3、8类文件")
 
+            if sta is not None:
+                data_name = sta.columns[-1]
+                if not keep_alt:
+                    sta[data_name] = 0
+                else:
+                    meteva.base.set_stadata_names(sta,["alt"])
+                meteva.base.set_stadata_coords(sta,time = datetime.datetime(2099,1,1,8,0),level = 0,dtime= 0)
+                if show:
+                    print("success read from "+filename)
+                return sta
+        except:
+            pass
 
 def read_sta_alt_from_micaps3(filename, station=None, drop_same_id=True,show = False):
     '''
@@ -62,9 +81,28 @@ def read_sta_alt_from_micaps3(filename, station=None, drop_same_id=True,show = F
     :param drop_same_id: 是否要删除相同id的行  默认为True
     :return:
     '''
-    try:
-        if os.path.exists(filename):
-            file = open(filename, 'r')
+
+    if not os.path.exists(filename):
+        print(filename+"文件不存在")
+        return None
+    else:
+        try:
+            encoding = "GBK"
+            file = open(filename,encoding="GBK")
+            head = file.readline()
+            file.close()
+        except:
+            try:
+                encoding = "UTF-8"
+                file = open(filename,encoding="UTF-8")
+                head = file.readline()
+                file.close()
+            except:
+                print(filename + "文件编码不是GBK或UTF-8格式，程序暂时不能识别")
+                return None
+
+        try:
+            file = open(filename, 'r',encoding= encoding)
             skip_num = 0
             strs = []
             nline = 0
@@ -118,12 +156,9 @@ def read_sta_alt_from_micaps3(filename, station=None, drop_same_id=True,show = F
             if show:
                 print("success read from " + filename)
             return sta
-        else:
+        except:
+            print(filename + "文件格式不能识别。可能原因：文件未按micaps3格式存储")
             return None
-    except:
-        exstr = traceback.format_exc()
-        print(exstr)
-        return None
 
 def read_stadata_from_micaps3(filename, station=None,  level=None,time=None, dtime=None, data_name='data0', drop_same_id=True,show = False):
     '''
@@ -141,9 +176,27 @@ def read_stadata_from_micaps3(filename, station=None,  level=None,time=None, dti
     :param drop_same_id: 是否要删除相同id的行  默认为True
     :return:
     '''
-    try:
-        if os.path.exists(filename):
-            file = open(filename, 'r')
+    if not os.path.exists(filename):
+        print(filename+"文件不存在")
+        return None
+    else:
+        try:
+            encoding = "GBK"
+            file = open(filename,encoding="GBK")
+            head = file.readline()
+            file.close()
+        except:
+            try:
+                encoding = "UTF-8"
+                file = open(filename,encoding="UTF-8")
+                head = file.readline()
+                file.close()
+            except:
+                print(filename + "文件编码不是GBK或UTF-8格式，程序暂时不能识别")
+                return None
+
+        try:
+            file = open(filename, 'r',encoding=encoding)
             skip_num = 0
             strs = []
             nline = 0
@@ -198,12 +251,10 @@ def read_stadata_from_micaps3(filename, station=None,  level=None,time=None, dti
             if show:
                 print("success read from " + filename)
             return sta
-        else:
+
+        except:
+            print(filename+"文件格式不能识别。可能原因：文件未按micaps3格式存储")
             return None
-    except:
-        exstr = traceback.format_exc()
-        print(exstr)
-        return None
 
 def read_stadata_from_txt(filename, columns , skiprows=0,level = None,time = None,dtime = None,data_name = "data0", drop_same_id=True,show = False,):
 
@@ -215,6 +266,7 @@ def read_stadata_from_txt(filename, columns , skiprows=0,level = None,time = Non
     :param drop_same_id: 是否要删除相同id的行  默认为True
     :return:返回带有'level','time','dtime','id','lon','lat','alt','data0'列的dataframe站点信息。
     """
+
     if os.path.exists(filename):
         try:
             file_sta = open(filename, 'r')
@@ -361,64 +413,79 @@ def read_stadata_from_micaps1_2_8(filename, column, station=None, level=None,tim
     :param drop_same_id: 是否要删除相同id的行  默认为True
     :return:
     '''
-    if os.path.exists(filename):
-        sta1 = pd.read_csv(filename, skiprows=2, sep="\s+", header=None, usecols=[0, 1, 2,  column])
-        # print(sta1)
-        sta1.columns = ['id', 'lon', 'lat', data_name]
-        sta2 = meteva.base.basicdata.sta_data(sta1)
-
-        if drop_same_id:
-            sta2 = sta2.drop_duplicates(['id'])
-
-
-        file = open(filename,'r')
-        head = file.readline()
-        head1 = file.readline()
-        file.close()
-        strs0 = head.split()
-        strs = head1.split()
-
-        y2 = ""
-        if len(strs[0]) == 2:
-            year = int(strs[0])
-            if year >= 50:
-                y2 = '19'
-            else:
-                y2 = '20'
-        if len(strs[0]) == 1: strs[0] = "0" + strs[0]
-        if len(strs[1]) == 1: strs[1] = "0" + strs[1]
-        if len(strs[2]) == 1: strs[2] = "0" + strs[2]
-        if len(strs[3]) == 1: strs[3] = "0" + strs[3]
-
-        time_str = y2 + strs[0] + strs[1] + strs[2] + strs[3]
-        time_file = meteva.base.tool.time_tools.str_to_time(time_str)
-        if time is None:
-            sta2.loc[:,'time'] = time_file
-        else:
-            sta2.loc[:,'time'] = time
-        #print(strs0)
-        if strs0[1] == "1":
-            sta2.loc[:,"level"] = 0
-            sta2.loc[:,"dtime"] = 0
-        elif strs0[1] == "2":
-            sta2.loc[:,"level"] = int(strs[4])
-            sta2.loc[:,"dtime"] = 0
-        elif strs0[1] == "8":
-            sta2.loc[:,"level"] = 0
-            sta2.loc[:,"dtime"] = int(strs[4])
-        else:
-            print(filename + "is not micaps第1、2、3、8类文件")
-
-        meteva.base.set_stadata_coords(sta2,level= level,time = time,dtime= dtime)
-        if show:
-            print("success read from "+filename)
-        if station is None:
-            return sta2
-        else:
-            sta = meteva.base.put_stadata_on_station(sta2, station)
-            return sta
-    else:
+    if not os.path.exists(filename):
+        print(filename+"文件不存在")
         return None
+    else:
+        try:
+            encoding = "GBK"
+            file = open(filename,encoding="GBK")
+            head = file.readline()
+            head1 = file.readline()
+            file.close()
+        except:
+            try:
+                encoding = "UTF-8"
+                file = open(filename,encoding="UTF-8")
+                head = file.readline()
+                head1 = file.readline()
+                file.close()
+            except:
+                print(filename + "文件编码不是GBK或UTF-8格式，程序暂时不能识别")
+                return None
+        try:
+            file = open(filename,encoding=encoding)
+            sta1 = pd.read_csv(file, skiprows=2, sep="\s+", header=None, usecols=[0, 1, 2,  column])
+            sta1.columns = ['id', 'lon', 'lat', data_name]
+            sta2 = meteva.base.basicdata.sta_data(sta1)
+            if drop_same_id:
+                sta2 = sta2.drop_duplicates(['id'])
+            strs0 = head.split()
+            strs = head1.split()
+            y2 = ""
+            if len(strs[0]) == 2:
+                year = int(strs[0])
+                if year >= 50:
+                    y2 = '19'
+                else:
+                    y2 = '20'
+            if len(strs[0]) == 1: strs[0] = "0" + strs[0]
+            if len(strs[1]) == 1: strs[1] = "0" + strs[1]
+            if len(strs[2]) == 1: strs[2] = "0" + strs[2]
+            if len(strs[3]) == 1: strs[3] = "0" + strs[3]
+
+            time_str = y2 + strs[0] + strs[1] + strs[2] + strs[3]
+            time_file = meteva.base.tool.time_tools.str_to_time(time_str)
+            if time is None:
+                sta2.loc[:,'time'] = time_file
+            else:
+                sta2.loc[:,'time'] = time
+            #print(strs0)
+            if strs0[1] == "1":
+                sta2.loc[:,"level"] = 0
+                sta2.loc[:,"dtime"] = 0
+            elif strs0[1] == "2":
+                sta2.loc[:,"level"] = int(strs[4])
+                sta2.loc[:,"dtime"] = 0
+            elif strs0[1] == "8":
+                sta2.loc[:,"level"] = 0
+                sta2.loc[:,"dtime"] = int(strs[4])
+            else:
+                print(filename + "is not micaps第1、2、3、8类文件")
+
+            meteva.base.set_stadata_coords(sta2,level= level,time = time,dtime= dtime)
+            if show:
+                print("success read from "+filename)
+            if station is None:
+                return sta2
+            else:
+                sta = meteva.base.put_stadata_on_station(sta2, station)
+                return sta
+        except:
+            print(filename+"文件格式不能识别。可能原因：文件未按micaps第1、2、8类格式存储")
+            return None
+
+
 
 def read_gds_ip_port(filename,show = False):
     file = open(filename)
@@ -1255,48 +1322,67 @@ def print_gds_file_values_names(filename,ip = None,port = None):
     return dict0
 
 def read_stadata_from_micaps16(filename,level = None,time= None,dtime = None,data_name = "data0",show = False):
-    if os.path.exists(filename):
-        file = open(filename,'r')
-        head = file.readline()
-        head = file.readline()
-        stationids = []
-        row1 = []
-        row2 = []
-        row3 = []
-        while(head is not None and head.strip() != ""):
-            strs = head.split()
-            stationids.append(strs[0])
-            a = int(strs[1])
-            b = a // 100 + (a % 100) /60
-            row1.append(b)
-            a = int(strs[2])
-            b = a // 100 + (a % 100) /60
-            row2.append(b)
-            row3.append(float(strs[3]))
-            head =  file.readline()
-
-        row1 = np.array(row1)
-        row2 = np.array(row2)
-        row3 = np.array(row3)
-        ids = np.array(stationids)
-        dat = np.zeros((len(row1),4))
-        dat[:,0] = ids[:]
-        if(np.max(row2) > 90 or np.min(row2) <-90):
-            dat[:,1] = row2[:]
-            dat[:,2] = row1[:]
-        else:
-            dat[:,1] = row1[:]
-            dat[:,2] = row2[:]
-        dat[:,3] = row3[:]
-        station = pd.DataFrame(dat, columns=['id','lon', 'lat', data_name])
-        station = meteva.base.sta_data(station)
-        meteva.base.set_stadata_coords(station,level=level,time= time,dtime = dtime)
-        if show:
-            print("success read from " + filename)
-        return station
-    else:
-        print(filename +" not exist")
+    if not os.path.exists(filename):
+        print(filename+"文件不存在")
         return None
+    else:
+        try:
+            encoding = "GBK"
+            file = open(filename,encoding="GBK")
+            head = file.readline()
+            file.close()
+        except:
+            try:
+                encoding = "UTF-8"
+                file = open(filename,encoding="UTF-8")
+                head = file.readline()
+                file.close()
+            except:
+                print(filename + "文件编码不是GBK或UTF-8格式，程序暂时不能识别")
+                return None
+
+        try:
+            file = open(filename, 'r',encoding=encoding)
+            head = file.readline()
+            head = file.readline()
+            stationids = []
+            row1 = []
+            row2 = []
+            row3 = []
+            while(head is not None and head.strip() != ""):
+                strs = head.split()
+                stationids.append(strs[0])
+                a = int(strs[1])
+                b = a // 100 + (a % 100) /60
+                row1.append(b)
+                a = int(strs[2])
+                b = a // 100 + (a % 100) /60
+                row2.append(b)
+                row3.append(float(strs[3]))
+                head =  file.readline()
+
+            row1 = np.array(row1)
+            row2 = np.array(row2)
+            row3 = np.array(row3)
+            ids = np.array(stationids)
+            dat = np.zeros((len(row1),4))
+            dat[:,0] = ids[:]
+            if(np.max(row2) > 90 or np.min(row2) <-90):
+                dat[:,1] = row2[:]
+                dat[:,2] = row1[:]
+            else:
+                dat[:,1] = row1[:]
+                dat[:,2] = row2[:]
+            dat[:,3] = row3[:]
+            station = pd.DataFrame(dat, columns=['id','lon', 'lat', data_name])
+            station = meteva.base.sta_data(station)
+            meteva.base.set_stadata_coords(station,level=level,time= time,dtime = dtime)
+            if show:
+                print("success read from " + filename)
+            return station
+        except:
+            print(filename+"文件格式不能识别。可能原因：文件未按micaps16格式存储")
+            return None
 
 def read_stadata_from_csv(filename,show = False):
     file = open(filename,"r")

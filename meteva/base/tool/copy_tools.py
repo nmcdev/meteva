@@ -86,8 +86,6 @@ def copy_data(input_root_dir,output_root_dir,input_type,output_type,effectiveNum
     print('All subprocesses done.')
 
 
-
-
 def copy_m4_to_nc(input_root_dir,output_root_dir,effectiveNum = 3,recover= False,grid = None):
     input_root_dir = input_root_dir.replace("\\","/")
     output_root_dir = output_root_dir.replace("\\","/")

@@ -7,7 +7,7 @@ import copy
 import pandas as pd
 
 
-def accumulate_time(sta_ob,span = 24,step = None,keep_all = False):
+def accumulate_time(sta_ob,step,keep_all = False):
     '''观测数据累加'''
     times= sta_ob.loc[:,'time'].values
     times = list(set(times))
@@ -16,13 +16,6 @@ def accumulate_time(sta_ob,span = 24,step = None,keep_all = False):
     dtimes = times[1:] - times[0:-1]
     min_dtime = np.min(dtimes)
     rain_ac = None
-    if span is None:
-        if step is None:
-            print("range or step must be set")
-            return
-    else:
-        dtimes = span * np.timedelta64(1, 'h')
-        step = int(dtimes/min_dtime)
     for i in range(step):
         rain1 = sta_ob.copy()
         rain1["time"] = rain1["time"] + min_dtime * i
@@ -34,31 +27,25 @@ def accumulate_time(sta_ob,span = 24,step = None,keep_all = False):
         rain_ac = meteva.base.in_time_list(rain_ac,new_times)
     return rain_ac
 
-def accumulate_dtime(sta_ob,span = 24,step = None,keep_all = False):
+def accumulate_dtime(sta,step,keep_all = False):
     '''观测数据累加'''
-    times= sta_ob.loc[:,'time'].values
-    times = list(set(times))
-    times.sort()
-    times = np.array(times)
-    dtimes = times[1:] - times[0:-1]
-    min_dtime = np.min(dtimes)
+
+    dtimes= sta.loc[:,'dtime'].values
+    dtimes = list(set(dtimes))
+    dtimes.sort()
+    dtimes = np.array(dtimes)
+    dhour_unit = dtimes[0]
+    if dhour_unit ==0:
+        dhour_unit = dtimes[1]
     rain_ac = None
-    if span is None:
-        if step is None:
-            print("range or step must be set")
-            return
-    else:
-        dtimes = span * np.timedelta64(1, 'h')
-        step = int(dtimes/min_dtime)
     for i in range(step):
-        rain1 = sta_ob.copy()
-        rain1["time"] = rain1["time"] + min_dtime * i
+        rain1 = sta.copy()
+        rain1["dtime"] = rain1["dtime"] + dhour_unit * i
         rain_ac = meteva.base.add_on_level_time_dtime_id(rain_ac,rain1,how="inner")
     if not keep_all:
-        dtimes = times[:] - times[-1]
-        dh = (dtimes/min_dtime).astype(np.int32)
-        new_times = times[dh%step ==0]
-        rain_ac = meteva.base.in_time_list(rain_ac,new_times)
+        dh =((dtimes - dtimes[-1])/dhour_unit).astype(np.int32)
+        new_dtimes = dtimes[dh%step ==0]
+        rain_ac = meteva.base.in_dtime_list(rain_ac,new_dtimes)
     return rain_ac
 
 
