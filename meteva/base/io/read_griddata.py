@@ -790,9 +790,19 @@ def read_gridwind_from_micaps2(filename,grid = None,level = None,time = None,dti
 
 def read_gridwind_from_micaps11(filename,grid = None,level = None,time = None,dtime = None,data_name = "",show = False):
     if os.path.exists(filename):
-        file = open(filename, 'r')
-        str1 = file.read()
-        file.close()
+        try:
+            file = open(filename,encoding="GBK")
+            str1 = file.read()
+            file.close()
+        except:
+            try:
+                file = open(filename,encoding="UTF-8")
+                str1 = file.read()
+                file.close()
+            except:
+                print(filename + "文件编码不是GBK或UTF-8格式，程序暂时不能识别")
+                return None
+
         strs = str1.split()
         dlon = float(strs[8])
         dlat = float(strs[9])
@@ -833,10 +843,10 @@ def read_gridwind_from_micaps11(filename,grid = None,level = None,time = None,dt
                 return wind1
         else:
 
-            print(filename + " format wrong")
+            print(filename + " 格式错误")
             return None
     else:
-        print(filename + " not exists")
+        print(filename + " 文件不存在")
         return None
 
 
