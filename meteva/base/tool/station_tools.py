@@ -24,29 +24,40 @@ def muti_strs_finder(input_str, collection):
     return input_collection
 
 def get_station_id_name_dict(id_name_list_file):
-
-    file1 = open(id_name_list_file)
-    str0 = file1.read()
-    file1.close()
-    str1 = str0.split("\n")
-    station_id_name_dict = {}
-    for i in range(len(str1)):
-        strs_line = str1[i].split(" ")
-        if len(strs_line) ==3:
-            values = strs_line[0]
-            strs_int = ""
-            for i in range(len(values)):
-                strs = values[i]
-                for s in strs:
-                    if s.isdigit():
-                        strs_int += s
-                    else:
-                        strs_int += str(ord(s))
-            if(len(strs_int) >0):
-                key =  int(strs_int)
-                if not key in station_id_name_dict.keys():
-                    value1 = strs_line[1]+"_"+strs_line[2]
-                    station_id_name_dict[key] = value1
+    file1 = None
+    try:
+        file1 = open(id_name_list_file, encoding="GBK")
+        str0 = file1.read()
+    except:
+        try:
+            file1 = open(id_name_list_file,encoding="UTF-8")
+            str0 = file1.read()
+        except:
+            pass
+    if file1 is not None:
+        file1.close()
+        str1 = str0.split("\n")
+        station_id_name_dict = {}
+        for i in range(len(str1)):
+            strs_line = str1[i].split(" ")
+            if len(strs_line) ==3:
+                values = strs_line[0]
+                strs_int = ""
+                for i in range(len(values)):
+                    strs = values[i]
+                    for s in strs:
+                        if s.isdigit():
+                            strs_int += s
+                        else:
+                            strs_int += str(ord(s))
+                if(len(strs_int) >0):
+                    key =  int(strs_int)
+                    if not key in station_id_name_dict.keys():
+                        value1 = strs_line[1]+"_"+strs_line[2]
+                        station_id_name_dict[key] = value1
+    else:
+        print("warming ：站点名称文件"+id_name_list_file+"读取失败,在后续的产品中不能显示站点中文名称")
+        station_id_name_dict = {}
     return station_id_name_dict
 
 station_id_name_dict = get_station_id_name_dict(pkg_resources.resource_filename('meteva', "resources/stations/station_id_pro_county.txt"))
@@ -57,5 +68,5 @@ def find_station_id_by_city_name(input_strs):
     names_ids = {}
     for names in ele_names:
         names_ids[names] = station_name_id_dict[names]
-        print(names + " : " + str(names_ids[names]))
+        #print(names + " : " + str(names_ids[names]))
     return names_ids
