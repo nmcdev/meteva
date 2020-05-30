@@ -378,3 +378,9 @@ def reset_value_as_IV(sta,iv_value):
     for name in data_names:
         sta1.loc[sta1.loc[:,name] == iv_value,name] = meteva.base.IV
     return sta1
+
+def move_fo_time(sta,dtime):
+    sta1 = sta.copy()
+    sta1["time"] = sta["time"] + dtime* np.timedelta64(1, 'h')
+    sta1["dtime"] = sta["dtime"] - dtime
+    return sta1
