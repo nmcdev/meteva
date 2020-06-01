@@ -276,7 +276,7 @@ def sta_dis_ensemble_near_by_sta(sta_to,nearNum = 100,sta_from = None,drop_frist
 def sta_index_ensemble_near_by_grid(sta, grid,nearNum = 1):
     ER = meteva.base.ER
     members = np.arange(nearNum).tolist()
-    grid1 = meteva.base.grid(grid.glon,grid.glat,members=members)
+    grid1 = meteva.base.grid(grid.glon,grid.glat,member_list=members)
     grd_en = meteva.base.grid_data(grid1)
     xyz_sta =  meteva.base.tool.math_tools.lon_lat_to_cartesian(sta.loc[:,"lon"], sta.loc[:,"lat"],R = ER)
     lon = np.arange(grid1.nlon) * grid1.dlon + grid1.slon
@@ -293,7 +293,7 @@ def mean_of_sta(sta,used_coords = ["member"]):
     sta_data = sta[meteva.base.get_stadata_names(sta)]
     value = sta_data.values
     mean = np.mean(value,axis=1)
-    sta_mean['mean'] =mean
+    sta_mean['mean'] = mean
     return sta_mean
 
 def std_of_sta(sta,used_coords = ["member"]):

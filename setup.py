@@ -48,6 +48,7 @@ setup(
                       "netCDF4>=1.4.2",
                       "seaborn>=0.9.0",
                       "ipywidgets>=7.5.1",
-                      "pyshp>=2.1.0"
+                      "pyshp>=2.1.0",
+                      "tables>=3.4.4"
                       ]
 )
