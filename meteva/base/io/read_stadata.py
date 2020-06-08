@@ -25,20 +25,8 @@ def read_station(filename,show = False,keep_alt = False,encoding="GBK"):
         print(filename+"文件不存在")
         return None
     else:
-        try:
-            encoding = "GBK"
-            file = open(filename,encoding="GBK")
-            head = file.readline()
-            file.close()
-        except:
-            try:
-                encoding = "UTF-8"
-                file = open(filename,encoding="UTF-8")
-                head = file.readline()
-                file.close()
-            except:
-                print(filename + "文件编码不是GBK或UTF-8格式，程序暂时不能识别")
-                return None
+        encoding,_ = meteva.base.io.get_encoding_of_file(filename,read_rows=1)
+        if encoding is None:return
         try:
             file = open(filename, encoding=encoding)
             sta = None
@@ -86,20 +74,8 @@ def read_sta_alt_from_micaps3(filename, station=None, drop_same_id=True,show = F
         print(filename+"文件不存在")
         return None
     else:
-        try:
-            encoding = "GBK"
-            file = open(filename,encoding="GBK")
-            head = file.readline()
-            file.close()
-        except:
-            try:
-                encoding = "UTF-8"
-                file = open(filename,encoding="UTF-8")
-                head = file.readline()
-                file.close()
-            except:
-                print(filename + "文件编码不是GBK或UTF-8格式，程序暂时不能识别")
-                return None
+        encoding, _ = meteva.base.io.get_encoding_of_file(filename,read_rows=1)
+        if encoding is None:return
 
         try:
             file = open(filename, 'r',encoding= encoding)
@@ -180,20 +156,8 @@ def read_stadata_from_micaps3(filename, station=None,  level=None,time=None, dti
         print(filename+"文件不存在")
         return None
     else:
-        try:
-            encoding = "GBK"
-            file = open(filename,encoding="GBK")
-            head = file.readline()
-            file.close()
-        except:
-            try:
-                encoding = "UTF-8"
-                file = open(filename,encoding="UTF-8")
-                head = file.readline()
-                file.close()
-            except:
-                print(filename + "文件编码不是GBK或UTF-8格式，程序暂时不能识别")
-                return None
+        encoding, _ = meteva.base.io.get_encoding_of_file(filename,read_rows=1)
+        if encoding is None:return
 
         try:
             file = open(filename, 'r',encoding=encoding)
@@ -268,17 +232,10 @@ def read_stadata_from_txt(filename, columns , skiprows=0,level = None,time = Non
     """
 
     if os.path.exists(filename):
-        try:
-            file_sta = open(filename, 'r')
-            sta0 = pd.read_csv(file_sta, skiprows=skiprows, sep="\s+", header=None)
-        except:
-            try:
-                file_sta = open(filename, 'r', encoding="UTF-8")
-                sta0 = pd.read_csv(file_sta, skiprows=skiprows, sep="\s+", header=None)
-            except:
-                exstr = traceback.format_exc()
-                print(exstr)
-                return None
+        encoding,_ = meteva.base.io.get_encoding_of_file(filename)
+        if encoding is None:return
+        file_sta = open(filename, 'r',encoding = encoding)
+        sta0 = pd.read_csv(file_sta, skiprows=skiprows, sep="\s+", header=None)
         sta0.columns = columns
         station_column = ['id', 'lon', 'lat', 'alt']
         colums1 = []
@@ -324,51 +281,23 @@ def read_stadata_from_sevp(filename0, element_id,level=None,time=None,data_name 
 
     '''
     filename = filename0
-    try:
-        if os.path.exists(filename):
-            try:
-                file = open(filename, 'r')
-                skip_num = 6
-                line1 = file.readline()
-                line2 = file.readline()
-                line3 = file.readline()
-                line4 = file.readline()
-                line5 = file.readline()
-                line6 = file.readline()
-                file.close()
-            except:
-                try:
-                    file = open(filename, 'r', encoding="UTF-8")
-                    skip_num = 6
-                    line1 = file.readline()
-                    line2 = file.readline()
-                    line3 = file.readline()
-                    line4 = file.readline()
-                    line5 = file.readline()
-                    line6 = file.readline()
-                    file.close()
-                except:
-                    exstr = traceback.format_exc()
-                    print(exstr)
-                    return None
-            try:
-                file_sta = open(filename)
-                sta1 = pd.read_csv(file_sta, skiprows=skip_num, sep="\s+", header=None)
-                file.close()
-            except:
-                try:
-                    file_sta = open(filename, 'r', encoding="UTF-8")
-                    sta1 = pd.read_csv(file_sta, skiprows=skip_num, sep="\s+", header=None)
-                    file.close()
-                except:
-                    exstr = traceback.format_exc()
-                    print(exstr)
-                    return None
-            num_list = re.findall(r"\d+", line3)
-            strs4 = line4.split()
+
+    if not os.path.exists(filename):
+        print(filename+"文件不存在")
+        return None
+    else:
+        encoding,lines = meteva.base.io.get_encoding_of_file(filename,read_rows=6)
+        if encoding is None:return
+        try:
+            #lines = heads.split("\n")
+            file = open(filename,encoding = encoding)
+            sta1 = pd.read_csv(file, skiprows=6, sep="\s+", header=None)
+            #file.close()
+            num_list = re.findall(r"\d+", lines[2])
+            strs4 = lines[3].split()
             time_file = meteva.base.tool.time_tools.str_to_time(strs4[1])
-            line6_list = re.findall(r'[0-9.]+', line6)
-            nline0 = int(line6_list[5])
+            line6_list = re.findall(r'[0-9.]+', lines[5])
+            nline0 = int(line6_list[4])
             sta_all = sta1.iloc[0:nline0,[0,element_id]]
             sta_all.loc[:,"id"] = int(line6_list[0])
             sta_all.loc[:,"lon"] = float(line6_list[1])
@@ -376,6 +305,7 @@ def read_stadata_from_sevp(filename0, element_id,level=None,time=None,data_name 
             #print(sta_all)
             dat_station = sta1.values[nline0,0:5]
             nline_all = len(sta1.index)
+
             while True:
                 nline1 = nline0 + int(dat_station[-1])+1
                 sta_one = sta1.iloc[nline0+1:nline1,[0,element_id]]
@@ -388,7 +318,8 @@ def read_stadata_from_sevp(filename0, element_id,level=None,time=None,data_name 
                 nline0 = nline1
                 dat_station = sta1.values[nline0,0:5]
 
-            sta_all.loc[:,"time"] = time_file
+            #sta_all.loc[:,"time"] = time_file
+            sta_all["time"] = time_file
             #print(sta_all)
             sta_all.columns = ["dtime","data0","id","lon","lat","time"]
             sta_all.loc[:,"level"] = 0
@@ -398,11 +329,9 @@ def read_stadata_from_sevp(filename0, element_id,level=None,time=None,data_name 
             if show:
                 print("success read from " + filename)
             return sta
-        else:
-            print("不存在此文件！")
-    except:
-        exstr = traceback.format_exc()
-        print(exstr)
+        except:
+            exstr = traceback.format_exc()
+            print(exstr)
 
 def read_stadata_from_micaps1_2_8(filename, column, station=None, level=None,time=None, dtime=None, data_name='data0', drop_same_id=True,show = False):
     '''
@@ -417,22 +346,9 @@ def read_stadata_from_micaps1_2_8(filename, column, station=None, level=None,tim
         print(filename+"文件不存在")
         return None
     else:
-        try:
-            encoding = "GBK"
-            file = open(filename,encoding="GBK")
-            head = file.readline()
-            head1 = file.readline()
-            file.close()
-        except:
-            try:
-                encoding = "UTF-8"
-                file = open(filename,encoding="UTF-8")
-                head = file.readline()
-                head1 = file.readline()
-                file.close()
-            except:
-                print(filename + "文件编码不是GBK或UTF-8格式，程序暂时不能识别")
-                return None
+        encoding,heads = meteva.base.io.get_encoding_of_file(filename,read_rows=2)
+        if encoding is None:return
+
         try:
             file = open(filename,encoding=encoding)
             sta1 = pd.read_csv(file, skiprows=2, sep="\s+", header=None, usecols=[0, 1, 2,  column])
@@ -440,8 +356,8 @@ def read_stadata_from_micaps1_2_8(filename, column, station=None, level=None,tim
             sta2 = meteva.base.basicdata.sta_data(sta1)
             if drop_same_id:
                 sta2 = sta2.drop_duplicates(['id'])
-            strs0 = head.split()
-            strs = head1.split()
+            strs0 = heads[0].split()
+            strs = heads[1].split()
             y2 = ""
             if len(strs[0]) == 2:
                 year = int(strs[0])
@@ -1326,20 +1242,7 @@ def read_stadata_from_micaps16(filename,level = None,time= None,dtime = None,dat
         print(filename+"文件不存在")
         return None
     else:
-        try:
-            encoding = "GBK"
-            file = open(filename,encoding="GBK")
-            head = file.readline()
-            file.close()
-        except:
-            try:
-                encoding = "UTF-8"
-                file = open(filename,encoding="UTF-8")
-                head = file.readline()
-                file.close()
-            except:
-                print(filename + "文件编码不是GBK或UTF-8格式，程序暂时不能识别")
-                return None
+        encoding,_ = meteva.base.io.get_encoding_of_file(filename,read_rows=1)
 
         try:
             file = open(filename, 'r',encoding=encoding)
