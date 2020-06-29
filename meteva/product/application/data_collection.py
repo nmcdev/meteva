@@ -40,8 +40,6 @@ para_example= {
 
 
 
-
-
 def download_one_cup(k,ip,port,local_binary_dir,local_sta_dir,local_grid_dir,file_sta_list,file_grid_list):
     service = meteva.base.io.GDSDataService(ip, port)
     for filepath in file_sta_list:
@@ -126,6 +124,7 @@ def download_mp(ip,port,local_binary_dir,local_sta_dir,local_grid_dir,download_s
 
 def in_op_time(hm,op_list_list):
     in_op = False
+    #print(op_list_list)
     for down_set in op_list_list:
         if hm >= down_set[0] and hm <= down_set[1]:
             in_op = True
@@ -161,6 +160,7 @@ def download_from_gds(para):
     download_grid_list = []
     for key in para["grid_origin_dirs"].keys():
         down_set_group  = para["grid_origin_dirs"][key]
+        #print(down_set_group)
         for down_set in down_set_group:
             if in_op_time(hm, down_set[1]):
                 dir_list = []
@@ -208,125 +208,10 @@ def remove(dir,save_day):
     print(dir +"目录下"+str(save_day)+"天之前的数据已删除")
 
 
-para_list = [
-    {
-        "input":r"O:\data\grid\GRAPES_GFS\APCP\YYYYMMDD\YYMMDDHH.TTT.nc",
-        "output":r"L:\luoqi\GRAPES_GFS\APCP\YYYYMMDD\YYMMDDHH.TTT.nc",
-        "start":datetime.datetime(2020,3,1,8,0),
-        "end":datetime.datetime(2020,6,1,8,0),
-        "hour_range":[8,21,12],
-        "dh_range":[3,241,3],
-        "recover":False
-    },
-
-    {
-        "input": r"O:\data\grid\ECMWF_HR\APCP\YYYYMMDD\YYMMDDHH.TTT.nc",
-        "output": r"L:\luoqi\ECMWF_HR\APCP\YYYYMMDD\YYMMDDHH.TTT.nc",
-        "start": datetime.datetime(2020, 3, 1, 8, 0),
-        "end": datetime.datetime(2020, 6, 1, 8, 0),
-        "hour_range": [8, 21, 12],
-        "dh_range": [3, 241, 3],
-        "recover": False
-    },
-
-    {
-        "input": r"O:\data\grid\NCEP_GFS_HR\APCP\YYYYMMDD\YYMMDDHH.TTT.nc",
-        "output": r"L:\luoqi\NCEP_GFS_HR\APCP\YYYYMMDD\YYMMDDHH.TTT.nc",
-        "start": datetime.datetime(2020, 3, 1, 8, 0),
-        "end": datetime.datetime(2020, 6, 1, 8, 0),
-        "hour_range": [8, 21, 12],
-        "dh_range": [3, 241, 3],
-        "recover": False
-    },
-
-    {
-        "input": r"O:\data\grid\SHANGHAI_HR\APCP\YYYYMMDD\YYMMDDHH.TTT.nc",
-        "output": r"L:\luoqi\SHANGHAI_HR\APCP\YYYYMMDD\YYMMDDHH.TTT.nc",
-        "start": datetime.datetime(2020, 3, 1, 8, 0),
-        "end": datetime.datetime(2020, 6, 1, 8, 0),
-        "hour_range": [0, 24, 1],
-        "dh_range": [0, 25, 1],
-        "recover": False
-    },
-
-    {
-        "input": r"O:\data\grid\GRAPES_MESO_HR\APCP\YYYYMMDD\YYMMDDHH.TTT.nc",
-        "output": r"L:\luoqi\GRAPES_MESO_HR\APCP\YYYYMMDD\YYMMDDHH.TTT.nc",
-        "start": datetime.datetime(2020, 3, 1, 8, 0),
-        "end": datetime.datetime(2020, 6, 1, 8, 0),
-        "hour_range": [2, 24, 3],
-        "dh_range": [0, 85, 1],
-        "recover": False
-    },
-
-    {
-        "input": r"O:\data\grid\GRAPES_3KM\APCP\YYYYMMDD\YYMMDDHH.TTT.nc",
-        "output": r"L:\luoqi\GRAPES_3KM\APCP\YYYYMMDD\YYMMDDHH.TTT.nc",
-        "start": datetime.datetime(2020, 3, 1, 8, 0),
-        "end": datetime.datetime(2020, 6, 1, 8, 0),
-        "hour_range": [2, 24, 3],
-        "dh_range": [0, 37, 1],
-        "recover": False
-    },
-
-]
-
-
-para_list1 = [
-    {
-        "input":r"O:\data\grid\NWFD_SCMOC\RAIN03\YYYYMMDD\YYMMDDHH.TTT.nc",
-        "output":r"\\10.28.27.93\SCMOC\RAIN03\YYYYMMDD\YYMMDDHH.TTT.nc",
-        "start":datetime.datetime(2020,5,20,8,0),
-        "end":datetime.datetime(2020,6,1,8,0),
-        "hour_range":[8,21,12],
-        "dh_range":[3,241,3],
-        "recover":False
-    },
-    {
-        "input": r"O:\data\grid\NWFD_SCMOC\TMP\2M_ABOVE_GROUND\YYYYMMDD\YYMMDDHH.TTT.nc",
-        "output": r"\\10.28.27.93\SCMOC\TMP\2M_ABOVE_GROUND\YYYYMMDD\YYMMDDHH.TTT.nc",
-        "start": datetime.datetime(2020, 5, 20, 8, 0),
-        "end": datetime.datetime(2020, 6, 1, 8, 0),
-        "hour_range": [8, 21, 12],
-        "dh_range": [3, 241, 3],
-        "recover": False
-    },
-    {
-        "input": r"O:\data\grid\NWFD_SCMOC\WIND\10M_ABOVE_GROUND\YYYYMMDD\YYMMDDHH.TTT.nc",
-        "output": r"\\10.28.27.93\SCMOC\WIND\10M_ABOVE_GROUND\YYYYMMDD\YYMMDDHH.TTT.nc",
-        "start": datetime.datetime(2020, 5, 20, 8, 0),
-        "end": datetime.datetime(2020, 6, 1, 8, 0),
-        "hour_range": [8, 21, 12],
-        "dh_range": [3, 241, 3],
-        "recover": False
-    },
-]
-
-
-def copy_data_file(para_list):
-    for para in para_list:
-        time0 = para["start"]
-        time1 = datetime.datetime(time0.year,time0.month,time0.day,0,0)
-        hour_list =  np.arange(para["hour_range"][0],para["hour_range"][1],para["hour_range"][2]).tolist()
-        dh_list = np.arange(para["dh_range"][0], para["dh_range"][1], para["dh_range"][2]).tolist()
-        recover = para["recover"]
-        while time1 <= para["end"]:
-            for hour in hour_list:
-                time2 = time1 +datetime.timedelta(hours=hour)
-                for dh in dh_list:
-                    path_out = meteva.base.get_path(para["output"],time2,dh)
-                    if recover or not os.path.exists(path_out):
-                        path_in = meteva.base.get_path(para["input"],time2,dh)
-                        if os.path.exists(path_in):
-                            meteva.base.creat_path(path_out)
-                            shutil.copyfile(path_in,path_out)
-            time1 = time1 + datetime.timedelta(hours=24)
-
-
 
 if __name__ == '__main__':
+    pass
     #download_from_gds(para_example)
-    copy_data_file(para_list1)
 
 
 
