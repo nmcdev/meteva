@@ -295,7 +295,7 @@ def time_list_line(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,sho
 
 
 def time_list_mesh_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
-                   clev_error = None,cmap_error = None,show = False,xtimetype = "mid",dpi = 300,annot =True,title = "多时效预报误差对比图"):
+                   max_error = None,cmap_error = None,show = False,xtimetype = "mid",dpi = 300,annot =True,title = "多时效预报误差对比图"):
     '''
 
     :param sta_ob_and_fos0:
@@ -310,6 +310,14 @@ def time_list_mesh_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
     :param title:
     :return:
     '''
+
+    if max_error is None:
+        sta_ob_fos0_noIV = meteva.base.not_IV(sta_ob_and_fos0)
+        values = sta_ob_fos0_noIV.values[:,6:].T
+        dvalues = values[1:,:] - values[0,:]
+        maxd = np.max(np.abs(dvalues))
+    else:
+        maxd = max_error
 
     sta_ob_and_fos1 = meteva.base.sele_by_dict(sta_ob_and_fos0, s)
     sta_ob_and_fos1 = meteva.base.sele_by_para(sta_ob_and_fos1,drop_IV=True)
@@ -423,11 +431,8 @@ def time_list_mesh_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
             if cmap_error is None:
                 cmap_error ="bwr"
                 cmap_part = cmap_error
-            if clev_error is not None:
-                clev_part,cmap_part = meteva.base.tool.color_tools.get_part_clev_and_cmap(clev_error,cmap_error,vmax,vmin)
-                vmax = clev_part[-1]
-                vmin = 2 * clev_part[0] - clev_part[1]
-            sns.heatmap(dat.T, ax=ax2, mask=mask, cmap=cmap_part, vmin=vmin, vmax=vmax, center=None, robust=False, annot=annot,fmt='.0f'
+
+            sns.heatmap(dat.T, ax=ax2, mask=mask, cmap=cmap_part, vmin=-maxd, vmax=maxd, center=None, robust=False, annot=annot,fmt='.0f'
             , annot_kws = {'size': annot_size})
             ax2.set_xlabel('实况时间',fontsize = 16)
             ax2.set_ylabel('起报时间',fontsize = 16)
@@ -435,8 +440,9 @@ def time_list_mesh_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
             ax2.set_xticklabels(x_ticks,rotation=360, fontsize=14)
             ax2.set_yticks(y_plot)
             ax2.set_yticklabels(y_ticks, rotation=360, fontsize=14)
-            ax2.grid(linestyle='--', linewidth=0.5)
 
+            ax2.grid(linestyle='--', linewidth=0.5)
+            ax2.set_ylim(row, 0)
             s1 = s
             if s1 is None:
                 s1 = {}
@@ -469,7 +475,7 @@ def time_list_mesh_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
     return
 
 def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
-                   clev = None,cmap = None,plot_error = True,cmap_error= None,show = False,xtimetype = "mid",dpi = 300,annot =True,title = "预报准确性和稳定性对比图"):
+                   clev = None,cmap = None,plot_error = True,max_error = None,cmap_error= None,show = False,xtimetype = "mid",dpi = 300,annot =True,title = "预报准确性和稳定性对比图"):
     '''
 
     :param sta_ob_and_fos0:
@@ -484,6 +490,18 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
     :param title:
     :return:
     '''
+
+    if max_error is None:
+        sta_ob_fos0_noIV = meteva.base.not_IV(sta_ob_and_fos0)
+        values = sta_ob_fos0_noIV.values[:,6:].T
+        if(values.size ==0):
+            print("无有效的观测数据")
+            return
+        dvalues = values[1:,:] - values[0,:]
+        maxd = np.max(np.abs(dvalues))
+    else:
+        maxd = max_error
+
     sta_ob_and_fos1 = meteva.base.sele_by_dict(sta_ob_and_fos0, s)
     ids = list(set(sta_ob_and_fos1.loc[:,"id"]))
     data_names = meteva.base.get_stadata_names(sta_ob_and_fos1)
@@ -610,8 +628,6 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
                         if dat[i, j] != meteva.base.IV:
                             dvalue[i, j] = dat[i, j] - top_value
 
-                maxd = np.max(np.abs(dvalue))
-                mind = np.min(dvalue)
                 fmt_str = ".0f"
                 if cmap_error is None:
                     cmap_error = "bwr"
@@ -620,7 +636,7 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
                 #ax1.set_xlabel('实况时间',fontsize = 16)
                 ax1.set_ylabel('起报时间',fontsize = 16)
                 ax1.set_xticks(x_plot)
-                ax1.set_xticklabels(x_ticks, fontsize=14)
+                ax1.set_xticklabels(x_ticks,rotation=360,fontsize=14)
                 ax1.set_yticks(y_plot)
                 ax1.set_yticklabels(y_ticks, rotation=360, fontsize=14)
 
@@ -639,6 +655,7 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
                     rect = patches.Rectangle((x1, y1), dh_y / dh_x, 1, linewidth=2, edgecolor='k', facecolor='none')
                     ax1.add_patch(rect)
                 rect = patches.Rectangle((0, 0), col, row, linewidth=0.8, edgecolor='k', facecolor='none')
+                ax1.set_ylim(row, 0)
                 ax1.add_patch(rect)
 
             else:
@@ -663,7 +680,7 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
             ax2.set_yticks(y_plot)
             ax2.set_yticklabels(y_ticks, rotation=360, fontsize=14)
             ax2.grid(linestyle='--', linewidth=0.5)
-
+            ax2.set_ylim(row,0)
             s1 = s
             if s1 is None:
                 s1 = {}
@@ -706,7 +723,7 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
 
 
 def time_list_mesh1(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
-                   clev = None,cmap = None,plot_error = True,cmap_error= None,show = False,title = "预报准确性和稳定性对比图"):
+                   clev = None,cmap = None,plot_error = True,max_error = None,cmap_error= None,show = False,title = "预报准确性和稳定性对比图"):
     '''
     :param sta_ob_all: 输入的观测站点数据序列，它为一个pandas数据列表，是包含一个站点的多个时刻的观测
     :param sta_fo_all: 输入的站点预报数据序列，它为一个pandas数据列表，是包含一个站点的多个时刻起报的，多个预报时效的数据
@@ -956,7 +973,24 @@ def time_list_mesh_tcdc(sta_ob_and_fos0,s = None,save_dir = None,save_path = Non
     title = "云量预报准确性和稳定性对比图")
 
 
-def time_list_mesh_wind(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,show = False,dpi = 300,title = "风预报准确性和稳定性对比图"):
+def time_list_mesh_wind(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,max_error = None,show = False,dpi = 300,title = "风预报准确性和稳定性对比图"):
+
+    if max_error is None:
+        sta_ob_fos0_noIV = meteva.base.not_IV(sta_ob_and_fos0)
+        values = sta_ob_fos0_noIV.values[:,6:].T
+        if(values.size ==0):
+            print("无有效的观测数据")
+            return
+        u = values[0::2,:]
+        v = values[1::2,:]
+        s2 = u * u +v * v
+        speed = np.sqrt(s2.astype(np.float32))
+        dvalues = speed[1:, :] - speed[0, :]
+        maxd = np.max(np.abs(dvalues))
+    else:
+        maxd = max_error
+
+
     sta_ob_and_fos1 = meteva.base.sele_by_dict(sta_ob_and_fos0, s)
     ids = list(set(sta_ob_and_fos1.loc[:, "id"]))
     data_names = meteva.base.get_stadata_names(sta_ob_and_fos1)
@@ -1107,13 +1141,13 @@ def time_list_mesh_wind(sta_ob_and_fos0,s = None,save_dir = None,save_path = Non
                         if dat_v[j, i] != meteva.base.IV:
                             diff_v[j, i] = dat_v[j, i] - top_value
 
-                maxd = np.max(np.abs(diff_speed))
+
                 #clev, cmap_error = meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("wind_speed_error")
 
                 sns.heatmap(diff_speed, ax=ax1, mask=mask, cmap="bwr", vmin=-maxd, vmax=maxd)
                 # sns.heatmap(dvalue.T, ax=ax1, mask=mask, cmap=cmap_error, vmin=-maxd, vmax=maxd, center=None, robust=False, annot=True,
                 #            fmt=fmt_str)
-                ax1.set_xlabel('实况时间',fontsize =16 )
+                #ax1.set_xlabel('实况时间',fontsize =16 )
                 ax1.set_ylabel('起报时间',fontsize =16)
                 ax1.set_xticks(x_plot)
                 ax1.set_xticklabels(x_ticks,fontsize =14)
