@@ -54,6 +54,9 @@ def read_griddata_from_micaps4(filename,grid=None,level = None,time = None,dtime
     :return:返回一个DataArray结构的六维数据信息da
     '''
     try:
+        if not os.path.exists(filename):
+            print(filename + " is not exist")
+            return None
         encoding,str1 = meteva.base.io.get_encoding_of_file(filename)
         if encoding is None:return
         #file = open(filename,'r',encoding=encoding)

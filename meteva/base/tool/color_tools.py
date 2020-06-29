@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.image as image
+from matplotlib import cm
 import matplotlib.pyplot as plt
 plt.rcParams['font.sans-serif']=['SimHei'] #用来正常显示中文标签
 plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
@@ -335,3 +336,20 @@ def show_cmap_clev(cmap,clev = None):
         ax.set_xticklabels(labels)
     ax.imshow(im, cmap=cmap)
 
+
+def get_color_list(legend_num):
+    colors_list = []
+    if legend_num<=10:
+        colors = cm.get_cmap("tab10")
+        for i in range(legend_num):
+            colors_list.append(colors(i))
+    elif legend_num <=20:
+        colors = cm.get_cmap("tab20")
+        for i in range(legend_num):
+            colors_list.append(colors(i))
+    else:
+        colors = cm.get_cmap('gist_rainbow', 128)
+        for i in range(legend_num):
+            color_grade = i / legend_num
+            colors_list.append(colors(color_grade))
+    return colors_list
