@@ -10,37 +10,95 @@ from meteva.method.yes_or_no.score import pofd_hfmc,pod_hfmc
 
 def tems(Ob, Fo):
     '''
-
     :param Ob:
     :param Fo:
     :return:
     '''
-    count = Ob.size
-    mx = np.mean(Ob)
-    sxx = np.mean(np.power(Ob - mx, 2))
-    error2 = np.sum(np.power(Fo - Ob, 2))
-    return np.array([count, error2, mx,sxx])
+    Ob_shape = Ob.shape
+    Fo_shape = Fo.shape
+    tems_list = []
+    Ob_shpe_list = list(Ob_shape)
+    size = len(Ob_shpe_list)
+    ind = -size
+    Fo_Ob_index = list(Fo_shape[ind:])
+    if Fo_Ob_index != Ob_shpe_list:
+        print('实况数据和观测数据维度不匹配')
+        return
+    Ob_shpe_list.insert(0, -1)
+    new_Fo_shape = tuple(Ob_shpe_list)
+    new_Fo = Fo.reshape(new_Fo_shape)
+    new_Fo_shape = new_Fo.shape
 
-def tems_merge(tems0,tems1):
+    for line in range(new_Fo_shape[0]):
+        count = Ob.size
+        mx = np.mean(Ob)
+        sxx = np.mean(np.power(Ob - mx, 2))
+        error2 = np.sum(np.power(new_Fo[line,:] - Ob, 2))
+        tems_list.append(np.array([count, error2, mx, sxx]))
+    tems_array = np.array(tems_list)
+    shape = list(Fo_shape[:ind])
+    shape.append(4)
+    tems_array = tems_array.reshape(shape)
+    return tems_array
+def tems_merge(tems0, tems1):
     '''
-
     :param tems0:
     :param tems1:
     :return:
     '''
-    count_total, mx_total, sxx_total = ss_iteration(tems0[0], tems0[2],tems0[3], tems1[0], tems1[2],tems1[3])
-    error_total = tems0[1] + tems1[1]
-    return np.array([count_total,error_total,mx_total,sxx_total])
+    tems_array_list = []
+    tems0_shape = list(tems0.shape)
+    tems1_shape = list(tems1.shape)
+    if tems0_shape != tems1_shape:
+        print('tems0和tems0维度不匹配')
+        return
+    tems0 = tems0.reshape((-1, 4))
+    tems1 = tems1.reshape((-1, 4))
+    new_tmmsss1_shape = tems1.shape
+    for line in range(new_tmmsss1_shape[0]):
+        tems1_piece = tems1[line, :]
+        tems0_piece = tems0[line, :]
 
-def bs(Ob,Fo):
+        count_total, mx_total, sxx_total = ss_iteration(tems0_piece[0], tems0_piece[2], tems0_piece[3], tems1_piece[0],
+                                                        tems1_piece[2], tems1_piece[3])
+        error_total = tems0_piece[1] + tems1_piece[1]
+        tems_array_list.append(np.array([count_total, error_total, mx_total, sxx_total]))
+    tems_array = np.array(tems_array_list)
+    tems_array = tems_array.reshape(tems0_shape)
+    return tems_array
+def bs(Ob, Fo):
     '''
     brier_score 评分
     :param Ob: 输入的概率化实况，多维的numpy，发生了则取值为1，未发生则取值为0
     :param Fo: 预报的概率值，多维的numpy
     :return: 实数形式的评分值
     '''
-    bs0 =brier_score_loss(Ob.flatten(),Fo.flatten())
-    return bs0
+    Ob_shape = Ob.shape
+    Fo_shape = Fo.shape
+    bs_list = []
+    Ob_shpe_list = list(Ob_shape)
+    size = len(Ob_shpe_list)
+    ind = -size
+    Fo_Ob_index = list(Fo_shape[ind:])
+    if Fo_Ob_index != Ob_shpe_list:
+        print('实况数据和观测数据维度不匹配')
+
+        return
+    Ob_shpe_list.insert(0, -1)
+    new_Fo_shape = tuple(Ob_shpe_list)
+    new_Fo = Fo.reshape(new_Fo_shape)
+    new_Fo_shape = new_Fo.shape
+
+    for line in range(new_Fo_shape[0]):
+        bs0 = brier_score_loss(Ob.flatten(), new_Fo[line, :].flatten())
+        bs_list.append(bs0)
+    if len(bs_list) == 1:
+        bs_array = bs_list[0]
+    else:
+        bs_array = np.array(bs_list)
+        shape = list(Fo_shape[:ind])
+        bs_array = bs_array.reshape(shape)
+    return bs_array
 
 def bs_tems(tems_array):
     '''
@@ -95,13 +153,38 @@ def bss_tems(tems_array):
         bss0[bs_climate ==0] = IV
     return bss0
 
-def roc_auc(Ob,Fo):
+def roc_auc(Ob, Fo):
     '''
     :param Ob: 输入的概率化实况，多维的numpy，发生了则取值为1，未发生则取值为0
     :param Fo: 预报的概率值，多维的numpy
     :return: 实数形式的评分值
     '''
-    return roc_auc_score(Ob,Fo)
+    ob = Ob.flatten()
+    Ob_shape = Ob.shape
+    Fo_shape = Fo.shape
+    roc_auc_list = []
+    Ob_shpe_list = list(Ob_shape)
+    size = len(Ob_shpe_list)
+    ind = -size
+    Fo_Ob_index = list(Fo_shape[ind:])
+    if Fo_Ob_index != Ob_shpe_list:
+        print('实况数据和观测数据维度不匹配')
+
+        return
+    Ob_shpe_list.insert(0, -1)
+    new_Fo_shape = tuple(Ob_shpe_list)
+    new_Fo = Fo.reshape(new_Fo_shape)
+    new_Fo_shape = new_Fo.shape
+
+    for line in range(new_Fo_shape[0]):
+        roc_auc_list.append(roc_auc_score(ob, new_Fo[line, :].flatten()))
+    if len(roc_auc_list) == 1:
+        roc_auc_array = roc_auc_list[0]
+    else:
+        roc_auc_array = np.array(roc_auc_list)
+        shape = list(Fo_shape[:ind])
+        roc_auc_array = roc_auc_array.reshape(shape)
+    return roc_auc_array
 
 def roc_auc_hnh(hnh_array):
     '''

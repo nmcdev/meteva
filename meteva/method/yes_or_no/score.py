@@ -2,6 +2,35 @@ import numpy as np
 import copy
 from meteva.base import IV
 
+def ob_fo_hr_hfmc(hfmc_array):
+    hit = hfmc_array[...,0]
+    fal = hfmc_array[...,1]
+    mis = hfmc_array[...,2]
+    cn = hfmc_array[...,3]
+    total = hit+fal+mis+cn
+    shape1 = list(hfmc_array.shape)
+    if len(hfmc_array.shape) == 2:
+        result = np.zeros((2,shape1[0]))
+        result[0, :] = (hit + mis) / total
+        result[1, :] = (hit + fal) / total
+    else:
+        result = np.zeros((1+shape1[0],shape1[1]))
+        result[0, :] = (hit[0,:] + mis[0,:]) / total[0,:]
+        result[1:, :] = (hit + fal) / total
+    return result
+
+
+def ob_fo_hr(Ob,Fo,grade_list = [1e-30]):
+    '''
+
+    :param Ob:
+    :param Fo:
+    :param grade_list:
+    :return:
+    '''
+    hfmc_array = hfmc(Ob, Fo, grade_list)
+
+    return ob_fo_hr_hfmc(hfmc_array)
 
 
 def hap_count(Ob,Fo, grade_list=[1e-30]):
@@ -15,7 +44,10 @@ def hap_count(Ob,Fo, grade_list=[1e-30]):
     result = []
     for grade in grade_list:
         result.append(Ob[Ob>grade].size)
-    result = np.array(result)
+    if len(grade_list) == 1:
+        result = result[0]
+    else:
+        result = np.array(result)
     return result
 
 def s(Ob,Fo, grade_list=[1e-30]):
@@ -30,7 +62,10 @@ def s(Ob,Fo, grade_list=[1e-30]):
     num = Ob.size
     for grade in grade_list:
         result.append(Ob[Ob>grade].size/num)
-    result = np.array(result)
+    if len(grade_list) == 1:
+        result = result[0]
+    else:
+        result = np.array(result)
     return result
 
 def s_hfmc(hfmc_array):
@@ -100,26 +135,47 @@ def hfmc_of_sun_rain(Ob, Fo):
     :param Fo: 预测数据 任意维numpy数组,Fo.shape 和Ob.shape一致
     :return: numpy 数组，其内容为 [命中数,空报数,漏报数,正确否定数]
     '''
-    fo1 = copy.deepcopy(Fo)
-    fo1[fo1 < 0.099] = 0
-    shape = Ob.shape
-    obhap = np.zeros(shape)
-    obhap[Ob > 0] = 1
-    fohap = np.zeros(shape)
-    fohap[fo1 > 0] = 1
-    obhap01 = np.zeros(shape)
-    obhap01[Ob >= 0.1] = 1
 
-    hit_threshold = (obhap * fohap)
-    mis_threshold = (obhap01 * (1 - fohap))
-    fal_threshold = ((1 - obhap) * fohap)
-    cn_threshold = 1 - hit_threshold - mis_threshold - fal_threshold
+    Ob_shape = Ob.shape
+    Fo_shape = Fo.shape
+    hfmc_of_sun_rain_list = []
+    Ob_shpe_list = list(Ob_shape)
+    size = len(Ob_shpe_list)
+    ind = -size
+    Fo_Ob_index = list(Fo_shape[ind:])
+    if Fo_Ob_index != Ob_shpe_list:
+        print('实况数据和观测数据维度不匹配')
 
-    hit = hit_threshold.sum()
-    fal = fal_threshold.sum()
-    mis = mis_threshold.sum()
-    cn = cn_threshold.sum()
-    return np.array([hit, fal,mis,  cn])
+        return
+    Ob_shpe_list.insert(0, -1)
+    new_Fo_shape = tuple(Ob_shpe_list)
+    new_Fo = Fo.reshape(new_Fo_shape)
+    new_Fo_shape = new_Fo.shape
+    for line in range(new_Fo_shape[0]):
+        new_Fo[line, :][new_Fo[line, :] < 0.099] = 0
+        shape = Ob.shape
+        obhap = np.zeros(shape)
+        obhap[Ob > 0] = 1
+        fohap = np.zeros(shape)
+        fohap[new_Fo[line, :] > 0] = 1
+        obhap01 = np.zeros(shape)
+        obhap01[Ob >= 0.1] = 1
+
+        hit_threshold = (obhap * fohap)
+        mis_threshold = (obhap01 * (1 - fohap))
+        fal_threshold = ((1 - obhap) * fohap)
+        cn_threshold = 1 - hit_threshold - mis_threshold - fal_threshold
+
+        hit = hit_threshold.sum()
+        fal = fal_threshold.sum()
+        mis = mis_threshold.sum()
+        cn = cn_threshold.sum()
+        hfmc_of_sun_rain_list.append(np.array([hit, fal, mis, cn]))
+    hfmc_of_sun_rain_array = np.array(hfmc_of_sun_rain_list)
+    shape = list(Fo_shape[:ind])
+    shape.append(4)
+    hfmc_of_sun_rain_array = hfmc_of_sun_rain_array.reshape(shape)
+    return hfmc_of_sun_rain_array
 
 def pc(Ob,Fo, grade_list=[1e-30]):
     '''
@@ -143,6 +199,8 @@ def pc_hfmc(hfmc_array):
     mis = hfmc_array[...,2]
     cn = hfmc_array[...,3]
     accurace0 = (hit + cn) / (hit + mis + fal + cn)
+    if accurace0.size ==1:
+        accurace0 = accurace0[0]
     return accurace0
 
 def pod(Ob, Fo, grade_list=[1e-30]):
@@ -168,6 +226,8 @@ def pod_hfmc(hfmc_array):
     sum[sum ==0] = 1e-10
     pod0 = hit / sum
     pod0[sum<1] = IV
+    if pod0.size == 1:
+        pod0 = pod0[0]
     return pod0
 
 def sr(Ob, Fo, grade_list=[1e-30]):
@@ -193,6 +253,8 @@ def sr_hfmc(hfmc_array):
     sum[sum ==0] = 1e-10
     sr0 = hit / sum
     sr0[sum < 1] = IV
+    if sr0.size ==1:
+        sr0 = sr0[0]
     return sr0
 
 def far(Ob, Fo, grade_list=[1e-30]):
@@ -218,6 +280,8 @@ def far_hfmc(hfmc_array):
     sum[sum == 0] = 1e-10
     far0 = fal / sum
     far0[sum < 1] = IV
+    if far0.size == 1:
+        far0 = far0[0]
     return far0
 
 def pofd(Ob,Fo,grade_list=[1e-30]):
@@ -243,6 +307,8 @@ def pofd_hfmc(hfmc_array):
     sum[sum == 0] = 1e-10
     podf0 = fal / sum
     podf0[sum < 1] = IV
+    if podf0.size ==1:
+        podf0 = podf0[0]
     return podf0
 
 def mr(Ob, Fo, grade_list=[1e-30]):
@@ -269,6 +335,8 @@ def mr_hfmc(hfmc_array):
     sum[sum ==0]= 1e-10
     mr0 = mis / sum
     mr0[sum < 1] = IV
+    if mr0.size == 1:
+        mr0 = mr0[0]
     return mr0
 
 def bias(Ob, Fo, grade_list=[1e-30]):
@@ -297,6 +365,8 @@ def bias_hfmc(hfmc_array):
     delta = fal - mis
     bias0[delta ==0] = 1
     bias0[bias0 > 1e9] = IV
+    if bias0.size ==1:
+        bias0 = bias0[0]
     return bias0
 
 def bias_extend_linear(bias_array):
@@ -342,25 +412,46 @@ def ts(Ob, Fo, grade_list=[1e-30]):
     return ts_hfmc(hfmc_array)
 
 
-def hfmdt(Ob,Fo,dtime,grade_list = [1e-30]):
-    hfmdt_array = np.zeros((len(grade_list),4))
-    tn = Ob.size
-
-    for i in range(len(grade_list)):
-        threshold = grade_list[i]
-        obhap = np.zeros_like(Ob)
-        obhap[Ob >= threshold] = 1
-        fohap = np.zeros_like(Fo)
-        fohap[Fo >= threshold] = 1
-        hit_threshold = (obhap * fohap)
-        mis_threshold = (obhap * (1 - fohap))
-        fal_threshold = ((1 - obhap) * fohap)
-        cn_threshold = hit_threshold * dtime - fal_threshold * 0.2 * dtime
-        hfmdt_array[i, 0] = hit_threshold.sum()
-        hfmdt_array[i, 1] = fal_threshold.sum()
-        hfmdt_array[i, 2] = mis_threshold.sum()
-        hfmdt_array[i, 3] = cn_threshold.sum()
+def hfmdt(Ob, Fo, dtime, grade_list=[1e-30]):
+    Ob_shape = Ob.shape
+    Fo_shape = Fo.shape
+    hfmdt_array_list = []
+    Ob_shpe_list = list(Ob_shape)
+    size = len(Ob_shpe_list)
+    ind = -size
+    Fo_Ob_index = list(Fo_shape[ind:])
+    if Fo_Ob_index != Ob_shpe_list:
+        print('实况数据和观测数据维度不匹配')
+        return
+    Ob_shpe_list.insert(0, -1)
+    new_Fo_shape = tuple(Ob_shpe_list)
+    new_Fo = Fo.reshape(new_Fo_shape)
+    new_Fo_shape = new_Fo.shape
+    for line in range(new_Fo_shape[0]):
+        hfmdt_array = np.zeros((len(grade_list), 4))
+        tn = Ob.size
+        for i in range(len(grade_list)):
+            threshold = grade_list[i]
+            obhap = np.zeros_like(Ob)
+            obhap[Ob >= threshold] = 1
+            fohap = np.zeros_like(new_Fo[line, :])
+            fohap[new_Fo[line, :] >= threshold] = 1
+            hit_threshold = (obhap * fohap)
+            mis_threshold = (obhap * (1 - fohap))
+            fal_threshold = ((1 - obhap) * fohap)
+            cn_threshold = hit_threshold * dtime - fal_threshold * 0.2 * dtime
+            hfmdt_array[i, 0] = hit_threshold.sum()
+            hfmdt_array[i, 1] = fal_threshold.sum()
+            hfmdt_array[i, 2] = mis_threshold.sum()
+            hfmdt_array[i, 3] = cn_threshold.sum()
+        hfmdt_array_list.append(hfmdt_array)
+    hfmdt_array = np.array(hfmdt_array_list)
+    shape = list(Fo_shape[:ind])
+    shape.append(len(grade_list))
+    shape.append(4)
+    hfmdt_array = hfmdt_array.reshape(shape)
     return hfmdt_array
+
 
 def effective_dtime_hfmdt(hfmdt_array):
     '''
@@ -404,6 +495,8 @@ def ts_hfmc(hfmc_array):
     sum = hit +mis + fal
     sum[sum ==0] = 1e-10
     ts_array =hit / sum
+    if ts_array.size ==1:
+        ts_array = ts_array[0]
     return ts_array
 
 def ets(Ob, Fo, grade_list=[1e-30]):
@@ -434,6 +527,8 @@ def ets_hfmc(hfmc_array):
     sum = hit + mis + fal - hit_random
     sum[sum == 0] = 1e-10
     ets_array = (hit - hit_random) / sum
+    if ets_array.size ==1:
+        ets_array = ets_array[0]
     return ets_array
 
 def hfmc(Ob, Fo, grade_list=[1e-30]):
@@ -444,22 +539,44 @@ def hfmc(Ob, Fo, grade_list=[1e-30]):
     :param grade_list: 多个阈值同时检验时的等级参数
     :return: python numpy数组，其中最后一维长度为4，分别记录了（命中数，漏报数，空报数，正确否定数）
     '''
-    hfmc_array = np.zeros((len(grade_list),4))
-    for i in range(len(grade_list)):
-        threshold = grade_list[i]
-        num = np.size(Ob)
-        obhap = np.zeros_like(Ob)
-        obhap[Ob >= threshold] = 1
-        fohap = np.zeros_like(Fo)
-        fohap[Fo >= threshold] = 1
-        hit_threshold = (obhap * fohap)
-        mis_threshold = (obhap * (1 - fohap))
-        fal_threshold = ((1 - obhap) * fohap)
-        cn_threshold = ((1 - obhap) * (1 - fohap))
-        hfmc_array[i, 0] = hit_threshold.sum()
-        hfmc_array[i, 1] = fal_threshold.sum()
-        hfmc_array[i, 2] = mis_threshold.sum()
-        hfmc_array[i, 3] = cn_threshold.sum()
+    Ob_shape = Ob.shape
+    Fo_shape = Fo.shape
+    hfmc_list = []
+    Ob_shpe_list = list(Ob_shape)
+    size = len(Ob_shpe_list)
+    ind = -size
+    Fo_Ob_index = list(Fo_shape[ind:])
+    if Fo_Ob_index != Ob_shpe_list:
+        print('实况数据和观测数据维度不匹配')
+        return
+    Ob_shpe_list.insert(0, -1)
+    new_Fo_shape = tuple(Ob_shpe_list)
+    new_Fo = Fo.reshape(new_Fo_shape)
+    new_Fo_shape = new_Fo.shape
+    for line in range(new_Fo_shape[0]):
+        fo = new_Fo[line, :]
+        hfmc_array = np.zeros((len(grade_list), 4))
+        for i in range(len(grade_list)):
+            threshold = grade_list[i]
+            num = np.size(Ob)
+            obhap = np.zeros_like(Ob)
+            obhap[Ob >= threshold] = 1
+            fohap = np.zeros_like(fo)
+            fohap[fo >= threshold] = 1
+            hit_threshold = (obhap * fohap)
+            mis_threshold = (obhap * (1 - fohap))
+            fal_threshold = ((1 - obhap) * fohap)
+            cn_threshold = ((1 - obhap) * (1 - fohap))
+            hfmc_array[i, 0] = hit_threshold.sum()
+            hfmc_array[i, 1] = fal_threshold.sum()
+            hfmc_array[i, 2] = mis_threshold.sum()
+            hfmc_array[i, 3] = cn_threshold.sum()
+        hfmc_list.append(hfmc_array)
+    hfmc_array = np.array(hfmc_list)
+    shape = list(Fo_shape[:ind])
+    shape.append(len(grade_list))
+    shape.append(4)
+    hfmc_array = hfmc_array.reshape(shape)
     return hfmc_array
 
 
@@ -480,6 +597,8 @@ def hk_yesorno_hfmc(hfmc_array):
     sum_fc = fal + cn
     sum_fc[sum_fc == 0] = 1e-10
     hk = hit/sum_hm - fal/sum_fc
+    if hk.size ==1:
+        hk = hk[0]
     return hk
 
 
@@ -498,7 +617,8 @@ def hss_yesorno_hfmc(hfmc_array):
     sum_rc = sum - correct_random
     sum_rc[sum_rc == 0] = 1e-10
     hss = (hit + cn - correct_random) / sum_rc
-
+    if hss.size ==1:
+        hss = hss[0]
     return hss
 
 def dts(Ob,Fo,grade_list= [1e-30]):
@@ -517,7 +637,8 @@ def dts_hfmc(hfmc_array):
     sum2[sum2 ==0] = 1e-10
 
     dts_array =(hit / sum1 + cn/sum2)/2
-
+    if dts_array.size ==1:
+        dts_array = dts_array[0]
     return dts_array
 
 
