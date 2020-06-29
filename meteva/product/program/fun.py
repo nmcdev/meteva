@@ -6,6 +6,9 @@ import time
 import pandas as pd
 import numpy as np
 
+
+
+
 def get_time_str_one_by_one(time1,time0 = None,row = 1):
     if row == 2:
         if time0 is None:
@@ -97,7 +100,7 @@ def get_time_str_list(time_list,row = 1):
         time_str_list.append(get_time_str_one_by_one(time_list[i],time_list[i-1],row))
     return time_str_list
 
-def get_save_path(save_dir,method,group_by,group_list,model_name,type,discription = None):
+def get_save_path(save_dir,method,group_by,group_list,model_name = "",type = "",discription = ""):
 
     if discription is None:
         discription = ""
@@ -110,6 +113,7 @@ def get_save_path(save_dir,method,group_by,group_list,model_name,type,discriptio
         if group_by is None:
             save_path = save_dir + "/"+method.__name__+"_" +model_name+discription+type
         else:
+            print(model_name)
             save_path = save_dir + "/" +method.__name__+"_" + model_name + "_"+ group_by + str(group_list)+discription+type
     return save_path
 
@@ -117,7 +121,16 @@ def get_title_from_dict(method,s,g,group_list,model_name,title = None):
     if title is not None:
         title1 = title
     else:
-        method_str =  method.__defaults__[-1]
+
+        #method_str =  method.__defaults__[-1]
+        method_para = method.__code__.co_varnames[:method.__code__.co_argcount]
+        #print(method_para)
+        if "title" in method_para:
+            method_str = method.__defaults__[-1]
+        else:
+            method_str = method.__name__.upper()
+
+
         s_str = ""
         if s is not None:
 
