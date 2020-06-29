@@ -3,5 +3,7 @@ from .read_griddata import *
 from .write_griddata import *
 from .read_stadata import *
 from .write_stadata import *
+from .write_array import *
+from .encoding import *
 #from . import DataBlock_pb2
 #from .GDS_data_service import GDSDataService

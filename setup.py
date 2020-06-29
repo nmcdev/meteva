@@ -5,7 +5,7 @@ from setuptools import find_packages, setup
 from codecs import open
 name = "meteva"
 author ="liucouhua,daikan,wangbaoli"
-version ="1.1.4.0"
+version ="1.2"
 
 here = path.abspath(path.dirname(__file__))
 
@@ -48,6 +48,7 @@ setup(
                       "netCDF4>=1.4.2",
                       "seaborn>=0.9.0",
                       "ipywidgets>=7.5.1",
-                      "pyshp>=2.1.0"
+                      "pyshp>=2.1.0",
+                      "tables>=3.4.4"
                       ]
 )

@@ -166,6 +166,8 @@ def combine_on_obTime_id(sta_ob,sta_fo_list,need_match_ob = False):
     :param sta_fo_list:
     :return:
     '''
+    if not isinstance(sta_fo_list, list):
+        sta_fo_list = [sta_fo_list]
 
     if sta_ob is None:
         sta_combine = None
@@ -194,8 +196,10 @@ def combine_on_obTime_id(sta_ob,sta_fo_list,need_match_ob = False):
     return sta_combine
 
 
-
 def combine_on_obTime(sta_ob,sta_fo_list,need_match_ob = False):
+    if not isinstance(sta_fo_list, list):
+        sta_fo_list = [sta_fo_list]
+
     dtime_list = list(set(sta_fo_list[0]['dtime'].values.tolist()))
     sta_combine = []
     for dtime in dtime_list:

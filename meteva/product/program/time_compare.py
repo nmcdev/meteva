@@ -1362,7 +1362,7 @@ def time_list_mesh_wind1(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
                 sns.heatmap(diff_speed, ax=ax1, mask=mask, cmap=cmap_error, vmin=-maxd, vmax=maxd)
                 #sns.heatmap(dvalue.T, ax=ax1, mask=mask, cmap=cmap_error, vmin=-maxd, vmax=maxd, center=None, robust=False, annot=True,
                 #            fmt=fmt_str)
-                ax1.set_xlabel('实况时间')
+                #ax1.set_xlabel('实况时间')
                 ax1.set_ylabel('起报时间')
                 ax1.set_xticks(x + 0.5)
                 ax1.set_xticklabels(xticks)

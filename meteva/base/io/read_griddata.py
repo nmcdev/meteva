@@ -54,17 +54,11 @@ def read_griddata_from_micaps4(filename,grid=None,level = None,time = None,dtime
     :return:返回一个DataArray结构的六维数据信息da
     '''
     try:
-        if not os.path.exists(filename):
-            print(filename + " is not exist")
-            return None
-        try:
-            file = open(filename,'r')
-            str1 = file.read()
-            file.close()
-        except:
-            file = open(filename,'r',encoding='utf-8')
-            str1 = file.read()
-            file.close()
+        encoding,str1 = meteva.base.io.get_encoding_of_file(filename)
+        if encoding is None:return
+        #file = open(filename,'r',encoding=encoding)
+        #str1 = file.read()
+        #file.close()
         strs = str1.split()
         year1 = int(strs[3])
         month = int(strs[4])
@@ -790,19 +784,8 @@ def read_gridwind_from_micaps2(filename,grid = None,level = None,time = None,dti
 
 def read_gridwind_from_micaps11(filename,grid = None,level = None,time = None,dtime = None,data_name = "",show = False):
     if os.path.exists(filename):
-        try:
-            file = open(filename,encoding="GBK")
-            str1 = file.read()
-            file.close()
-        except:
-            try:
-                file = open(filename,encoding="UTF-8")
-                str1 = file.read()
-                file.close()
-            except:
-                print(filename + "文件编码不是GBK或UTF-8格式，程序暂时不能识别")
-                return None
-
+        encoding,str1 = meteva.base.io.get_encoding_of_file(filename)
+        if encoding is None:return
         strs = str1.split()
         dlon = float(strs[8])
         dlat = float(strs[9])

@@ -7,7 +7,7 @@ import copy
 import pandas as pd
 
 
-def accumulate_time(sta_ob,step,keep_all = False):
+def accumulate_time(sta_ob,step,keep_all = True):
     '''观测数据累加'''
     times= sta_ob.loc[:,'time'].values
     times = list(set(times))
@@ -27,7 +27,7 @@ def accumulate_time(sta_ob,step,keep_all = False):
         rain_ac = meteva.base.in_time_list(rain_ac,new_times)
     return rain_ac
 
-def accumulate_dtime(sta,step,keep_all = False):
+def accumulate_dtime(sta,step,keep_all = True):
     '''观测数据累加'''
 
     dtimes= sta.loc[:,'dtime'].values
@@ -276,7 +276,7 @@ def sta_dis_ensemble_near_by_sta(sta_to,nearNum = 100,sta_from = None,drop_frist
 def sta_index_ensemble_near_by_grid(sta, grid,nearNum = 1):
     ER = meteva.base.ER
     members = np.arange(nearNum).tolist()
-    grid1 = meteva.base.grid(grid.glon,grid.glat,members=members)
+    grid1 = meteva.base.grid(grid.glon,grid.glat,member_list=members)
     grd_en = meteva.base.grid_data(grid1)
     xyz_sta =  meteva.base.tool.math_tools.lon_lat_to_cartesian(sta.loc[:,"lon"], sta.loc[:,"lat"],R = ER)
     lon = np.arange(grid1.nlon) * grid1.dlon + grid1.slon
@@ -289,15 +289,15 @@ def sta_index_ensemble_near_by_grid(sta, grid,nearNum = 1):
     return grd_en
 
 def mean_of_sta(sta,used_coords = ["member"]):
-    sta_mean = sta[meteva.base.get_coord_names()]
+    sta_mean = sta.loc[:,meteva.base.get_coord_names()]
     sta_data = sta[meteva.base.get_stadata_names(sta)]
     value = sta_data.values
     mean = np.mean(value,axis=1)
-    sta_mean['mean'] =mean
+    sta_mean['mean'] = mean
     return sta_mean
 
 def std_of_sta(sta,used_coords = ["member"]):
-    sta_std = sta[meteva.base.get_coord_names()]
+    sta_std = sta.loc[:,meteva.base.get_coord_names()]
     sta_data = sta[meteva.base.get_stadata_names(sta)]
     value = sta_data.values
     std = np.std(value, axis=1)
@@ -305,7 +305,7 @@ def std_of_sta(sta,used_coords = ["member"]):
     return sta_std
 
 def var_of_sta(sta,used_coords = ["member"]):
-    sta_var = sta[meteva.base.get_coord_names()]
+    sta_var = sta.loc[:,meteva.base.get_coord_names()]
     sta_data = sta[meteva.base.get_stadata_names(sta)]
     value = sta_data.values
     var = np.var(value, axis=1)
@@ -313,7 +313,7 @@ def var_of_sta(sta,used_coords = ["member"]):
     return sta_var
 
 def max_of_sta(sta,used_coords = ["member"]):
-    sta_max = sta[meteva.base.get_coord_names()]
+    sta_max = sta.loc[:,meteva.base.get_coord_names()]
     sta_data = sta[meteva.base.get_stadata_names(sta)]
     value = sta_data.values
     max1 = np.max(value, axis=1)
@@ -321,7 +321,7 @@ def max_of_sta(sta,used_coords = ["member"]):
     return sta_max
 
 def min_of_sta(sta,used_coords = ["member"]):
-    sta_min = sta[meteva.base.get_coord_names()]
+    sta_min = sta.loc[:,meteva.base.get_coord_names()]
     sta_data = sta[meteva.base.get_stadata_names(sta)]
     value = sta_data.values
     min1 = np.min(value, axis=1)

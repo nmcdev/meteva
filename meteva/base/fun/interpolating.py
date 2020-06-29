@@ -3,6 +3,7 @@ import numpy as np
 from scipy.spatial import cKDTree
 from scipy.interpolate import LinearNDInterpolator
 import copy
+import pandas as pd
 
 
 #格点到站点的插值
@@ -21,15 +22,16 @@ def interp_gs_nearest(grd,sta,used_coords = "xy"):
     column_list2 = ['level','time','dtime','id', 'lon', 'lat']
     column_list2.extend(members)
     grid = meteva.base.get_grid_of_data(grd)
-    sta_all = None
+
     if used_coords == "xy":
         sta1 = meteva.base.sele.in_grid_xy(sta, grid)
-        ig = np.round((sta1['lon'].values - grid.slon) // grid.dlon).astype(dtype = 'int16')
-        jg = np.round((sta1['lat'].values - grid.slat) // grid.dlat).astype(dtype = 'int16')
+        ig = np.round((sta1.loc[:,'lon'].values - grid.slon) // grid.dlon).astype(dtype = 'int16')
+        jg = np.round((sta1.loc[:,'lat'].values - grid.slat) // grid.dlat).astype(dtype = 'int16')
+        sta_list = []
         for i in range(len(levels)):
             for j in range(len(times)):
                 for k in range(len(dtimes)):
-                    sta = sta1.loc[:,["id","lon","lat"]]
+                    sta = sta1.loc[:,["time","id","lon","lat"]]
                     sta.loc[:,'time'] = times[j]
                     sta.loc[:,'dtime'] = dtimes[k]
                     sta.loc[:,'level'] = levels[i]
@@ -37,7 +39,9 @@ def interp_gs_nearest(grd,sta,used_coords = "xy"):
                         dat = grd.values[m,i,j,k,:,:]
                         dat_sta= dat[jg,ig]
                         sta.loc[:,members[m]] = dat_sta
-                    sta_all = meteva.base.combine_join(sta_all,sta)
+                    sta_list.append(sta)
+        #sta_all = meteva.base.combine_join(sta_all,sta)
+        sta_all = pd.concat(sta_list,axis = 0)
         sta_all = sta_all.reindex(columns=column_list2)
         return sta_all
 
@@ -67,7 +71,7 @@ def interp_gs_linear(grd,sta,used_coords = "xy"):
         c11 = dx * dy
         ig1 = np.minimum(ig + 1, grid.nlon - 1)
         jg1 = np.minimum(jg + 1, grid.nlat - 1)
-
+        sta_list = []
         for i in range(len(levels)):
             for j in range(len(times)):
                 for k in range(len(dtimes)):
@@ -79,7 +83,9 @@ def interp_gs_linear(grd,sta,used_coords = "xy"):
                         dat = grd.values[m,i,j,k,:,:]
                         dat_sta= c00 * dat[jg,ig] + c01 * dat[jg,ig1] + c10 * dat[jg1,ig] + c11 * dat[jg1,ig1]
                         sta.loc[:,members[m]] = dat_sta
-                    sta_all = meteva.base.combine_join(sta_all,sta)
+                    sta_list.append(sta)
+        #sta_all = meteva.base.combine_join(sta_all,sta)
+        sta_all = pd.concat(sta_list, axis=0)
         sta_all = sta_all.reindex(columns=column_list2)
         return sta_all
 
@@ -334,4 +340,3 @@ def cubic_f(n, dx):
         return -(dx + 1) * dx * (dx - 2) / 2
     else:
         return (dx + 1) * dx * (dx - 1) / 6
-
