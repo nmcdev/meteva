@@ -179,9 +179,9 @@ def read_stadata_from_micaps3(filename, station=None,  level=None,time=None, dti
                     if (len(strs) == nstart):
                         break
             file.close()
+            if int(strs[-1]) == 0:return None
 
             file_sta = open(filename)
-
             sta1 = pd.read_csv(file_sta, skiprows=skip_num, sep="\s+", header=None, usecols=[0, 1, 2, 4])
             sta1.columns = ['id', 'lon', 'lat', data_name]
             sta1.drop_duplicates(keep='first', inplace=True)
