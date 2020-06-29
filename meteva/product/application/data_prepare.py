@@ -13,30 +13,39 @@ para_example= {
     "day_num":7,
     "end_time":datetime.datetime.now(),
     "station_file":meteva.base.station_国家站,
+    "interp": meteva.base.interp_gs_nearest,
     "defalut_value":999999,
     "hdf_file_name":"week.h5",
     "ob_data":{
         "hdf_dir":r"O:\data\hdf\SURFACE\QC_BY_FSOL\TMP_ALL_STATION",
         "dir_ob": r"O:\data\sta\SURFACE\QC_BY_FSOL\TMP_ALL_STATION\YYYYMMDD\YYYYMMDDHH0000.000",
+        "read_method":meteva.base.io.read_stadata_from_gdsfile,
+        "read_para":{},
         "operation":None,
-        "operation_para_dict":{}
+        "operation_para":{}
     },
     "fo_data":{
         "SCMOC":{
             "hdf_dir": r"O:\data\hdf\NWFD_SCMOC\TMP\2M_ABOVE_GROUND",
             "dir_fo": r"O:\data\grid\NWFD_SCMOC\TMP\2M_ABOVE_GROUND\YYYYMMDD\YYMMDDHH.TTT.nc",
+            "read_method": meteva.base.io.read_griddata_from_nc,
+            "read_para": {},
             "operation": None,
             "operation_para_dict":{}
         },
         "GRAPES": {
             "hdf_dir": r"O:\data\hdf\GRAPES_GFS\TMP\2M_ABOVE_GROUND",
             "dir_fo": r"O:\data\grid\GRAPES_GFS\TMP\2M_ABOVE_GROUND\YYYYMMDD\YYMMDDHH.TTT.nc",
+            "read_method": meteva.base.io.read_griddata_from_nc,
+            "read_para": {},
             "operation": None,
             "operation_para_dict": {}
         },
         "ECMWF":{
             "hdf_dir": r"O:\data\hdf\ECMWF_HR\TMP_2M",
             "dir_fo": r"O:\data\grid\ECMWF_HR\TMP_2M\YYYYMMDD\YYMMDDHH.TTT.nc",
+            "read_method": meteva.base.io.read_griddata_from_nc,
+            "read_para": {},
             "operation": None,
             "operation_para_dict":{}
         }
@@ -46,6 +55,11 @@ para_example= {
 
 
 def prepare_dataset(para):
+    '''
+
+    :param para: 根据配置参数从站点和网格数据中读取数据插值到指定站表上，在存储成hdf格式文件，然后从hdf格式文件中读取相应的文件合并成检验要的数据集合文件
+    :return:
+    '''
     station = meteva.base.read_station(para["station_file"])
     station.iloc[:,-1] = para["defalut_value"]
     day_num = para["day_num"]
@@ -53,24 +67,26 @@ def prepare_dataset(para):
     hdf_file_list = []
     hdf_file = para["ob_data"]["hdf_dir"] +"/"+ para["hdf_file_name"]
     hdf_file_list.append(hdf_file)
-    creat_ob_dataset(hdf_file,para["ob_data"]["dir_ob"],station=station,
-                     end_time = end_time,day_num=day_num,operation=para["ob_data"]["operation"],
-                     operation_para_list = para["ob_data"]["operation_para_dict"],data_name="ob")
+    read_para = para["ob_data"]["read_para"]
+    creat_ob_dataset(hdf_file,para["ob_data"]["dir_ob"],station,"ob",end_time = end_time,day_num=day_num,
+                     read_method=para["ob_data"]["read_method"], read_para = read_para,
+                     operation=para["ob_data"]["operation"],operation_para = para["ob_data"]["operation_para"])
     models = para["fo_data"].keys()
     for model in models:
         hdf_file = para["fo_data"][model]["hdf_dir"] + "/" + para["hdf_file_name"]
         hdf_file_list.append(hdf_file)
-        creat_fo_dataset(hdf_file,para["fo_data"][model]["dir_fo"],station,
+        creat_fo_dataset(hdf_file,para["fo_data"][model]["dir_fo"],station,model,
                          end_time = end_time,day_num = day_num,
+                         read_method=para["fo_data"][model]["read_method"], read_para=read_para,
                          operation = para["fo_data"][model]["operation"],
-                         operation_para_list = para["fo_data"][model]["operation_para_dict"],data_name = model)
+                         operation_para = para["fo_data"][model]["operation_para"],interp = para["interp"])
 
     output_file = para["output_dir"] + "/" + para["hdf_file_name"]
     meteva.base.path_tools.creat_path(output_file)
     combine_ob_fos_dataset(output_file,hdf_file_list)
 
 
-def creat_fo_dataset(hdf_path, dir_fo, station, day_num,end_time = None, operation=None, operation_para_list=0,data_name = None):
+def creat_fo_dataset(hdf_path, dir_fo, station,data_name,day_num,end_time = None,read_method= pd.read_hdf,read_para ={},interp = None, operation=None, operation_para={}):
     data0 = None
     if os.path.exists(hdf_path):
         data0 = pd.read_hdf(hdf_path, "df")
@@ -84,6 +100,8 @@ def creat_fo_dataset(hdf_path, dir_fo, station, day_num,end_time = None, operati
     before = today - datetime.timedelta(days=day_num)
     tomorrow = today + datetime.timedelta(days=1)
     exist_dtimes = {}
+
+
     if data0 is None:
         hours = np.arange(0, 24, 1).tolist()
         dtimes = np.arange(0, 721, 1).tolist()
@@ -136,18 +154,27 @@ def creat_fo_dataset(hdf_path, dir_fo, station, day_num,end_time = None, operati
                 path = meteva.base.get_path(dir_fo, time1, dt)
                 if os.path.exists(path):
                     print(path)
-                    grd = meteva.base.read_griddata_from_nc(path, time=time1, dtime=dt,data_name= data_name)
-                    if grd is not None:
-                        sta = meteva.base.interp_gs_linear(grd, station)
-                        sta_list.append(sta)
+                    #grd = meteva.base.read_griddata_from_nc(path, time=time1, dtime=dt,data_name= data_name)
+                    #print(read_para)
+                    dat = read_method(path,**read_para)
 
+                    if dat is not None:
+                        if not isinstance(dat, pd.DataFrame):
+                            dat = interp(dat, station)
+                        meteva.base.set_stadata_coords(dat,time = time1,dtime = dt)
+                        meteva.base.set_stadata_names(dat,data_name)
+                        sta_list.append(dat)
+
+    if(len(sta_list) == 0):
+        print("there is not file data in " + dir_fo)
+        return
     sta_all = pd.concat(sta_list, axis=0)
 
     print(hdf_path)
     meteva.base.creat_path(hdf_path)
     sta_all.to_hdf(hdf_path, "df")
 
-def creat_ob_dataset(hdf_path, dir_ob, station, day_num,end_time = None, operation=None, operation_para_list=0,data_name = None):
+def creat_ob_dataset(hdf_path, dir_ob,station,data_name,day_num,end_time = None,read_method = pd.read_hdf,read_para = {}, interp = None,operation=None, operation_para={}):
     data0 = None
     if os.path.exists(hdf_path):
         data0 = pd.read_hdf(hdf_path, "df")
@@ -157,6 +184,7 @@ def creat_ob_dataset(hdf_path, dir_ob, station, day_num,end_time = None, operati
         now = datetime.datetime.now()
     else:
         now = end_time
+
     today = datetime.datetime(now.year, now.month, now.day, 0, 0)
     before = today - datetime.timedelta(days=day_num)
     tomorrow = today + datetime.timedelta(days=1)
@@ -186,6 +214,7 @@ def creat_ob_dataset(hdf_path, dir_ob, station, day_num,end_time = None, operati
         hours = list(set(hours))
         hours.sort()
 
+
     for dd in range(day_num):
         for hh in range(len(hours)):
             hour = hours[hh]
@@ -196,9 +225,15 @@ def creat_ob_dataset(hdf_path, dir_ob, station, day_num,end_time = None, operati
             path = meteva.base.get_path(dir_ob, time1)
             if os.path.exists(path):
                 print(path)
-                sta = meteva.base.read_stadata_from_gdsfile(path, station=station, time=time1,data_name= data_name)
-                if sta is not None:
-                    sta_list.append(sta)
+                #sta = meteva.base.read_stadata_from_gdsfile(path, station=station, time=time1,data_name= data_name)
+                dat = read_method(path,**read_para)
+                if dat is not None:
+                    dat = meteva.base.fun.comp.put_stadata_on_station(dat,station)
+                    if not isinstance(dat,pd.DataFrame):
+                        dat = interp(dat,station)
+                    meteva.base.set_stadata_names(dat,data_name)
+                    meteva.base.set_stadata_coords(dat,time = time1)
+                    sta_list.append(dat)
     sta_all = pd.concat(sta_list, axis=0)
     meteva.base.creat_path(hdf_path)
     print(hdf_path)
