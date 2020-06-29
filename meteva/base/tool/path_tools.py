@@ -289,3 +289,65 @@ def get_gds_all_dir(ip,port,path,all_path,service = None):
                     #print(name_size_pair[0])
             if(not contain_dir):
                 all_path.append(path)
+
+
+
+def get_dati_of_path(path):
+    try:
+        dir,filename = os.path.split(path)
+        filename0 = os.path.splitext(filename)[0]
+        a = int(filename0[0:2])
+        b = int(filename0[2:4])
+        if a ==20:
+            if b >12:
+                pass
+            else:
+                filename0 = "20" + filename0
+        elif a == 19:
+            if b >12:
+                pass
+            else:
+                filename0 = "20" + filename0
+        else:
+            filename0 = "20" + filename0
+
+        dati = str_to_time(filename0)
+        return dati
+    except:
+        return None
+
+#以列表的形式返回根目录下所有文件的路径
+def get_during_path_list_in_dir(root_dir,all_path = None,start = None,end = None):
+    start_time = None
+    if start is None:
+        start_time = datetime.datetime(1900,1,1,0,0)
+    else:
+        start_time = start
+    if end is None:
+        end_time = datetime.datetime.now()
+    else:
+        end_time = end
+    time_compair = False
+    if start is not None or end is not None:
+        time_compair = True
+
+    if not os.path.exists(root_dir):
+        return []
+    files = os.listdir(root_dir)
+    if all_path is None:
+        all_path = []
+    for file in files:
+        fi_d = os.path.join(root_dir,file)
+        if os.path.isdir(fi_d):
+            if time_compair:
+                dati = get_dati_of_path(fi_d)
+                if dati is None:
+                    get_during_path_list_in_dir(fi_d, all_path, start, end)
+                else:
+                    if dati >= start_time and dati <= end_time:
+                        get_during_path_list_in_dir(fi_d,all_path,start,end)
+            else:
+                get_during_path_list_in_dir(fi_d, all_path, start, end)
+        else:
+            all_path.append(fi_d)
+    return all_path
