@@ -4,7 +4,7 @@ import math
 
 
 def rmse_scatter(sta_ob_and_fos,s = None,g = None,gll = None,group_name_list= None,save_dir=None,save_path = None,show = False,
-                 print_max = 1,threshold = 0,add_county_line = False,map_extend = None,dpi = 200,title="均方根误差站点分布"):
+                 print_max = 1,threshold = 0,add_county_line = False,map_extend = None,dpi = 300,title="均方根误差站点分布"):
     if len(sta_ob_and_fos.index) == 0:
         print("error infomation: 站点数据内容为空")
         return
@@ -18,8 +18,6 @@ def rmse_scatter(sta_ob_and_fos,s = None,g = None,gll = None,group_name_list= No
     if g == "id":
         print("绘制误差平面分布时，g 不能设置为id")
         return
-
-
     sta_ob_and_fos1 = meteva.base.sele_by_dict(sta_ob_and_fos,s = s)
     sta_ob_and_fos_list, gll1 = meteva.base.group(sta_ob_and_fos1, g = g, gll = gll)
     g_num = len(sta_ob_and_fos_list)
@@ -29,10 +27,13 @@ def rmse_scatter(sta_ob_and_fos,s = None,g = None,gll = None,group_name_list= No
 
     for k in range(g_num):
         sta_ob_and_fos_g1 = sta_ob_and_fos_list[k]
-        _,_,rmse_sta = meteva.product.score(sta_ob_and_fos_g1,meteva.method.rmse,g="id")
-        values = rmse_sta.values[:,6:]
+        rmse_sta = meteva.product.score_id(sta_ob_and_fos_g1,meteva.method.rmse)[0]
+        #values = rmse_sta.values[:,6:]
+
+        '''
         mean_value = np.mean(values)
         data_names = meteva.base.get_stadata_names(rmse_sta)
+
         vmax = np.max(values)
         vmin = np.min(values)
         if vmax - vmin < 1e-10:
@@ -55,8 +56,23 @@ def rmse_scatter(sta_ob_and_fos,s = None,g = None,gll = None,group_name_list= No
         vmin = inte * ((int)(vmin / inte) - 1)
         vmax = inte * ((int)(vmax / inte) + 2)
         clevs1 = np.arange(vmin, vmax, inte)
+        '''
 
+        title1 = meteva.product.program.get_title_from_dict(meteva.product.rmse_scatter, s, g, group_name_list[k],"NNN")
+        if save_path is None:
+            if save_dir is None:
+                save_path = None
+                show = True
+            else:
+                fileName = title1.replace("\n", "").replace(":", "")
+                save_path = save_dir + "/" + fileName + ".png"
+        if save_path is not None: meteva.base.creat_path(save_path)
+        meteva.base.tool.plot_tools.scatter_sta(rmse_sta, save_path=save_path, show=show,
+                                                fix_size=False, title=title1, print_max=print_max
+                                                , add_county_line=add_county_line,
+                                                threshold=threshold, map_extend=map_extend, dpi=dpi)
 
+        '''
         for di in range(len(data_names)):
             data_name = data_names[di]
             title1 = meteva.product.program.get_title_from_dict(meteva.product.rmse_scatter, s, g, group_name_list[k],
@@ -68,7 +84,7 @@ def rmse_scatter(sta_ob_and_fos,s = None,g = None,gll = None,group_name_list= No
                 else:
                     fileName  = title1.replace("\n","").replace(":","")
                     save_path = save_dir + "/"+fileName+".png"
-            meteva.base.creat_path(save_path)
+            if save_path is not None:meteva.base.creat_path(save_path)
             meteva.base.tool.plot_tools.scatter_sta(rmse_sta,value_column = di,save_path= save_path,show = show,
                                                     clevs= clevs1,fix_size=False,title=title1,print_max = print_max
                                                     ,mean_value = mean_value,add_county_line=add_county_line,threshold=threshold,map_extend=map_extend,dpi = dpi)
@@ -76,10 +92,10 @@ def rmse_scatter(sta_ob_and_fos,s = None,g = None,gll = None,group_name_list= No
             if save_path is not None:
                 print("图片输出至"+save_path)
                 save_path = None
-
+            '''
 
 def mae_scatter(sta_ob_and_fos,s = None,g = None,gll = None,group_name_list= None, save_dir=None,save_path = None,show = False,
-                print_max = 1,threshold = 0,add_county_line = False,map_extend= None,dpi = 200,title="绝对误差站点分布图"):
+                print_max = 1,threshold = 0,add_county_line = False,map_extend= None,dpi = 300,title="绝对误差站点分布图"):
 
     if len(sta_ob_and_fos.index) == 0:
         print("error infomation: 站点数据内容为空")
@@ -103,8 +119,23 @@ def mae_scatter(sta_ob_and_fos,s = None,g = None,gll = None,group_name_list= Non
         group_name_list = meteva.product.program.get_group_name(gll1)
     for k in range(g_num):
         sta_ob_and_fos_g1 = sta_ob_and_fos_list[k]
-        _,_,rmse_sta = meteva.product.score(sta_ob_and_fos_g1,meteva.method.mae,g="id")
+        rmse_sta = meteva.product.score_id(sta_ob_and_fos_g1,meteva.method.mae)[0]
 
+        title1 = meteva.product.program.get_title_from_dict(meteva.product.rmse_scatter, s, g, group_name_list[k],"NNN")
+        if save_path is None:
+            if save_dir is None:
+                save_path = None
+                show = True
+            else:
+                fileName = title1.replace("\n", "").replace(":", "")
+                save_path = save_dir + "/" + fileName + ".png"
+        if save_path is not None: meteva.base.creat_path(save_path)
+        meteva.base.tool.plot_tools.scatter_sta(rmse_sta, save_path=save_path, show=show,
+                                                fix_size=False, title=title1, print_max=print_max
+                                                , add_county_line=add_county_line,
+                                                threshold=threshold, map_extend=map_extend, dpi=dpi)
+
+        '''
         values = rmse_sta.values[:, 6:]
         mean_value = np.mean(values)
         data_names = meteva.base.get_stadata_names(rmse_sta)
@@ -141,16 +172,18 @@ def mae_scatter(sta_ob_and_fos,s = None,g = None,gll = None,group_name_list= Non
                 else:
                     fileName  = title1.replace("\n","").replace(":","")
                     save_path = save_dir + "/"+fileName+".png"
-            meteva.base.creat_path(save_path)
+            if save_path is not None:meteva.base.creat_path(save_path)
             meteva.base.tool.plot_tools.scatter_sta(rmse_sta,value_column = di,
                                                     save_path= save_path,show= show,fix_size=False,clevs=clevs1,title=title1,print_max = print_max,
                                                     mean_value = mean_value, threshold = threshold,add_county_line = add_county_line,map_extend= map_extend,dpi = dpi)
             if save_path is not None:
                 print("图片输出至"+save_path)
                 save_path = None
+                
+        '''
 
 def me_scatter(sta_ob_and_fos,s= None,g = None,gll = None,group_name_list= None, save_dir=None,save_path = None,show = False,
-               print_max = 1,threshold = 0,add_county_line = False,map_extend= None,dpi = 200,title="误差站点分布图"):
+               print_max = 1,print_min = 1,threshold = 0,add_county_line = False,map_extend= None,dpi = 300,title="误差站点分布图"):
     if len(sta_ob_and_fos.index) == 0:
         print("error infomation: 站点数据内容为空")
         return
@@ -174,7 +207,23 @@ def me_scatter(sta_ob_and_fos,s= None,g = None,gll = None,group_name_list= None,
         group_name_list = meteva.product.program.get_group_name(gll1)
     for k in range(g_num):
         sta_ob_and_fos_g1 = sta_ob_and_fos_list[k]
-        _,_,rmse_sta = meteva.product.score(sta_ob_and_fos_g1,meteva.method.me,g="id")
+        rmse_sta = meteva.product.score_id(sta_ob_and_fos_g1,meteva.method.me)[0]
+        title1 = meteva.product.program.get_title_from_dict(meteva.product.rmse_scatter, s, g, group_name_list[k],"NNN")
+        if save_path is None:
+            if save_dir is None:
+                save_path = None
+                show = True
+            else:
+                fileName = title1.replace("\n", "").replace(":", "")
+                save_path = save_dir + "/" + fileName + ".png"
+        if save_path is not None: meteva.base.creat_path(save_path)
+
+        meteva.base.tool.plot_tools.scatter_sta(rmse_sta, save_path=save_path, show=show,
+                                                fix_size=False, title=title1, print_max=print_max,print_min=print_min
+                                                , add_county_line=add_county_line,
+                                                threshold=threshold, map_extend=map_extend, dpi=dpi)
+
+        '''
         values = rmse_sta.values[:, 6:]
         mean_value = np.mean(np.abs(values))
         data_names = meteva.base.get_stadata_names(rmse_sta)
@@ -216,10 +265,11 @@ def me_scatter(sta_ob_and_fos,s= None,g = None,gll = None,group_name_list= None,
                     fileName  = title1.replace("\n","").replace(":","")
                     save_path = save_dir + "/"+fileName+".png"
 
-            meteva.base.creat_path(save_path)
+            if save_path is not None:meteva.base.creat_path(save_path)
             meteva.base.tool.plot_tools.scatter_sta(rmse_sta, value_column=di, save_path=save_path,show = show, fix_size=False,
-                                                        clevs=clevs1, title=title1,print_max = print_max,
+                                                        clevs=clevs1, title=title1,print_max = print_max,print_min=print_min,
                                                     mean_value=mean_value, threshold=threshold,add_county_line = add_county_line,map_extend = map_extend,dpi = dpi)
             if save_path is not None:
                 print("图片输出至"+save_path)
                 save_path = None
+        '''
