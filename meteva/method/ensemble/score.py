@@ -9,11 +9,31 @@ def cr(ob,fo,grade_list=[1e-300]):
     :return: 一维numpy数组，其中每个元素为0-1的实数，最优值为1
     '''
     #print(fo.shape)
+
+    rmse_list = []
+    Fo_shape = fo.shape
+    Ob_shape = ob.shape
+
+    Ob_shpe_list = list(Ob_shape)
+    size = len(Ob_shpe_list)
+    ind = -size
+    Fo_Ob_index = list(Fo_shape[ind:])
+    if Fo_Ob_index != Ob_shpe_list:
+        print('实况数据和观测数据维度不匹配')
+        return
+
+    Ob_shpe_list.insert(0, -1)
+    new_Fo_shape = tuple(Ob_shpe_list)
+    new_Fo = fo.reshape(new_Fo_shape)
+    new_Fo_shape = new_Fo.shape
+
+
     cr_list = []
     grade_num = len(grade_list)
-    ensemble_num = fo.shape[1]
+    ensemble_num = new_Fo_shape[0]
     intersecti = np.zeros_like(ob)
     union = np.zeros_like(ob)
+
     for g in range(grade_num):
         ob1 = np.zeros_like(ob)
         ob1[ob >=grade_list[g]] = 1
@@ -21,7 +41,7 @@ def cr(ob,fo,grade_list=[1e-300]):
         union[:] = ob1[:]
         for i in range(ensemble_num):
             fo1 = np.zeros_like(ob)
-            fo1[fo[:,i] >= grade_list[g]] = 1
+            fo1[fo[i,:] >= grade_list[g]] = 1
             intersecti[:] = intersecti[:] * fo1[:]
             union[:] = union[:] + fo1[:]
         union[union>0] = 1
@@ -29,7 +49,10 @@ def cr(ob,fo,grade_list=[1e-300]):
         intersecti_num = np.sum(intersecti)
         cr1 = intersecti_num/(union_num + 1e-30)
         cr_list.append(cr1)
-    crs = np.array(cr_list)
+    if len(cr_list)>1:
+        crs = np.array(cr_list)
+    else:
+        crs = cr_list[0]
     return crs
 
 
