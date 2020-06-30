@@ -160,7 +160,7 @@ def add_on_id(sta1_0, sta2_0, how="left", default=None):
         columns_m = list(df.columns)
         for i in range(4,6):
             name1 = columns_m[i]
-            name2 = columns_m[i+len_c1]
+            name2 = columns_m[i+len_c1-1]
             df.loc[df[name1].isnull(), name1] = df[df[name1].isnull()][name2]
 
 
