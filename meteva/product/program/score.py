@@ -209,8 +209,6 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
         grade_names = ["0"]
     grade_num = len(grade_names)
 
-
-
     g_num = len(sta_ob_and_fos_list)
     if(g_num == 1):gll1 = [None]
     if group_name_list is None:
@@ -219,7 +217,7 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
     result_all = []
     for k in range(g_num):
         g_id = "id"
-        result,id_list= score(sta_ob_and_fos1,method,g = g_id,**kwargs)
+        result,id_list= score(sta_ob_and_fos_list[k],method,g = g_id,**kwargs)
         station = sta_ob_and_fos1.drop_duplicates(['id'],inplace=False)
         station1 = meteva.base.in_id_list(station,id_list)
         id_s = pd.Series(id_list)

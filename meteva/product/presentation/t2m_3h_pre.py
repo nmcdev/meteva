@@ -2,7 +2,7 @@ import datetime
 import meteva
 
 para_example= {
-    "day_num":2,
+    "day_num":7,
     "end_time":datetime.datetime.now(),
     "station_file":meteva.base.station_国家站,
     "defalut_value":999999,
