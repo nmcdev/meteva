@@ -407,6 +407,7 @@ def scatter_sta(sta0,value_column=None,
                 fix_size = True,threshold = None,mean_value = None,
                 print_max = 0,print_min = 0,
                 save_path=None,show = False,dpi = 300,title=None):
+
     sta = sta0
     if save_path is None:
         show = True
@@ -607,18 +608,18 @@ def scatter_sta(sta0,value_column=None,
                 area[np.abs(value)<threshold] *= 0.1
             im = ax.scatter(x, y, c=colors, cmap=cmap1, norm=norm, s=area)
 
-            if print_max>0:
-                print("取值最大的"+str(print_max)+"个站点：")
-                indexs = value.argsort()[-print_max:][::-1]
-                for index in indexs:
-                    print("id:" + str(sta.iloc[index,3]) +"   lon:"+str(sta.iloc[index,4])+"  lat:" + str(sta.iloc[index,5]) +
-                          " value:"+str(sta.iloc[index,6+value_column]))
-            if print_min>0:
-                print("取值最小的"+str(print_max)+"个站点：")
-                indexs = value.argsort()[:print_max]
-                for index in indexs:
-                    print("id:" + str(sta.iloc[index,3]) +"   lon:"+str(sta.iloc[index,4])+"  lat:" + str(sta.iloc[index,5]) +
-                          " value:"+str(sta.iloc[index,6+value_column]))
+        if print_max>0:
+            print("取值最大的"+str(print_max)+"个站点：")
+            indexs = value.argsort()[-print_max:][::-1]
+            for index in indexs:
+                print("id:" + str(sta.iloc[index,3]) +"   lon:"+str(sta.iloc[index,4])+"  lat:" + str(sta.iloc[index,5]) +
+                      " value:"+str(sta.iloc[index,6+value_column]))
+        if print_min>0:
+            print("取值最小的"+str(print_min)+"个站点：")
+            indexs = value.argsort()[:print_min]
+            for index in indexs:
+                print("id:" + str(sta.iloc[index,3]) +"   lon:"+str(sta.iloc[index,4])+"  lat:" + str(sta.iloc[index,5]) +
+                      " value:"+str(sta.iloc[index,6+value_column]))
 
         colorbar_position = fig.add_axes([left_low, legend_hight / hight, 0.02, 1-title_hight/hight])  # 位置[左,下,宽,高]
         plt.colorbar(im, cax=colorbar_position)
