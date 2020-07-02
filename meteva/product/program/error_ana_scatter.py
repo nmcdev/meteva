@@ -121,7 +121,7 @@ def mae_scatter(sta_ob_and_fos,s = None,g = None,gll = None,group_name_list= Non
         sta_ob_and_fos_g1 = sta_ob_and_fos_list[k]
         rmse_sta = meteva.product.score_id(sta_ob_and_fos_g1,meteva.method.mae)[0]
 
-        title1 = meteva.product.program.get_title_from_dict(meteva.product.rmse_scatter, s, g, group_name_list[k],"NNN")
+        title1 = meteva.product.program.get_title_from_dict(meteva.product.mae_scatter, s, g, group_name_list[k],"NNN")
         if save_path is None:
             if save_dir is None:
                 save_path = None
@@ -208,7 +208,7 @@ def me_scatter(sta_ob_and_fos,s= None,g = None,gll = None,group_name_list= None,
     for k in range(g_num):
         sta_ob_and_fos_g1 = sta_ob_and_fos_list[k]
         rmse_sta = meteva.product.score_id(sta_ob_and_fos_g1,meteva.method.me)[0]
-        title1 = meteva.product.program.get_title_from_dict(meteva.product.rmse_scatter, s, g, group_name_list[k],"NNN")
+        title1 = meteva.product.program.get_title_from_dict(meteva.product.me_scatter, s, g, group_name_list[k],"NNN")
         if save_path is None:
             if save_dir is None:
                 save_path = None
