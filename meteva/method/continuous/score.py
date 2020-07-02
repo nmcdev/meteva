@@ -13,7 +13,7 @@ def sample_count(Ob, Fo=None):
 
 
 def ob_fo_mean(ob,fo):
-    correct_rate_list = []
+
     Fo_shape = fo.shape
     Ob_shape = ob.shape
 
@@ -34,8 +34,112 @@ def ob_fo_mean(ob,fo):
     result = np.array(result)
     return result
 
+def ob_fo_min(ob,fo,count = 1):
+    if count ==1:
+        Fo_shape = fo.shape
+        Ob_shape = ob.shape
+
+        Ob_shpe_list = list(Ob_shape)
+        size = len(Ob_shpe_list)
+        ind = -size
+        Fo_Ob_index = list(Fo_shape[ind:])
+        if Fo_Ob_index != Ob_shpe_list:
+            print('实况数据和观测数据维度不匹配')
+            return
+
+        if len(fo.shape) == len(ob.shape):
+            result = [np.min(ob),np.min(fo)]
+        else:
+            result = [np.min(ob)]
+            for i in range(Fo_shape[0]):
+                result.append(np.min(fo[i,:]))
+        result = np.array(result)
+        return result
+    elif count < 1:
+        print('para count must be int >=1')
+    else:
+        Fo_shape = fo.shape
+        Ob_shape = ob.shape
+
+        Ob_shpe_list = list(Ob_shape)
+        size = len(Ob_shpe_list)
+        ind = -size
+        Fo_Ob_index = list(Fo_shape[ind:])
+        if Fo_Ob_index != Ob_shpe_list:
+            print('实况数据和观测数据维度不匹配')
+            return
+        ob_f = ob.flatten()
+        index = ob_f.argsort()[:count]
+        ob_mins = ob_f[index]
+        result = [ob_mins]
+        if len(fo.shape) == len(ob.shape):
+            fo_f = fo.flatten()
+            index = fo_f.argsort()[:count]
+            fo_maxs = fo_f[index]
+            result.append(fo_maxs)
+        else:
+            for i in range(Fo_shape[0]):
+                v1 = fo[i, :].flatten()
+                index = v1.argsort()[:count]
+                fo_maxs = v1[index]
+                result.append(fo_maxs)
+        result = np.array(result)
+        return result
+
+def ob_fo_max(ob,fo, count = 1):
+    if count == 1:
+        Fo_shape = fo.shape
+        Ob_shape = ob.shape
+
+        Ob_shpe_list = list(Ob_shape)
+        size = len(Ob_shpe_list)
+        ind = -size
+        Fo_Ob_index = list(Fo_shape[ind:])
+        if Fo_Ob_index != Ob_shpe_list:
+            print('实况数据和观测数据维度不匹配')
+            return
+
+        if len(fo.shape) == len(ob.shape):
+            result = [np.max(ob),np.max(fo)]
+        else:
+            result = [np.max(ob)]
+            for i in range(Fo_shape[0]):
+                result.append(np.max(fo[i,:]))
+        result = np.array(result)
+        return result
+    elif count < 1:
+        print('para count must be int >=1')
+    else:
+        Fo_shape = fo.shape
+        Ob_shape = ob.shape
+
+        Ob_shpe_list = list(Ob_shape)
+        size = len(Ob_shpe_list)
+        ind = -size
+        Fo_Ob_index = list(Fo_shape[ind:])
+        if Fo_Ob_index != Ob_shpe_list:
+            print('实况数据和观测数据维度不匹配')
+            return
+        ob_f = ob.flatten()
+        index = ob_f.argsort()[-count:][::-1]
+        ob_maxs = ob_f[index]
+        result = [ob_maxs]
+        if len(fo.shape) == len(ob.shape):
+            fo_f = fo.flatten()
+            index = fo_f.argsort()[-count:][::-1]
+            fo_maxs = fo_f[index]
+            result.append(fo_maxs)
+        else:
+            for i in range(Fo_shape[0]):
+                v1 = fo[i, :].flatten()
+                index = v1.argsort()[-count:][::-1]
+                fo_maxs = v1[index]
+                result.append(fo_maxs)
+        result = np.array(result)
+        return result
+
 def ob_fo_std(ob,fo):
-    correct_rate_list = []
+
     Fo_shape = fo.shape
     Ob_shape = ob.shape
 
@@ -55,6 +159,7 @@ def ob_fo_std(ob,fo):
             result.append(np.std(fo[i,:]))
     result = np.array(result)
     return result
+
 
 
 def ob_mean(Ob, Fo=None):
