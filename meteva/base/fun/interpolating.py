@@ -262,6 +262,30 @@ def interp_sg_idw(sta0, grid, background=None, effectR=1000, nearNum=8):
     return grd
 
 
+def interp_ss_idw(sta0, station, effectR=1000, nearNum=8):
+    '''
+
+    :param sta0: 包含原始数据的站点数据
+    :param station: 插值后的目标站点
+    :param effectR: 反距离插值最大半径
+    :param nearNum: 插值所选用的最近点个数
+    :return:
+    '''
+    sta = meteva.base.sele_by_para(sta0,drop_IV=True)
+    sta1 = station.copy()
+    xyz_sta0 = meteva.base.tool.math_tools.lon_lat_to_cartesian(sta['lon'].values,sta['lat'].values,R=meteva.base.basicdata.const.ER)
+    xyz_sta1 = meteva.base.tool.math_tools.lon_lat_to_cartesian(sta1['lon'].values,sta1['lat'].values,R=meteva.base.basicdata.const.ER)
+    tree = cKDTree(xyz_sta0)
+    d, inds = tree.query(xyz_sta1, k=nearNum)
+    d += 1e-6
+    w = 1.0 / d ** 2
+    input_dat = sta0.iloc[:,-1].values
+    dat = np.sum(w * input_dat[inds], axis=1) / np.sum(w, axis=1)
+    dat[:] = np.where(d[:,0] > effectR,0,dat[:])
+    sta1.iloc[:,-1] = dat[:]
+    return sta1
+
+
 
 def interp_gg_linear(grd, grid,used_coords = "xy",outer_value = None):
     '''
