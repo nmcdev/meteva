@@ -26,6 +26,9 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
     group_num = len(sta_ob_and_fos_list)
 
     data_name = meteva.base.get_stadata_names(sta_ob_and_fos)
+    if g is not None:
+        if g.find("last") >=0:
+            data_name = data_name[:-1]
     if method.__name__.find("ob_fo")>=0:
         fo_name = data_name
     else:
