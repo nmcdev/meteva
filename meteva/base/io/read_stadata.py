@@ -98,7 +98,7 @@ def read_sta_alt_from_micaps3(filename, station=None, drop_same_id=True,show = F
                         break
             file.close()
 
-            file_sta = open(filename)
+            file_sta = open(filename,'r',encoding= encoding)
 
             sta1 = pd.read_csv(file_sta, skiprows=skip_num, sep="\s+", header=None, usecols=[0, 1, 2, 3])
             sta1.columns = ['id', 'lon', 'lat', 'alt']
