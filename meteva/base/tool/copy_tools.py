@@ -8,82 +8,47 @@ from multiprocessing import freeze_support,Process,cpu_count
 
 
 
-def copy_data_one_cup(k,file_list,len_input,to_dir,input_fun,output_fun,rm_follow,ad_follow,effectiveNum,recover,grid):
-    start = time.time()
-    copyed_num = 0
-    file_num = len(file_list)
-    for i in range(file_num):
-        file = file_list[i]
-        path_input = file.replace("\\", "/")
-        path_file = path_input[len_input:]
-        path_output = to_dir + path_file
-        filename,follow = os.path.splitext(path_output)
-        if follow == rm_follow:
-            path_output = filename
-        path_output = path_output + ad_follow
 
-        if not os.path.exists(path_output) or recover:
-            meteva.base.tool.path_tools.creat_path(path_output)
-            grd = input_fun(path_input,grid = grid)
-            if grd is not None:
-                output_fun(grd, path_output, effectiveNum)
-                end = time.time()
-                copyed_num += 1
-                left_minutes = int((end - start) * (file_num - i - 1) / (copyed_num * 60)) + 1
-                print("第"+str(k)+"个进程剩余" + str(left_minutes) + "分钟")
-                # print(path_output)
+def copy_data_one_cup(input_path,output_path,read_method,write_method,read_args,write_args):
+
+    dat = read_method(filename = input_path,**read_args)
+    meteva.base.creat_path(output_path)
+    write_method(dat,save_path = output_path,**write_args)
 
 
-def copy_data(input_root_dir,output_root_dir,input_type,output_type,effectiveNum = 3,recover= False,grid = None,cpu_num = 1):
-    freeze_support()
-    input_root_dir = input_root_dir.replace("\\","/")
-    output_root_dir = output_root_dir.replace("\\","/")
+
+def copy_data(input_root_dir,output_root_dir,read_method,write_method,read_args ={},write_args ={}, recover = False,tran_extension = None,process_count = 1):
+    #获取所以的输入文件
+    input_root_dir = input_root_dir.replace("\\", "/")
+    output_root_dir = output_root_dir.replace("\\", "/")
     if input_root_dir[-1] != "/":
         input_root_dir += "/"
     if output_root_dir[-1] != '/':
         output_root_dir += "/"
-    (gds_dir,file_model) = os.path.split(input_root_dir)
-    from_dir = input_root_dir
-    to_dir = output_root_dir
-    file_list = meteva.base.tool.path_tools.get_path_list_in_dir(gds_dir)
-    file_num = len(file_list)
-    pro_num = cpu_count() - 2
-    if cpu_num > cpu_num:
-        pro_num = cpu_num
-    file_dict_list = {}
-    for i in range(pro_num):
-        file_dict_list[i] = []
-    for i in range(file_num):
-        k = i % pro_num
-        file_dict_list[k].append(file_list[i])
-
-    input_fun = None
-    rm_follow = ""
-    if input_type == "m4":
-        input_fun = meteva.base.read_griddata_from_micaps4
-    elif input_type == "nc":
-        input_fun = meteva.base.read_griddata_from_nc
-        rm_follow ="nc"
-
-    output_fun = None
-    ad_follow = ""
-    if output_type == "m4":
-        output_fun = meteva.base.write_griddata_to_micaps4
-    elif output_type == "nc":
-        output_fun = meteva.base.write_griddata_to_nc
-        ad_follow = ".nc"
+    file_list = meteva.base.tool.path_tools.get_path_list_in_dir(input_root_dir)
     len_input = len(input_root_dir)
-    PP = []
-    for k in range(pro_num):
-        tmpp = Process(target=copy_data_one_cup, args=(k,file_dict_list[k],len_input,to_dir,input_fun,output_fun,rm_follow,ad_follow,effectiveNum,recover,grid))
-        PP.append(tmpp)
-    print('Waiting for all subprocesses done...')
-    for pc in PP:
-        pc.start()
+    input_path_list = []
+    output_path_list = []
+    for file in file_list:
+        filename_part = file[len_input:]
+        output_path = output_root_dir + filename_part
+        if tran_extension is not None:
+            if tran_extension[0] == "+":
+                output_path += tran_extension[1:]
+            elif tran_extension[0] == "-":
+                str_len = len(tran_extension) - 1
+                if output_path[-str_len:] == tran_extension[1:]:
+                    output_path = output_path[:-str_len]
+            else:
+                "print the chang_file_type args must start with + or -"
+        if recover or not os.path.exists(output_path):
+            input_path_list.append(file)
+            output_path_list.append(output_path)
+    meteva.base.tool.multi_run(process_count = process_count,method=copy_data_one_cup,
+                               Input_path = input_path_list,Output_path = output_path_list,
+                               read_method = read_method,write_method = write_method,
+                               read_args  = read_args,write_args = write_args)
 
-    for pp in PP:
-        pp.join()
-    print('All subprocesses done.')
 
 
 def copy_m4_to_nc(input_root_dir,output_root_dir,effectiveNum = 3,recover= False,grid = None):
