@@ -106,12 +106,13 @@ def write_griddata_to_nc(da,save_path = "a.txt",creat_dir = False,effectiveNum =
         scale_factor = math.pow(10,-effectiveNum)
         #print(scale_factor)
         encodingdict = {da.name:{
-                            'dtype': 'int32',
+                            'dtype': 'float32',
                             'scale_factor': scale_factor,
                              'zlib': True,
-                            '_FillValue':999999.0
+                            '_FillValue':None
                             }
                         }
+
         da.to_netcdf(save_path,encoding = encodingdict)
         if show:
             print('成功输出至' + save_path)
