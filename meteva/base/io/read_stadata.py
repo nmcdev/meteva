@@ -217,6 +217,10 @@ def read_stadata_from_micaps3(filename, station=None,  level=None,time=None, dti
             return sta
 
         except:
+            if show:
+                exstr = traceback.format_exc()
+                print(exstr)
+
             print(filename+"文件格式不能识别。可能原因：文件未按micaps3格式存储")
             return None
 
@@ -271,7 +275,7 @@ def read_stadata_from_txt(filename, columns , skiprows=0,level = None,time = Non
         print(filename + " not exist")
         return None
 
-def read_stadata_from_sevp(filename0, element_id,level=None,time=None,data_name = "data0",show = False):
+def read_stadata_from_sevp(filename, element_id,level=None,time=None,data_name = "data0",show = False):
     '''
     兼容多个时次的预报产品文件 txt格式
     :param：filename:文件路径和名称
@@ -280,7 +284,6 @@ def read_stadata_from_sevp(filename0, element_id,level=None,time=None,data_name 
     :return：dataframe格式的站点数据
 
     '''
-    filename = filename0
 
     if not os.path.exists(filename):
         print(filename+"文件不存在")
@@ -330,8 +333,10 @@ def read_stadata_from_sevp(filename0, element_id,level=None,time=None,data_name 
                 print("success read from " + filename)
             return sta
         except:
-            exstr = traceback.format_exc()
-            print(exstr)
+            if show:
+                exstr = traceback.format_exc()
+                print(exstr)
+            print(filename +" 文件格式异常")
 
 def read_stadata_from_micaps1_2_8(filename, column, station=None, level=None,time=None, dtime=None, data_name='data0', drop_same_id=True,show = False):
     '''
@@ -398,6 +403,9 @@ def read_stadata_from_micaps1_2_8(filename, column, station=None, level=None,tim
                 sta = meteva.base.put_stadata_on_station(sta2, station)
                 return sta
         except:
+            if show:
+                exstr = traceback.format_exc()
+                print(exstr)
             print(filename+"文件格式不能识别。可能原因：文件未按micaps第1、2、8类格式存储")
             return None
 
@@ -1170,8 +1178,10 @@ def read_stadata_from_gds_griddata(ip,port,filename,station,level = None,time =N
                 if show:
                     print("success read from " + filename)
                 return sta
-    except Exception as e:
-        print(e)
+    except :
+        if show:
+            exstr = traceback.format_exc()
+            print(exstr)
         return None
 
 def print_gds_file_values_names(filename,ip = None,port = None):
@@ -1284,6 +1294,9 @@ def read_stadata_from_micaps16(filename,level = None,time= None,dtime = None,dat
                 print("success read from " + filename)
             return station
         except:
+            if show:
+                exstr = traceback.format_exc()
+                print(exstr)
             print(filename+"文件格式不能识别。可能原因：文件未按micaps16格式存储")
             return None
 
