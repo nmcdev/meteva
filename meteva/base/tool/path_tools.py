@@ -6,6 +6,7 @@ import numpy as np
 from ..io import DataBlock_pb2
 from ..io.GDS_data_service import GDSDataService
 import re
+import pathlib
 
 #获取最新的路径
 
@@ -104,9 +105,9 @@ def get_path_without_star(dir,time,dt = None,dt_cell = "hour"):
 #创建路径
 def creat_path(path):
     [dir,filename] = os.path.split(path)
-    if(not os.path.exists(dir)):
-        os.makedirs(dir)
-
+    #if(not os.path.exists(dir)):
+    #    os.makedirs(dir)
+    pathlib.Path(dir).mkdir(parents=True,exist_ok=True)
 #字符转换为datetime
 def str_to_time(str0):
     return datetime.datetime.strptime(str0, '%Y%m%d%H%M')

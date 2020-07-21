@@ -8,7 +8,11 @@ import matplotlib.colors as colors
 import pkg_resources
 import math
 
-
+def clev_cmap_temper_2m_k():
+    path = pkg_resources.resource_filename('meteva', "resources/colormaps/color_temp_2m.txt")
+    clev,cmap =  get_clev_and_cmap_from_file(path)
+    clev += 273.15
+    return clev,cmap
 
 def clev_cmap_temper_2m():
     path = pkg_resources.resource_filename('meteva', "resources/colormaps/color_temp_2m.txt")

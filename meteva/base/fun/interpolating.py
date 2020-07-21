@@ -227,7 +227,7 @@ def interp_gs_cubic(grd,sta,used_coords = "xy"):
     return sta1
 
 
-def interp_sg_idw(sta0, grid, background=None, effectR=1000, nearNum=8):
+def interp_sg_idw(sta0, grid, background=None, effectR=1000, nearNum=8,decrease = 2):
     sta = meteva.base.sele_by_para(sta0,drop_IV=True)
     data_name = meteva.base.get_stadata_names(sta)
     index0 = sta.index[0]
@@ -249,7 +249,7 @@ def interp_sg_idw(sta0, grid, background=None, effectR=1000, nearNum=8):
         nearNum = len(sta.index)
     d, inds = tree.query(xyz_grid, k=nearNum)
     d += 1e-6
-    w = 1.0 / d ** 2
+    w = 1.0 / d ** decrease
     input_dat = sta.values[:,-1]
     dat = np.sum(w * input_dat[inds], axis=1) / np.sum(w, axis=1)
     bg = meteva.base.basicdata.grid_data(grid2)
@@ -260,6 +260,30 @@ def interp_sg_idw(sta0, grid, background=None, effectR=1000, nearNum=8):
     grd = meteva.base.basicdata.grid_data(grid2, dat)
     grd.name = "data0"
     return grd
+
+
+def interp_ss_idw(sta0, station, effectR=1000, nearNum=8,decrease = 2):
+    '''
+
+    :param sta0: 包含原始数据的站点数据
+    :param station: 插值后的目标站点
+    :param effectR: 反距离插值最大半径
+    :param nearNum: 插值所选用的最近点个数
+    :return:
+    '''
+    sta = meteva.base.sele_by_para(sta0,drop_IV=True)
+    sta1 = station.copy()
+    xyz_sta0 = meteva.base.tool.math_tools.lon_lat_to_cartesian(sta['lon'].values,sta['lat'].values,R=meteva.base.basicdata.const.ER)
+    xyz_sta1 = meteva.base.tool.math_tools.lon_lat_to_cartesian(sta1['lon'].values,sta1['lat'].values,R=meteva.base.basicdata.const.ER)
+    tree = cKDTree(xyz_sta0)
+    d, inds = tree.query(xyz_sta1, k=nearNum)
+    d += 1e-6
+    w = 1.0 / d ** decrease
+    input_dat = sta0.iloc[:,-1].values
+    dat = np.sum(w * input_dat[inds], axis=1) / np.sum(w, axis=1)
+    dat[:] = np.where(d[:,0] > effectR,0,dat[:])
+    sta1.iloc[:,-1] = dat[:]
+    return sta1
 
 
 

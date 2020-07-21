@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = None,plot = None,save_path = None,show = False,dpi = 300,excel_path = None,**kwargs):
+def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = None,plot = None,save_path = None,show = False,dpi = 300,title = "",excel_path = None,**kwargs):
 
     if s is not None:
         if g is not None:
@@ -25,7 +25,7 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
     sta_ob_and_fos_list,group_list_list1 = group(sta_ob_and_fos,g,gll)
     group_num = len(sta_ob_and_fos_list)
 
-    data_name = meteva.base.get_stadata_names(sta_ob_and_fos)
+    data_name = meteva.base.get_stadata_names(sta_ob_and_fos_list[0])
     if method.__name__.find("ob_fo")>=0:
         fo_name = data_name
     else:
@@ -154,9 +154,13 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
                 axis = keys[0]
                 legend = keys[1]
         else:
-            if group_num == 1 and grade_num ==1:
-                legend = keys[2]
-                axis = keys[1]
+            if group_num == 1 :
+                if grade_num >1:
+                    legend = keys[1]
+                    axis = keys[2]
+                else:
+                    legend = keys[2]
+                    axis = keys[1]
             else:
                 legend = keys[1]
                 axis = keys[0]
@@ -170,11 +174,13 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
             vmin = 0
         else:
             vmin = None
+
+
         if plot is not None:
             if plot =="bar":
-                meteva.base.plot_tools.bar(result_plot,name_list_dict,legend=legend,axis = axis,vmin =vmin,ylabel= ylabel,save_path=save_path,show=show,dpi =dpi)
+                meteva.base.plot_tools.bar(result_plot,name_list_dict,legend=legend,axis = axis,vmin =vmin,ylabel= ylabel,save_path=save_path,show=show,dpi =dpi,title = title)
             else:
-                meteva.base.plot_tools.plot(result_plot,name_list_dict,legend=legend,axis = axis,vmin =vmin,ylabel= ylabel,save_path=save_path,show=show,dpi = dpi)
+                meteva.base.plot_tools.plot(result_plot,name_list_dict,legend=legend,axis = axis,vmin =vmin,ylabel= ylabel,save_path=save_path,show=show,dpi = dpi,title= title)
         if excel_path is not None:
             meteva.base.write_array_to_excel(result_plot,excel_path,name_list_dict,index= axis,columns=legend)
     result = result.squeeze()
@@ -183,8 +189,14 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
 
 
 def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = None,plot = None,save_dir = None,save_path = None,show = False,
-             add_county_line = False,map_extend= None,print_max=0,print_min=0,dpi = 300,**kwargs):
+             add_county_line = False,map_extend= None,print_max=0,print_min=0,dpi = 300,title = None,**kwargs):
 
+    if s is not None:
+        if g is not None:
+            if g == "last_range" or g == "last_step":
+                s["drop_last"] = False
+            else:
+                s["drop_last"] = True
 
     sta_ob_and_fos1 = meteva.base.sele_by_dict(sta_ob_and_fos0,s = s)
     sta_ob_and_fos_list, gll1 = meteva.base.group(sta_ob_and_fos1, g = g, gll = gll)
@@ -214,6 +226,31 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
     if group_name_list is None:
         group_name_list = meteva.product.program.get_group_name(gll1)
 
+
+    data_names = meteva.base.get_stadata_names(sta_ob_and_fos_list[0])
+
+    if method.__name__.find("ob_fo")>=0:
+        fo_name = data_names
+    else:
+        fo_name = data_names[1:]
+    fo_num = len(fo_name)
+
+
+    if title is not None:
+        if isinstance(title, list):
+            if fo_num * g_num * grade_num != len(title):
+                print("手动设置的title数目和要绘制的图形数目不一致")
+                return
+
+    if save_path is not None:
+        if isinstance(save_path, str):
+            save_path = [save_path]
+        if fo_num * g_num * grade_num != len(save_path):
+            print("手动设置的save_path数目和要绘制的图形数目不一致")
+            return
+
+
+
     result_all = []
     for k in range(g_num):
         g_id = "id"
@@ -224,12 +261,6 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
         id_s.name = "id"
         sta_merge = pd.merge(id_s,station1, on='id', how='left')
         sta_merge = meteva.base.sta_data(sta_merge)
-        data_names = meteva.base.get_stadata_names(sta_merge)
-        if method.__name__.find("ob_fo")>=0:
-            fo_name = data_names
-        else:
-            fo_name = data_names[1:]
-
         coord_names = meteva.base.get_coord_names()
 
         if len(result.shape) == 1:
@@ -266,10 +297,25 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
         for i in range(len(sta_result)):
             sta_result1 = sta_result[i]
             if plot == "scatter":
-                title1 = meteva.product.program.get_title_from_dict(method, s, g,
-                                                                    group_name_list[k], "NNN")
-                if grade_num>1:
-                    title1 += "(grade_" + str(grade_names[i])+")"
+
+                title1_list = None
+                if isinstance(title, list):
+                    kk = k * grade_num + i
+                    title1_list = title[kk * fo_num: (kk + 1) * fo_num]
+                else:
+                    title1_list = []
+                    for ii in range(fo_num):
+                        if title is not None:
+                            title1 =meteva.product.program.get_title_from_dict(title, s, g, group_name_list[k],
+                                                                                 fo_name[ii])
+                        else:
+                            title1 = meteva.product.program.get_title_from_dict(method, s, g,
+                                                                                group_name_list[k], fo_name[ii])
+                        if grade_num>1:
+                            title1 += "(grade_" + str(grade_names[i])+")"
+                        title1_list.append(title1)
+
+                '''        
                 if save_path is None:
                     if save_dir is None:
                         save_path1 = None
@@ -279,11 +325,32 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
                         save_path1 = save_dir + "/" + fileName + ".png"
                 else:
                     save_path1 = save_path
-                if save_path1 is not None: meteva.base.creat_path(save_path1)
+                #if save_path1 is not None: meteva.base.creat_path(save_path1)
                 meteva.base.tool.plot_tools.scatter_sta(sta_result1, save_path=save_path1, show=show,
                                                         title=title1, print_max=print_max,print_min = print_min,
                                                         add_county_line=add_county_line,
                                                         map_extend=map_extend, dpi=dpi)
+                                                        '''
+
+                save_path1 = None
+                if save_path is None:
+                    if save_dir is None:
+                        show = True
+                    else:
+                        save_path1 = []
+                        for i in range(len(title1_list)):
+                            fileName = title1_list[i].replace("\n", "").replace(":", "")
+                            save_path1.append(save_dir + "/" + fileName + ".png")
+                else:
+                    save_path1 = save_path[k * fo_num: (k + 1) * fo_num]
+
+                meteva.base.tool.plot_tools.scatter_sta(sta_result1, save_path=save_path1, show=show,
+                                                        fix_size=False, title=title1_list, print_max=print_max,
+                                                        print_min=print_min
+                                                        , add_county_line=add_county_line,
+                                                         map_extend=map_extend, dpi=dpi)
+
+
         if len(sta_result) == 1:
             sta_result = sta_result[0]
         result_all.append(sta_result)
@@ -294,203 +361,164 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
     return result_all,gll1
 
 
-def score1(sta_ob_and_fos0,method,s = None,g = None,gll = None,para1 = None,para2 = None,plot = "line",show = False,excel_path = None):
 
+def score_tdt(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = None,plot = "mesh",save_dir = None,save_path = None,show = False,
+        dpi = 300,title = None,**kwargs):
     if s is not None:
         if g is not None:
             if g == "last_range" or g == "last_step":
                 s["drop_last"] = False
             else:
                 s["drop_last"] = True
-    sta_ob_and_fos = sele_by_dict(sta_ob_and_fos0, s)
 
-    if type(method) == str:
-        method =  globals().get(method)
-    if method == meteva.method.FSS_time:
-        if g == "dtime":
-            print("FSS_time 检验时，参数group_by不能选择dtime")
+    sta_ob_and_fos1 = meteva.base.sele_by_dict(sta_ob_and_fos0, s=s)
+    sta_ob_and_fos_list, gll1 = meteva.base.group(sta_ob_and_fos1, g=g, gll=gll)
+
+    if "grade_list" in kwargs.keys():
+        grades = kwargs["grade_list"]
+        grade_names = []
+        mutil_list1 = [meteva.method.ts_multi, meteva.method.bias_multi, meteva.method.ets_multi,
+                       meteva.method.mr_multi, meteva.method.far_multi]
+        mutil_list2 = [meteva.method.accuracy, meteva.method.hk, meteva.method.hss]
+        if method in mutil_list1:
+            grade_names = ["<" + str(grades[0])]
+            for i in range(len(grades) - 1):
+                grade_names.append("[" + str(grades[i]) + "," + str(grades[i + 1]) + ")")
+            grade_names.append(">=" + str(grades[-1]))
+        elif method in mutil_list2:
+            grade_names = ["0"]
+        else:
+            for i in range(len(grades)):
+                grade_names.append(str(grades[i]))
+    else:
+        grade_names = ["0"]
+    grade_num = len(grade_names)
+
+    g_num = len(sta_ob_and_fos_list)
+    if (g_num == 1): gll1 = [None]
+    if group_name_list is None:
+        group_name_list = meteva.product.program.get_group_name(gll1)
+
+    data_names = meteva.base.get_stadata_names(sta_ob_and_fos_list[0])
+
+    if method.__name__.find("ob_fo") >= 0:
+        fo_name = data_names
+    else:
+        fo_name = data_names[1:]
+    fo_num = len(fo_name)
+
+    if title is not None:
+        if isinstance(title, list):
+            if fo_num * g_num * grade_num != len(title):
+                print("手动设置的title数目和要绘制的图形数目不一致")
+                return
+
+    if save_path is not None:
+        if isinstance(save_path, str):
+            save_path = [save_path]
+        if fo_num * g_num * grade_num != len(save_path):
+            print("手动设置的save_path数目和要绘制的图形数目不一致")
             return
-    sta_ob_and_fos_list,group_list_list1 = group(sta_ob_and_fos,g,gll)
-    data_name = meteva.base.get_stadata_names(sta_ob_and_fos)
-    fo_num = len(data_name) -1
-    ensemble_score_method = [meteva.method.cr]
-    group_num = len(sta_ob_and_fos_list)
 
-    if para1 is None:
-        para_num = 1
-    else:
-        para_name_list = []
-        mutil_list = [meteva.method.ts_multi,meteva.method.bias_multi,meteva.method.ets_multi,
-                      meteva.method.mr_multi,meteva.method.far_multi]
-        if method in mutil_list:
-            para_num = len(para1)+1
-            para_name_list = ["<" +  str(para1[0])]
-            for i in range(len(para1)-1):
-                para_name_list.append("["+str(para1[i]) + ","+str(para1[i+1])+")")
-            para_name_list.append(">=" + str(para1[-1]))
+    result_all = []
+    for k in range(g_num):
+        g_time = "time"
+        sta_time_list,time_list = meteva.base.group(sta_ob_and_fos_list[k],g ="time")
 
-        else:
-            para_num = len(para1)
-            for i in range(len(para1)):
-                para_name_list.append(para1[i])
+        sta_result_list_dict = {}
+        for g in range(grade_num):
+            sta_result_list_dict[g] = []
 
-    sta_result = None
-
-    if method == meteva.method.FSS_time:
-        #统计dtime的集合
-        dtime_list = list(set(sta_ob_and_fos["dtime"].values.tolist()))
-        dtime_list.sort()
-        ndtime = len(dtime_list)
-        result= []
-        for sta_ob_and_fo in sta_ob_and_fos_list:
-            # 将观测和预报数据重新整理成FSS_time所需格式
-            ob = in_member_list(sta_ob_and_fo,[data_name[0]])
-            ob_dtimes = None
-            for k in range(ndtime):
-                dtimek = dtime_list[k]
-                sta_obk = in_dtime_list(ob,[dtimek])
-                set_stadata_names(sta_obk,[data_name[0]+ str(dtimek)])
-                ob_dtimes = combine_on_leve_time_id(ob_dtimes,sta_obk)
-            result1 = []
-            #print(ob_dtimes)
-            ob_array = ob_dtimes.values[:,6:]
-            for j in range(fo_num):
-                fo = in_member_list(sta_ob_and_fo, [data_name[j+1]])
-                fo_dtimes = None
-                for k in range(ndtime):
-                    dtimek = dtime_list[k]
-                    sta_fok = in_dtime_list(fo, [dtimek])
-                    set_stadata_names(sta_fok, [data_name[j+1] + str(dtimek)])
-                    fo_dtimes = combine_on_leve_time_id(fo_dtimes, sta_fok)
-                fo_array = fo_dtimes.values[:,6:]
-
-                #调用检验程序
-                if para1 is None:
-                    para1 = [1e-30]
-                result2 = FSS_time(ob_array, fo_array, para1, para2)
-                result1.append(result2)
-            result.append(result1)
-        result = np.array(result) #将数据转换成数组
-        result = result.squeeze()
-
-    else:
-        nead_lon_lat = False
-        if g == "id" and gll is None:
-            nead_lon_lat = True
-        lon_lat_list = []
-
-        if method in ensemble_score_method:
-            result = np.zeros((group_num,para_num))
-            for i in range(group_num):
-                sta = sta_ob_and_fos_list[i]
-                #if(len(sta.index) == 0):
-                #    result[i,:] = meteva.base.IV
-                #else:
-                ob = sta[data_name[0]].values
-                fo = sta[data_name[1:]].values
-                if para1 is None:
-                    result[i, :] = method(ob, fo)
+        for st in range(len(sta_time_list)):
+            sta_time = sta_time_list[st]
+            result, dtime_list = score(sta_time, method, g="dtime", **kwargs)
+            if len(result.shape) ==1:
+                # 没有等级，只有一个预报成员
+                sta_result = pd.DataFrame({"dtime":dtime_list,fo_name[0]:result})
+                sta_result["time"] = time_list[st]
+                sta_result_list_dict[0].append(sta_result)
+            elif len(result.shape) ==2:
+                if len(fo_name) > 1:
+                    # 没有等级，但有多个预报成员
+                    dict_result = {}
+                    dict_result["dtime"] = dtime_list
+                    for f in range(fo_num):
+                        dict_result[fo_name[f]] = result[:,f]
+                    sta_result = pd.DataFrame(dict_result)
+                    sta_result["time"] = time_list[st]
+                    sta_result_list_dict[0].append(sta_result)
                 else:
-                    result[i,:] = method(ob, fo,para1)
-                if nead_lon_lat:
-                    lon_lat_list.append(sta.iloc[0,[4,5]])
-        else:
-            if fo_num ==0:
-                result = np.zeros((group_num,para_num))
+                    # 有多个等级，但只有一个预报成员
+                    for g in range(grade_num):
+                        dict_result = {}
+                        dict_result["dtime"] = dtime_list
+                        dict_result[fo_name[0]] = result[:,g]
+                        sta_result = pd.DataFrame(dict_result)
+                        sta_result["time"] = time_list[st]
+                        sta_result_list_dict[g].append(sta_result)
             else:
-                result = np.zeros((group_num,fo_num,para_num))
-            for i in range(group_num):
-                #print(group_num)
-                sta = sta_ob_and_fos_list[i]
-                #if(len(sta.index) == 0):
-                #    result[i,:] = meteva.base.IV
-                #else:
-                ob = sta[data_name[0]].values
-                if fo_num>0:
-                    for j in range(fo_num):
-                        fo = sta[data_name[j+1]].values
-                        if para1 is None:
-                            result[i, j] = method(ob, fo)
-                        else:
-                            result[i,j] = method(ob, fo,para1)
+                for g in range(grade_num):
+                    dict_result = {}
+                    dict_result["dtime"] = dtime_list
+                    for f in range(fo_num):
+                        dict_result[fo_name[f]] = result[:,f,g]
+                    sta_result = pd.DataFrame(dict_result)
+                    sta_result["time"] = time_list[st]
+                    sta_result_list_dict[g].append(sta_result)
+
+        sta_all_g_list = []
+        for g in range(grade_num):
+            sta_all_g = pd.concat(sta_result_list_dict[g])
+            sta_all_g["level"] = meteva.base.IV
+            sta_all_g["id"] = meteva.base.IV
+            sta_all_g["lon"] = meteva.base.IV
+            sta_all_g["lat"] = meteva.base.IV
+            print(sta_all_g)
+            sta_all_g1 = meteva.base.sta_data(sta_all_g)
+            sta_all_g_list.append(sta_all_g1)
+
+        for i in range(len(sta_all_g_list)):
+            sta_result1 = sta_all_g_list[i]
+            if plot == "line":
+
+                title1_list = None
+                if isinstance(title, list):
+                    kk = k * grade_num + i
+                    title1_list = title[kk * fo_num: (kk + 1) * fo_num]
                 else:
-                    if para1 is None:
-                        result[i] = method(ob, None)
-                    else:
-                        result[i] = method(ob, None,para1)
-                if nead_lon_lat:
-                    lon_lat_list.append(sta.iloc[0,[4,5]])
-
-        # 将结果输出到excel
-        if excel_path is not None:
-            meteva.base.creat_path(excel_path)
-            if fo_num ==0:
-                fo_num = 1
-            result.reshape([group_num,fo_num,para_num])
-            group_dict ={"group":group_list_list1}
-            model_dict = {"member":data_name[1:]}
-            para_dict = {"threshold":para_name_list}
-            name_dict_list = [group_dict,model_dict,para_dict]
-            meteva.base.write_array_to_excel(result,excel_path,name_dict_list)
-
-        result = result.squeeze()
-        if nead_lon_lat:
-            df = pd.DataFrame(lon_lat_list)
-            df["id"] = group_list_list1
-            df["level"] = np.NAN
-            df["time"] = np.NAN
-            df["dtime"] = np.NAN
-            if fo_num ==0:
-                if para1 is None:
-                    df["ob"] = result
-                else:
-                    if isinstance(para1,list):
-                        for i in range(len(para1)):
-                            para = para1[i]
-                            df[para] = result[:,i]
-                    else:
-                        df[para1] = result
-            else:
-                result = result.reshape(group_num,fo_num,para_num)
-                for j in range(fo_num):
-                    if para1 is None:
-                        df[data_name[1+j]] = result[:,j,0]
-                    else:
-                        if isinstance(para1, list):
-                            for i in range(len(para1)):
-                                para = para1[i]
-                                df[data_name[1+j]+"_"+str(para)] = result[:,j, i]
+                    title1_list = []
+                    for ii in range(fo_num):
+                        if title is not None:
+                            title1 = meteva.product.program.get_title_from_dict(title, s, g, group_name_list[k],
+                                                                                fo_name[ii])
                         else:
-                            df[data_name[1 + j]] = result[:,j,0]
+                            title1 = meteva.product.program.get_title_from_dict(method, s, g,
+                                                                                group_name_list[k], fo_name[ii])
+                        if grade_num > 1:
+                            title1 += "(grade_" + str(grade_names[i]) + ")"
+                        title1_list.append(title1)
 
-            sta_result = sta_data(df)
-    if show:
-        if plot == "line":
-            if g == "dtime":
-                x = np.arange(len(group_list_list1))
-                plt.plot(result,label = data_name[1])
-                plt.xticks(x,group_list_list1)
-                plt.xlabel("预报时效")
-                plt.ylabel("ME")
-                plt.legend()
-                plt.show()
+                save_path1 = None
+                if save_path is None:
+                    if save_dir is None:
+                        show = True
+                    else:
+                        save_path1 = []
+                        for i in range(len(title1_list)):
+                            fileName = title1_list[i].replace("\n", "").replace(":", "")
+                            save_path1.append(save_dir + "/" + fileName + ".png")
+                else:
+                    save_path1 = save_path[k * fo_num: (k + 1) * fo_num]
 
-
-
-    return result,group_list_list1,sta_result
-
-
-
-def score_id_scatter(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_list_list = None,para1 = None,para2 = None,save_dir = None,save_path = None,title = None):
-    pass
+                #绘制图形
 
 
-def score_id_contourf(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_list_list = None,para1 = None,para2 = None,save_dir = None,save_path = None,title = None):
-    pass
+        if len(sta_all_g_list) == 1:
+            sta_all_g_list = sta_all_g_list[0]
 
 
-def score_time_dtime_line():
-    pass
+        result_all.append(sta_all_g_list)
 
-def score_time_dtime_mesh():
-    pass
+    if len(result_all) == 1:
+        result_all = result_all[0]
+    return result_all, gll1

@@ -16,7 +16,7 @@ import math
 
 
 
-def read_station(filename,show = False,keep_alt = False,encoding="GBK"):
+def read_station(filename,keep_alt = False,show = False):
     '''
     :param filename: 站点文件路径，它可以是micaps第1、2、3、8类文件
     :return: 站点数据，其中time,dtime,level属性为设置的缺省值，数据内容都设置为0
@@ -26,7 +26,9 @@ def read_station(filename,show = False,keep_alt = False,encoding="GBK"):
         return None
     else:
         encoding,_ = meteva.base.io.get_encoding_of_file(filename,read_rows=1)
-        if encoding is None:return
+        if encoding is None:
+            print("文件编码格式不识别")
+            return None
         try:
             file = open(filename, encoding=encoding)
             sta = None
@@ -55,7 +57,12 @@ def read_station(filename,show = False,keep_alt = False,encoding="GBK"):
                     print("success read from "+filename)
                 return sta
         except:
-            pass
+            if show:
+                exstr = traceback.format_exc()
+                print(exstr)
+
+            print(filename + "文件格式不能识别。可能原因：文件未按micaps格式存储")
+            return None
 
 def read_sta_alt_from_micaps3(filename, station=None, drop_same_id=True,show = False):
     '''
@@ -75,7 +82,9 @@ def read_sta_alt_from_micaps3(filename, station=None, drop_same_id=True,show = F
         return None
     else:
         encoding, _ = meteva.base.io.get_encoding_of_file(filename,read_rows=1)
-        if encoding is None:return
+        if encoding is None:
+            print("文件编码格式不识别")
+            return None
 
         try:
             file = open(filename, 'r',encoding= encoding)
@@ -133,7 +142,11 @@ def read_sta_alt_from_micaps3(filename, station=None, drop_same_id=True,show = F
                 print("success read from " + filename)
             return sta
         except:
-            print(filename + "文件格式不能识别。可能原因：文件未按micaps3格式存储")
+            if show:
+                exstr = traceback.format_exc()
+                print(exstr)
+
+            print(filename+"文件格式不能识别。可能原因：文件未按micaps3格式存储")
             return None
 
 def read_stadata_from_micaps3(filename, station=None,  level=None,time=None, dtime=None, data_name='data0', drop_same_id=True,show = False):
@@ -157,7 +170,9 @@ def read_stadata_from_micaps3(filename, station=None,  level=None,time=None, dti
         return None
     else:
         encoding, _ = meteva.base.io.get_encoding_of_file(filename,read_rows=1)
-        if encoding is None:return
+        if encoding is None:
+            print("文件编码格式不识别")
+            return None
 
         try:
             file = open(filename, 'r',encoding=encoding)
@@ -217,6 +232,10 @@ def read_stadata_from_micaps3(filename, station=None,  level=None,time=None, dti
             return sta
 
         except:
+            if show:
+                exstr = traceback.format_exc()
+                print(exstr)
+
             print(filename+"文件格式不能识别。可能原因：文件未按micaps3格式存储")
             return None
 
@@ -232,46 +251,56 @@ def read_stadata_from_txt(filename, columns , skiprows=0,level = None,time = Non
     """
 
     if os.path.exists(filename):
-        encoding,_ = meteva.base.io.get_encoding_of_file(filename)
-        if encoding is None:return
-        file_sta = open(filename, 'r',encoding = encoding)
-        sta0 = pd.read_csv(file_sta, skiprows=skiprows, sep="\s+", header=None)
-        sta0.columns = columns
-        station_column = ['id', 'lon', 'lat', 'alt']
-        colums1 = []
-        for name in station_column:
-            if name in columns:
-                colums1.append(name)
-        sta1 = sta0[colums1]
-        nsta = len(sta1.index)
-        for i in range(nsta):
-            if sta1.loc[i, 'lon'] > 1000:
-                a = sta1.loc[i, 'lon'] // 100 + (a % 100) / 60
-                sta1.loc[i, 'lon'] = a
-            if sta1.loc[i, 'lat'] > 1000:
-                a = sta1.loc[i, 'lat'] // 100 + (a % 100) / 60
-                sta1.loc[i, 'lat'] = a
-        # sta = bd.sta_data(sta1)
-        sta = meteva.base.basicdata.sta_data(sta1)
-        if drop_same_id:
-            sta = sta.drop_duplicates(['id'])
+        encoding,_ = meteva.base.io.get_encoding_of_file(filename,read_rows=skiprows)
+        if encoding is None:
+            print("文件编码格式不识别")
+            return None
+        try:
+            file_sta = open(filename, 'r',encoding = encoding)
+            sta0 = pd.read_csv(file_sta, skiprows=skiprows, sep="\s+", header=None)
+            sta0.columns = columns
+            station_column = ['id', 'lon', 'lat', 'alt']
+            colums1 = []
+            for name in station_column:
+                if name in columns:
+                    colums1.append(name)
+            sta1 = sta0[colums1]
+            nsta = len(sta1.index)
+            for i in range(nsta):
+                if sta1.loc[i, 'lon'] > 1000:
+                    a = sta1.loc[i, 'lon'] // 100 + (a % 100) / 60
+                    sta1.loc[i, 'lon'] = a
+                if sta1.loc[i, 'lat'] > 1000:
+                    a = sta1.loc[i, 'lat'] // 100 + (a % 100) / 60
+                    sta1.loc[i, 'lat'] = a
+            # sta = bd.sta_data(sta1)
+            sta = meteva.base.basicdata.sta_data(sta1)
+            if drop_same_id:
+                sta = sta.drop_duplicates(['id'])
 
-        # sta['time'] = method.time_tools.str_to_time64("2099010108")
-        sta.loc[:,'time'] = meteva.base.tool.time_tools.str_to_time64("2099010108")
-        sta.loc[:,'level'] = 0
-        sta.loc[:,'dtime'] = 0
-        # sta.coloumns = ['level', 'time', 'dtime', 'id', 'lon', 'lat', 'alt', 'data0']
-        sta.loc[:,data_name] = 0
-        meteva.base.basicdata.reset_id(sta)
-        meteva.base.set_stadata_coords(sta, level=level, time=time,dtime = dtime)
-        if show:
-            print("success read from "+filename)
-        return sta
+            # sta['time'] = method.time_tools.str_to_time64("2099010108")
+            sta.loc[:,'time'] = meteva.base.tool.time_tools.str_to_time64("2099010108")
+            sta.loc[:,'level'] = 0
+            sta.loc[:,'dtime'] = 0
+            # sta.coloumns = ['level', 'time', 'dtime', 'id', 'lon', 'lat', 'alt', 'data0']
+            sta.loc[:,data_name] = 0
+            meteva.base.basicdata.reset_id(sta)
+            meteva.base.set_stadata_coords(sta, level=level, time=time,dtime = dtime)
+            if show:
+                print("success read from "+filename)
+            return sta
+        except:
+            if show:
+                exstr = traceback.format_exc()
+                print(exstr)
+
+            print(filename+"文件格式不能识别。可能原因：文件未按pandas能够识别的csv格式存储")
+            return None
     else:
         print(filename + " not exist")
         return None
 
-def read_stadata_from_sevp(filename0, element_id,level=None,time=None,data_name = "data0",show = False):
+def read_stadata_from_sevp(filename, element_id,level=None,time=None,data_name = "data0",show = False):
     '''
     兼容多个时次的预报产品文件 txt格式
     :param：filename:文件路径和名称
@@ -280,14 +309,15 @@ def read_stadata_from_sevp(filename0, element_id,level=None,time=None,data_name 
     :return：dataframe格式的站点数据
 
     '''
-    filename = filename0
 
     if not os.path.exists(filename):
         print(filename+"文件不存在")
         return None
     else:
         encoding,lines = meteva.base.io.get_encoding_of_file(filename,read_rows=6)
-        if encoding is None:return
+        if encoding is None:
+            print("文件编码格式不识别")
+            return None
         try:
             #lines = heads.split("\n")
             file = open(filename,encoding = encoding)
@@ -330,8 +360,10 @@ def read_stadata_from_sevp(filename0, element_id,level=None,time=None,data_name 
                 print("success read from " + filename)
             return sta
         except:
-            exstr = traceback.format_exc()
-            print(exstr)
+            if show:
+                exstr = traceback.format_exc()
+                print(exstr)
+            print(filename +" 文件格式异常")
 
 def read_stadata_from_micaps1_2_8(filename, column, station=None, level=None,time=None, dtime=None, data_name='data0', drop_same_id=True,show = False):
     '''
@@ -347,7 +379,9 @@ def read_stadata_from_micaps1_2_8(filename, column, station=None, level=None,tim
         return None
     else:
         encoding,heads = meteva.base.io.get_encoding_of_file(filename,read_rows=2)
-        if encoding is None:return
+        if encoding is None:
+            print("文件编码格式不识别")
+            return None
 
         try:
             file = open(filename,encoding=encoding)
@@ -398,9 +432,11 @@ def read_stadata_from_micaps1_2_8(filename, column, station=None, level=None,tim
                 sta = meteva.base.put_stadata_on_station(sta2, station)
                 return sta
         except:
+            if show:
+                exstr = traceback.format_exc()
+                print(exstr)
             print(filename+"文件格式不能识别。可能原因：文件未按micaps第1、2、8类格式存储")
             return None
-
 
 
 def read_gds_ip_port(filename,show = False):
@@ -441,12 +477,178 @@ def read_stadata_from_gds(ip, port, filename,element_id = None,station = None, l
     except ValueError:
         print('Can not retrieve data' + filename + ' from ' + directory)
         return None
-    ByteArrayResult = DataBlock_pb2.ByteArrayResult()
-    if status == 200:
-        ByteArrayResult.ParseFromString(response)
-        if ByteArrayResult is not None:
-            byteArray = ByteArrayResult.byteArray
+    try:
+        ByteArrayResult = DataBlock_pb2.ByteArrayResult()
+        if status == 200:
+            ByteArrayResult.ParseFromString(response)
+            if ByteArrayResult is not None:
+                byteArray = ByteArrayResult.byteArray
 
+                # define head structure
+                head_dtype = [('discriminator', 'S4'), ('type', 'i2'),
+                              ('description', 'S100'),
+                              ('level', 'f4'), ('levelDescription', 'S50'),
+                              ('year', 'i4'), ('month', 'i4'), ('day', 'i4'),
+                              ('hour', 'i4'), ('minute', 'i4'), ('second', 'i4'),
+                              ('Timezone', 'i4'), ('extent', 'S100')]
+
+                # read head information
+                head_info = np.frombuffer(byteArray[0:288], dtype=head_dtype)
+
+                if time is None:
+                    time = datetime.datetime(
+                        head_info['year'][0], head_info['month'][0],
+                        head_info['day'][0], head_info['hour'][0],
+                        head_info['minute'][0], head_info['second'][0])
+                else:
+                    time = meteva.base.tool.time_tools.all_type_time_to_time64(time)
+                if level is None:
+                    level = head_info["level"][0]
+                if dtime is None:
+                    filename1 = os.path.split(filename)[1].split(".")
+                    dtime = int(filename1[1])
+                ind = 288
+                # read the number of stations
+                station_number = np.frombuffer(
+                    byteArray[ind:(ind+4)], dtype='i4')[0]
+                ind += 4
+
+                # read the number of elements
+                element_number = np.frombuffer(
+                    byteArray[ind:(ind+2)], dtype='i2')[0]
+
+                if element_number == 0:
+                    return None
+                ind += 2
+
+                # construct record structure
+                element_type_map = {
+                    1: 'b1', 2: 'i2', 3: 'i4', 4: 'i8', 5: 'f4', 6: 'f8', 7: 'S1'}
+                element_map = {}
+                element_map_len = {}
+                for i in range(element_number):
+                    element_id = str(np.frombuffer(byteArray[ind:(ind+2)], dtype='i2')[0])
+                    ind += 2
+                    element_type = np.frombuffer(
+                        byteArray[ind:(ind+2)], dtype='i2')[0]
+                    ind += 2
+                    element_map[element_id] = element_type_map[element_type]
+                    element_map_len[element_id] = int(element_type_map[element_type][1])
+
+                if element_id0 is None:
+                    dict0 = {}
+                    id_dict = meteva.base.gds_element_id_dict
+                    for key in element_map.keys():
+                        if (int(key) in id_dict.values()):
+                            for ele in id_dict.keys():
+                                if int(key) == id_dict[ele]:
+                                    dict0[ele] = key
+                    if len(dict0.keys()) > 1:
+                        print("element_id can not be None for this file")
+                    else:
+                        element_id_str0 = list(dict0.values())[0]
+                dtype_str = element_map[element_id_str0]
+
+
+                # loop every station to retrieve record
+                record_head_dtype = [
+                    ('id', 'i4'), ('lon', 'f4'), ('lat', 'f4'), ('numb', 'i2')]
+                records = []
+                if station is None or len(station.index) * 100 > station_number:
+                    for i in range(station_number):
+                        record_head = np.frombuffer(
+                            byteArray[ind:(ind+14)], dtype=record_head_dtype)
+                        ind += 14
+                        record = {
+                            'id': record_head['id'][0], 'lon': record_head['lon'][0],
+                            'lat': record_head['lat'][0]}
+                        for j in range(record_head['numb'][0]):    # the record element number is not same, missing value is not included.
+                            element_id = str(np.frombuffer(byteArray[ind:(ind + 2)], dtype='i2')[0])
+                            ind += 2
+                            element_len = element_map_len[element_id]
+                            if element_id == element_id_str0:
+                                record[data_name] = np.frombuffer(
+                                    byteArray[ind:(ind + element_len)],
+                                    dtype=dtype_str)[0]
+                                records.append(record)
+                            ind += element_len
+                    records = pd.DataFrame(records)
+                    records.set_index('id')
+                    # get time
+
+                    records['time'] = time
+                    records['level'] = level
+                    records['dtime'] = dtime
+                    new_columns = ['level', 'time', 'dtime', 'id', 'lon', 'lat', data_name]
+                    records = records.reindex(columns=new_columns)
+
+                    if station is None:
+                        return records
+                    else:
+                        sta = meteva.base.put_stadata_on_station(records, station)
+                        return sta
+                else:
+                    sta = copy.deepcopy(station)
+                    byte_num = len(byteArray)
+                    i4_num = (byte_num - ind -4) //4
+                    ids = np.zeros((i4_num,4),dtype=np.int32)
+
+                    ids[:, 0] = np.frombuffer(byteArray[ind:(ind + i4_num * 4)], dtype='i4')
+                    ids[:, 1] = np.frombuffer(byteArray[(ind +1):(ind + 1 + i4_num * 4)], dtype='i4')
+                    ids[:, 2] = np.frombuffer(byteArray[(ind + 2):(ind + 2 + i4_num * 4)], dtype='i4')
+                    ids[:, 3] = np.frombuffer(byteArray[(ind + 3):(ind + 3 + i4_num * 4)], dtype='i4')
+                    ids = ids.flatten()
+                    station_ids = station["id"].values
+                    dat = np.zeros(station_ids.size)
+
+                    for k in range(dat.size):
+                        id1 = station_ids[k]
+                        indexs = np.where(ids == id1)
+                        if len(indexs[0]) >=1:
+                            for n in range(len(indexs)):
+                                ind1 =ind +  indexs[n][0]
+                                record_head = np.frombuffer(byteArray[ind1:(ind1 + 14)], dtype=record_head_dtype)
+                                if(record_head['lon'][0] >=-180 and record_head['lon'][0] <= 360 and
+                                        record_head['lat'][0] >= -90 and record_head['lat'][0] <= 90 and record_head["numb"][0] < 1000):
+                                    ind1 += 14
+                                    for j in range(record_head['numb'][0]):  # the record element number is not same, missing value is not included.
+                                        element_id = str(np.frombuffer(byteArray[ind1:(ind1 + 2)], dtype='i2')[0])
+                                        ind1 += 2
+                                        element_len = element_map_len[element_id]
+                                        if element_id == element_id_str0:
+                                            sta.iloc[k,-1] = np.frombuffer(byteArray[ind1:(ind1 + element_len)],dtype=dtype_str)[0]
+                                        ind1 += element_len
+                    meteva.base.set_stadata_names(sta,[data_name])
+                    sta['time'] = time
+                    sta['level'] = level
+                    sta['dtime'] = dtime
+                    if show:
+                        print("success read from " + filename)
+                    return sta
+            else:
+                print("连接服务状态正常，但返回的输入内容为空")
+                return None
+        else:
+            print("连接服务的状态异常，不能读取相应的文件,可能原因相应的文件不在允许读取的时段范围")
+            return None
+    except:
+        if show:
+            exstr = traceback.format_exc()
+            print(exstr)
+        print(filename + "数据读取失败")
+        return None
+
+def read_stadata_from_gdsfile(filename,element_id = None,station = None, level=None,time=None, dtime=None, data_name='data0',show = False):
+
+    element_id0 = element_id
+    if element_id is not None:
+        element_id_str0 = str(element_id)
+
+    if os.path.exists(filename):
+        try:
+            element_id_str0 = str(element_id)
+            file = open(filename,"rb")
+            byteArray = file.read()
             # define head structure
             head_dtype = [('discriminator', 'S4'), ('type', 'i2'),
                           ('description', 'S100'),
@@ -457,7 +659,6 @@ def read_stadata_from_gds(ip, port, filename,element_id = None,station = None, l
 
             # read head information
             head_info = np.frombuffer(byteArray[0:288], dtype=head_dtype)
-
             if time is None:
                 time = datetime.datetime(
                     head_info['year'][0], head_info['month'][0],
@@ -506,12 +707,11 @@ def read_stadata_from_gds(ip, port, filename,element_id = None,station = None, l
                         for ele in id_dict.keys():
                             if int(key) == id_dict[ele]:
                                 dict0[ele] = key
-                if len(dict0.keys()) > 1:
-                    print("element_id can not be None for this file")
+                if len(dict0.keys())>1:
+                    print("element_id can not be None for this file" )
                 else:
                     element_id_str0 = list(dict0.values())[0]
             dtype_str = element_map[element_id_str0]
-
 
             # loop every station to retrieve record
             record_head_dtype = [
@@ -544,11 +744,12 @@ def read_stadata_from_gds(ip, port, filename,element_id = None,station = None, l
                 records['dtime'] = dtime
                 new_columns = ['level', 'time', 'dtime', 'id', 'lon', 'lat', data_name]
                 records = records.reindex(columns=new_columns)
-
                 if station is None:
                     return records
                 else:
                     sta = meteva.base.put_stadata_on_station(records, station)
+                    if show:
+                        print("success read from " + filename)
                     return sta
             else:
                 sta = copy.deepcopy(station)
@@ -588,161 +789,12 @@ def read_stadata_from_gds(ip, port, filename,element_id = None,station = None, l
                 if show:
                     print("success read from " + filename)
                 return sta
-        else:
-            return None
-    else:
-        return None
-
-def read_stadata_from_gdsfile(filename,element_id = None,station = None, level=None,time=None, dtime=None, data_name='data0',show = False):
-
-    element_id0 = element_id
-    if element_id is not None:
-        element_id_str0 = str(element_id)
-
-    if os.path.exists(filename):
-        element_id_str0 = str(element_id)
-        file = open(filename,"rb")
-        byteArray = file.read()
-        # define head structure
-        head_dtype = [('discriminator', 'S4'), ('type', 'i2'),
-                      ('description', 'S100'),
-                      ('level', 'f4'), ('levelDescription', 'S50'),
-                      ('year', 'i4'), ('month', 'i4'), ('day', 'i4'),
-                      ('hour', 'i4'), ('minute', 'i4'), ('second', 'i4'),
-                      ('Timezone', 'i4'), ('extent', 'S100')]
-
-        # read head information
-        head_info = np.frombuffer(byteArray[0:288], dtype=head_dtype)
-        if time is None:
-            time = datetime.datetime(
-                head_info['year'][0], head_info['month'][0],
-                head_info['day'][0], head_info['hour'][0],
-                head_info['minute'][0], head_info['second'][0])
-        else:
-            time = meteva.base.tool.time_tools.all_type_time_to_time64(time)
-        if level is None:
-            level = head_info["level"][0]
-        if dtime is None:
-            filename1 = os.path.split(filename)[1].split(".")
-            dtime = int(filename1[1])
-        ind = 288
-        # read the number of stations
-        station_number = np.frombuffer(
-            byteArray[ind:(ind+4)], dtype='i4')[0]
-        ind += 4
-
-        # read the number of elements
-        element_number = np.frombuffer(
-            byteArray[ind:(ind+2)], dtype='i2')[0]
-
-        if element_number == 0:
-            return None
-        ind += 2
-
-        # construct record structure
-        element_type_map = {
-            1: 'b1', 2: 'i2', 3: 'i4', 4: 'i8', 5: 'f4', 6: 'f8', 7: 'S1'}
-        element_map = {}
-        element_map_len = {}
-        for i in range(element_number):
-            element_id = str(np.frombuffer(byteArray[ind:(ind+2)], dtype='i2')[0])
-            ind += 2
-            element_type = np.frombuffer(
-                byteArray[ind:(ind+2)], dtype='i2')[0]
-            ind += 2
-            element_map[element_id] = element_type_map[element_type]
-            element_map_len[element_id] = int(element_type_map[element_type][1])
-
-        if element_id0 is None:
-            dict0 = {}
-            id_dict = meteva.base.gds_element_id_dict
-            for key in element_map.keys():
-                if (int(key) in id_dict.values()):
-                    for ele in id_dict.keys():
-                        if int(key) == id_dict[ele]:
-                            dict0[ele] = key
-            if len(dict0.keys())>1:
-                print("element_id can not be None for this file" )
-            else:
-                element_id_str0 = list(dict0.values())[0]
-        dtype_str = element_map[element_id_str0]
-
-        # loop every station to retrieve record
-        record_head_dtype = [
-            ('id', 'i4'), ('lon', 'f4'), ('lat', 'f4'), ('numb', 'i2')]
-        records = []
-        if station is None or len(station.index) * 100 > station_number:
-            for i in range(station_number):
-                record_head = np.frombuffer(
-                    byteArray[ind:(ind+14)], dtype=record_head_dtype)
-                ind += 14
-                record = {
-                    'id': record_head['id'][0], 'lon': record_head['lon'][0],
-                    'lat': record_head['lat'][0]}
-                for j in range(record_head['numb'][0]):    # the record element number is not same, missing value is not included.
-                    element_id = str(np.frombuffer(byteArray[ind:(ind + 2)], dtype='i2')[0])
-                    ind += 2
-                    element_len = element_map_len[element_id]
-                    if element_id == element_id_str0:
-                        record[data_name] = np.frombuffer(
-                            byteArray[ind:(ind + element_len)],
-                            dtype=dtype_str)[0]
-                        records.append(record)
-                    ind += element_len
-            records = pd.DataFrame(records)
-            records.set_index('id')
-            # get time
-
-            records['time'] = time
-            records['level'] = level
-            records['dtime'] = dtime
-            new_columns = ['level', 'time', 'dtime', 'id', 'lon', 'lat', data_name]
-            records = records.reindex(columns=new_columns)
-            if station is None:
-                return records
-            else:
-                sta = meteva.base.put_stadata_on_station(records, station)
-                if show:
-                    print("success read from " + filename)
-                return sta
-        else:
-            sta = copy.deepcopy(station)
-            byte_num = len(byteArray)
-            i4_num = (byte_num - ind -4) //4
-            ids = np.zeros((i4_num,4),dtype=np.int32)
-
-            ids[:, 0] = np.frombuffer(byteArray[ind:(ind + i4_num * 4)], dtype='i4')
-            ids[:, 1] = np.frombuffer(byteArray[(ind +1):(ind + 1 + i4_num * 4)], dtype='i4')
-            ids[:, 2] = np.frombuffer(byteArray[(ind + 2):(ind + 2 + i4_num * 4)], dtype='i4')
-            ids[:, 3] = np.frombuffer(byteArray[(ind + 3):(ind + 3 + i4_num * 4)], dtype='i4')
-            ids = ids.flatten()
-            station_ids = station["id"].values
-            dat = np.zeros(station_ids.size)
-
-            for k in range(dat.size):
-                id1 = station_ids[k]
-                indexs = np.where(ids == id1)
-                if len(indexs[0]) >=1:
-                    for n in range(len(indexs)):
-                        ind1 =ind +  indexs[n][0]
-                        record_head = np.frombuffer(byteArray[ind1:(ind1 + 14)], dtype=record_head_dtype)
-                        if(record_head['lon'][0] >=-180 and record_head['lon'][0] <= 360 and
-                                record_head['lat'][0] >= -90 and record_head['lat'][0] <= 90 and record_head["numb"][0] < 1000):
-                            ind1 += 14
-                            for j in range(record_head['numb'][0]):  # the record element number is not same, missing value is not included.
-                                element_id = str(np.frombuffer(byteArray[ind1:(ind1 + 2)], dtype='i2')[0])
-                                ind1 += 2
-                                element_len = element_map_len[element_id]
-                                if element_id == element_id_str0:
-                                    sta.iloc[k,-1] = np.frombuffer(byteArray[ind1:(ind1 + element_len)],dtype=dtype_str)[0]
-                                ind1 += element_len
-            meteva.base.set_stadata_names(sta,[data_name])
-            sta['time'] = time
-            sta['level'] = level
-            sta['dtime'] = dtime
+        except:
             if show:
-                print("success read from " + filename)
-            return sta
+                exstr = traceback.format_exc()
+                print(exstr)
+            print(filename + "数据读取失败")
+            return None
     else:
         print(filename + " not exist")
 
@@ -760,20 +812,201 @@ def read_stawind_from_gds(ip,port,filename,station = None, level=None,time=None,
     except ValueError:
         print('Can not retrieve data' + filename + ' from ' + directory)
         return None
-    ByteArrayResult = DataBlock_pb2.ByteArrayResult()
-    if status == 200:
-        ByteArrayResult.ParseFromString(response)
-        if ByteArrayResult is not None:
-            byteArray = ByteArrayResult.byteArray
+    try:
+        ByteArrayResult = DataBlock_pb2.ByteArrayResult()
+        if status == 200:
+            ByteArrayResult.ParseFromString(response)
+            if ByteArrayResult is not None:
+                byteArray = ByteArrayResult.byteArray
 
-            head_dtype = [('discriminator', 'S4'), ('type', 'i2'),
-                      ('description', 'S100'),
-                      ('level', 'f4'), ('levelDescription', 'S50'),
-                      ('year', 'i4'), ('month', 'i4'), ('day', 'i4'),
-                      ('hour', 'i4'), ('minute', 'i4'), ('second', 'i4'),
-                      ('Timezone', 'i4'), ('extent', 'S100')]
-            if(len(byteArray)<300):
+                head_dtype = [('discriminator', 'S4'), ('type', 'i2'),
+                          ('description', 'S100'),
+                          ('level', 'f4'), ('levelDescription', 'S50'),
+                          ('year', 'i4'), ('month', 'i4'), ('day', 'i4'),
+                          ('hour', 'i4'), ('minute', 'i4'), ('second', 'i4'),
+                          ('Timezone', 'i4'), ('extent', 'S100')]
+                if(len(byteArray)<300):
+                    return None
+                # read head information
+                head_info = np.frombuffer(byteArray[0:288], dtype=head_dtype)
+                if time is None:
+                    time = datetime.datetime(
+                        head_info['year'][0], head_info['month'][0],
+                        head_info['day'][0], head_info['hour'][0],
+                        head_info['minute'][0], head_info['second'][0])
+                else:
+                    time = meteva.base.tool.time_tools.all_type_time_to_time64(time)
+                if level is None:
+                    level = head_info["level"][0]
+                if dtime is None:
+                    filename1 = os.path.split(filename)[1].split(".")
+                    dtime = int(filename1[1])
+                ind = 288
+                # read the number of stations
+                station_number = np.frombuffer(
+                    byteArray[ind:(ind+4)], dtype='i4')[0]
+                ind += 4
+
+                # read the number of elements
+                element_number = np.frombuffer(
+                    byteArray[ind:(ind+2)], dtype='i2')[0]
+
+                if element_number == 0:
+                    return None
+                ind += 2
+
+                # construct record structure
+                element_type_map = {
+                    1: 'b1', 2: 'i2', 3: 'i4', 4: 'i8', 5: 'f4', 6: 'f8', 7: 'S1'}
+                element_map = {}
+                element_map_len = {}
+                for i in range(element_number):
+                    element_id = str(np.frombuffer(byteArray[ind:(ind+2)], dtype='i2')[0])
+                    ind += 2
+                    element_type = np.frombuffer(
+                        byteArray[ind:(ind+2)], dtype='i2')[0]
+                    ind += 2
+                    element_map[element_id] = element_type_map[element_type]
+                    element_map_len[element_id] = int(element_type_map[element_type][1])
+
+                dict0 = {}
+                id_dict = meteva.base.gds_element_id_dict
+
+
+
+                speed_id = -1
+                angle_id = -1
+                for key in element_map.keys():
+                    if (int(key) in id_dict.values()):
+                        for ele in id_dict.keys():
+                            if int(key) == id_dict[ele]:
+                                dict0[ele] = key
+                                if ele.find("风速")>0:
+                                    speed_id = key
+                                    #print(ele)
+                                if ele.find("风向")>0:
+                                    angle_id = key
+                                    #print(ele)
+
+                if speed_id == -1 or angle_id == -1:
+                    print("the file doesn't contains wind")
+                dtype_str_speed = element_map[speed_id]
+                dtype_str_angle = element_map[angle_id]
+
+                # loop every station to retrieve record
+                record_head_dtype = [
+                    ('id', 'i4'), ('lon', 'f4'), ('lat', 'f4'), ('numb', 'i2')]
+                records = []
+                if station is None or len(station.index) * 100 > station_number:
+                    for i in range(station_number):
+                        record_head = np.frombuffer(
+                            byteArray[ind:(ind+14)], dtype=record_head_dtype)
+                        ind += 14
+                        record = {
+                            'id': record_head['id'][0], 'lon': record_head['lon'][0],
+                            'lat': record_head['lat'][0]}
+                        for j in range(record_head['numb'][0]):    # the record element number is not same, missing value is not included.
+                            element_id = str(np.frombuffer(byteArray[ind:(ind + 2)], dtype='i2')[0])
+                            ind += 2
+                            element_len = element_map_len[element_id]
+                            hadwind = False
+                            if element_id == speed_id:
+                                record["speed"] = np.frombuffer(
+                                    byteArray[ind:(ind + element_len)],
+                                    dtype=dtype_str_speed)[0]
+                                hadwind = True
+                            if element_id == angle_id:
+                                record["angle"] = np.frombuffer(
+                                    byteArray[ind:(ind + element_len)],
+                                    dtype=dtype_str_angle)[0]
+                                hadwind = True
+                            if hadwind:
+                                records.append(record)
+                            ind += element_len
+                    records = pd.DataFrame(records)
+                    records.set_index('id')
+                    # get time
+
+                    records['time'] = time
+                    records['level'] = level
+                    records['dtime'] = dtime
+                    new_columns = ['level', 'time', 'dtime', 'id', 'lon', 'lat', "speed"+data_name,"angle"+data_name]
+                    records = records.reindex(columns=new_columns)
+                    if station is None:
+                        return records
+                    else:
+                        sta = meteva.base.put_stadata_on_station(records, station)
+                        if show:
+                            print("success read from " + filename)
+                        return sta
+                else:
+                    sta = copy.deepcopy(station)
+                    meteva.base.set_stadata_names(sta,["speed"+data_name])
+                    sta["angle"+data_name] = meteva.base.IV
+                    byte_num = len(byteArray)
+                    i4_num = (byte_num - ind -4) //4
+                    ids = np.zeros((i4_num,4),dtype=np.int32)
+
+                    ids[:, 0] = np.frombuffer(byteArray[ind:(ind + i4_num * 4)], dtype='i4')
+                    ids[:, 1] = np.frombuffer(byteArray[(ind +1):(ind + 1 + i4_num * 4)], dtype='i4')
+                    ids[:, 2] = np.frombuffer(byteArray[(ind + 2):(ind + 2 + i4_num * 4)], dtype='i4')
+                    ids[:, 3] = np.frombuffer(byteArray[(ind + 3):(ind + 3 + i4_num * 4)], dtype='i4')
+                    ids = ids.flatten()
+                    station_ids = station["id"].values
+                    dat = np.zeros(station_ids.size)
+
+                    for k in range(dat.size):
+                        id1 = station_ids[k]
+                        indexs = np.where(ids == id1)
+                        if len(indexs[0]) >=1:
+                            for n in range(len(indexs)):
+                                ind1 =ind +  indexs[n][0]
+                                record_head = np.frombuffer(byteArray[ind1:(ind1 + 14)], dtype=record_head_dtype)
+                                if(record_head['lon'][0] >=-180 and record_head['lon'][0] <= 360 and
+                                        record_head['lat'][0] >= -90 and record_head['lat'][0] <= 90 and record_head["numb"][0] < 1000):
+                                    ind1 += 14
+                                    for j in range(record_head['numb'][0]):  # the record element number is not same, missing value is not included.
+                                        element_id = str(np.frombuffer(byteArray[ind1:(ind1 + 2)], dtype='i2')[0])
+                                        ind1 += 2
+                                        element_len = element_map_len[element_id]
+                                        if element_id == speed_id:
+                                            sta.iloc[k,-2] = np.frombuffer(byteArray[ind1:(ind1 + element_len)],dtype=dtype_str_speed)[0]
+                                        if element_id == angle_id:
+                                            sta.iloc[k,-1] = np.frombuffer(byteArray[ind1:(ind1 + element_len)],dtype=dtype_str_angle)[0]
+                                        ind1 += element_len
+                    sta['time'] = time
+                    sta['level'] = level
+                    sta['dtime'] = dtime
+
+                    if show:
+                        print("success read from " + filename)
+                    return sta
+            else:
+                print(filename + " not exist")
                 return None
+        else:
+            print("连接服务的状态异常，不能读取相应的文件,可能原因相应的文件不在允许读取的时段范围")
+            return None
+    except:
+        if show:
+            exstr = traceback.format_exc()
+            print(exstr)
+        print(filename + "数据读取失败")
+        return None
+
+def read_stawind_from_gdsfile(filename,station = None, level=None,time=None, dtime=None,data_name = "",show = False):
+    if os.path.exists(filename):
+        try:
+            file = open(filename,"rb")
+            byteArray = file.read()
+            # define head structure
+            head_dtype = [('discriminator', 'S4'), ('type', 'i2'),
+                          ('description', 'S100'),
+                          ('level', 'f4'), ('levelDescription', 'S50'),
+                          ('year', 'i4'), ('month', 'i4'), ('day', 'i4'),
+                          ('hour', 'i4'), ('minute', 'i4'), ('second', 'i4'),
+                          ('Timezone', 'i4'), ('extent', 'S100')]
+
             # read head information
             head_info = np.frombuffer(byteArray[0:288], dtype=head_dtype)
             if time is None:
@@ -783,6 +1016,7 @@ def read_stawind_from_gds(ip,port,filename,station = None, level=None,time=None,
                     head_info['minute'][0], head_info['second'][0])
             else:
                 time = meteva.base.tool.time_tools.all_type_time_to_time64(time)
+
             if level is None:
                 level = head_info["level"][0]
             if dtime is None:
@@ -830,10 +1064,10 @@ def read_stawind_from_gds(ip,port,filename,station = None, level=None,time=None,
                             dict0[ele] = key
                             if ele.find("风速")>0:
                                 speed_id = key
-                                #print(ele)
+                                print(ele)
                             if ele.find("风向")>0:
                                 angle_id = key
-                                #print(ele)
+                                print(ele)
 
             if speed_id == -1 or angle_id == -1:
                 print("the file doesn't contains wind")
@@ -844,6 +1078,8 @@ def read_stawind_from_gds(ip,port,filename,station = None, level=None,time=None,
             record_head_dtype = [
                 ('id', 'i4'), ('lon', 'f4'), ('lat', 'f4'), ('numb', 'i2')]
             records = []
+            speed_name = "speed"+data_name
+            angle_name = "angle"+data_name
             if station is None or len(station.index) * 100 > station_number:
                 for i in range(station_number):
                     record_head = np.frombuffer(
@@ -858,12 +1094,12 @@ def read_stawind_from_gds(ip,port,filename,station = None, level=None,time=None,
                         element_len = element_map_len[element_id]
                         hadwind = False
                         if element_id == speed_id:
-                            record["speed"] = np.frombuffer(
+                            record[speed_name] = np.frombuffer(
                                 byteArray[ind:(ind + element_len)],
                                 dtype=dtype_str_speed)[0]
                             hadwind = True
                         if element_id == angle_id:
-                            record["angle"] = np.frombuffer(
+                            record[angle_name] = np.frombuffer(
                                 byteArray[ind:(ind + element_len)],
                                 dtype=dtype_str_angle)[0]
                             hadwind = True
@@ -924,182 +1160,17 @@ def read_stawind_from_gds(ip,port,filename,station = None, level=None,time=None,
                 sta['time'] = time
                 sta['level'] = level
                 sta['dtime'] = dtime
-
                 if show:
                     print("success read from " + filename)
                 return sta
-        else:
-            print(filename + " not exist")
-
-def read_stawind_from_gdsfile(filename,station = None, level=None,time=None, dtime=None,data_name = "",show = False):
-    if os.path.exists(filename):
-        file = open(filename,"rb")
-        byteArray = file.read()
-        # define head structure
-        head_dtype = [('discriminator', 'S4'), ('type', 'i2'),
-                      ('description', 'S100'),
-                      ('level', 'f4'), ('levelDescription', 'S50'),
-                      ('year', 'i4'), ('month', 'i4'), ('day', 'i4'),
-                      ('hour', 'i4'), ('minute', 'i4'), ('second', 'i4'),
-                      ('Timezone', 'i4'), ('extent', 'S100')]
-
-        # read head information
-        head_info = np.frombuffer(byteArray[0:288], dtype=head_dtype)
-        if time is None:
-            time = datetime.datetime(
-                head_info['year'][0], head_info['month'][0],
-                head_info['day'][0], head_info['hour'][0],
-                head_info['minute'][0], head_info['second'][0])
-        else:
-            time = meteva.base.tool.time_tools.all_type_time_to_time64(time)
-
-        if level is None:
-            level = head_info["level"][0]
-        if dtime is None:
-            filename1 = os.path.split(filename)[1].split(".")
-            dtime = int(filename1[1])
-        ind = 288
-        # read the number of stations
-        station_number = np.frombuffer(
-            byteArray[ind:(ind+4)], dtype='i4')[0]
-        ind += 4
-
-        # read the number of elements
-        element_number = np.frombuffer(
-            byteArray[ind:(ind+2)], dtype='i2')[0]
-
-        if element_number == 0:
-            return None
-        ind += 2
-
-        # construct record structure
-        element_type_map = {
-            1: 'b1', 2: 'i2', 3: 'i4', 4: 'i8', 5: 'f4', 6: 'f8', 7: 'S1'}
-        element_map = {}
-        element_map_len = {}
-        for i in range(element_number):
-            element_id = str(np.frombuffer(byteArray[ind:(ind+2)], dtype='i2')[0])
-            ind += 2
-            element_type = np.frombuffer(
-                byteArray[ind:(ind+2)], dtype='i2')[0]
-            ind += 2
-            element_map[element_id] = element_type_map[element_type]
-            element_map_len[element_id] = int(element_type_map[element_type][1])
-
-        dict0 = {}
-        id_dict = meteva.base.gds_element_id_dict
-
-
-
-        speed_id = -1
-        angle_id = -1
-        for key in element_map.keys():
-            if (int(key) in id_dict.values()):
-                for ele in id_dict.keys():
-                    if int(key) == id_dict[ele]:
-                        dict0[ele] = key
-                        if ele.find("风速")>0:
-                            speed_id = key
-                            print(ele)
-                        if ele.find("风向")>0:
-                            angle_id = key
-                            print(ele)
-
-        if speed_id == -1 or angle_id == -1:
-            print("the file doesn't contains wind")
-        dtype_str_speed = element_map[speed_id]
-        dtype_str_angle = element_map[angle_id]
-
-        # loop every station to retrieve record
-        record_head_dtype = [
-            ('id', 'i4'), ('lon', 'f4'), ('lat', 'f4'), ('numb', 'i2')]
-        records = []
-        speed_name = "speed"+data_name
-        angle_name = "angle"+data_name
-        if station is None or len(station.index) * 100 > station_number:
-            for i in range(station_number):
-                record_head = np.frombuffer(
-                    byteArray[ind:(ind+14)], dtype=record_head_dtype)
-                ind += 14
-                record = {
-                    'id': record_head['id'][0], 'lon': record_head['lon'][0],
-                    'lat': record_head['lat'][0]}
-                for j in range(record_head['numb'][0]):    # the record element number is not same, missing value is not included.
-                    element_id = str(np.frombuffer(byteArray[ind:(ind + 2)], dtype='i2')[0])
-                    ind += 2
-                    element_len = element_map_len[element_id]
-                    hadwind = False
-                    if element_id == speed_id:
-                        record[speed_name] = np.frombuffer(
-                            byteArray[ind:(ind + element_len)],
-                            dtype=dtype_str_speed)[0]
-                        hadwind = True
-                    if element_id == angle_id:
-                        record[angle_name] = np.frombuffer(
-                            byteArray[ind:(ind + element_len)],
-                            dtype=dtype_str_angle)[0]
-                        hadwind = True
-                    if hadwind:
-                        records.append(record)
-                    ind += element_len
-            records = pd.DataFrame(records)
-            records.set_index('id')
-            # get time
-
-            records['time'] = time
-            records['level'] = level
-            records['dtime'] = dtime
-            new_columns = ['level', 'time', 'dtime', 'id', 'lon', 'lat', "speed"+data_name,"angle"+data_name]
-            records = records.reindex(columns=new_columns)
-            if station is None:
-                return records
-            else:
-                sta = meteva.base.put_stadata_on_station(records, station)
-                if show:
-                    print("success read from " + filename)
-                return sta
-        else:
-            sta = copy.deepcopy(station)
-            meteva.base.set_stadata_names(sta,["speed"+data_name])
-            sta["angle"+data_name] = meteva.base.IV
-            byte_num = len(byteArray)
-            i4_num = (byte_num - ind -4) //4
-            ids = np.zeros((i4_num,4),dtype=np.int32)
-
-            ids[:, 0] = np.frombuffer(byteArray[ind:(ind + i4_num * 4)], dtype='i4')
-            ids[:, 1] = np.frombuffer(byteArray[(ind +1):(ind + 1 + i4_num * 4)], dtype='i4')
-            ids[:, 2] = np.frombuffer(byteArray[(ind + 2):(ind + 2 + i4_num * 4)], dtype='i4')
-            ids[:, 3] = np.frombuffer(byteArray[(ind + 3):(ind + 3 + i4_num * 4)], dtype='i4')
-            ids = ids.flatten()
-            station_ids = station["id"].values
-            dat = np.zeros(station_ids.size)
-
-            for k in range(dat.size):
-                id1 = station_ids[k]
-                indexs = np.where(ids == id1)
-                if len(indexs[0]) >=1:
-                    for n in range(len(indexs)):
-                        ind1 =ind +  indexs[n][0]
-                        record_head = np.frombuffer(byteArray[ind1:(ind1 + 14)], dtype=record_head_dtype)
-                        if(record_head['lon'][0] >=-180 and record_head['lon'][0] <= 360 and
-                                record_head['lat'][0] >= -90 and record_head['lat'][0] <= 90 and record_head["numb"][0] < 1000):
-                            ind1 += 14
-                            for j in range(record_head['numb'][0]):  # the record element number is not same, missing value is not included.
-                                element_id = str(np.frombuffer(byteArray[ind1:(ind1 + 2)], dtype='i2')[0])
-                                ind1 += 2
-                                element_len = element_map_len[element_id]
-                                if element_id == speed_id:
-                                    sta.iloc[k,-2] = np.frombuffer(byteArray[ind1:(ind1 + element_len)],dtype=dtype_str_speed)[0]
-                                if element_id == angle_id:
-                                    sta.iloc[k,-1] = np.frombuffer(byteArray[ind1:(ind1 + element_len)],dtype=dtype_str_angle)[0]
-                                ind1 += element_len
-            sta['time'] = time
-            sta['level'] = level
-            sta['dtime'] = dtime
+        except:
             if show:
-                print("success read from " + filename)
-            return sta
+                exstr = traceback.format_exc()
+                print(exstr)
+            print(filename + "数据读取失败")
+            return None
     else:
+        print(filename +" not exists")
         return None
 
 def read_stadata_from_gds_griddata(ip,port,filename,station,level = None,time =None,dtime = None,data_name = "data0",show = False):
@@ -1170,8 +1241,17 @@ def read_stadata_from_gds_griddata(ip,port,filename,station,level = None,time =N
                 if show:
                     print("success read from " + filename)
                 return sta
-    except Exception as e:
-        print(e)
+            else:
+                print(filename + " not exist")
+                return None
+        else:
+            print("连接服务的状态异常，不能读取相应的文件,可能原因相应的文件不在允许读取的时段范围")
+            return None
+    except :
+        if show:
+            exstr = traceback.format_exc()
+            print(exstr)
+        print(filename +" 数据读取失败")
         return None
 
 def print_gds_file_values_names(filename,ip = None,port = None):
@@ -1243,7 +1323,9 @@ def read_stadata_from_micaps16(filename,level = None,time= None,dtime = None,dat
         return None
     else:
         encoding,_ = meteva.base.io.get_encoding_of_file(filename,read_rows=1)
-
+        if encoding is None:
+            print("文件编码格式不识别")
+            return None
         try:
             file = open(filename, 'r',encoding=encoding)
             head = file.readline()
@@ -1284,10 +1366,19 @@ def read_stadata_from_micaps16(filename,level = None,time= None,dtime = None,dat
                 print("success read from " + filename)
             return station
         except:
+            if show:
+                exstr = traceback.format_exc()
+                print(exstr)
             print(filename+"文件格式不能识别。可能原因：文件未按micaps16格式存储")
             return None
 
 def read_stadata_from_csv(filename,show = False):
+    '''
+    从利用pd.to_csv函数将sta_data导出的csv文件中读取sta_data
+    :param filename:
+    :param show:
+    :return:
+    '''
     file = open(filename,"r")
     sta = pd.read_csv(file,parse_dates=['time'],sep = "\s+")
     sta.drop(sta.columns[[0]], axis=1, inplace=True)
@@ -1298,141 +1389,157 @@ def read_stadata_from_csv(filename,show = False):
 
 def read_stadata_from_gds_griddata_file(filename,station,level = None,time = None,dtime = None,data_name = "data0",show = False):
     if os.path.exists(filename):
-        file = open(filename,"rb")
-        position = file.seek(106)
-        content = file.read(28)
-        level1, y, m, d, h, timezone, period = struct.unpack("fiiiiii", content)
-        position = file.seek(134)
-        content = file.read(32)
-        slon, elon, dlon,nlon,slat,elat,dlat,nlat = struct.unpack("fffifffi", content)
-        nsta = len(station.index)
-        ig = ((station['lon'].values - slon) // dlon).astype(dtype='int32')
-        jg = ((station['lat'].values - slat) // dlat).astype(dtype='int32')
-        dx = (station['lon'].values - slon) / dlon - ig
-        dy = (station['lat'].values - slat) / dlat - jg
-        c00 = (1 - dx) * (1 - dy)
-        c01 = dx * (1 - dy)
-        c10 = (1 - dx) * dy
-        c11 = dx * dy
-        ig1 = np.minimum(ig + 1, nlon - 1)
-        jg1 = np.minimum(jg + 1, nlat - 1)
-        i00 = (nlon * jg + ig)
-        i01 = nlon * jg + ig1
-        i10 = nlon * jg1 + ig
-        i11 = nlon * jg1 + ig1
-        dat = np.zeros(nsta)
-        for i in range(nsta):
-            position = file.seek(i00[i] * 4+278)
-            content = file.read(4)
-            dat00 = np.frombuffer(content, dtype='float32')
-            position = file.seek(i01[i] * 4+278)
-            content = file.read(4)
-            dat01 = np.frombuffer(content, dtype='float32')
-            position = file.seek(i10[i] * 4+278)
-            content = file.read(4)
-            dat10 = np.frombuffer(content, dtype='float32')
-            position = file.seek(i11[i] * 4+278)
-            content = file.read(4)
-            dat11 = np.frombuffer(content, dtype='float32')
-            dat[i] = c00[i] * dat00 + c01[i] * dat01 + c10[i] * dat10 + c11[i] * dat11
-        file.close()
-        sta = copy.deepcopy(station)
-        sta.iloc[:, -1] = dat[:]
-        if time is None:
-            time = datetime.datetime(y, m, d, h, 0)
-        else:
-            time = meteva.base.tool.time_tools.all_type_time_to_time64(time)
-        if level is None:
-            level = level1
-        if dtime is None:
-            dtime = period
-        sta.loc[:, "level"] = level
-        sta.loc[:, "time"] = time
-        sta.loc[:, "dtime"] = dtime
-        meteva.base.set_stadata_names(sta, [data_name])
+        try:
+            file = open(filename,"rb")
+            position = file.seek(106)
+            content = file.read(28)
+            level1, y, m, d, h, timezone, period = struct.unpack("fiiiiii", content)
+            position = file.seek(134)
+            content = file.read(32)
+            slon, elon, dlon,nlon,slat,elat,dlat,nlat = struct.unpack("fffifffi", content)
+            nsta = len(station.index)
+            ig = ((station['lon'].values - slon) // dlon).astype(dtype='int32')
+            jg = ((station['lat'].values - slat) // dlat).astype(dtype='int32')
+            dx = (station['lon'].values - slon) / dlon - ig
+            dy = (station['lat'].values - slat) / dlat - jg
+            c00 = (1 - dx) * (1 - dy)
+            c01 = dx * (1 - dy)
+            c10 = (1 - dx) * dy
+            c11 = dx * dy
+            ig1 = np.minimum(ig + 1, nlon - 1)
+            jg1 = np.minimum(jg + 1, nlat - 1)
+            i00 = (nlon * jg + ig)
+            i01 = nlon * jg + ig1
+            i10 = nlon * jg1 + ig
+            i11 = nlon * jg1 + ig1
+            dat = np.zeros(nsta)
+            for i in range(nsta):
+                position = file.seek(i00[i] * 4+278)
+                content = file.read(4)
+                dat00 = np.frombuffer(content, dtype='float32')
+                position = file.seek(i01[i] * 4+278)
+                content = file.read(4)
+                dat01 = np.frombuffer(content, dtype='float32')
+                position = file.seek(i10[i] * 4+278)
+                content = file.read(4)
+                dat10 = np.frombuffer(content, dtype='float32')
+                position = file.seek(i11[i] * 4+278)
+                content = file.read(4)
+                dat11 = np.frombuffer(content, dtype='float32')
+                dat[i] = c00[i] * dat00 + c01[i] * dat01 + c10[i] * dat10 + c11[i] * dat11
+            file.close()
+            sta = copy.deepcopy(station)
+            sta.iloc[:, -1] = dat[:]
+            if time is None:
+                time = datetime.datetime(y, m, d, h, 0)
+            else:
+                time = meteva.base.tool.time_tools.all_type_time_to_time64(time)
+            if level is None:
+                level = level1
+            if dtime is None:
+                dtime = period
+            sta.loc[:, "level"] = level
+            sta.loc[:, "time"] = time
+            sta.loc[:, "dtime"] = dtime
+            meteva.base.set_stadata_names(sta, [data_name])
 
-        if show:
-            print("success read from " + filename)
-        return sta
+            if show:
+                print("success read from " + filename)
+            return sta
+        except:
+            if show:
+                exstr = traceback.format_exc()
+                print(exstr)
+            print(filename+"文件格式不能识别")
+            return None
     else:
+        print(filename + " not exist")
         return None
 
 def read_stawind_from_gds_gridwind_file(filename,station,level = None,time = None,dtime = None,data_name = "",show = False):
     if os.path.exists(filename):
-        file = open(filename, "rb")
-        position = file.seek(106)
-        content = file.read(28)
-        level1, y, m, d, h, timezone, period = struct.unpack("fiiiiii", content)
-        position = file.seek(134)
-        content = file.read(32)
-        slon, elon, dlon, nlon, slat, elat, dlat, nlat = struct.unpack("fffifffi", content)
-        nsta = len(station.index)
-        ig = ((station['lon'].values - slon) // dlon).astype(dtype='int32')
-        jg = ((station['lat'].values - slat) // dlat).astype(dtype='int32')
-        dx = (station['lon'].values - slon) / dlon - ig
-        dy = (station['lat'].values - slat) / dlat - jg
-        c00 = (1 - dx) * (1 - dy)
-        c01 = dx * (1 - dy)
-        c10 = (1 - dx) * dy
-        c11 = dx * dy
-        ig1 = np.minimum(ig + 1, nlon - 1)
-        jg1 = np.minimum(jg + 1, nlat - 1)
-        i00 = (nlon * jg + ig)
-        i01 = nlon * jg + ig1
-        i10 = nlon * jg1 + ig
-        i11 = nlon * jg1 + ig1
-        udata = np.zeros(nsta)
-        vdata = np.zeros(nsta)
-        i_s0 = 278
-        i_s1 = i_s0 + nlon * nlat * 4
+        try:
+            file = open(filename, "rb")
+            position = file.seek(106)
+            content = file.read(28)
+            level1, y, m, d, h, timezone, period = struct.unpack("fiiiiii", content)
+            position = file.seek(134)
+            content = file.read(32)
+            slon, elon, dlon, nlon, slat, elat, dlat, nlat = struct.unpack("fffifffi", content)
+            nsta = len(station.index)
+            ig = ((station['lon'].values - slon) // dlon).astype(dtype='int32')
+            jg = ((station['lat'].values - slat) // dlat).astype(dtype='int32')
+            dx = (station['lon'].values - slon) / dlon - ig
+            dy = (station['lat'].values - slat) / dlat - jg
+            c00 = (1 - dx) * (1 - dy)
+            c01 = dx * (1 - dy)
+            c10 = (1 - dx) * dy
+            c11 = dx * dy
+            ig1 = np.minimum(ig + 1, nlon - 1)
+            jg1 = np.minimum(jg + 1, nlat - 1)
+            i00 = (nlon * jg + ig)
+            i01 = nlon * jg + ig1
+            i10 = nlon * jg1 + ig
+            i11 = nlon * jg1 + ig1
+            udata = np.zeros(nsta)
+            vdata = np.zeros(nsta)
+            i_s0 = 278
+            i_s1 = i_s0 + nlon * nlat * 4
 
-        for i in range(nsta):
-            position = file.seek(i00[i] * 4 + i_s0)
-            content = file.read(4)
-            dat00 = np.frombuffer(content, dtype='float32')
-            position = file.seek(i01[i] * 4 + i_s0)
-            content = file.read(4)
-            dat01 = np.frombuffer(content, dtype='float32')
-            position = file.seek(i10[i] * 4 + i_s0)
-            content = file.read(4)
-            dat10 = np.frombuffer(content, dtype='float32')
-            position = file.seek(i11[i] * 4 + i_s0)
-            content = file.read(4)
-            dat11 = np.frombuffer(content, dtype='float32')
-            udata[i] = c00[i] * dat00 + c01[i] * dat01 + c10[i] * dat10 + c11[i] * dat11
+            for i in range(nsta):
+                position = file.seek(i00[i] * 4 + i_s0)
+                content = file.read(4)
+                dat00 = np.frombuffer(content, dtype='float32')
+                position = file.seek(i01[i] * 4 + i_s0)
+                content = file.read(4)
+                dat01 = np.frombuffer(content, dtype='float32')
+                position = file.seek(i10[i] * 4 + i_s0)
+                content = file.read(4)
+                dat10 = np.frombuffer(content, dtype='float32')
+                position = file.seek(i11[i] * 4 + i_s0)
+                content = file.read(4)
+                dat11 = np.frombuffer(content, dtype='float32')
+                udata[i] = c00[i] * dat00 + c01[i] * dat01 + c10[i] * dat10 + c11[i] * dat11
 
-            position = file.seek(i00[i] * 4 + i_s1)
-            content = file.read(4)
-            dat00 = np.frombuffer(content, dtype='float32')
-            position = file.seek(i01[i] * 4 + i_s1)
-            content = file.read(4)
-            dat01 = np.frombuffer(content, dtype='float32')
-            position = file.seek(i10[i] * 4 + i_s1)
-            content = file.read(4)
-            dat10 = np.frombuffer(content, dtype='float32')
-            position = file.seek(i11[i] * 4 + i_s1)
-            content = file.read(4)
-            dat11 = np.frombuffer(content, dtype='float32')
-            vdata[i] = c00[i] * dat00 + c01[i] * dat01 + c10[i] * dat10 + c11[i] * dat11
-        file.close()
-        sta = copy.deepcopy(station)
-        sta.iloc[:, -1] = udata[:]
-        sta["v"] = vdata
-        if time is None:
-            time = datetime.datetime(y, m, d, h, 0)
-        else:
-            time = meteva.base.tool.time_tools.all_type_time_to_time64(time)
-        if level is None:
-            level = level1
-        if dtime is None:
-            dtime = period
-        sta.loc[:, "level"] = level
-        sta.loc[:, "time"] = time
-        sta.loc[:, "dtime"] = dtime
-        meteva.base.set_stadata_names(sta,["u"+data_name,"v"+data_name])
+                position = file.seek(i00[i] * 4 + i_s1)
+                content = file.read(4)
+                dat00 = np.frombuffer(content, dtype='float32')
+                position = file.seek(i01[i] * 4 + i_s1)
+                content = file.read(4)
+                dat01 = np.frombuffer(content, dtype='float32')
+                position = file.seek(i10[i] * 4 + i_s1)
+                content = file.read(4)
+                dat10 = np.frombuffer(content, dtype='float32')
+                position = file.seek(i11[i] * 4 + i_s1)
+                content = file.read(4)
+                dat11 = np.frombuffer(content, dtype='float32')
+                vdata[i] = c00[i] * dat00 + c01[i] * dat01 + c10[i] * dat10 + c11[i] * dat11
+            file.close()
+            sta = copy.deepcopy(station)
+            sta.iloc[:, -1] = udata[:]
+            sta["v"] = vdata
+            if time is None:
+                time = datetime.datetime(y, m, d, h, 0)
+            else:
+                time = meteva.base.tool.time_tools.all_type_time_to_time64(time)
+            if level is None:
+                level = level1
+            if dtime is None:
+                dtime = period
+            sta.loc[:, "level"] = level
+            sta.loc[:, "time"] = time
+            sta.loc[:, "dtime"] = dtime
+            meteva.base.set_stadata_names(sta,["u"+data_name,"v"+data_name])
 
-        if show:
-            print("success read from " + filename)
-        return sta
+            if show:
+                print("success read from " + filename)
+            return sta
+        except:
+            if show:
+                exstr = traceback.format_exc()
+                print(exstr)
+            print(filename + "文件格式不能识别")
+            return None
     else:
+        print(filename + " not exist")
         return None

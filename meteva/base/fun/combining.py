@@ -191,7 +191,8 @@ def combine_on_obTime_id(sta_ob,sta_fo_list,need_match_ob = False):
         sta_combine = combine_on_level_time_dtime_id(sta_combine, sta_combine_fo, how="inner")
     else:
         sta_combine = combine_on_level_time_dtime_id(sta_combine,sta_combine_fo,how="right")
-        sta_combine = sta_combine.fillna(meteva.base.IV)
+        if sta_combine is not None:
+            sta_combine = sta_combine.fillna(meteva.base.IV)
 
     return sta_combine
 
@@ -287,22 +288,11 @@ def get_inner_grid(grid0,grid1,used_coords = "xy"):
     return grid_inner
 
 def get_outer_grid(grid0,grid1,used_coords = "xy"):
-    si = 0
-    sj = 0
-    ei = 0
-    ej = 0
-    if (grid1.slon < grid0.slon):
-        si = int(math.ceil((grid0.slon - grid1.slon) / grid0.dlon))
-    if (grid1.slat < grid0.slat):
-        sj = int(math.ceil((grid0.slat - grid1.slat) / grid0.dlat))
-    if (grid1.elon > grid0.elon):
-        ei = int(math.ceil((-grid0.elon + grid1.elon) / grid0.dlon))
-    if (grid1.elat > grid0.elat):
-        ej = int(math.ceil((-grid0.elat + grid1.elat) / grid0.dlat))
-    slon = grid0.slon - si * grid0.dlon
-    slat = grid0.slat - sj * grid0.dlat
-    elon = grid0.elon + ei * grid0.dlon
-    elat = grid0.elat + ej * grid0.dlat
+
+    slon = min(grid0.slon,grid1.slon)
+    slat = min(grid0.slat,grid1.slat)
+    elon = max(grid0.elon,grid1.elon)
+    elat = max(grid0.elat,grid1.elat)
     grid_outer = meteva.base.grid([slon,elon,grid0.dlon],[slat,elat,grid0.dlat],grid0.gtime,grid0.dtimes,grid0.levels,grid0.members)
     return grid_outer
 
@@ -315,8 +305,9 @@ def expand_to_contain_another_grid(grd0,grid1,used_coords = "xy",outer_value = 0
     si = 0
     sj = 0
     if (grid1.slon < grid0.slon):
-        si = int(math.ceil((grid0.slon - grid1.slon) / grid0.dlon))
+        si = int(round((grid0.slon - grid1.slon) / grid0.dlon))
     if (grid1.slat < grid0.slat):
-        sj = int(math.ceil((grid0.slat - grid1.slat) / grid0.dlat))
+        sj = int(round((grid0.slat - grid1.slat) / grid0.dlat))
     grd1.values[:,:,:,:,sj:(sj + grid0.nlat), si:(si + grid0.nlon)] = grd0.values[...]
     return grd1
+
