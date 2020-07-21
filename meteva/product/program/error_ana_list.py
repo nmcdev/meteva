@@ -31,14 +31,30 @@ def error_boxplot(sta_ob_and_fos0,s = None, g = None, gll=None,
             else:
                 s["drop_last"] = True
 
+
+
     sta_ob_and_fos = meteva.base.sele_by_dict(sta_ob_and_fos0, s)
-    data_names = meteva.base.get_stadata_names(sta_ob_and_fos)
+    sta_ob_and_fos_list, gll1 = meteva.base.fun.group(sta_ob_and_fos, g, gll)
+    data_names = meteva.base.get_stadata_names(sta_ob_and_fos_list[0])
     if(len(data_names) ==1):
         print("error infomation: only one data column, can't caculate error")
         return
-    sta_ob_and_fos_list, gll1 = meteva.base.fun.group(sta_ob_and_fos, g, gll)
+
+    if isinstance(title, list):
+        if len(data_names) -1 != len(title):
+            print("手动设置的title数目和要绘制的图形数目不一致")
+            return
+
+    if save_path is not None:
+        if isinstance(save_path,str):
+            save_path = [save_path]
+        if len(data_names) -1 != len(save_path):
+            print("手动设置的save_path数目和要绘制的图形数目不一致")
+            return
+
     if group_name_list is None:
         group_name_list = meteva.product.program.get_group_name(gll1)
+
     for v in range(len(data_names)-1):
         combineData = []
         boxgroup = []
@@ -98,17 +114,13 @@ def error_boxplot(sta_ob_and_fos0,s = None, g = None, gll=None,
         plt.hlines(threshold, 1, len(group_name_list), linewidth=1, color="k", linestyles="dashed")
         plt.hlines(-threshold, 1, len(group_name_list), linewidth=1, color="k", linestyles="dashed")
         plt.legend()
-        title1 = meteva.product.program.get_title_from_dict(meteva.product.error_boxplot, s, None, None,
-                                                            data_names[v + 1])
-        #if title is None:
-        #    title1 = data_names[v+1]+"误差综合分析图"
-        #    title1 = meteva.product.program.get_title_from_dict(meteva.product.error_boxplot,s,None,None,data_names[v+1])
-        #    print(title1)
-        #else:
-        #    if len(data_names) ==1:
-        #        title1 = title
-        #    else:
-        #        title1 = data_names[v+1]+title
+
+
+        if isinstance(title,list):
+            title1 = title[v]
+        else:
+            title1 = meteva.product.program.get_title_from_dict(title, s, None, None,
+                                                                data_names[v + 1])
 
         plt.title(title1, fontsize=14)
 
@@ -128,29 +140,27 @@ def error_boxplot(sta_ob_and_fos0,s = None, g = None, gll=None,
         plt.yticks(fontsize=12)
         plt.ylabel("准确率(%)", fontsize=14)
 
-
+        save_path1 = None
         if save_path is None:
             if save_dir is None:
                 show = True
             else:
-                save_path = save_dir + "/" + data_names[v + 1] + ".png"
-
-        if save_path is not None:
-            meteva.base.tool.path_tools.creat_path(save_path)
-            plt.savefig(save_path,bbox_inches='tight')
-            print("图片已保存至" + save_path)
-            save_path = None
+                save_path1 = save_dir + "/" + data_names[v + 1] + ".png"
+        else:
+            save_path1 = save_path[v]
+        if save_path1 is not None:
+            meteva.base.tool.path_tools.creat_path(save_path1)
+            plt.savefig(save_path1,bbox_inches='tight')
+            print("图片已保存至" + save_path1)
         if show:
             plt.show()
         plt.close()
 
 
-
-
-
-
 def error_boxplot_abs(sta_ob_and_fos0,s = None, g = None, gll=None,
-                  group_name_list=None,threshold = 2,save_dir=None,save_path = None,show = False,dpi = 200,title="误差综合分析图"):
+                  group_name_list=None,threshold = 2,save_dir=None,save_path = None,show = False,dpi = 200,title="绝对误差综合分析图"):
+
+
 
     if s is not None:
         if g is not None:
@@ -165,6 +175,17 @@ def error_boxplot_abs(sta_ob_and_fos0,s = None, g = None, gll=None,
         print("error infomation: only one data column, can't caculate error")
         return
 
+    if save_path is not None:
+        if isinstance(save_path,str):
+            save_path = [save_path]
+        if len(data_names) -1 != len(save_path):
+            print("手动设置的save_path数目和要绘制的图形数目不一致")
+            return
+
+    if isinstance(title, list):
+        if len(data_names) -1 != len(title):
+            print("手动设置的title数目和要绘制的图形数目不一致")
+            return
     sta_ob_and_fos_list, gll1 = meteva.base.fun.group(sta_ob_and_fos, g, gll)
     if group_name_list is None:
         group_name_list = meteva.product.program.get_group_name(gll1)
@@ -232,15 +253,13 @@ def error_boxplot_abs(sta_ob_and_fos0,s = None, g = None, gll=None,
         plt.plot(x, rmse_list, 'r', label='均方根误差',zorder = 3)
         plt.legend()
 
-        title1 = meteva.product.program.get_title_from_dict(meteva.product.error_boxplot, s, None, None,
-                                                            data_names[v + 1])
-        #if title is None:
-        #    title1 = data_names[v+1]+"误差综合分析图"
-        #else:
-        #    if len(data_names) ==1:
-        #        title1 = title
-        #    else:
-        #        title1 = data_names[v+1]+title
+        if isinstance(title,list):
+            title1 = title[v]
+        else:
+            title1 = meteva.product.program.get_title_from_dict(title, s, None, None,
+                                                                data_names[v + 1])
+
+
         plt.title(title1, fontsize=14)
 
         plt.hlines(threshold, 1, len(group_name_list), linewidth=1, color="k", linestyles="dashed")
@@ -260,17 +279,18 @@ def error_boxplot_abs(sta_ob_and_fos0,s = None, g = None, gll=None,
         plt.yticks(fontsize=12)
         plt.ylabel("准确率(%)", fontsize=14)
 
+        save_path1 = None
         if save_path is None:
             if save_dir is None:
                 show = True
             else:
-                save_path = save_dir + "/" + data_names[v + 1] + ".png"
-
-        if save_path is not None:
-            meteva.base.tool.path_tools.creat_path(save_path)
-            plt.savefig(save_path,bbox_inches='tight')
-            print("图片已保存至" + save_path)
-            save_path = None
+                save_path1 = save_dir + "/" + data_names[v + 1] + ".png"
+        else:
+            save_path1 = save_path[v]
+        if save_path1 is not None:
+            meteva.base.tool.path_tools.creat_path(save_path1)
+            plt.savefig(save_path1,bbox_inches='tight')
+            print("图片已保存至" + save_path1)
         if show:
             plt.show()
         plt.close()

@@ -117,18 +117,24 @@ def get_save_path(save_dir,method,group_by,group_list,model_name = "",type = "",
             save_path = save_dir + "/" +method.__name__+"_" + model_name + "_"+ group_by + str(group_list)+discription+type
     return save_path
 
+
+
 def get_title_from_dict(method,s,g,group_list,model_name,title = None):
+
     if title is not None:
         title1 = title
     else:
 
-        #method_str =  method.__defaults__[-1]
-        method_para = method.__code__.co_varnames[:method.__code__.co_argcount]
-        #print(method_para)
-        if "title" in method_para:
-            method_str = method.__defaults__[-1]
+        if isinstance(method,str):
+            method_str = method
         else:
-            method_str = method.__name__.upper()
+            #method_str =  method.__defaults__[-1]
+            method_para = method.__code__.co_varnames[:method.__code__.co_argcount]
+            #print(method_para)
+            if "title" in method_para:
+                method_str = method.__defaults__[-1]
+            else:
+                method_str = method.__name__.upper()
 
 
         s_str = ""
@@ -219,6 +225,7 @@ def get_title_from_dict(method,s,g,group_list,model_name,title = None):
         else:
             model_name = ""
         title1 = method_str + model_name + s_str +group_name
+
     return title1
 
 def get_title(method,group_by,group_list,model_name,title = None,discription_uni = ""):
@@ -474,7 +481,10 @@ def get_x_ticks(ticks,width):
         else:
             #无规律，需穷举
             xtick_labels = get_time_str_list(times,row=2)
-            xticks = np.arange(xtick_labels)
+            xticks = []
+            for i in range(len(xtick_labels)):
+                xticks.append((times[i] - times[0]) / np.timedelta64(1, 'h'))
+            xticks = np.array(xticks)
     else:
         pass
     return xticks, xtick_labels
