@@ -16,7 +16,21 @@ def time_list_line_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
     sta_ob_and_fos1 = meteva.base.sele_by_dict(sta_ob_and_fos0, s)
     sta_ob_and_fos1 = meteva.base.sele_by_para(sta_ob_and_fos1,drop_IV=True)
     ids = list(set(sta_ob_and_fos1.loc[:,"id"]))
-    for id in ids:
+    nids = len(ids)
+
+    if isinstance(title, list):
+        if nids != len(title):
+            print("手动设置的title数目和要绘制的图形数目不一致")
+            return
+
+    if save_path is not None:
+        if isinstance(save_path,str):
+            save_path = [save_path]
+        if nids != len(save_path):
+            print("手动设置的save_path数目和要绘制的图形数目不一致")
+            return
+    for n in range(nids):
+        id = ids[n]
         sta_ob_and_fos = meteva.base.in_id_list(sta_ob_and_fos1,[id])
         times_fo = sta_ob_and_fos.loc[:, "time"].values
         times_fo = list(set(times_fo))
@@ -85,21 +99,8 @@ def time_list_line_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
         dtime_all = pd.Series(time_all) - times_fo[0]
         x_all = dtime_all/np.timedelta64(1, 'h')
         x_all = x_all.values
-        #print(x_all)
-        #dx_all = x_all[1:] - x_all[:-1]
-        #dx_all = dx_all[dx_all!=0]
-        #mindx_all = np.min(dx_all)
-        #step0 = int(len(x_all) / 30) + 1
-        #step1 = int(24/(mindx_all*step0))
-        #if step1 > 0:
-        #    step = int(24/step1/mindx_all)
-        #else:
-        #    step = step0
-        #x_plot = x_all[::step]
-        #time_plot = time_all[::step]
-        #time_strs = meteva.product.program.get_time_str_list(time_plot, row=2)
+
         x_plot, time_strs = meteva.product.program.get_x_ticks(time_all, width-1)
-        #print(x_plot)
 
         time_strs_null = []
         for i in range(len(time_strs)):
@@ -130,10 +131,16 @@ def time_list_line_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
                 if s1 is None:
                     s1 = {}
                     s1["id"] = id
-                title1 = meteva.product.program.get_title_from_dict(meteva.product.time_list_line_error, s1, None, None,
+
+                if isinstance(title,list):
+                    title1 = title[n]
+                else:
+                    title1 = meteva.product.program.get_title_from_dict(title, s1, None, None,
                                                                     None)
-                title1 = title1.replace("\n","")
+
+                    title1 = title1.replace("\n","")
                 plt.title(title1,fontsize = 16)
+
             plt.hlines(0,x_plot[0],x_plot[-1],"g")
             if i == len(times_fo) - 1:
                 plt.xticks(x_plot, time_strs,fontsize = 12)
@@ -145,18 +152,20 @@ def time_list_line_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
         ax_ylabel = plt.axes(rect_ylabel)
         ax_ylabel.axes.set_axis_off()
         plt.text(0, 0, "起报时间", fontsize=16, rotation=90)
+
+        save_path1 = None
         if save_path is None:
             if save_dir is None:
                 show = True
             else:
-                save_path = save_dir+"\\" + str(id) + ".png"
-                meteva.base.creat_path(save_path)
+                save_path1 = save_dir+"\\" + str(id) + ".png"
+        else:
+            save_path1 = save_path[n]
 
-        if save_path is not None:
-            meteva.base.tool.path_tools.creat_path(save_path)
-            plt.savefig(save_path,bbox_inches='tight')
-            print("图片已保存至" + save_path)
-            save_path = None
+        if save_path1 is not None:
+            meteva.base.tool.path_tools.creat_path(save_path1)
+            plt.savefig(save_path1,bbox_inches='tight')
+            print("图片已保存至" + save_path1)
         if show:
             plt.show()
         plt.close()
@@ -165,7 +174,21 @@ def time_list_line_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
 def time_list_line(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,show = False,dpi = 300,title = "预报准确性和稳定性对比图"):
     sta_ob_and_fos1 = meteva.base.sele_by_dict(sta_ob_and_fos0, s)
     ids = list(set(sta_ob_and_fos1.loc[:,"id"]))
-    for id in ids:
+    nids = len(ids)
+    if isinstance(title, list):
+        if nids != len(title):
+            print("手动设置的title数目和要绘制的图形数目不一致")
+            return
+
+    if save_path is not None:
+        if isinstance(save_path,str):
+            save_path = [save_path]
+        if nids != len(save_path):
+            print("手动设置的save_path数目和要绘制的图形数目不一致")
+            return
+
+    for n in range(nids):
+        id = ids[n]
         #print(id)
         sta_ob_and_fos = meteva.base.in_id_list(sta_ob_and_fos1,[id])
         times_fo = sta_ob_and_fos.loc[:, "time"].values
@@ -218,19 +241,7 @@ def time_list_line(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,sho
         dtime_all = pd.Series(time_all) - times_fo[0]
         x_all = dtime_all/np.timedelta64(1, 'h')
         x_all = x_all.values
-        #print(x_all)
-        #dx_all = x_all[1:] - x_all[:-1]
-        #dx_all = dx_all[dx_all!=0]
-        #mindx_all = np.min(dx_all)
-        #step0 = int(len(x_all) / 30) + 1
-        #step1 = int(24/(mindx_all*step0))
-        #if step1 > 0:
-        #    step = int(24/step1/mindx_all)
-        #else:
-        #    step = step0
-        #x_plot = x_all[::step]
-        #time_plot = time_all[::step]
-        #time_strs = meteva.product.program.get_time_str_list(time_plot, row=2)
+
         x_plot,time_strs = meteva.product.program.get_x_ticks(time_all,width-1)
         time_strs_null = []
         for i in range(len(time_strs)):
@@ -261,10 +272,13 @@ def time_list_line(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,sho
                     s1 = {}
                 s1["id"] = id
 
-                title1 = meteva.product.program.get_title_from_dict(meteva.product.time_list_line, s1, None, None,
-                                                                    None)
-                title1 = title1.replace("\n","")
-                plt.title(title1,fontsize = 16)
+                if isinstance(title, list):
+                    title1 = title[n]
+                else:
+                    title1 = meteva.product.program.get_title_from_dict(title, s1, None, None,
+                                                                        None)
+                    title1 = title1.replace("\n", "")
+                plt.title(title1, fontsize=16)
             if i == len(times_fo) - 1:
                 #print(x_plot)
                 plt.xticks(x_plot, time_strs,fontsize = 12)
@@ -277,17 +291,18 @@ def time_list_line(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,sho
         ax_ylabel.axes.set_axis_off()
         plt.text(0, 0, "起报时间", fontsize=16, rotation=90)
 
+        save_path1 = None
         if save_path is None:
             if save_dir is None:
                 show = True
             else:
-                save_path = save_dir+"/" + str(id) + ".png"
-                meteva.base.creat_path(save_path)
-        if save_path is not None:
-            meteva.base.tool.path_tools.creat_path(save_path)
-            plt.savefig(save_path,bbox_inches='tight')
-            print("图片已保存至" + save_path)
-            save_path = None
+                save_path1 = save_dir+"/" + str(id) + ".png"
+        else:
+            save_path1 = save_path[n]
+        if save_path1 is not None:
+            meteva.base.tool.path_tools.creat_path(save_path1)
+            plt.savefig(save_path1,bbox_inches='tight')
+            print("图片已保存至" + save_path1)
         if show:
             plt.show()
         plt.close()
@@ -400,7 +415,22 @@ def time_list_mesh_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
     annot_size = width * 50 / col
     if annot_size >16:
         annot_size= 16
-    for d in range(len(data_names)-1):
+
+    nids = len(ids)
+    nfo = len(data_names) - 1
+    if isinstance(title, list):
+        if nids * nfo != len(title):
+            print("手动设置的title数目和要绘制的图形数目不一致")
+            return
+
+    if save_path is not None:
+        if isinstance(save_path,str):
+            save_path = [save_path]
+        if nids * nfo != len(save_path):
+            print("手动设置的save_path数目和要绘制的图形数目不一致")
+            return
+    kk = 0
+    for d in range(nfo):
         data_name = data_names[d+1]
         sta_one_member = meteva.base.in_member_list(sta_ob_and_fos1, [data_names[0],data_name])
         #meteva.base.set_stadata_names(sta_ob_part2, [data_name])
@@ -448,30 +478,38 @@ def time_list_mesh_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
                 s1 = {}
                 s1["id"] = id
                 s1["member"] =[data_name]
-            #title1 = meteva.product.program.get_title_from_dict(meteva.product.time_list_mesh, s1, None, None,None)
+            if isinstance(title,list):
+                title1 = title[kk]
+            else:
+                if id in meteva.base.station_id_name_dict.keys():
+                    title1 = title + "(" + data_name + ")" + "{\'id\':" + str(id) +meteva.base.station_id_name_dict[id] +"}"
+                else:
+                    title1 = title + "(" + data_name + ")" + "{\'id\':" + str(id) +  "}"
 
-            #title = data_name + '实况和不同时效预报对比图'
-            title1 = title + "(" + data_name + ")" + "{\'id\':" + str(id) +meteva.base.station_id_name_dict[id] +"}"
             ax2.set_title(title1, loc='left', fontweight='bold', fontsize=18)
             rect = patches.Rectangle((0,0 ), col, row, linewidth=0.8, edgecolor='k', facecolor='none')
             ax2.add_patch(rect)
             #plt.tick_params(top='on', right='on', which='both')  # 显示上侧和右侧的刻度
             plt.rcParams['xtick.direction'] = 'in'  # 将x轴的刻度线方向设置抄向内
             plt.rcParams['ytick.direction'] = 'in'  # 将y轴的刻度方知向设置向内
+
+            save_path1 = None
             if(save_path is None):
                 if save_dir is None:
                     show = True
                 else:
-                    save_path = save_dir +"/" +data_name+"_"+str(id) + ".png"
-                    meteva.base.creat_path(save_path)
-            if save_path is not None:
-                meteva.base.tool.path_tools.creat_path(save_path)
-                plt.savefig(save_path,bbox_inches='tight')
-                print("图片已保存至"+save_path)
-                save_path = None
+                    save_path1 = save_dir +"/" +data_name+"_"+str(id) + ".png"
+            else:
+                save_path1 = save_path[kk]
+            if save_path1 is not None:
+
+                meteva.base.tool.path_tools.creat_path(save_path1)
+                plt.savefig(save_path1,bbox_inches='tight')
+                print("图片已保存至"+save_path1)
             if show:
                 plt.show()
             plt.close()
+            kk += 1
     return
 
 def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
@@ -574,7 +612,7 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
         #    str1 = str(hour) + "时"
         #print(str1)
         y_ticks.append(str1)
-    title0 = title
+
     width = 14
     x_plot,x_ticks = meteva.product.get_x_ticks(times_ob,width-2)
     x_plot /= dh_x
@@ -590,12 +628,35 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
     annot_size = width * 50 / col
     if annot_size >16:
         annot_size= 16
+
+
+    nids = len(ids)
+    nfo = len(data_names) - 1
+    if isinstance(title, list):
+        if plot_error:
+            if 2 * nids * nfo != len(title):
+                print("手动设置的title数目和要绘制的图形数目不一致")
+                return
+        else:
+            if nids * nfo != len(title):
+                print("手动设置的title数目和要绘制的图形数目不一致")
+                return
+
+    if save_path is not None:
+        if isinstance(save_path,str):
+            save_path = [save_path]
+        if nids * nfo != len(save_path):
+            print("手动设置的save_path数目和要绘制的图形数目不一致")
+            return
+    kk1 = 0
+    kk2 = 0
     for d in range(len(data_names)-1):
         data_name = data_names[d+1]
         sta_fo_all2 = meteva.base.in_member_list(sta_fo_all1, data_name)
         meteva.base.set_stadata_names(sta_ob_part2, [data_name])
         sta_one_member = meteva.base.combine_join(sta_ob_part2, sta_fo_all2)
         #以最近的预报作为窗口中间的时刻
+
         for id in ids:
             sta_one_id = meteva.base.in_id_list(sta_one_member,id)
             dat = np.ones((col, row)) * meteva.base.IV
@@ -640,8 +701,16 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
                 ax1.set_yticks(y_plot)
                 ax1.set_yticklabels(y_ticks, rotation=360, fontsize=14)
 
-                title = title0+"（误差）"+"("+data_name+")"+ "{\'id\':"+str(id)+meteva.base.station_id_name_dict[id] +"}"
-                ax1.set_title(title, loc='left', fontweight='bold', fontsize=18)
+                if isinstance(title,list):
+                    title1 = title[kk2]
+                    kk2 +=1
+                else:
+                    if id in meteva.base.station_id_name_dict.keys():
+                        title1 = title+"（误差）"+"("+data_name+")"+ "{\'id\':"+str(id)+meteva.base.station_id_name_dict[id] +"}"
+                    else:
+                        title1 = title + "（误差）" + "(" + data_name + ")" + "{\'id\':" + str(id) + "}"
+                ax1.set_title(title1, loc='left', fontweight='bold', fontsize=18)
+
                 ax1.grid(linestyle='--', linewidth=0.5)
 
                 #plt.tick_params(top='on', right='on', which='both')  # 显示上侧和右侧的刻度
@@ -689,9 +758,15 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
             #title1 = meteva.product.program.get_title_from_dict(meteva.product.time_list_mesh, s1, None, None,None)
 
             #title = data_name + '实况和不同时效预报对比图'
-            title1 = title0 + "（要素值）" + "(" + data_name + ")" + "{\'id\':" + str(id) +meteva.base.station_id_name_dict[id] +"}"
+            if isinstance(title,list):
+                title1 = title[kk2]
+                kk2 +=1
+            else:
+                if id in meteva.base.station_id_name_dict.keys():
+                    title1 = title + "（要素值）" + "(" + data_name + ")" + "{\'id\':" + str(id) +meteva.base.station_id_name_dict[id] +"}"
+                else:
+                    title1 = title + "（要素值）" + "(" + data_name + ")" + "{\'id\':" + str(id)  + "}"
             ax2.set_title(title1, loc='left', fontweight='bold', fontsize=18)
-
 
             for k in range(row):
                 jr = row - k - 1
@@ -705,20 +780,23 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
             #plt.tick_params(top='on', right='on', which='both')  # 显示上侧和右侧的刻度
             plt.rcParams['xtick.direction'] = 'in'  # 将x轴的刻度线方向设置抄向内
             plt.rcParams['ytick.direction'] = 'in'  # 将y轴的刻度方知向设置向内
-            if(save_path is None):
+
+            save_path1 = None
+            if (save_path is None):
                 if save_dir is None:
                     show = True
                 else:
-                    save_path = save_dir +"/" +data_name+"_"+str(id) + ".png"
-                    meteva.base.creat_path(save_path)
-            if save_path is not None:
-                meteva.base.tool.path_tools.creat_path(save_path)
-                plt.savefig(save_path,bbox_inches='tight')
-                print("图片已保存至"+save_path)
-                save_path = None
+                    save_path1 = save_dir + "/" + data_name + "_" + str(id) + ".png"
+            else:
+                save_path1 = save_path[kk1]
+            if save_path1 is not None:
+                meteva.base.tool.path_tools.creat_path(save_path1)
+                plt.savefig(save_path1, bbox_inches='tight')
+                print("图片已保存至" + save_path1)
             if show:
                 plt.show()
             plt.close()
+            kk1 += 1
     return
 
 
@@ -935,42 +1013,48 @@ def time_list_mesh1(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
             plt.close()
     return
 
-def time_list_mesh_temp(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,show = False,dpi = 300,annot =True):
+def time_list_mesh_temp(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,show = False,dpi = 300,annot =True,
+                        title = "温度预报准确性和稳定性对比图"):
     clev, cmap= meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("temp")
     time_list_mesh(sta_ob_and_fos0,s,save_dir,save_path,clev,cmap,plot_error,cmap_error= "bwr",show = show,dpi = dpi ,annot = annot,
-    title = "温度预报准确性和稳定性对比图")
+    title = title)
 
-def time_list_mesh_rain01h(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,show = False,dpi = 300,annot =True):
+def time_list_mesh_rain01h(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,show = False,dpi = 300,annot =True,
+                           title = "1小时降水量预报准确性和稳定性对比图"):
     clev, cmap= meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("rain_1h")
     #clev_error, cmap_error = meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("rain_1h_error")
     time_list_mesh(sta_ob_and_fos0,s,save_dir,save_path,clev,cmap,plot_error,show = show,xtimetype="right",dpi = dpi ,annot = annot,
-    title = "1小时降水量预报准确性和稳定性对比图")
+    title = title)
 
-def time_list_mesh_rain03h(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,show = False,dpi = 300,annot =True):
+def time_list_mesh_rain03h(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,show = False,dpi = 300,annot =True,
+                           title = "3小时降水量预报准确性和稳定性对比图"):
     clev, cmap= meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("rain_3h")
     #clev_error, cmap_error = meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("rain_3h_error")
     time_list_mesh(sta_ob_and_fos0, s, save_dir, save_path, clev, cmap, plot_error, show=show,
                     xtimetype="right",dpi = dpi ,annot = annot,
-    title = "3小时降水量预报准确性和稳定性对比图")
+    title = title)
 
-def time_list_mesh_rh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,show = False,dpi = 300,annot =True):
+def time_list_mesh_rh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,show = False,dpi = 300,annot =True,
+                      title = "相对湿度预报准确性和稳定性对比图"):
     clev, cmap= meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("rh")
     #clev_error, cmap_error = meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("rh_error")
     time_list_mesh(sta_ob_and_fos0,s,save_dir,save_path, clev, cmap, plot_error,show = show,dpi = dpi ,annot = annot,
-    title = "相对湿度预报准确性和稳定性对比图")
+    title = title)
 
-def time_list_mesh_vis(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,show = False,dpi = 300,annot =True):
+def time_list_mesh_vis(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,show = False,dpi = 300,annot =True,
+                       title = "能见度预报准确性和稳定性对比图"):
     clev, cmap= meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("vis")
     #clev_error,cmap_error = meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("vis_error")
     time_list_mesh(sta_ob_and_fos0,s,save_dir,save_path,clev,cmap,plot_error,show = show,dpi = dpi ,annot = annot,
-    title = "能见度预报准确性和稳定性对比图")
+    title = title)
 
 
-def time_list_mesh_tcdc(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,show = False,dpi = 300,annot =True):
+def time_list_mesh_tcdc(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,show = False,dpi = 300,annot =True,
+                        title = "云量预报准确性和稳定性对比图"):
     clev, cmap= meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("tcdc")
     #clev_error, cmap_error = meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("tcdc_error")
     time_list_mesh(sta_ob_and_fos0,s,save_dir,save_path,clev,cmap,plot_error = plot_error,show = show,dpi = dpi ,annot = annot,
-    title = "云量预报准确性和稳定性对比图")
+    title = title)
 
 
 def time_list_mesh_wind(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,max_error = None,show = False,dpi = 300,title = "风预报准确性和稳定性对比图"):
@@ -1048,7 +1132,7 @@ def time_list_mesh_wind(sta_ob_and_fos0,s = None,save_dir = None,save_path = Non
     y_ticks = []
     t_fo0 = meteva.base.all_type_time_to_datetime(times_fo[0])
     step = int(math.ceil(row / 40))
-    title0 = title
+
     if step != 1:
         while step * dh_y % 3 != 0:
             step += 1
@@ -1072,8 +1156,27 @@ def time_list_mesh_wind(sta_ob_and_fos0,s = None,save_dir = None,save_path = Non
     x_plot += 0.5
     x = np.arange(col)
     y = np.arange(row)
-    model_num = int(len(fo_names)/2)
-    for d in range(model_num):
+    nfo = int(len(fo_names)/2)
+    nids = len(ids)
+    if isinstance(title, list):
+        if plot_error:
+            if 2 * nids * nfo != len(title):
+                print("手动设置的title数目和要绘制的图形数目不一致")
+                return
+        else:
+            if nids * nfo != len(title):
+                print("手动设置的title数目和要绘制的图形数目不一致")
+                return
+
+    if save_path is not None:
+        if isinstance(save_path,str):
+            save_path = [save_path]
+        if nids * nfo != len(save_path):
+            print("手动设置的save_path数目和要绘制的图形数目不一致")
+            return
+    kk1 = 0
+    kk2 = 0
+    for d in range(nfo):
         data_name = fo_names[d*2:d*2+2]
         sta_fo_all2 = meteva.base.in_member_list(sta_fo_all1, data_name)
         meteva.base.set_stadata_names(sta_ob_part2, data_name)
@@ -1153,8 +1256,12 @@ def time_list_mesh_wind(sta_ob_and_fos0,s = None,save_dir = None,save_path = Non
                 ax1.set_xticklabels(x_ticks,fontsize =14)
                 ax1.set_yticklabels(y_ticks, rotation=360,fontsize =14)
                 #title = "实况(id:" + str(id) + ")和不同时效预报(" + data_name[0][2:] + ")偏差图"
-                title = title0 + "(偏差)" + "(" + data_name[0][2:] + ")" + "{\'id\':" + str(id) + meteva.base.station_id_name_dict[id] + "}"
-                ax1.set_title(title, loc='left', fontweight='bold', fontsize=18)
+                if isinstance(title,list):
+                    title1 = title[kk2]
+                    kk2 += 1
+                else:
+                    title1 = title + "(偏差)" + "(" + data_name[0][2:] + ")" + "{\'id\':" + str(id) + meteva.base.station_id_name_dict[id] + "}"
+                ax1.set_title(title1, loc='left', fontweight='bold', fontsize=18)
                 ax1.grid(linestyle='--', linewidth=0.5)
                 xx, yy = np.meshgrid(x + 0.5, y + 0.5)
                 speed_1d = dat_speed.flatten()
@@ -1197,8 +1304,12 @@ def time_list_mesh_wind(sta_ob_and_fos0,s = None,save_dir = None,save_path = Non
             ax2.set_xticklabels(x_ticks,fontsize =14)
             ax2.set_yticklabels(y_ticks, rotation=360,fontsize =14)
             #title = "实况(" + str(id) + ")和不同时效预报(" + data_name[0][2:] + ")对比图"
-            title = title0 + "(要素值)" + "(" + data_name[0][2:] + ")" + "{\'id\':" + str(id) +meteva.base.station_id_name_dict[id] +"}"
-            ax2.set_title(title, loc='left', fontweight='bold', fontsize=18)
+            if isinstance(title,list):
+                title1 = title[kk2]
+                kk2+= 1
+            else:
+                title1 = title + "(要素值)" + "(" + data_name[0][2:] + ")" + "{\'id\':" + str(id) +meteva.base.station_id_name_dict[id] +"}"
+            ax2.set_title(title1, loc='left', fontweight='bold', fontsize=18)
             ax2.grid(linestyle='--', linewidth=0.5)
             xx, yy = np.meshgrid(x + 0.5, y + 0.5)
             speed_1d = dat_speed.flatten()
@@ -1218,22 +1329,22 @@ def time_list_mesh_wind(sta_ob_and_fos0,s = None,save_dir = None,save_path = Non
             rect = patches.Rectangle((0,0 ), col, row, linewidth=0.8, edgecolor='k', facecolor='none')
             ax2.add_patch(rect)
 
-            if save_path is None:
+            save_path1 = None
+            if (save_path is None):
                 if save_dir is None:
                     show = True
                 else:
-                    save_path = save_dir + "/" + data_name[0] + "_" + str(id) + ".png"
-                    meteva.base.tool.path_tools.creat_path(save_path)
-                    plt.savefig(save_path)
-                    print("图片已保存至" + save_path)
+                    save_path1 = save_dir + "/" + data_name + "_" + str(id) + ".png"
             else:
-                meteva.base.tool.path_tools.creat_path(save_path)
-                plt.savefig(save_path, bbox_inches='tight')
-                print("图片已保存至" + save_path)
-                save_path = None
+                save_path1 = save_path[kk1]
+            if save_path1 is not None:
+                meteva.base.tool.path_tools.creat_path(save_path1)
+                plt.savefig(save_path1, bbox_inches='tight')
+                print("图片已保存至" + save_path1)
             if show:
                 plt.show()
             plt.close()
+            kk1 += 1
     return
 
 
