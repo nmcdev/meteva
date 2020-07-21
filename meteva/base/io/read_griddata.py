@@ -59,7 +59,9 @@ def read_griddata_from_micaps4(filename,grid=None,level = None,time = None,dtime
             print(filename + " is not exist")
             return None
         encoding,str1 = meteva.base.io.get_encoding_of_file(filename)
-        if encoding is None:return
+        if encoding is None:
+            print("文件编码格式不识别")
+            return None
         #file = open(filename,'r',encoding=encoding)
         #str1 = file.read()
         #file.close()
@@ -121,10 +123,11 @@ def read_griddata_from_micaps4(filename,grid=None,level = None,time = None,dtime
                 return da1
         else:
             return None
-    except (Exception, BaseException) as e:
-        exstr = traceback.format_exc()
-        print(exstr)
-        print(e)
+    except:
+        if show:
+            exstr = traceback.format_exc()
+            print(exstr)
+        print(filename + "文件格式不能识别。可能原因：文件未按micaps4格式存储")
         return None
 
 #读取nc数据
@@ -396,97 +399,6 @@ def read_griddata_from_nc(filename,grid = None,
         return None
 
 
-#读取nc数据
-def read_griddata_from_nc1(filename,grid = None,value_name = None,member = None,level = None,time = None,dt = None,lat = None,lon = None):
-
-    """
-    读取NC文件，并将其保存为xarray中DataArray结构的六维数据信息
-    :param filename:NC格式的文件路径和文件名
-    :param value_name:nc文件中要素name的值,默认：None
-    :param member:要素名,默认：None
-    :param level:层次,默认：None
-    :param time:时间,默认：None
-    :param dt:时效,默认：None
-    :param lat:纬度,默认：None
-    :param lon:经度,默认：None
-    :return:返回一个DataArray结构的六维数据信息da1
-    """
-    try:
-        ds0 = xr.open_dataset(filename)
-        drop_list = []
-        ds = xr.Dataset()
-        #1判断要素成员member
-        if member in list(ds0):
-            drop_list.append(member)
-            member =  ds0[member]
-
-        #2判断层次level
-        if level in list(ds0):
-            drop_list.append(level)
-            level = ds0[level]
-        #3 time
-        if time is None:
-            if "time" in ds0.coords or "time" in list(ds0):
-                time = "time"
-        elif time in list(ds0):
-            drop_list.append(time)
-            time = ds0[time]
-
-        if dt in list(ds0):
-            drop_list.append(dt)
-            dt = ds0[dt]
-
-        #5判断纬度lat
-        if(lat is None):
-            if "latitude" in ds0.coords or "latitude" in list(ds0):
-                lat = "latitude"
-            elif "lat" in ds0.coords or "lat" in list(ds0):
-                lat = "lat"
-
-        if lat in list(ds0):
-            drop_list.append(lat)
-            lat = ds0[lat]
-
-        #6判断经度lon
-        if(lon is None):
-            if "longitude" in ds0.coords or "longitude" in list(ds0):
-                lon = "longitude"
-            elif "lon" in ds0.coords or "lon" in list(ds0):
-                lon = "lon"
-        if lon in list(ds0):
-            drop_list.append(lon)
-            lon = ds0[lon]
-
-        da = None
-        if value_name is not None:
-            da = ds0[value_name]
-        else:
-            name_list = list((ds0))
-            for name in name_list:
-                if name in drop_list: continue
-                da = ds0[name]
-                shape = da.values.shape
-                size = 1
-                for i in range(len(shape)):
-                    size = size * shape[i]
-                if size > 1:
-                    break
-        da1 = meteva.base.basicdata.DataArray_to_grd(da,member,level,time,dt,lat,lon)
-
-        meteva.base.reset(da1)
-        if grid is None:
-            da1.name = "data0"
-            return da1
-        else:
-            # 如果传入函数有grid信息，就需要进行一次双线性插值，按照grid信息进行提取网格信息。
-            da2 = meteva.base.interp_gg_linear(da1, grid)
-            da2.name = "data0"
-            return da2
-
-
-    except:
-        exstr = traceback.format_exc()
-        print(exstr)
 
 
 def read_griddata_from_gds_file(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
@@ -530,11 +442,18 @@ def read_griddata_from_gds(ip,port,filename,grid = None,level = None,time = None
                 if show:
                     print("success read from " + filename)
                 return grd
-        elif status == 416:
-            print(filename + "超出可读时间")
+            else:
+                print(filename + " not exist")
+                return None
+        else:
+            print("连接服务的状态异常，不能读取相应的文件,可能原因相应的文件不在允许读取的时段范围")
             return None
-    except Exception as e:
-        print(e)
+    except:
+        if show:
+            exstr = traceback.format_exc()
+            print(exstr)
+
+        print(filename + "数据读取错误")
         return None
 
 
@@ -561,8 +480,18 @@ def read_gridwind_from_gds(ip,port,filename,grid = None,level = None,time = None
                 if show:
                     print("success read from " + filename)
                 return grd
-    except Exception as e:
-        print(e)
+            else:
+                print(filename + " not exist")
+                return None
+        else:
+            print("连接服务的状态异常，不能读取相应的文件,可能原因相应的文件不在允许读取的时段范围")
+            return None
+    except :
+        if show:
+            exstr = traceback.format_exc()
+            print(exstr)
+
+        print(filename + "数据读取错误")
         return None
 
 
@@ -759,8 +688,12 @@ def read_gridwind_from_gds_file(filename,grid = None,level = None,time = None,dt
         if show:
             print("success read from " + filename)
         return wind
-    except Exception as e:
-        print(e)
+    except:
+        if show:
+            exstr = traceback.format_exc()
+            print(exstr)
+
+        print(filename + "数据读取错误")
         return None
 
 def read_gridwind_from_micaps2(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show =False):
@@ -782,10 +715,12 @@ def read_gridwind_from_micaps2(filename,grid = None,level = None,time = None,dti
                 if show:
                     print("success read from " + filename)
                 return wind1
-        except (Exception, BaseException) as e:
-            exstr = traceback.format_exc()
-            print(exstr)
-            print(e)
+        except:
+            if show:
+                exstr = traceback.format_exc()
+                print(exstr)
+
+            print(filename + "文件读取错误，可能原因，文件不符合micaps2格式规范")
             return None
     else:
         print(filename + " not exists")
@@ -793,49 +728,59 @@ def read_gridwind_from_micaps2(filename,grid = None,level = None,time = None,dti
 
 def read_gridwind_from_micaps11(filename,grid = None,level = None,time = None,dtime = None,data_name = "",show = False):
     if os.path.exists(filename):
-        encoding,str1 = meteva.base.io.get_encoding_of_file(filename)
-        if encoding is None:return
-        strs = str1.split()
-        dlon = float(strs[8])
-        dlat = float(strs[9])
-        slon = float(strs[10])
-        elon = float(strs[11])
-        slat = float(strs[12])
-        elat = float(strs[13])
-        nlon = float(strs[14])
-        nlat = float(strs[15])
-        if (nlat - 1) * dlat == (elat - slat) and (nlon - 1) * dlon == (elon - slon):
-            k = 16
-            grid0 =meteva.base.grid([slon,elon,dlon],[slat,elat,dlat])
-        else:
-            dlon = float(strs[9])
-            dlat = float(strs[10])
-            slon = float(strs[11])
-            elon = float(strs[12])
-            slat = float(strs[13])
-            elat = float(strs[14])
-            k = 17
-            grid0 =meteva.base.grid([slon,elon,dlon],[slat,elat,dlat])
-        if (len(strs) - k +1) >= 2 * grid0.nlon * grid0.nlat:
-            dat_u= (np.array(strs[k:(k + grid0.nlon * grid0.nlat)])).astype(float).reshape((grid0.nlat,grid0.nlon))
-            k += grid0.nlon * grid0.nlat
-            dat_v = (np.array(strs[k:(k + grid0.nlon * grid0.nlat)])).astype(float).reshape((grid0.nlat, grid0.nlon))
-            grid_u = meteva.base.grid_data(grid0,dat_u)
-            grid_v = meteva.base.grid_data(grid0,dat_v)
-            wind = meteva.base.diag.u_v_to_wind(grid_u,grid_v)
-            meteva.base.reset(wind)
-            meteva.base.set_griddata_coords(wind, gtime=[time], dtime_list=[dtime], level_list=[level],
-                                            member_list=["u" + data_name, "v" + data_name])
-            if grid is None:
-                return wind
+        try:
+            encoding,str1 = meteva.base.io.get_encoding_of_file(filename)
+            if encoding is None:
+                print("文件编码格式不识别")
+                return None
+            strs = str1.split()
+            dlon = float(strs[8])
+            dlat = float(strs[9])
+            slon = float(strs[10])
+            elon = float(strs[11])
+            slat = float(strs[12])
+            elat = float(strs[13])
+            nlon = float(strs[14])
+            nlat = float(strs[15])
+            if (nlat - 1) * dlat == (elat - slat) and (nlon - 1) * dlon == (elon - slon):
+                k = 16
+                grid0 =meteva.base.grid([slon,elon,dlon],[slat,elat,dlat])
             else:
-                wind1 = meteva.base.interp_gg_linear(wind, grid)
-                if show:
-                    print("success read from " + filename)
-                return wind1
-        else:
+                dlon = float(strs[9])
+                dlat = float(strs[10])
+                slon = float(strs[11])
+                elon = float(strs[12])
+                slat = float(strs[13])
+                elat = float(strs[14])
+                k = 17
+                grid0 =meteva.base.grid([slon,elon,dlon],[slat,elat,dlat])
+            if (len(strs) - k +1) >= 2 * grid0.nlon * grid0.nlat:
+                dat_u= (np.array(strs[k:(k + grid0.nlon * grid0.nlat)])).astype(float).reshape((grid0.nlat,grid0.nlon))
+                k += grid0.nlon * grid0.nlat
+                dat_v = (np.array(strs[k:(k + grid0.nlon * grid0.nlat)])).astype(float).reshape((grid0.nlat, grid0.nlon))
+                grid_u = meteva.base.grid_data(grid0,dat_u)
+                grid_v = meteva.base.grid_data(grid0,dat_v)
+                wind = meteva.base.diag.u_v_to_wind(grid_u,grid_v)
+                meteva.base.reset(wind)
+                meteva.base.set_griddata_coords(wind, gtime=[time], dtime_list=[dtime], level_list=[level],
+                                                member_list=["u" + data_name, "v" + data_name])
+                if grid is None:
+                    return wind
+                else:
+                    wind1 = meteva.base.interp_gg_linear(wind, grid)
+                    if show:
+                        print("success read from " + filename)
+                    return wind1
+            else:
 
-            print(filename + " 格式错误")
+                print(filename + " 格式错误")
+                return None
+        except:
+            if show:
+                exstr = traceback.format_exc()
+                print(exstr)
+
+            print(filename + "文件读取错误，可能原因，文件不符合micaps11格式规范")
             return None
     else:
         print(filename + " 文件不存在")
@@ -931,8 +876,18 @@ def read_AWX_from_gds(ip,port,filename,grid = None,level = None,time = None,dtim
                     if show:
                         print("success read from " + filename)
                     return da
-    except Exception as e:
-        print(e)
+            else:
+                print(filename + " not exist")
+                return None
+        else:
+            print("连接服务的状态异常，不能读取相应的文件,可能原因相应的文件不在允许读取的时段范围")
+            return None
+    except:
+        if show:
+            exstr = traceback.format_exc()
+            print(exstr)
+
+        print(filename + "数据读取失败")
         return None
 
 
@@ -1015,8 +970,12 @@ def read_griddata_from_AWX_file(filename,grid = None,level = None,time = None,dt
         if show:
             print("success read from " + filename)
         return grd
-    except Exception as e:
-        print(e)
+    except:
+        if show:
+            exstr = traceback.format_exc()
+            print(exstr)
+
+        print(filename + "数据读取失败")
         return None
 
 def read_griddata_from_binary(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
@@ -1037,8 +996,12 @@ def read_griddata_from_binary(filename,grid = None,level = None,time = None,dtim
         if show:
             print("success read from " + filename)
         return grd
-    except Exception as e:
-        print(e)
+    except:
+        if show:
+            exstr = traceback.format_exc()
+            print(exstr)
+
+        print(filename + "数据读取失败")
         return None
 
 
@@ -1146,20 +1109,35 @@ def read_griddata_from_radar_latlon_file(filename,grid = None,level = None,time 
         if show:
             print("success read from " + filename)
         return grd
-    except Exception as e:
-        print(e)
+    except:
+        if show:
+            exstr = traceback.format_exc()
+            print(exstr)
+
+        print(filename + "数据读取失败")
         return None
 
-def read_griddata_from_bz2_file(filename,decode_method,grid = None,level = None,time = None,dtime = None,data_name = "data0"):
-    f = bz2.BZ2File(filename)
-    buf = f.read()
-    f.close()
+def read_griddata_from_bz2_file(filename,decode_method,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
+
+    if not os.path.exists(filename):
+        print(filename + " not exist")
+        return None
     try:
+        f = bz2.BZ2File(filename)
+        buf = f.read()
+        f.close()
         grd = decode_method(buf,grid = grid,level = level,time = time,dtime = dtime,data_name = data_name)
+        if show:
+            print("successed read griddata from "+ filename)
+        return grd
     except:
-        print(filename + " format wrong")
-        grd = None
-    return grd
+        if show:
+            exstr = traceback.format_exc()
+            print(exstr)
+
+        print(filename + "数据读取失败")
+        return None
+
 
 
 
@@ -1185,8 +1163,17 @@ def read_radar_latlon_from_gds(ip,port,filename,grid = None,level = None,time = 
                 byteArray = ByteArrayResult.byteArray
                 grd = decode_griddata_from_radar_byteArray(byteArray,grid = grid,level = level,time = time,dtime = dtime,data_name = data_name)
                 return grd
-    except Exception as e:
-        print(e)
+            else:
+                print(filename + " not exist")
+                return None
+        else:
+            print("连接服务的状态异常，不能读取相应的文件,可能原因相应的文件不在允许读取的时段范围")
+            return None
+    except:
+        if show:
+            exstr = traceback.format_exc()
+            print(exstr)
+        print(filename + "数据读取失败")
         return None
 
 def read_griddata_from_rasterData(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
@@ -1221,7 +1208,10 @@ def read_griddata_from_rasterData(filename,grid = None,level = None,time = None,
             da = meteva.base.interp_gg_linear(grd, grid)
             da.name = "data0"
             return da
-    except Exception as e:
-        print(e)
+    except:
+        if show:
+            exstr = traceback.format_exc()
+            print(exstr)
+        print(filename + "数据读取失败")
         return None
 
