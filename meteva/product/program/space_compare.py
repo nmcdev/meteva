@@ -395,7 +395,7 @@ def rain_24h_comprehensive_sg(sta_ob,grd_fo, save_path=None,show = False,dpi = 2
     bias = meteva.method.yes_or_no.score.bias(ob, fo, clevs[1:])
     hit_rate = meteva.method.yes_or_no.score.pod(ob, fo, clevs[1:])
     mis_rate = meteva.method.yes_or_no.score.mr(ob, fo, clevs[1:])
-    fal_rate = meteva.method.yes_or_no.score.pofd(ob, fo, clevs[1:])
+    fal_rate = meteva.method.yes_or_no.score.far(ob, fo, clevs[1:])
 
     text = str(len(ob)) + "评分站点预报检验统计量\n"
     text += "Mean absolute error:" + "%6.2f" % mae + "\n"
@@ -677,7 +677,7 @@ def rain_24h_comprehensive_chinaland_sg(sta_ob,grd_fo,  save_path=None,show = Fa
     bias = meteva.method.yes_or_no.score.bias(ob, fo, clevs[1:])
     hit_rate = meteva.method.yes_or_no.score.pod(ob, fo, clevs[1:])
     mis_rate = meteva.method.yes_or_no.score.mr(ob, fo, clevs[1:])
-    fal_rate = meteva.method.yes_or_no.score.pofd(ob, fo, clevs[1:])
+    fal_rate = meteva.method.yes_or_no.score.far(ob, fo, clevs[1:])
     text = str(len(ob)) + "评分站点预报检验统计量\n"
     text += "Mean absolute error:" + "%6.2f" % mae + "\n"
     text += "Mean error:" + "%6.2f" % me + "\n"
@@ -739,7 +739,11 @@ def temper_gg(grd_ob,grd_fo,save_path = None,show = False,dpi = 200,add_county_l
 
     ob_fo_max = max(ob_max,fo_max)
     ob_fo_min = min(ob_min,fo_min)
-    clevs_temp, cmap_temp = meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("temp")
+    if ob_fo_max > 120:
+        clevs_temp, cmap_temp = meteva.base.tool.color_tools.clev_cmap_temper_2m_k()
+    else:
+        clevs_temp, cmap_temp = meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("temp")
+
     clevs,cmap = meteva.base.tool.color_tools.get_part_clev_and_cmap(clevs_temp,cmap_temp,ob_fo_max,ob_fo_min)
 
     width = 9  #整个画面的宽度
@@ -863,7 +867,13 @@ def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None,show = False,dpi = 20
 
     ob_fo_max = max(ob_max,fo_max)
     ob_fo_min = min(ob_min,fo_min)
-    clevs_temp, cmap_temp = meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("temp")
+    #clevs_temp, cmap_temp = meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("temp")
+
+    if ob_fo_max > 120:
+        clevs_temp, cmap_temp = meteva.base.tool.color_tools.clev_cmap_temper_2m_k()
+    else:
+        clevs_temp, cmap_temp = meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("temp")
+
     clevs,cmap = meteva.base.tool.color_tools.get_part_clev_and_cmap(clevs_temp,cmap_temp,ob_fo_max,ob_fo_min)
 
     width = 9  #整个画面的宽度
