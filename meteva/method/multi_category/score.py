@@ -108,6 +108,70 @@ def tcof(ob, fo, grade_list=None):
     return tcof_array
 
 
+def hfmc_grade(ob, fo, grade_list):
+    '''
+    多分类评分中间统计量
+    :param ob: 实况数据 任意维numpy数组
+    :param fo: 预测数据 任意维numpy数组,Fo.shape 和Ob.shape一致
+    :param grade_list: 一个从小到大排列的实数列表，以其中列出的数值划分出的多个区间作为分类标签。
+    :return: 一维数组，包括（总样本数，正确样本数，观测的样本数、预报的样本数）
+    '''
+    hfmc_multi_list = []
+    Ob_shape = ob.shape
+    Fo_shape = fo.shape
+
+    Ob_shpe_list = list(Ob_shape)
+    size = len(Ob_shpe_list)
+    ind = -size
+    Fo_Ob_index = list(Fo_shape[ind:])
+    if Fo_Ob_index != Ob_shpe_list:
+        print('实况数据和观测数据维度不匹配')
+        return
+
+    total_count = ob.size
+    Ob_shpe_list.insert(0, -1)
+    new_Fo_shape = tuple(Ob_shpe_list)
+    new_Fo = fo.reshape(new_Fo_shape)
+    new_Fo_shape = new_Fo.shape
+    new_grade_list = None
+    for line in range(new_Fo_shape[0]):
+
+        new_grade_list = grade_list
+        hfmc_m = np.zeros((len(grade_list) + 1, 4))
+        gle = [-1e300]
+        gle.extend(grade_list)
+        gle.append(1e300)
+        for i in range(len(gle) - 1):
+            #命中样本
+            hit_index_list = np.where(
+                (ob >= gle[i]) & (ob < gle[i + 1]) & (new_Fo[line, :] >= gle[i]) & (new_Fo[line, :] < gle[i + 1]))
+            hfmc_m[i, 0] = len(hit_index_list[0])
+
+            #空报样本，预报处于某个区间，而观测低于该区间
+            fal_index_list = np.where(
+                (ob < gle[i]) & (new_Fo[line, :] >= gle[i]) & (new_Fo[line, :] < gle[i + 1]))
+            hfmc_m[i, 1] = len(fal_index_list[0])
+
+            # 漏报样本，观测处于某个区间，而预测低于该区间
+            mis_index_list = np.where(
+                (ob >= gle[i]) & (ob < gle[i + 1]) & (new_Fo[line, :] < gle[i]))
+            hfmc_m[i, 2] = len(mis_index_list[0])
+
+            #正确无
+            nd_list = np.where((ob < gle[i]) & (new_Fo[line, :] < gle[i]))
+            hfmc_m[i, 3] = len(nd_list[0])
+        hfmc_multi_list.append(hfmc_m)
+    hfmc_multi_array = np.array(hfmc_multi_list)
+    shape = list(Fo_shape[:ind])
+    a = len(new_grade_list)
+    if (grade_list is not None):
+        a+=1
+    shape.append(a)
+    shape.append(4)
+    hfmc_multi_array = hfmc_multi_array.reshape(shape)
+    return hfmc_multi_array
+
+
 def hfmc_multi(ob, fo, grade_list=None):
     '''
     多分类评分中间统计量
@@ -163,15 +227,20 @@ def hfmc_multi(ob, fo, grade_list=None):
             gle.extend(grade_list)
             gle.append(1e300)
             for i in range(len(gle) - 1):
+
+                #命中样本
                 hit_index_list = np.where(
                     (ob >= gle[i]) & (ob < gle[i + 1]) & (new_Fo[line, :] >= gle[i]) & (new_Fo[line, :] < gle[i + 1]))
                 hfmc_m[i, 0] = len(hit_index_list[0])
-                fal_index_list = np.where(
-                    ((ob < gle[i]) | (ob >= gle[i + 1])) & (new_Fo[line, :] >= gle[i]) & (new_Fo[line, :] < gle[i + 1]))
+
+                #空报样本，预报处于某个区间，而观测低于该区间
+                fal_index_list = np.where(((ob < gle[i]) | (ob >= gle[i + 1])) & (new_Fo[line, :] >= gle[i]) & (new_Fo[line, :] < gle[i + 1]))
                 hfmc_m[i, 1] = len(fal_index_list[0])
-                mis_index_list = np.where(
-                    (ob >= gle[i]) & (ob < gle[i + 1]) & ((new_Fo[line, :] < gle[i]) | (new_Fo[line, :] >= gle[i + 1])))
+                # 漏报样本，观测处于某个区间，而预测低于该区间
+                mis_index_list = np.where((ob >= gle[i]) & (ob < gle[i + 1]) & ((new_Fo[line, :] < gle[i]) | (new_Fo[line, :] >= gle[i + 1])))
                 hfmc_m[i, 2] = len(mis_index_list[0])
+
+                #正确无
                 hfmc_m[i, 3] = total_count - hfmc_m[i, 0] - hfmc_m[i, 1] - hfmc_m[i, 2]
         hfmc_multi_list.append(hfmc_m)
     hfmc_multi_array = np.array(hfmc_multi_list)
@@ -224,6 +293,43 @@ def accuracy_tcof(tcof_array):
     correct_count = tcof_array[..., 0, 1]
     accuracy_score = correct_count / total_count
     return accuracy_score
+
+
+def ts_grade(ob,fo,grade_list):
+    '''
+    分级ts评分
+    :param ob:
+    :param fo:
+    :param grade_list:
+    :return:
+    '''
+    hfmc_array = hfmc_grade(ob, fo, grade_list)
+    ts_array = ts_hfmc(hfmc_array)
+    return ts_array
+
+
+def ets_grade(ob, fo, grade_list):
+    hfmc_array = hfmc_grade(ob, fo, grade_list)
+    ets_array = ets_hfmc(hfmc_array)
+    return ets_array
+
+
+def bias_grade(ob, fo, grade_list):
+    hfmc_array = hfmc_grade(ob, fo, grade_list)
+    bias_array = bias_hfmc(hfmc_array)
+    return bias_array
+
+
+def mr_grade(ob, fo, grade_list):
+    hfmc_array = hfmc_grade(ob, fo, grade_list)
+    mr_array = mr_hfmc(hfmc_array)
+    return mr_array
+
+
+def far_grade(ob, fo, grade_list):
+    hfmc_array = hfmc_grade(ob, fo, grade_list)
+    far_array = far_hfmc(hfmc_array)
+    return far_array
 
 
 def ts_multi(ob, fo, grade_list=None):
