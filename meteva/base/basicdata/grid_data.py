@@ -152,7 +152,7 @@ def xarray_to_griddata(xr0,value_name = None,member_dim = None,level_dim = None,
     # 1判断要素成员member
     if (member_dim is None):
         member_dim = "member"
-    if member_dim in list(ds0.coords) or member_dim in list(ds0):
+    if member_dim in list(ds0.coords) or member_dim in list(ds0.dims):
         if member_dim in ds0.coords:
             members = ds0.coords[member_dim]
         else:
@@ -291,17 +291,30 @@ def xarray_to_griddata(xr0,value_name = None,member_dim = None,level_dim = None,
     dim_order = {}
 
     for dim in dims:
-        if "member" in dim.lower():
+        if member_dim == dim:
             dim_order["member"] = dim
-        elif dim.lower().find("time") == 0:
-            dim_order["time"] = dim
-        elif dim.lower().find("dt") == 0:
-            dim_order["dtime"] = dim
-        elif dim.lower().find("lev") == 0:
+        elif level_dim == dim:
             dim_order["level"] = dim
-        elif dim.lower().find("lat") == 0 or 'y' == dim.lower():
+        elif time_dim == dim:
+            dim_order["time"] = dim
+        elif dtime_dim == dim:
+            dim_order["dtime"] = dim
+        elif lon_dim == dim:
+            dim_order["lon"] = dim
+        elif lat_dim == dim:
             dim_order["lat"] = dim
-        elif dim.lower().find("lon") == 0 or 'x' == dim.lower():
+    for dim in dims:
+        if "member" not in dim_order.keys() and "member" in dim.lower():
+            dim_order["member"] = dim
+        elif "time" not in dim_order.keys() and dim.lower().find("time") == 0:
+            dim_order["time"] = dim
+        elif "dtime" not in dim_order.keys() and dim.lower().find("dt") == 0:
+            dim_order["dtime"] = dim
+        elif "level" not in dim_order.keys() and dim.lower().find("lev") == 0:
+            dim_order["level"] = dim
+        elif "lat" not in dim_order.keys() and (dim.lower().find("lat") == 0 or 'y' == dim.lower()):
+            dim_order["lat"] = dim
+        elif "lon" not in dim_order.keys() and (dim.lower().find("lon") == 0 or 'x' == dim.lower()):
             dim_order["lon"] = dim
 
     if "member" not in dim_order.keys():
