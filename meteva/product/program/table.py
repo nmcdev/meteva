@@ -12,7 +12,7 @@ def table(sta_ob_and_fos0,method,s = None,g = None,gll = None,save_dir = None,**
                 s["drop_last"] = True
     sta_ob_and_fos = sele_by_dict(sta_ob_and_fos0, s)
     sta_ob_and_fos_list,gll1 = group(sta_ob_and_fos,g,gll)
-    data_name = meteva.base.get_stadata_names(sta_ob_and_fos)
+    data_name = meteva.base.get_stadata_names(sta_ob_and_fos_list[0])
     ensemble_score_method = [meteva.method.cr]
     group_num = len(sta_ob_and_fos_list)
 
