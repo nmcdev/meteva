@@ -1143,7 +1143,7 @@ def bar(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",v
         data = array.transpose(newshape)
         legend_num = len(name_list_dict[legend])
         width_axis = meteva.base.plot_tools.caculate_axis_width(name_list_dict[axis], sup_fontsize,legend_num)
-        width_wspace = sup_fontsize * 0.05
+        width_wspace = sup_fontsize * 0.2
         width_one_subplot = width_axis +width_wspace
         if width_one_subplot <1.5:width_one_subplot = 1.5
         subplot_num = len(name_list_dict[subplot])
@@ -1159,7 +1159,7 @@ def bar(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",v
             nrow = int(math.ceil(len(name_list_dict[subplot])/ncol))
         width_fig = width_one_subplot * ncol
         height_axis = width_axis * 0.5
-        height_hspace = sup_fontsize * 0.05
+        height_hspace = sup_fontsize * 0.2
         height_suplegend = 1
         height_fig = nrow * (height_axis+height_hspace) + height_suplegend
         if width_fig>10:width_fig = 10
@@ -1419,7 +1419,7 @@ def plot(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",
         legend_num = len(name_list_dict[legend])
         width_axis = meteva.base.plot_tools.caculate_axis_width(name_list_dict[axis], sup_fontsize,legend_num)
 
-        width_wspace = sup_fontsize * 0.05
+        width_wspace = sup_fontsize * 0.2
         width_one_subplot = width_axis +width_wspace
         subplot_num = len(name_list_dict[subplot])
         spasify = 1
@@ -1434,7 +1434,7 @@ def plot(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",
             nrow = int(math.ceil(len(name_list_dict[subplot])/ncol))
         width_fig = width_one_subplot * ncol
         height_axis = width_axis * 0.5
-        height_hspace = sup_fontsize * 0.05
+        height_hspace = sup_fontsize * 0.2
         height_suplegend = 1
         height_fig = nrow * (height_axis+height_hspace) + height_suplegend
         if width_fig>10:
