@@ -152,6 +152,16 @@ def read_griddata_from_nc(filename,grid = None,
         return
     try:
         ds0 = xr.open_dataset(filename)
+
+        if dtime_dim == "time":
+            ds0 = ds0.rename_dims({"time":"dtime"})
+            dtime_dim = "dtime"
+        if time_dim == "dtime":
+            ds0 = ds0.rename_dims({"dtime": "time"})
+            time_dim = "time"
+
+
+        #print(ds0)
         drop_list = []
         ds = xr.Dataset()
         #1判断要素成员member
@@ -173,11 +183,11 @@ def read_griddata_from_nc(filename,grid = None,
 
         #2判断层次level
         if (level_dim is None):
-            if "level" in list(ds0.coords) or "level" in list(ds0):
+            if "level" in list(ds0.coords) or "level" in list(ds0.dims):
                 level_dim = "level"
-            elif "lev" in ds0.coords or "lev" in list(ds0):
+            elif "lev" in ds0.coords or "lev" in list(ds0.dims):
                 level_dim = "lev"
-        if level_dim in ds0.coords or level_dim in list(ds0):
+        if level_dim in ds0.coords or level_dim in list(ds0.dims):
             if level_dim in ds0.coords:
                 levels = ds0.coords[level_dim]
             else:
@@ -192,10 +202,10 @@ def read_griddata_from_nc(filename,grid = None,
 
         # 3判断时间time
         if(time_dim is None):
-            if "time" in ds0.coords or "time" in list(ds0):
+            if "time" in ds0.coords or "time" in list(ds0.dims):
                 time_dim = "time"
 
-        if time_dim in ds0.coords or time_dim in list(ds0):
+        if time_dim in ds0.coords or time_dim in list(ds0.dims):
             if time_dim in ds0.coords:
                 times = ds0.coords[time_dim]
             else:
@@ -208,9 +218,10 @@ def read_griddata_from_nc(filename,grid = None,
             ds.coords["time"] = ("time", [0])
 
         # 4判断时效dt
-        if (dtime_dim is None):
-            dtime_dim = "dtime"
-        if dtime_dim in ds0.coords or dtime_dim in list(ds0):
+        dtime_dim0 = dtime_dim
+
+
+        if dtime_dim in ds0.coords or dtime_dim in list(ds0.dims):
             if dtime_dim in ds0.coords:
                 dts = ds0.coords[dtime_dim]
             else:
@@ -226,11 +237,11 @@ def read_griddata_from_nc(filename,grid = None,
 
         #5判断纬度lat
         if(lat_dim is None):
-            if "latitude" in ds0.coords or "latitude" in list(ds0):
+            if "latitude" in ds0.coords or "latitude" in list(ds0.dims):
                 lat_dim = "latitude"
-            elif "lat" in ds0.coords or "lat" in list(ds0):
+            elif "lat" in ds0.coords or "lat" in list(ds0.dims):
                 lat_dim = "lat"
-        if lat_dim in ds0.coords or lat_dim in list(ds0):
+        if lat_dim in ds0.coords or lat_dim in list(ds0.dims):
             if lat_dim in ds0.coords:
                 lats = ds0.coords[lat_dim]
             else:
@@ -251,11 +262,11 @@ def read_griddata_from_nc(filename,grid = None,
 
         #6判断经度lon
         if(lon_dim is None):
-            if "longitude" in ds0.coords or "longitude" in list(ds0):
+            if "longitude" in ds0.coords or "longitude" in list(ds0.dims):
                 lon_dim = "longitude"
-            elif "lon" in ds0.coords or "lon" in list(ds0):
+            elif "lon" in ds0.coords or "lon" in list(ds0.dims):
                 lon_dim = "lon"
-        if lon_dim in ds0.coords or lon_dim in list(ds0):
+        if lon_dim in ds0.coords or lon_dim in list(ds0.dims):
             if lon_dim in ds0.coords:
                 lons = ds0.coords[lon_dim]
             else:
@@ -342,9 +353,11 @@ def read_griddata_from_nc(filename,grid = None,
             dim_order["lon"] = "lon"
             da = da .expand_dims("lon")
 
+
+
         da = da.transpose(dim_order["member"],dim_order["level"],dim_order["time"],
                           dim_order["dtime"],dim_order["lat"],dim_order["lon"])
-
+        #print(da)
         ds[name] = (("member","level","time","dtime","lat","lon"),da)
         attrs_name = list(da.attrs)
         for key in attrs_name:
@@ -357,11 +370,22 @@ def read_griddata_from_nc(filename,grid = None,
         da1 = ds[name]
 
         da1.name = "data"
-        if da1.coords['time'] is None or pd.isnull(da1.coords["time"]):
-            da1.coords['time'] = pd.date_range("2099-1-1",periods=1)
-        #print(da1.coords["dtime"])
-        if da1.coords['dtime'] is None or pd.isnull(da1.coords["dtime"]):
-            da1.coords['dtime'] = [0]
+        if da1.coords["time"] is None:
+            da1.coords['time'] = pd.date_range("2099-1-1", periods=1)
+        else:
+            time_dim_value = da1.coords["time"].values
+            if len(time_dim_value) == 1:
+                 if pd.isnull(time_dim_value):
+                     da1.coords['time'] = pd.date_range("2099-1-1", periods=1)
+
+        if da1.coords["dtime"] is None:
+            da1.coords["dtime"] = [0]
+        else:
+            level_dim_value = da1.coords["dtime"].values
+            if len(level_dim_value)==1:
+                if pd.isnull(level_dim_value):
+                    da1.coords["dtime"] = [0]
+
         if da1.coords["level"] is None:
             da1.coords["level"] = [0]
         else:

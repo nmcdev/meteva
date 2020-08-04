@@ -325,11 +325,33 @@ def between_ob_time_range(sta,start_time,end_time):
 ############
 
 #为拥有多dtime的站点数据，依次增加dtime所表示的list列表
-def in_dtime_list(sta,dtime_list):
+def in_dtime_list(data,dtime_list):
     if not isinstance(dtime_list,list) and not isinstance(dtime_list,np.ndarray):
         dtime_list = [dtime_list]
-    sta1 = sta.loc[sta['dtime'].isin(dtime_list)]
-    return sta1
+    if isinstance(data, pd.DataFrame):
+        sta1 = data.loc[data['dtime'].isin(dtime_list)]
+        return sta1
+    else:
+        grid0 = meteva.base.basicdata.get_grid_of_data(data)
+        num_list = []
+        dtime_list1 = []
+        for dtime in dtime_list:
+            if dtime not in grid0.dtimes:
+                print(dtime +" not exist in griddata's dtime_list")
+            else:
+                for i in range(len(grid0.dtimes)):
+                    if dtime == grid0.levels[i]:
+                        num_list.append(i)
+                        dtime_list1.append(dtime)
+                        break
+
+        dat = data.values[:, :, :, num_list, :, :]
+
+        grid1 = meteva.base.basicdata.grid(grid0.glon, grid0.glat,
+                                                            grid0.gtime, dtime_list=dtime_list1,level_list = grid0.levels,
+                                                            member_list = grid0.members)
+        grd1 = meteva.base.basicdata.grid_data(grid1, dat)
+        return grd1
 
 #为拥有多dday的站点数据，依次增加dday所表示的list列表
 def in_dday_list(sta,dday_list):
