@@ -41,6 +41,7 @@ meteva/base/tool/grib_tools.py
 meteva/base/tool/math_tools.py
 meteva/base/tool/path_tools.py
 meteva/base/tool/plot_tools.py
+meteva/base/tool/process_tools.py
 meteva/base/tool/station_tools.py
 meteva/base/tool/time_tools.py
 meteva/method/__init__.py
@@ -101,8 +102,10 @@ meteva/product/application/read_data_base_on_gds.py
 meteva/product/application/time_compare.py
 meteva/product/presentation/__init__.py
 meteva/product/presentation/gds_data_dict.py
+meteva/product/presentation/pre_t2m_3h_global1w.py
 meteva/product/presentation/pre_t2m_3h_global243.py
 meteva/product/presentation/rain_1h_pre.py
+meteva/product/presentation/shenxueshun.py
 meteva/product/presentation/t2m_3h_pre.py
 meteva/product/presentation/winter_olympic.py
 meteva/product/presentation/wuhan.py

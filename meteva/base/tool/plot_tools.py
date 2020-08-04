@@ -41,10 +41,14 @@ def readshapefile(shapefile, default_encoding='utf-8'):
     for shprec in shf.shapeRecords():
         shp = shprec.shape; rec = shprec.record
         npoly = npoly + 1
+        #print(shptype)
+
         if shptype != shp.shapeType:
-            print(shapefile)
-            raise ValueError('readshapefile can only handle a single shape type per file')
-        if shptype not in [1,3,5,8]:
+            #print(shptype)
+            #print(shapefile)
+            continue
+            #raise ValueError('readshapefile can only handle a single shape type per file')
+        if shptype not in [1,3,5,8,13]:
             raise ValueError('readshapefile can only handle 2D shape types')
         verts = shp.points
         if shptype in [1,8]: # a Point or MultiPoint shape.
@@ -104,12 +108,17 @@ def add_china_map_2basemap(ax,name ="province", facecolor='none',
     :return: None.
     """
     # map name
-    names = {'world':"worldmap",'nation': "bou1_4p", 'province': "bou2_4p",
+    names = {'world':"worldmap",'nation': "bou1_4p", 'province': "Province",
+             'county': "BOUNT_poly", 'river': "hyd1_4p",
+             'river_high': "hyd2_4p"}
+
+    names = {'world':"worldmap",'nation': "NationalBorder", 'province': "Province",
              'county': "BOUNT_poly", 'river': "hyd1_4p",
              'river_high': "hyd2_4p"}
         # get shape file and information
     shpfile = pkg_resources.resource_filename(
         'meteva', "resources/maps/" + names[name])
+    #print(shpfile)
     shp1 = readshapefile(shpfile, default_encoding=encoding)
     lines = LineCollection(shp1,antialiaseds=(1,))
     lines.set_color(edgecolor)
@@ -118,7 +127,7 @@ def add_china_map_2basemap(ax,name ="province", facecolor='none',
     ax.add_collection(lines)
 
 
-def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = None,add_county_line = False,show = False,dpi = 300):
+def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = None,add_county_line = False,add_worldmap =False,show = False,dpi = 300):
 
     if save_path is None:
         show = True
@@ -138,7 +147,15 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = None,a
     ax = plt.axes(rect1)
 
     grid0 = meteva.base.get_grid_of_data(grd)
-    add_china_map_2basemap(ax, grid=grid0, edgecolor='k', lw=0.3,encoding = 'gbk')  #"省界"
+
+
+    if grid0.slon < 70 or grid0.elon > 140 or grid0.slat < 10 or grid0.elat > 60:
+        add_worldmap = True
+    if add_worldmap:
+        add_china_map_2basemap(ax, name="world", edgecolor='k', lw=0.3, encoding='gbk', grid0=None)  # "国界"
+
+    add_china_map_2basemap(ax, name="nation", edgecolor='k', lw=0.3,encoding = 'gbk')  #"国界"
+    add_china_map_2basemap(ax, edgecolor='k', lw=0.3,encoding = 'gbk')  #"省界"
     if add_county_line:
         add_china_map_2basemap(ax, name="county", edgecolor='k', lw=0.2, encoding='gbk')  # "省界"
     ax.set_xlim((grid0.slon, grid0.elon))
@@ -255,7 +272,7 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = None,a
     plt.close()
 
 
-def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = None,add_county_line = False,show = False,dpi = 300):
+def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = None,add_county_line = False,add_worldmap=False,show = False,dpi = 300):
 
     if save_path is None:
         show = True
@@ -288,9 +305,17 @@ def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = None
     plt.title(title,fontsize = 14)
     grid0 = meteva.base.get_grid_of_data(grd)
 
-    add_china_map_2basemap(ax, name="province", edgecolor='k', lw=0.3,encoding = 'gbk')  #"省界"
+
+    if grid0.slon < 70 or grid0.elon > 140 or grid0.slat < 10 or grid0.elat > 60:
+        add_worldmap = True
+    if add_worldmap:
+        add_china_map_2basemap(ax, name="world", edgecolor='k', lw=0.3, encoding='gbk', grid0=None)  # "国界"
+
+    add_china_map_2basemap(ax, name="nation", edgecolor='k', lw=0.3, encoding='gbk')  # "国界"
+    add_china_map_2basemap(ax,  edgecolor='k', lw=0.3, encoding='gbk')   # "省界"
+
     if add_county_line:
-        add_china_map_2basemap(ax, name="county", edgecolor='k', lw=0.2, encoding='gbk')  # "省界"
+        add_china_map_2basemap(ax, name="county", edgecolor='k', lw=0.2, encoding='gbk')  # "县界"
 
     ax.set_xlim((grid0.slon, grid0.elon))
     ax.set_ylim((grid0.slat, grid0.elat))
@@ -400,9 +425,8 @@ def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = None
     plt.close()
 
 
-
 def scatter_sta(sta0,value_column=None,
-                map_extend = None,add_county_line = False,
+                map_extend = None,add_county_line = False,add_worldmap = False,
                 clevs=None, cmap=None,
                 fix_size = True,threshold = None,mean_value = None,
                 print_max = 0,print_min = 0,save_dir = None,
@@ -475,7 +499,7 @@ def scatter_sta(sta0,value_column=None,
     if mean_value is None:
         mean_value = np.sum(np.abs(values)) / values.size
 
-    print(mean_value)
+    #print(mean_value)
 
     vmax = np.max(sta_without_iv[plot_data_names].values)
     vmin = np.min(sta_without_iv[plot_data_names].values)
@@ -487,8 +511,8 @@ def scatter_sta(sta0,value_column=None,
             if vmax - vmin < 1e-10:
                 vmax = vmin + 1.1
             dif = (vmax - vmin) / 10.0
-            print(vmax)
-            print(vmin)
+            # print(vmax)
+            # print(vmin)
             inte = math.pow(10, math.floor(math.log10(dif)));
             # 用基本间隔，将最大最小值除于间隔后小数点部分去除，最后把间隔也整数化
             r = dif / inte
@@ -613,7 +637,9 @@ def scatter_sta(sta0,value_column=None,
 
         plt.title(title1,fontsize = 14)
 
-        if slon<60 or elon > 150 or slat < 0 or elat > 60:
+        if slon < 70 or elon > 140 or slat < 10 or elat > 60:
+            add_worldmap = True
+        if add_worldmap:
             add_china_map_2basemap(ax, name="world", edgecolor='k', lw=0.3, encoding='gbk', grid0=None)  # "国界"
 
 
@@ -971,7 +997,8 @@ def caculate_axis_width(xticks,fontsize,legend_num = 1):
     return width
 
 
-def bar(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",vmin = None,vmax = None,ncol = None,save_path = None,show = False,dpi = 300,title = ""):
+def bar(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",vmin = None,vmax = None,ncol = None,save_path = None,show = False
+        ,dpi = 300,bar_width = None,hspace = None,same_y = False,wspace = None,title = ""):
     sup_fontsize = 10
     shape = array.shape
     if len(array[array!=meteva.base.IV]) ==0:
@@ -1013,7 +1040,12 @@ def bar(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",v
         x = np.arange(array.size)
         y_plot = array[array != meteva.base.IV]
         x_plot = x[array!=meteva.base.IV]
-        plt.bar(x_plot,y_plot)
+
+        if bar_width is None:
+            width = 0.2
+        else:
+            width = bar_width
+        plt.bar(x_plot,y_plot,width= width *0.95)
         if len(array[array ==meteva.base.IV])>0:
             x_iv = x[array == meteva.base.IV]
             y_iv = np.zeros(x_iv.size)
@@ -1069,7 +1101,10 @@ def bar(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",v
 
         fig = plt.figure(figsize=(width, height), dpi=dpi)
         x = np.arange(len(xticks))
-        width = 0.8 / (legend_num+2)
+        if bar_width is None:
+            width = 0.7 / (legend_num + 2)
+        else:
+            width = bar_width
 
         for i in range(legend_num):
             x1 = x + (i - legend_num/2 + 0.5) * width
@@ -1143,7 +1178,7 @@ def bar(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",v
         data = array.transpose(newshape)
         legend_num = len(name_list_dict[legend])
         width_axis = meteva.base.plot_tools.caculate_axis_width(name_list_dict[axis], sup_fontsize,legend_num)
-        width_wspace = sup_fontsize * 0.2
+        width_wspace = sup_fontsize * 0.1
         width_one_subplot = width_axis +width_wspace
         if width_one_subplot <1.5:width_one_subplot = 1.5
         subplot_num = len(name_list_dict[subplot])
@@ -1159,7 +1194,7 @@ def bar(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",v
             nrow = int(math.ceil(len(name_list_dict[subplot])/ncol))
         width_fig = width_one_subplot * ncol
         height_axis = width_axis * 0.5
-        height_hspace = sup_fontsize * 0.2
+        height_hspace = sup_fontsize * 0.1
         height_suplegend = 1
         height_fig = nrow * (height_axis+height_hspace) + height_suplegend
         if width_fig>10:width_fig = 10
@@ -1167,13 +1202,24 @@ def bar(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",v
         if width_fig<5: width_fig=5
         if height_fig<3:height_fig=3
         fig = plt.figure(figsize=(width_fig, height_fig), dpi=dpi)
+        if hspace is None:
+            hspace = height_hspace/(width_axis*0.5)
+        if wspace is None:
+            wspace = width_wspace/width_one_subplot
+
         plt.subplots_adjust(left=0, bottom=0.0, right=1.0, top = 1 - height_suplegend/height_fig,
-                            hspace=height_hspace/(width_axis*0.5),wspace=width_wspace/width_one_subplot)
+                            hspace=hspace,wspace=wspace)
+
+
+        if bar_width is None:
+            width = 0.7 / (legend_num + 2)
+        else:
+            width = bar_width
 
         for k in range(subplot_num):
             plt.subplot(nrow, ncol, k + 1)
             x = np.arange(len(name_list_dict[axis]))
-            width = 0.8 / (legend_num + 2)
+
             for i in range(legend_num):
                 x1 = x + (i - legend_num / 2 + 0.5) * width
                 dat0 = data[k,i,:]
@@ -1419,7 +1465,7 @@ def plot(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",
         legend_num = len(name_list_dict[legend])
         width_axis = meteva.base.plot_tools.caculate_axis_width(name_list_dict[axis], sup_fontsize,legend_num)
 
-        width_wspace = sup_fontsize * 0.2
+        width_wspace = sup_fontsize * 0.1
         width_one_subplot = width_axis +width_wspace
         subplot_num = len(name_list_dict[subplot])
         spasify = 1
@@ -1434,7 +1480,7 @@ def plot(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",
             nrow = int(math.ceil(len(name_list_dict[subplot])/ncol))
         width_fig = width_one_subplot * ncol
         height_axis = width_axis * 0.5
-        height_hspace = sup_fontsize * 0.2
+        height_hspace = sup_fontsize * 0.1
         height_suplegend = 1
         height_fig = nrow * (height_axis+height_hspace) + height_suplegend
         if width_fig>10:

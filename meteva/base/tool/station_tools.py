@@ -1,5 +1,6 @@
 import pkg_resources
 import re
+import meteva
 def fuzzyfinder(input_str, collection):
     suggestions = []
     pattern = '.*?'.join(input_str)    # Converts 'djm' to 'd.*?j.*?m'
@@ -62,6 +63,13 @@ def get_station_id_name_dict(id_name_list_file):
 
 station_id_name_dict = get_station_id_name_dict(pkg_resources.resource_filename('meteva', "resources/stations/station_id_pro_county.txt"))
 station_name_id_dict = dict(zip(station_id_name_dict.values(),station_id_name_dict.keys()))
+
+
+def add_station_id_name_dict(id_name_dict):
+    for id in id_name_dict.keys():
+        name = id_name_dict[id]
+        meteva.base.station_id_name_dict[id] = name
+        meteva.base.station_name_id_dict[name] = id
 
 def find_station_id_by_city_name(input_strs):
     ele_names = muti_strs_finder(input_strs,station_name_id_dict)
