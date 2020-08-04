@@ -180,7 +180,6 @@ def combine_on_obTime_id(sta_ob,sta_fo_list,need_match_ob = False):
             sta["time"] = sta["time"] - datetime.timedelta(hours= dtime)
             sta["dtime"] = dtime
             sta_combine.append(sta)
-
         sta_combine = pd.concat(sta_combine, axis=0)
 
     sta_combine_fo = None

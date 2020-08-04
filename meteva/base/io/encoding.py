@@ -15,6 +15,7 @@ def get_encoding_of_file(filename,read_rows = 0):
                 for i in range(read_rows):
                     strs.append(file.readline())
         file.close()
+
     except:
         try:
             encoding = "UTF-8"

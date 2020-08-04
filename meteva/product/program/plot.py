@@ -66,6 +66,7 @@ def plot(sta_ob_and_fos0,method,s = None,g = None,gll = None,save_dir = None,sav
             method_para = method.__code__.co_varnames[:method.__code__.co_argcount]
             if "member_list" in method_para:
                 kwargs["member_list"] = data_name[1:]
+            meteva.base.creat_path(save_path1)
             method(ob, fo,save_path = save_path1,**kwargs)
 
     return valid_gll

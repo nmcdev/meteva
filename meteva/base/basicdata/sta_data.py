@@ -19,7 +19,7 @@ def sta_data(df,columns = None):
     # 将列名变为小写
     columns_1 = []
     for column in columns:
-        column = column.lower()
+        #column = column.lower()
         columns_1.append(column)
     columns = columns_1
 

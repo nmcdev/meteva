@@ -310,8 +310,6 @@ def box_plot_continue(ob, fo,  member_list=None,vmax = None,vmin = None, save_pa
     height = width/2
     fig = plt.figure(figsize=(width, height), dpi=dpi)
 
-
-
     markersize = 5 * width * height / np.sqrt(ob.size)
     if markersize < 1:
         markersize = 1
@@ -332,7 +330,7 @@ def box_plot_continue(ob, fo,  member_list=None,vmax = None,vmin = None, save_pa
     plt.title(title,fontsize = sup_fontsize)
     for i, item in enumerate(bplot["boxes"]):
         item.set_facecolor(colors_list[i])
-    plt.title(title, fontsize=sup_fontsize)
+    #plt.title(title, fontsize=sup_fontsize)
 
     if vmin is not None or vmax is not None:
         if vmin is not None:

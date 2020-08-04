@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = None,plot = None,save_path = None,show = False,dpi = 300,title = "",excel_path = None,**kwargs):
+def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = None,plot = None,bar_width = None,save_path = None,show = False,dpi = 300,title = "",excel_path = None,**kwargs):
 
     if s is not None:
         if g is not None:
@@ -57,8 +57,10 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
     if "grade_list" in kwargs.keys():
         grades = kwargs["grade_list"]
         grade_names = []
-        mutil_list1 = [meteva.method.ts_multi,meteva.method.bias_multi,meteva.method.ets_multi,
-                      meteva.method.mr_multi,meteva.method.far_multi]
+        mutil_list1 = [meteva.method.ts_multi, meteva.method.bias_multi, meteva.method.ets_multi,
+                       meteva.method.mr_multi, meteva.method.far_multi,
+                       meteva.method.ts_grade, meteva.method.bias_grade, meteva.method.ets_grade,
+                       meteva.method.mr_grade, meteva.method.far_grade]
         mutil_list2 = [meteva.method.accuracy,meteva.method.hk,meteva.method.hss]
         if method in mutil_list1:
             grade_names = ["<" +  str(grades[0])]
@@ -178,7 +180,7 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
 
         if plot is not None:
             if plot =="bar":
-                meteva.base.plot_tools.bar(result_plot,name_list_dict,legend=legend,axis = axis,vmin =vmin,ylabel= ylabel,save_path=save_path,show=show,dpi =dpi,title = title)
+                meteva.base.plot_tools.bar(result_plot,name_list_dict,legend=legend,axis = axis,vmin =vmin,ylabel= ylabel,save_path=save_path,show=show,dpi =dpi,title = title,bar_width=bar_width)
             else:
                 meteva.base.plot_tools.plot(result_plot,name_list_dict,legend=legend,axis = axis,vmin =vmin,ylabel= ylabel,save_path=save_path,show=show,dpi = dpi,title= title)
         if excel_path is not None:
@@ -204,8 +206,10 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
     if "grade_list" in kwargs.keys():
         grades = kwargs["grade_list"]
         grade_names = []
-        mutil_list1 = [meteva.method.ts_multi,meteva.method.bias_multi,meteva.method.ets_multi,
-                      meteva.method.mr_multi,meteva.method.far_multi]
+        mutil_list1 = [meteva.method.ts_multi, meteva.method.bias_multi, meteva.method.ets_multi,
+                       meteva.method.mr_multi, meteva.method.far_multi,
+                       meteva.method.ts_grade, meteva.method.bias_grade, meteva.method.ets_grade,
+                       meteva.method.mr_grade, meteva.method.far_grade]
         mutil_list2 = [meteva.method.accuracy,meteva.method.hk,meteva.method.hss]
         if method in mutil_list1:
             grade_names = ["<" +  str(grades[0])]
@@ -378,7 +382,9 @@ def score_tdt(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_lis
         grades = kwargs["grade_list"]
         grade_names = []
         mutil_list1 = [meteva.method.ts_multi, meteva.method.bias_multi, meteva.method.ets_multi,
-                       meteva.method.mr_multi, meteva.method.far_multi]
+                       meteva.method.mr_multi, meteva.method.far_multi,
+                       meteva.method.ts_grade, meteva.method.bias_grade, meteva.method.ets_grade,
+                       meteva.method.mr_grade, meteva.method.far_grade]
         mutil_list2 = [meteva.method.accuracy, meteva.method.hk, meteva.method.hss]
         if method in mutil_list1:
             grade_names = ["<" + str(grades[0])]

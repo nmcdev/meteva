@@ -248,9 +248,14 @@ def load_ob_fos_dataset(ob_fos_path_list,ob_fos_name_list = None,reset_level = T
             meteva.base.set_stadata_names(sta_all,[ob_fos_name_list[i]])
         if reset_level and i==0:
             level_ob = sta_all.iloc[0,0]
-        if reset_level and i !=0:
-            meteva.base.set_stadata_coords(sta_all,level = level_ob)
+        if np.isnan(level_ob):
+            level_ob = 0
+            meteva.base.set_stadata_coords(sta_all, level=level_ob)
+        else:
+            if reset_level and i !=0:
+                meteva.base.set_stadata_coords(sta_all,level = level_ob)
         sta_all_list.append(sta_all)
+        print(sta_all)
     sta_all_merged = meteva.base.combine_on_obTime_id(sta_all_list[0],sta_all_list[1:])
     return sta_all_merged
 
