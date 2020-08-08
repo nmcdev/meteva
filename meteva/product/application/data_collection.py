@@ -8,8 +8,8 @@ import numpy as np
 from multiprocessing import Process,cpu_count
 
 para_example= {
-    "cup_count":1,
-    "ip_port_file":r"H:\test_data\input\input\meb\ip_port.txt",
+    "cpu_count":1,
+    "ip_port_file":r"H:\test_data\ip_port.txt",
     "local_binary_dir": r"O:\data\mdfs",
     "local_sta_dir": r"O:\data\sta",
     "local_grid_dir":r"O:\data\grid",
@@ -21,7 +21,7 @@ para_example= {
     ],
     "grid_origin_dirs": {
         "NWFD_SCMOC": [
-            ["NWFD_SCMOC/RAIN03", [[1100, 1200],[2100,2300]]],
+            ["NWFD_SCMOC/RAIN03", [[1100, 1900],[2100,2300]]],
             ["NWFD_SCMOC/TMP/2M_ABOVE_GROUND", [[1100, 1200],[2100,2359]]],
             ["NWFD_SCMOC/WIND/10M_ABOVE_GROUND", [[1100, 1200],[2100,2359]]],
         ],
@@ -39,8 +39,7 @@ para_example= {
 }
 
 
-
-def download_one_cup(k,ip,port,local_binary_dir,local_sta_dir,local_grid_dir,file_sta_list,file_grid_list):
+def download_one_cpu(k,ip,port,local_binary_dir,local_sta_dir,local_grid_dir,file_sta_list,file_grid_list):
     service = meteva.base.io.GDSDataService(ip, port)
     for filepath in file_sta_list:
         dir,file = os.path.split(filepath)
@@ -80,11 +79,11 @@ def download_one_cup(k,ip,port,local_binary_dir,local_sta_dir,local_grid_dir,fil
                     br.close()
                     if dir.upper().find("WIND") >= 0:
                         if (dir.upper().find("GUST")) >= 0:
-                            grd = meteva.base.io.byteArray_to_griddata(byteArray)
+                            grd = meteva.base.io.decode_griddata_from_gds_byteArray(byteArray)
                         else:
-                            grd = meteva.base.io.byteArray_to_gridwind(byteArray)
+                            grd = meteva.base.io.decode_gridwind_from_gds_byteArray(byteArray)
                     else:
-                        grd = meteva.base.io.byteArray_to_griddata(byteArray)
+                        grd = meteva.base.io.decode_griddata_from_gds_byteArray(byteArray)
                     save_path_nc = local_grid_dir + "/" + dir + "/" + dati_str + "/" + file + ".nc"
                     meteva.base.write_griddata_to_nc(grd, save_path_nc, creat_dir=True,show=True)
                     print(k)
@@ -111,7 +110,18 @@ def download_mp(ip,port,local_binary_dir,local_sta_dir,local_grid_dir,download_s
 
     PP = []
     for k in range(multi_pro_num):
-        tmpp = Process(target=download_one_cup, args=(k,ip,port,local_binary_dir,local_sta_dir,local_grid_dir,file_sta_dict_list[k],file_grid_dict_list[k]))
+        kwargs = {
+            "k":k,
+            "ip":ip,
+            "port":port,
+            "local_binary_dir": local_binary_dir,
+            "local_sta_dir":local_sta_dir,
+            "local_grid_dir":local_grid_dir,
+            "file_sta_list":file_sta_dict_list[k],
+            "file_grid_list":file_grid_dict_list[k]
+        }
+        #tmpp = Process(target=download_one_cup, args=(k,ip,port,local_binary_dir,local_sta_dir,local_grid_dir,file_sta_dict_list[k],file_grid_dict_list[k]))
+        tmpp = Process(target=download_one_cpu,kwargs=kwargs)
         PP.append(tmpp)
     print('Waiting for all subprocesses done...')
     for pc in PP:
@@ -193,8 +203,12 @@ def download_from_gds(para):
                             except Exception as e:
                                 print(e)
 
-    download_mp(ip, port, para["local_binary_dir"], para["local_sta_dir"], para["local_grid_dir"], download_sta_list, download_grid_list,
-                para["cup_count"])
+    if len(download_sta_list) == 0 and len(download_grid_list) == 0:
+        return
+    else:
+        download_mp(ip, port, para["local_binary_dir"], para["local_sta_dir"], para["local_grid_dir"], download_sta_list, download_grid_list,
+                para["cpu_count"])
+        download_from_gds(para)
 
 
 def remove(dir,save_day):
@@ -211,7 +225,7 @@ def remove(dir,save_day):
 
 if __name__ == '__main__':
     pass
-    #download_from_gds(para_example)
+    download_from_gds(para_example)
 
 
 

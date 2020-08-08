@@ -6,7 +6,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = None,plot = None,bar_width = None,save_path = None,show = False,dpi = 300,title = "",excel_path = None,**kwargs):
+def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = None,plot = None,
+          vmax = None,vmin = None,bar_width = None,save_path = None,show = False,dpi = 300,title = "",excel_path = None,**kwargs):
 
     if s is not None:
         if g is not None:
@@ -172,17 +173,18 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
                            meteva.method.pc,meteva.method.mr,meteva.method.far,meteva.method.tc,
                            meteva.method.roc_auc,meteva.method.r,meteva.method.sr,meteva.method.cr,meteva.method.pod,
                            meteva.method.pofd,meteva.method.mse,meteva.method.rmse,meteva.method.mae]
-        if method in bigthan0_method:
-            vmin = 0
-        else:
-            vmin = None
+
+        if vmin is None:
+            if method in bigthan0_method:
+                vmin = 0
+
 
 
         if plot is not None:
             if plot =="bar":
-                meteva.base.plot_tools.bar(result_plot,name_list_dict,legend=legend,axis = axis,vmin =vmin,ylabel= ylabel,save_path=save_path,show=show,dpi =dpi,title = title,bar_width=bar_width)
+                meteva.base.plot_tools.bar(result_plot,name_list_dict,legend=legend,axis = axis,vmin =vmin,vmax = vmax,bar_width=bar_width,ylabel= ylabel,save_path=save_path,show=show,dpi =dpi,title = title)
             else:
-                meteva.base.plot_tools.plot(result_plot,name_list_dict,legend=legend,axis = axis,vmin =vmin,ylabel= ylabel,save_path=save_path,show=show,dpi = dpi,title= title)
+                meteva.base.plot_tools.plot(result_plot,name_list_dict,legend=legend,axis = axis,vmin =vmin,vmax = vmax,ylabel= ylabel,save_path=save_path,show=show,dpi = dpi,title= title)
         if excel_path is not None:
             meteva.base.write_array_to_excel(result_plot,excel_path,name_list_dict,index= axis,columns=legend)
     result = result.squeeze()
@@ -479,7 +481,7 @@ def score_tdt(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_lis
             sta_all_g["id"] = meteva.base.IV
             sta_all_g["lon"] = meteva.base.IV
             sta_all_g["lat"] = meteva.base.IV
-            print(sta_all_g)
+            #print(sta_all_g)
             sta_all_g1 = meteva.base.sta_data(sta_all_g)
             sta_all_g_list.append(sta_all_g1)
 
@@ -517,7 +519,8 @@ def score_tdt(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_lis
                     save_path1 = save_path[k * fo_num: (k + 1) * fo_num]
 
                 #绘制图形
-
+                print("start plot")
+                meteva.base.tool.plot_tools.mesh_tdt(sta_result1,time_list = time_list[i],save_dir=save_dir)
 
         if len(sta_all_g_list) == 1:
             sta_all_g_list = sta_all_g_list[0]

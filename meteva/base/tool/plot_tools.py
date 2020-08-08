@@ -11,6 +11,8 @@ from meteva.base import IV
 import meteva
 from matplotlib.collections import LineCollection
 import matplotlib.patches as patches
+import seaborn as sns
+import datetime
 
 
 def readshapefile(shapefile, default_encoding='utf-8'):
@@ -998,12 +1000,15 @@ def caculate_axis_width(xticks,fontsize,legend_num = 1):
 
 
 def bar(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",vmin = None,vmax = None,ncol = None,save_path = None,show = False
-        ,dpi = 300,bar_width = None,hspace = None,same_y = False,wspace = None,title = ""):
+        ,dpi = 300,bar_width = None,title = ""):
     sup_fontsize = 10
     shape = array.shape
+
     if len(array[array!=meteva.base.IV]) ==0:
         print("所有的值都为缺失值")
         return
+
+    '''
     if vmin is None:
         vmin1 = np.min(array[array != meteva.base.IV])
     else:
@@ -1019,6 +1024,7 @@ def bar(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",v
             vmin1 = vmin1 - 0.1 * dmax
     if vmax is None:
         vmax1 = vmax1 + 0.5 * dmax
+    '''
 
     if len(shape) ==1:
         if name_list_dict is None:
@@ -1059,6 +1065,24 @@ def bar(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",v
             title = title[0]
         plt.title(title,fontsize = sup_fontsize)
 
+        if vmin is None:
+            vmin1 = np.min(array[array != meteva.base.IV])
+        else:
+            vmin1 = vmin
+        if vmax is None:
+            vmax1 = np.max(array[array != meteva.base.IV])
+        else:
+            vmax1 = vmax
+
+        dmax = vmax1 - vmin1
+        if vmin is None:
+            if vmin1 < 0:
+                vmin1 = vmin1 - 0.1 * dmax
+        if vmax is None:
+            vmax1 = vmax1 + 0.2 * dmax
+
+        plt.ylim(vmin1,vmax1)
+
     elif len(shape)==2:
         if name_list_dict is None:
             name_list_dict = {}
@@ -1076,12 +1100,16 @@ def bar(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",v
                 else:
                     legend = keys[1]
                     dat = array.T
+        if legend == keys[1]:
+            dat = array.T
+
         if dat is None:
             dat = array
         if legend not in keys:
             print("legend 参数的取值必须是name_list_dict的key")
         if axis not in keys:
             print("axis 参数的取值必须是name_list_dict的key")
+
         legend_list = name_list_dict[legend]
         legend_num = len(legend_list)
         xticks = name_list_dict[axis]
@@ -1127,6 +1155,23 @@ def bar(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",v
             title = title[0]
         plt.title(title, fontsize=sup_fontsize)
         plt.xlim(-0.5, len(xticks)-0.5)
+
+
+        if vmin is None:
+            vmin1 = np.min(array[array != meteva.base.IV])
+        else:
+            vmin1 = vmin
+        if vmax is None:
+            vmax1 = np.max(array[array != meteva.base.IV])
+        else:
+            vmax1 = vmax
+
+        dmax = vmax1 - vmin1
+        if vmin is None:
+            if vmin1 < 0:
+                vmin1 = vmin1 - 0.1 * dmax
+        if vmax is None:
+            vmax1 = vmax1 + 0.5 * dmax
 
         plt.ylim(vmin1,vmax1)
 
@@ -1194,7 +1239,7 @@ def bar(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",v
             nrow = int(math.ceil(len(name_list_dict[subplot])/ncol))
         width_fig = width_one_subplot * ncol
         height_axis = width_axis * 0.5
-        height_hspace = sup_fontsize * 0.1
+        height_hspace = sup_fontsize * 0.01
         height_suplegend = 1
         height_fig = nrow * (height_axis+height_hspace) + height_suplegend
         if width_fig>10:width_fig = 10
@@ -1202,14 +1247,32 @@ def bar(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",v
         if width_fig<5: width_fig=5
         if height_fig<3:height_fig=3
         fig = plt.figure(figsize=(width_fig, height_fig), dpi=dpi)
-        if hspace is None:
-            hspace = height_hspace/(width_axis*0.5)
-        if wspace is None:
-            wspace = width_wspace/width_one_subplot
+        hspace = height_hspace/(width_axis*0.5)
+        wspace = width_wspace/width_one_subplot
 
         plt.subplots_adjust(left=0, bottom=0.0, right=1.0, top = 1 - height_suplegend/height_fig,
-                            hspace=hspace,wspace=wspace)
+                            hspace=0.08,wspace=wspace)
 
+        if vmin is not None:
+            if isinstance(vmin,list):
+                if len(vmin) != subplot_num:
+                    print("vmin 参数的个数和 子图个数不一致，请重新设置")
+                    return
+                else:
+                    vmin1 = vmin
+            else:
+                vmin1 = vmin * np.ones(subplot_num)
+                vmin1 = vmin1.tolist()
+
+        if vmax is not None:
+            if isinstance(vmax,list):
+                if len(vmax) != subplot_num:
+                    print("vmax 参数的个数和 子图个数不一致，请重新设置")
+                    return
+                else:
+                    vmax1 = vmax
+            else:
+                vmax1 = vmax * np.ones(subplot_num)
 
         if bar_width is None:
             width = 0.7 / (legend_num + 2)
@@ -1225,16 +1288,29 @@ def bar(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",v
                 dat0 = data[k,i,:]
                 y_plot = dat0[dat0 != meteva.base.IV]
                 x_plot = x1[dat0 != meteva.base.IV]
-                plt.bar(x_plot, y_plot, width=width * 0.95, label=name_list_dict[legend][i])
+                if k ==0:
+                    plt.bar(x_plot, y_plot, width=width * 0.95, label=name_list_dict[legend][i])
+                else:
+                    plt.bar(x_plot, y_plot, width=width * 0.95)
                 if len(dat0[dat0 == meteva.base.IV]) > 0:
                     x_iv = x1[dat0 == meteva.base.IV]
                     y_iv = np.zeros(x_iv.size)
                     plt.plot(x_iv, y_iv, "^", color='k')
                 #plt.bar(x1, data[k,i, :], width=width * 0.95, label=name_list_dict[legend][i])
             #plt.legend(fontsize=sup_fontsize * 0.8, ncol=legend_col, loc="upper center")
-            plt.xticks(x[::spasify], name_list_dict[axis][::spasify], fontsize=sup_fontsize * 0.8)
+
+            ki = k % ncol
+            kj = int(k / ncol)
+            knext_row = ki + (kj+1) * ncol
+            #print(knext_row)
+            #print(subplot_num)
+            if knext_row>=subplot_num:
+                plt.xticks(x[::spasify], name_list_dict[axis][::spasify], fontsize=sup_fontsize * 0.8)
+                plt.xlabel(axis, fontsize=sup_fontsize * 0.9)
+            else:
+                plt.xticks([])
             plt.yticks(fontsize=sup_fontsize * 0.8)
-            plt.xlabel(axis, fontsize=sup_fontsize * 0.9)
+
             plt.ylabel(ylabel, fontsize=sup_fontsize * 0.9)
 
             if isinstance(title, list):
@@ -1247,16 +1323,43 @@ def bar(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",v
                     title1 = title +"("+ subplot +"_"+ str(name_list_dict[subplot][k])+")"
                 else:
                     title1 = title
-            plt.title(title1, fontsize=sup_fontsize)
+            y1 =  1 - 0.035 *  sup_fontsize / (height_fig/nrow)
+            plt.title(title1, fontsize=sup_fontsize,y = y1)
             plt.xlim(-0.5, len(name_list_dict[axis]) - 0.5)
-            plt.ylim(vmin1,vmax1)
-            if legend_num>1:
-                width_axis = width_fig/ncol
-                legend_col = int(width_axis *0.8)
-                if legend_col <1:legend_col = 1
-                legend_row = int(math.ceil(legend_num / legend_col))
-                legend_col = int(math.ceil(legend_num / legend_row))
+
+            data_k = data[k,:,:]
+            if vmin is None:
+                vmin2 = np.min(data_k[data_k != meteva.base.IV])
+            else:
+                vmin2 = vmin1[k]
+
+            if vmax is None:
+                vmax2 = np.max(data_k[data_k != meteva.base.IV])
+            else:
+                vmax2 = vmax1[k]
+
+            dmax = vmax2- vmin2
+
+            if vmin is None:
+                if vmin2 < 0:
+                    vmin2 = vmin2 - 0.1 * dmax
+            if vmax is None:
+                vmax2 = vmax2 + 0.5 * dmax
+            plt.ylim(vmin2,vmax2)
+        if legend_num>1:
+            legend_col = int(width_fig *0.8)
+            if legend_col <1:legend_col = 1
+            legend_row = int(math.ceil(legend_num / legend_col))
+            legend_col = int(math.ceil(legend_num / legend_row))
+
+            by = 0.95 + legend_row * 0.03
+            if subplot_num >1:
+                fig.legend(fontsize = sup_fontsize *0.9,ncol = legend_col,loc = "upper center",
+                       bbox_to_anchor=(0.55,by))
+            else:
                 plt.legend(fontsize = sup_fontsize *0.9,ncol = legend_col,loc = "upper center")
+
+
 
     else:
         print("array不能超过3维")
@@ -1275,6 +1378,7 @@ def bar(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",v
     if show:
         plt.show()
     plt.close()
+
 
 
 def plot(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",vmin = None,vmax = None,ncol = None,save_path = None,show = False,dpi = 300,title =""):
@@ -1340,6 +1444,22 @@ def plot(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",
             title = title[0]
         plt.title(title,fontsize = sup_fontsize)
 
+        if vmin is None:
+            vmin1 = np.min(array[array != meteva.base.IV])
+        else:
+            vmin1 = vmin
+        if vmax is None:
+            vmax1 = np.max(array[array != meteva.base.IV])
+        else:
+            vmax1 = vmax
+
+        dmax = vmax1 - vmin1
+        if vmin is None:
+            if vmin1 < 0:
+                vmin1 = vmin1 - 0.1 * dmax
+        if vmax is None:
+            vmax1 = vmax1 + 0.2 * dmax
+        plt.ylim(vmin1,vmax1)
 
     elif len(shape)==2:
         if name_list_dict is None:
@@ -1413,7 +1533,26 @@ def plot(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",
             title = title[0]
         plt.title(title, fontsize=sup_fontsize)
         plt.xlim(-0.5, len(xticks)-0.5)
-        plt.ylim(vmin1,vmax1+dmax * (0.1 + 0.15 * legend_row))
+
+
+        if vmin is None:
+            vmin1 = np.min(array[array != meteva.base.IV])
+        else:
+            vmin1 = vmin
+        if vmax is None:
+            vmax1 = np.max(array[array != meteva.base.IV])
+        else:
+            vmax1 = vmax
+
+        dmax = vmax1 - vmin1
+        if vmin is None:
+            if vmin1 < 0:
+                vmin1 = vmin1 - 0.1 * dmax
+        if vmax is None:
+            vmax1 = vmax1 + 0.5 * dmax
+
+        plt.ylim(vmin1,vmax1)
+
 
     elif len(shape)==3:
 
@@ -1489,11 +1628,33 @@ def plot(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",
         if width_fig<5: width_fig=5
         if height_fig<3:height_fig=3
         fig = plt.figure(figsize=(width_fig, height_fig), dpi=dpi)
+        #plt.subplots_adjust(left=0, bottom=0.0, right=1.0, top = 1 - height_suplegend/height_fig,
+        #                    hspace=height_hspace/(width_axis*0.5),wspace=width_wspace/width_axis)
+        wspace = width_wspace/width_one_subplot
         plt.subplots_adjust(left=0, bottom=0.0, right=1.0, top = 1 - height_suplegend/height_fig,
-                            hspace=height_hspace/(width_axis*0.5),wspace=width_wspace/width_axis)
+                            hspace=0.08,wspace=wspace)
+        if vmin is not None:
+            if isinstance(vmin,list):
+                if len(vmin) != subplot_num:
+                    print("vmin 参数的个数和 子图个数不一致，请重新设置")
+                    return
+                else:
+                    vmin1 = vmin
+            else:
+                vmin1 = vmin * np.ones(subplot_num)
+                vmin1 = vmin1.tolist()
+
+        if vmax is not None:
+            if isinstance(vmax,list):
+                if len(vmax) != subplot_num:
+                    print("vmax 参数的个数和 子图个数不一致，请重新设置")
+                    return
+                else:
+                    vmax1 = vmax
+            else:
+                vmax1 = vmax * np.ones(subplot_num)
+
         for k in range(subplot_num):
-
-
             plt.subplot(nrow, ncol, k + 1)
             x = np.arange(len(name_list_dict[axis]))
             width = 0.8 / (legend_num + 2)
@@ -1501,7 +1662,10 @@ def plot(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",
                 dat0 = data[k, i, :]
                 index_iv = np.where(dat0 == meteva.base.IV)
                 if len(index_iv) ==0:
-                    plt.plot(x, data[k, i, :], label=name_list_dict[legend][i])
+                    if k == 0:
+                        plt.plot(x, data[k, i, :], label=name_list_dict[legend][i])
+                    else:
+                        plt.plot(x, data[k, i, :])
                 else:
                     dat0_all = set_plot_IV(dat0)
                     plt.plot(x, dat0_all, "--", linewidth=0.5, color="k")
@@ -1510,13 +1674,24 @@ def plot(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",
                     plt.plot(x_iv, dat0_iv, "x", color='k')
                     dat0_notiv = dat0.copy()
                     dat0_notiv[dat0_notiv == meteva.base.IV] = np.nan
-                    plt.plot(x,dat0_notiv,label=name_list_dict[legend][i])
-
+                    if k==0:
+                        plt.plot(x,dat0_notiv,label=name_list_dict[legend][i])
+                    else:
+                        plt.plot(x, dat0_notiv)
 
             #plt.legend(fontsize=sup_fontsize * 0.8, ncol=legend_col, loc="upper center")
-            plt.xticks(x[::spasify], name_list_dict[axis][::spasify], fontsize=sup_fontsize * 0.8)
+            ki = k % ncol
+            kj = int(k / ncol)
+            knext_row = ki + (kj+1) * ncol
+            if knext_row>=subplot_num:
+                plt.xticks(x[::spasify], name_list_dict[axis][::spasify], fontsize=sup_fontsize * 0.8)
+                plt.xlabel(axis, fontsize=sup_fontsize * 0.9)
+            else:
+                plt.xticks([])
+
+            #plt.xticks(x[::spasify], name_list_dict[axis][::spasify], fontsize=sup_fontsize * 0.8)
             plt.yticks(fontsize=sup_fontsize * 0.8)
-            plt.xlabel(axis, fontsize=sup_fontsize * 0.9)
+            #plt.xlabel(axis, fontsize=sup_fontsize * 0.9)
             plt.ylabel(ylabel, fontsize=sup_fontsize * 0.9)
 
             if isinstance(title, list):
@@ -1529,22 +1704,57 @@ def plot(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",
                     title1 = title +"("+ subplot +"_"+ str(name_list_dict[subplot][k])+")"
                 else:
                     title1 = title
-            plt.title(title1, fontsize=sup_fontsize)
+
+            y1 =  1 - 0.035 *  sup_fontsize / (height_fig/nrow)
+            plt.title(title1, fontsize=sup_fontsize,y = y1)
+
+            #plt.title(title1, fontsize=sup_fontsize)
 
             plt.xlim(-0.5, len(name_list_dict[axis]) - 0.5)
 
+            data_k = data[k, :, :]
+            if vmin is None:
+                vmin2 = np.min(data_k[data_k != meteva.base.IV])
+            else:
+                vmin2 = vmin1[k]
 
+            if vmax is None:
+                vmax2 = np.max(data_k[data_k != meteva.base.IV])
+            else:
+                vmax2 = vmax1[k]
+
+            dmax = vmax2 - vmin2
+
+            if vmin is None:
+                if vmin2 < 0:
+                    vmin2 = vmin2 - 0.1 * dmax
+            if vmax is None:
+                vmax2 = vmax2 + 0.5 * dmax
+            plt.ylim(vmin2, vmax2)
+        if legend_num > 1:
+            legend_col = int(width_fig * 0.8)
+            if legend_col < 1: legend_col = 1
+            legend_row = int(math.ceil(legend_num / legend_col))
+            legend_col = int(math.ceil(legend_num / legend_row))
+
+            by = 0.95 + legend_row * 0.03
+            if subplot_num > 1:
+                fig.legend(fontsize=sup_fontsize * 0.9, ncol=legend_col, loc="upper center",
+                           bbox_to_anchor=(0.55, by))
+            else:
+                plt.legend(fontsize=sup_fontsize * 0.9, ncol=legend_col, loc="upper center")
+
+            '''
             plt.ylim(vmin1, vmax1)
             if len(name_list_dict[axis]) > 30:
                 plt.grid()
-
             if legend_num>1:
                 width_axis = width_fig/ncol
                 legend_col = int(width_axis *0.8)
                 legend_row = int(math.ceil(legend_num / legend_col))
                 legend_col = int(math.ceil(legend_num / legend_row))
                 plt.legend(fontsize = sup_fontsize *0.9,ncol = legend_col,loc = "upper center")
-
+            '''
     else:
         print("array不能超过3维")
         return
@@ -1563,3 +1773,169 @@ def plot(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",
         plt.show()
     plt.close()
 
+def mesh_tdt(sta,x = "time",save_dir = None,save_path = None,
+                   clev = None,cmap = None,show = False,xtimetype = "mid",dpi = 300,annot =True,title = "预报准确性和稳定性对比图"):
+
+
+    ids = list(set(sta.loc[:, "id"]))
+    data_names = meteva.base.get_stadata_names(sta)
+    times_fo = sta.loc[:, "time"].values
+    times_fo = list(set(times_fo))
+    if (len(times_fo) == 1):
+        print("仅有单个起报时间的预报，程序退出")
+        return
+    times_fo.sort()
+    times_fo = np.array(times_fo)
+    #print(times_fo)
+
+    dhs_fo = (times_fo[1:] - times_fo[0:-1])
+    if isinstance(dhs_fo[0], np.timedelta64):
+        dhs_fo = dhs_fo / np.timedelta64(1, 'h')
+    else:
+        dhs_fo = dhs_fo / datetime.timedelta(hours=1)
+    dhs_fo_not0 = dhs_fo[dhs_fo != 0]
+    dh_y = np.min(dhs_fo_not0)
+    min_dtime = int(np.min(sta["dtime"]))
+
+
+    ob_time_s = sta["time"] + sta["dtime"] * np.timedelta64(1, 'h')
+    times_ob = list(set(ob_time_s.values))
+    times_ob.sort()
+    times_ob = np.array(times_ob)
+
+    dhs_ob = (times_ob[1:] - times_ob[0:-1])
+    if isinstance(dhs_ob[0], np.timedelta64):
+        dhs_ob = dhs_ob / np.timedelta64(1, 'h')
+    else:
+        dhs_ob = dhs_ob / datetime.timedelta(hours=1)
+
+    dhs_ob_not0 = dhs_ob[dhs_ob != 0]
+    dh_x = np.min(dhs_ob_not0)
+    #print(dh_x)
+    np.sum(dhs_fo_not0)
+    row = int(np.sum(dhs_fo_not0)/dh_y)+1
+    col = int(np.sum(dhs_ob_not0)/dh_x)+1
+    #print(row)
+    t_ob = []
+    for t in times_ob:
+        t_ob.append(meteva.base.all_type_time_to_datetime(t))
+
+    y_ticks = []
+    t_fo0= meteva.base.all_type_time_to_datetime(times_fo[0])
+    step = int(math.ceil(row / 40))
+
+    if step !=1 :
+        while step * dh_y % 3 !=0:
+            step +=1
+
+    y_plot = np.arange(0,row,step)+0.5
+    for j in range(0,row,step):
+        jr = row - j - 1
+        time_fo = t_fo0 + datetime.timedelta(hours=1) * dh_y * jr
+        hour = time_fo.hour
+        day = time_fo.day
+        #if ((j * int(dh_y)) % 3 == 0):
+        str1 = str(day) + "日" + str(hour) + "时"
+        #else:
+        #    str1 = str(hour) + "时"
+        #print(str1)
+        y_ticks.append(str1)
+
+    width = 14
+    x_plot,x_ticks = meteva.product.get_x_ticks(times_ob,width-2)
+    x_plot /= dh_x
+    #y_plot, y_ticks = meteva.product.get_y_ticks(times_fo, height)
+    if xtimetype == "right":
+        x_plot  = x_plot+1
+    elif xtimetype == "left":
+        x_plot = x_plot +0
+    else:
+        x_plot = x_plot +0.5
+    if annot:
+        annot = col <120
+    annot_size = width * 50 / col
+    if annot_size >16:
+        annot_size= 16
+
+    nids = len(ids)
+    nfo = len(data_names) - 1
+    if isinstance(title, list):
+        if nids * nfo != len(title):
+            print("手动设置的title数目和要绘制的图形数目不一致")
+            return
+
+    if save_path is not None:
+        if isinstance(save_path,str):
+            save_path = [save_path]
+        if nids * nfo != len(save_path):
+            print("手动设置的save_path数目和要绘制的图形数目不一致")
+            return
+    kk = 0
+    for d in range(nfo):
+        data_name = data_names[d+1]
+        sta_one_member = meteva.base.in_member_list(sta, [data_names[0],data_name])
+        #meteva.base.set_stadata_names(sta_ob_part2, [data_name])
+        #sta_one_member = meteva.base.combine_join(sta_ob_part2, sta_fo_all2)
+        #以最近的预报作为窗口中间的时刻
+        for id in ids:
+            sta_one_id = meteva.base.in_id_list(sta_one_member,id)
+            dat = np.ones((col, row)) * meteva.base.IV
+            for j in range(row):
+                jr = row - j - 1
+                time_fo = times_fo[0] + np.timedelta64(1, 'h') * dh_y * jr
+                sta_on_row = meteva.base.in_time_list(sta_one_id,time_fo)
+                dhx0 = (time_fo - times_ob[0])/np.timedelta64(1, 'h')
+                dhxs = sta_on_row["dtime"].values + dhx0
+                index_i = (dhxs/dh_x).astype(np.int16)
+                dat[index_i,j] = sta_on_row.values[:,-1] - sta_on_row.values[:,-2]
+            mask = np.zeros_like(dat.T)
+            mask[dat.T == meteva.base.IV] = True
+
+            vmin = np.min(dat[dat != meteva.base.IV])
+            vmax = np.max(dat[dat != meteva.base.IV])
+
+            height = width * row / col + 2
+            f, ax2 = plt.subplots(figsize=(width, height), nrows=1, edgecolor='black',dpi = dpi)
+            plt.subplots_adjust(left=0.1, bottom=0.15, right=0.98, top=0.90)
+
+
+            if cmap_error is None:
+                cmap_error ="bwr"
+                cmap_part = cmap_error
+
+            sns.heatmap(dat.T, ax=ax2, mask=mask, cmap=cmap_part, vmin=vmin, vmax=vmax, center=None, robust=False, annot=annot,fmt='.0f'
+            , annot_kws = {'size': annot_size})
+            ax2.set_xlabel('实况时间',fontsize = 16)
+            ax2.set_ylabel('起报时间',fontsize = 16)
+            ax2.set_xticks(x_plot)
+            ax2.set_xticklabels(x_ticks,rotation=360, fontsize=14)
+            ax2.set_yticks(y_plot)
+            ax2.set_yticklabels(y_ticks, rotation=360, fontsize=14)
+
+            ax2.grid(linestyle='--', linewidth=0.5)
+            ax2.set_ylim(row, 0)
+            ax2.set_title(title, loc='left', fontweight='bold', fontsize=18)
+            rect = patches.Rectangle((0,0 ), col, row, linewidth=0.8, edgecolor='k', facecolor='none')
+            ax2.add_patch(rect)
+            #plt.tick_params(top='on', right='on', which='both')  # 显示上侧和右侧的刻度
+            plt.rcParams['xtick.direction'] = 'in'  # 将x轴的刻度线方向设置抄向内
+            plt.rcParams['ytick.direction'] = 'in'  # 将y轴的刻度方知向设置向内
+
+            save_path1 = None
+            if(save_path is None):
+                if save_dir is None:
+                    show = True
+                else:
+                    save_path1 = save_dir +"/" +data_name+"_"+str(id) + ".png"
+            else:
+                save_path1 = save_path[kk]
+            if save_path1 is not None:
+
+                meteva.base.tool.path_tools.creat_path(save_path1)
+                plt.savefig(save_path1,bbox_inches='tight')
+                print("图片已保存至"+save_path1)
+            if show:
+                plt.show()
+            plt.close()
+            kk += 1
+    return
