@@ -100,3 +100,23 @@ def get_index(X,level_list):
         level = levels[i]
         index[X < level] = i - 1
     return index
+
+
+def greatest_common_divisor(value_list):
+
+    value_set = np.array(list(set(value_list))).astype(np.int32)
+
+    # 获取最小值
+    x = value_set[0]
+    value_set1 = value_set[1:]
+    for i in range(len(value_set1)):
+        y = value_set1[i]
+        if x > y:
+            smaller = y
+        else:
+            smaller = x
+        for i in range(1, smaller + 1):
+            if ((x % i == 0) and (y % i == 0)):
+                hcf = i
+        x = hcf
+    return x

@@ -1773,7 +1773,7 @@ def plot(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",
         plt.show()
     plt.close()
 
-def mesh_tdt(sta,x = "time",save_dir = None,save_path = None,
+def mesh_obtime_time(sta,save_dir = None,save_path = None,
                    clev = None,cmap = None,show = False,xtimetype = "mid",dpi = 300,annot =True,title = "预报准确性和稳定性对比图"):
 
 
@@ -1810,7 +1810,7 @@ def mesh_tdt(sta,x = "time",save_dir = None,save_path = None,
         dhs_ob = dhs_ob / datetime.timedelta(hours=1)
 
     dhs_ob_not0 = dhs_ob[dhs_ob != 0]
-    dh_x = np.min(dhs_ob_not0)
+    dh_x = meteva.base.tool.math_tools.greatest_common_divisor(dhs_ob_not0)
     #print(dh_x)
     np.sum(dhs_fo_not0)
     row = int(np.sum(dhs_fo_not0)/dh_y)+1
@@ -1841,8 +1841,16 @@ def mesh_tdt(sta,x = "time",save_dir = None,save_path = None,
         #print(str1)
         y_ticks.append(str1)
 
-    width = 14
-    x_plot,x_ticks = meteva.product.get_x_ticks(times_ob,width-2)
+    width0 = col * 0.1 + 2
+    height0 = row * 0.1 + 2
+    x_plot,x_ticks = meteva.product.get_x_ticks(times_ob,width0-2,row=3)
+    super_fontsize = 10
+
+    rate = max(width0/10, height0/7)
+    width = width0/rate
+    height = height0/rate
+    super_fontsize = super_fontsize/rate
+
     x_plot /= dh_x
     #y_plot, y_ticks = meteva.product.get_y_ticks(times_fo, height)
     if xtimetype == "right":
@@ -1858,7 +1866,7 @@ def mesh_tdt(sta,x = "time",save_dir = None,save_path = None,
         annot_size= 16
 
     nids = len(ids)
-    nfo = len(data_names) - 1
+    nfo = len(data_names)
     if isinstance(title, list):
         if nids * nfo != len(title):
             print("手动设置的title数目和要绘制的图形数目不一致")
@@ -1871,9 +1879,23 @@ def mesh_tdt(sta,x = "time",save_dir = None,save_path = None,
             print("手动设置的save_path数目和要绘制的图形数目不一致")
             return
     kk = 0
+
+    dat = sta[data_names].values
+    dat[np.isnan(dat)] = meteva.base.IV
+    vmin = np.min(dat[dat != meteva.base.IV])
+    vmax = np.max(dat[dat != meteva.base.IV])
+    if cmap is None:
+        cmap = "bwr"
+        cmap_part = cmap
+    if clev is not None:
+        clev_part, cmap_part = meteva.base.tool.color_tools.get_part_clev_and_cmap(clev, cmap, vmax, vmin)
+        vmax = clev_part[-1]
+        vmin = 2 * clev_part[0] - clev_part[1]
+    #print(nfo)
+
     for d in range(nfo):
-        data_name = data_names[d+1]
-        sta_one_member = meteva.base.in_member_list(sta, [data_names[0],data_name])
+        data_name = data_names[d]
+        sta_one_member = meteva.base.in_member_list(sta, [data_name])
         #meteva.base.set_stadata_names(sta_ob_part2, [data_name])
         #sta_one_member = meteva.base.combine_join(sta_ob_part2, sta_fo_all2)
         #以最近的预报作为窗口中间的时刻
@@ -1887,34 +1909,25 @@ def mesh_tdt(sta,x = "time",save_dir = None,save_path = None,
                 dhx0 = (time_fo - times_ob[0])/np.timedelta64(1, 'h')
                 dhxs = sta_on_row["dtime"].values + dhx0
                 index_i = (dhxs/dh_x).astype(np.int16)
-                dat[index_i,j] = sta_on_row.values[:,-1] - sta_on_row.values[:,-2]
+                dat[index_i,j] = sta_on_row.values[:,-1]
             mask = np.zeros_like(dat.T)
             mask[dat.T == meteva.base.IV] = True
 
-            vmin = np.min(dat[dat != meteva.base.IV])
-            vmax = np.max(dat[dat != meteva.base.IV])
-
-            height = width * row / col + 2
             f, ax2 = plt.subplots(figsize=(width, height), nrows=1, edgecolor='black',dpi = dpi)
             plt.subplots_adjust(left=0.1, bottom=0.15, right=0.98, top=0.90)
 
-
-            if cmap_error is None:
-                cmap_error ="bwr"
-                cmap_part = cmap_error
-
             sns.heatmap(dat.T, ax=ax2, mask=mask, cmap=cmap_part, vmin=vmin, vmax=vmax, center=None, robust=False, annot=annot,fmt='.0f'
             , annot_kws = {'size': annot_size})
-            ax2.set_xlabel('实况时间',fontsize = 16)
-            ax2.set_ylabel('起报时间',fontsize = 16)
+            ax2.set_xlabel('实况时间',fontsize = super_fontsize*0.9)
+            ax2.set_ylabel('起报时间',fontsize = super_fontsize*0.9)
             ax2.set_xticks(x_plot)
-            ax2.set_xticklabels(x_ticks,rotation=360, fontsize=14)
+            ax2.set_xticklabels(x_ticks,rotation=360, fontsize=super_fontsize*0.8)
             ax2.set_yticks(y_plot)
-            ax2.set_yticklabels(y_ticks, rotation=360, fontsize=14)
+            ax2.set_yticklabels(y_ticks, rotation=360,fontsize = super_fontsize * 0.8)
 
             ax2.grid(linestyle='--', linewidth=0.5)
             ax2.set_ylim(row, 0)
-            ax2.set_title(title, loc='left', fontweight='bold', fontsize=18)
+            ax2.set_title(title[kk], loc='left', fontweight='bold', fontsize= super_fontsize)
             rect = patches.Rectangle((0,0 ), col, row, linewidth=0.8, edgecolor='k', facecolor='none')
             ax2.add_patch(rect)
             #plt.tick_params(top='on', right='on', which='both')  # 显示上侧和右侧的刻度
@@ -1926,7 +1939,318 @@ def mesh_tdt(sta,x = "time",save_dir = None,save_path = None,
                 if save_dir is None:
                     show = True
                 else:
-                    save_path1 = save_dir +"/" +data_name+"_"+str(id) + ".png"
+                    id_str = ""
+                    if id != meteva.base.IV:
+                        id_str = "_"+str(id)
+                    save_path1 = save_dir +"/" +data_name+id_str + ".png"
+            else:
+                save_path1 = save_path[kk]
+            if save_path1 is not None:
+
+                meteva.base.tool.path_tools.creat_path(save_path1)
+                plt.savefig(save_path1,bbox_inches='tight')
+                print("图片已保存至"+save_path1)
+            if show:
+                plt.show()
+            plt.close()
+            kk += 1
+    return
+
+
+
+def mesh_obtime_dtime(sta,save_dir = None,save_path = None,
+                   clev = None,cmap = None,show = False,xtimetype = "mid",dpi = 300,annot =True,title = "预报准确性和稳定性对比图"):
+    ids = list(set(sta.loc[:, "id"]))
+    data_names = meteva.base.get_stadata_names(sta)
+
+    dhs_fo = sta.loc[:, "dtime"].values
+    dhs_fo = list(set(dhs_fo))
+    dhs_fo.sort()
+
+    ob_time_s = sta["time"] + sta["dtime"] * np.timedelta64(1, 'h')
+    times_ob = list(set(ob_time_s.values))
+    times_ob.sort()
+    times_ob = np.array(times_ob)
+
+    dhs_ob = (times_ob[1:] - times_ob[0:-1])
+    if isinstance(dhs_ob[0], np.timedelta64):
+        dhs_ob = dhs_ob / np.timedelta64(1, 'h')
+    else:
+        dhs_ob = dhs_ob / datetime.timedelta(hours=1)
+
+
+    dhs_ob_not0 = dhs_ob[dhs_ob != 0]
+
+    dh_x = meteva.base.tool.math_tools.greatest_common_divisor(dhs_ob_not0)
+    #print(dh_x)
+    row = len(dhs_fo)
+    col = int(np.sum(dhs_ob_not0)/dh_x)+1
+    #print(row)
+    t_ob = []
+    for t in times_ob:
+        t_ob.append(meteva.base.all_type_time_to_datetime(t))
+    y_ticks = dhs_fo
+
+    width0 = col * 0.1 + 2
+    height0 = row * 0.1 + 2
+    x_plot, x_ticks = meteva.product.get_x_ticks(times_ob, width0 - 2,row=3)
+    super_fontsize = 10
+
+    rate = max(width0 / 10, height0 / 7)
+    width = width0 / rate
+    height = height0 / rate
+    super_fontsize = super_fontsize / rate
+
+
+    x_plot /= dh_x
+    #y_plot, y_ticks = meteva.product.get_y_ticks(times_fo, height)
+    if xtimetype == "right":
+        x_plot  = x_plot+1
+    elif xtimetype == "left":
+        x_plot = x_plot +0
+    else:
+        x_plot = x_plot +0.5
+    if annot:
+        annot = col <120
+    annot_size = width * 50 / col
+    if annot_size >16:
+        annot_size= 16
+
+    nids = len(ids)
+    nfo = len(data_names)
+    if isinstance(title, list):
+        if nids * nfo != len(title):
+            print("手动设置的title数目和要绘制的图形数目不一致")
+            return
+
+    if save_path is not None:
+        if isinstance(save_path,str):
+            save_path = [save_path]
+        if nids * nfo != len(save_path):
+            print("手动设置的save_path数目和要绘制的图形数目不一致")
+            return
+    kk = 0
+
+    dat = sta[data_names].values
+    dat[np.isnan(dat)] = meteva.base.IV
+    vmin = np.min(dat[dat != meteva.base.IV])
+    vmax = np.max(dat[dat != meteva.base.IV])
+    if cmap is None:
+        cmap = "bwr"
+        cmap_part = cmap
+    if clev is not None:
+        clev_part, cmap_part = meteva.base.tool.color_tools.get_part_clev_and_cmap(clev, cmap, vmax, vmin)
+        vmax = clev_part[-1]
+        vmin = 2 * clev_part[0] - clev_part[1]
+
+    #print(times_ob[0])
+    for d in range(nfo):
+        data_name = data_names[d]
+        sta_one_member = meteva.base.in_member_list(sta, [data_name])
+        #meteva.base.set_stadata_names(sta_ob_part2, [data_name])
+        #sta_one_member = meteva.base.combine_join(sta_ob_part2, sta_fo_all2)
+        #以最近的预报作为窗口中间的时刻
+        for id in ids:
+            sta_one_id = meteva.base.in_id_list(sta_one_member,id)
+            dat = np.ones((col, row)) * meteva.base.IV
+            for j in range(row):
+                sta_on_row = meteva.base.in_dtime_list(sta_one_id,dhs_fo[j])
+                #print(sta_on_row)
+                dhxs = (sta_on_row["time"].values - times_ob[0])/np.timedelta64(1, 'h') + dhs_fo[j]
+                index_i = (dhxs/dh_x).astype(np.int16)
+                dat[index_i,j] = sta_on_row.values[:,-1]
+            mask = np.zeros_like(dat.T)
+            mask[dat.T == meteva.base.IV] = True
+
+            f, ax2 = plt.subplots(figsize=(width, height), nrows=1, edgecolor='black',dpi = dpi)
+            plt.subplots_adjust(left=0.1, bottom=0.15, right=0.98, top=0.90)
+            sns.heatmap(dat.T, ax=ax2, mask=mask, cmap=cmap_part, vmin=vmin, vmax=vmax, center=None, robust=False, annot=annot,fmt='.0f'
+            , annot_kws = {'size': annot_size})
+
+            ax2.set_xlabel('实况时间',fontsize = super_fontsize*0.9)
+            ax2.set_ylabel('预报时效',fontsize = super_fontsize*0.9)
+            ax2.set_xticks(x_plot)
+            ax2.set_xticklabels(x_ticks,rotation=360, fontsize=super_fontsize * 0.8)
+            ax2.set_yticks(np.arange(len(y_ticks)))
+            ax2.set_yticklabels(y_ticks, rotation=360, fontsize=super_fontsize * 0.8)
+
+            ax2.grid(linestyle='--', linewidth=0.5)
+            ax2.set_ylim(row, 0)
+            ax2.set_title(title[kk], loc='left', fontweight='bold', fontsize=super_fontsize)
+            rect = patches.Rectangle((0,0 ), col, row, linewidth=0.8, edgecolor='k', facecolor='none')
+            ax2.add_patch(rect)
+            #plt.tick_params(top='on', right='on', which='both')  # 显示上侧和右侧的刻度
+            plt.rcParams['xtick.direction'] = 'in'  # 将x轴的刻度线方向设置抄向内
+            plt.rcParams['ytick.direction'] = 'in'  # 将y轴的刻度方知向设置向内
+
+            save_path1 = None
+            if(save_path is None):
+                if save_dir is None:
+                    show = True
+                else:
+                    id_str = ""
+                    if id != meteva.base.IV:
+                        id_str = "_"+str(id)
+                    save_path1 = save_dir +"/" +data_name+id_str + ".png"
+            else:
+                save_path1 = save_path[kk]
+            if save_path1 is not None:
+
+                meteva.base.tool.path_tools.creat_path(save_path1)
+                plt.savefig(save_path1,bbox_inches='tight')
+                print("图片已保存至"+save_path1)
+            if show:
+                plt.show()
+            plt.close()
+            kk += 1
+    return
+
+def mesh_time_dtime(sta,save_dir = None,save_path = None,
+                   clev = None,cmap = None,show = False,xtimetype = "mid",dpi = 300,annot =True,title = "预报准确性对比图"):
+    ids = list(set(sta.loc[:, "id"]))
+    data_names = meteva.base.get_stadata_names(sta)
+    times_fo = sta.loc[:, "time"].values
+    times_fo = list(set(times_fo))
+    if (len(times_fo) == 1):
+        print("仅有单个起报时间的预报，程序退出")
+        return
+    times_fo.sort()
+    times_fo = np.array(times_fo)
+
+
+    dhs_fo = sta.loc[:, "dtime"].values
+    dhs_fo = list(set(dhs_fo))
+    dhs_fo.sort()
+    #print(times_fo)
+    dhs_x = (times_fo[1:] - times_fo[0:-1])
+    if isinstance(dhs_x[0], np.timedelta64):
+        dhs_x = dhs_x / np.timedelta64(1, 'h')
+    else:
+        dhs_x = dhs_x / datetime.timedelta(hours=1)
+    dhs_x_not0 = dhs_x[dhs_x != 0]
+
+
+    dh_x = meteva.base.tool.math_tools.greatest_common_divisor(dhs_x_not0)
+
+    #print(dh_x)
+    row = len(dhs_fo)
+    col = int(np.sum(dhs_x_not0)/dh_x)+1
+    #print(row)
+    t_ob = []
+    for t in times_fo:
+        t_ob.append(meteva.base.all_type_time_to_datetime(t))
+    y_ticks = dhs_fo
+
+
+    width0 = col * 0.15 + 2
+    height0 = row * 0.1 + 2
+    x_plot, x_ticks = meteva.product.get_x_ticks(times_fo, width0 - 2,row = 3)
+    super_fontsize = 10
+
+    rate = max(width0 / 10, height0 / 7)
+    width = width0 / rate
+    height = height0 / rate
+    super_fontsize = super_fontsize / rate
+
+    rate2 = super_fontsize * len(x_ticks) * 0.05 / width
+    if rate2 > 1:
+        super_fontsize = super_fontsize/rate2
+
+    x_plot /= dh_x
+    #y_plot, y_ticks = meteva.product.get_y_ticks(times_fo, height)
+    if xtimetype == "right":
+        x_plot  = x_plot+1
+    elif xtimetype == "left":
+        x_plot = x_plot +0
+    else:
+        x_plot = x_plot +0.5
+    if annot:
+        annot = col <120
+    annot_size = width * 50 / col
+    if annot_size >16:
+        annot_size= 16
+
+    nids = len(ids)
+    nfo = len(data_names)
+    if isinstance(title, list):
+        if nids * nfo != len(title):
+            print("手动设置的title数目和要绘制的图形数目不一致")
+            return
+
+    if save_path is not None:
+        if isinstance(save_path,str):
+            save_path = [save_path]
+        if nids * nfo != len(save_path):
+            print("手动设置的save_path数目和要绘制的图形数目不一致")
+            return
+    kk = 0
+
+    dat = sta[data_names].values
+    dat[np.isnan(dat)] = meteva.base.IV
+    vmin = np.min(dat[dat != meteva.base.IV])
+    vmax = np.max(dat[dat != meteva.base.IV])
+    if cmap is None:
+        cmap = "bwr"
+        cmap_part = cmap
+    if clev is not None:
+        clev_part, cmap_part = meteva.base.tool.color_tools.get_part_clev_and_cmap(clev, cmap, vmax, vmin)
+        vmax = clev_part[-1]
+        vmin = 2 * clev_part[0] - clev_part[1]
+
+    #print(times_ob[0])
+    for d in range(nfo):
+        data_name = data_names[d]
+        sta_one_member = meteva.base.in_member_list(sta, [data_name])
+        #meteva.base.set_stadata_names(sta_ob_part2, [data_name])
+        #sta_one_member = meteva.base.combine_join(sta_ob_part2, sta_fo_all2)
+        #以最近的预报作为窗口中间的时刻
+        for id in ids:
+            sta_one_id = meteva.base.in_id_list(sta_one_member,id)
+            dat = np.ones((col, row)) * meteva.base.IV
+            for j in range(row):
+                sta_on_row = meteva.base.in_dtime_list(sta_one_id,dhs_fo[j])
+                #print(sta_on_row)
+                dhxs = (sta_on_row["time"].values - times_fo[0])/np.timedelta64(1, 'h')
+                index_i = (dhxs/dh_x).astype(np.int16)
+                dat[index_i,j] = sta_on_row.values[:,-1]
+            mask = np.zeros_like(dat.T)
+            mask[dat.T == meteva.base.IV] = True
+
+
+            #height = width * row / col + 2
+            #print(width)
+            #print(height)
+            f, ax2 = plt.subplots(figsize=(width, height), nrows=1, edgecolor='black',dpi = dpi)
+            plt.subplots_adjust(left=0.1, bottom=0.15, right=0.98, top=0.90)
+
+            sns.heatmap(dat.T, ax=ax2, mask=mask, cmap=cmap_part, vmin=vmin, vmax=vmax, center=None, robust=False, annot=annot,fmt='.0f'
+            , annot_kws = {'size': annot_size})
+
+            ax2.set_xlabel('起报时间',fontsize = super_fontsize * 0.9)
+            ax2.set_ylabel('预报时效',fontsize = super_fontsize * 0.9)
+            ax2.set_xticks(x_plot)
+            ax2.set_xticklabels(x_ticks,rotation=360, fontsize=super_fontsize * 0.8)
+            ax2.set_yticks(np.arange(len(y_ticks)))
+            ax2.set_yticklabels(y_ticks, rotation=360, fontsize=super_fontsize * 0.8)
+
+            ax2.grid(linestyle='--', linewidth=0.5)
+            ax2.set_ylim(row, 0)
+            ax2.set_title(title[kk], loc='left', fontweight='bold', fontsize=super_fontsize)
+            rect = patches.Rectangle((0,0 ), col, row, linewidth=0.8, edgecolor='k', facecolor='none')
+            ax2.add_patch(rect)
+            #plt.tick_params(top='on', right='on', which='both')  # 显示上侧和右侧的刻度
+            plt.rcParams['xtick.direction'] = 'in'  # 将x轴的刻度线方向设置抄向内
+            plt.rcParams['ytick.direction'] = 'in'  # 将y轴的刻度方知向设置向内
+
+            save_path1 = None
+            if(save_path is None):
+                if save_dir is None:
+                    show = True
+                else:
+                    id_str = ""
+                    if id != meteva.base.IV:
+                        id_str = "_"+str(id)
+                    save_path1 = save_dir +"/" +data_name+id_str + ".png"
             else:
                 save_path1 = save_path[kk]
             if save_path1 is not None:
