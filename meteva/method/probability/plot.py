@@ -463,8 +463,8 @@ def comprehensive_hnh(hnh_array,  member_list=None,vmax = None, save_path=None,s
         if line == 0:
             ax3.plot([0, 1], [0, 1], ":", color="k", linewidth=1, label="无技巧")
         ax3.plot(far, pod, color=color_list[line], linewidth=2, label=label[line])
-        ax4.bar(x1, observed_grade_num, width=bar_width*0.8, color=color_list[line],label = label[line])
-        ax4.bar(x1, (not_observed_grade_num+ observed_grade_num), width=bar_width*0.8,edgecolor=color_list[line],fill=False,label =label[line])
+        #ax4.bar(x1, observed_grade_num, width=bar_width*0.8, color=color_list[line],label = label[line])
+        ax4.bar(x1, (not_observed_grade_num+ observed_grade_num), width=bar_width*0.8,edgecolor=color_list[line],label =label[line])
 
         ax4.set_xlabel("预测的概率",fontsize= sup_fontsize *0.9)
         ax4.set_ylabel("样本数",fontsize= sup_fontsize *0.9)
@@ -484,7 +484,7 @@ def comprehensive_hnh(hnh_array,  member_list=None,vmax = None, save_path=None,s
     ax3.legend(loc=4,fontsize= sup_fontsize *0.9)
     ax4.set_xlim(0.0, 1)
     ax4.set(title='\n')
-    ax4.legend(loc="upper right", ncol=2)
+    #ax4.legend(loc="upper right", ncol=2)
     if vmax is None:
         ax4.set_ylim(0.0, ymax * 1.5)
     else:
@@ -493,10 +493,10 @@ def comprehensive_hnh(hnh_array,  member_list=None,vmax = None, save_path=None,s
     mark_line_y = np.array(mark_line_y)
     mark_line_x = mark_line_x.T.flatten()
     mark_line_y = mark_line_y.T.flatten()
-    ax4.plot(mark_line_x, mark_line_y, '.', color='k',markersize = bar_width * 300)
-    lines = ax4.get_children()
-    ax4.legend([lines[0], lines[grade_count],lines[grade_count * legend_num * 2 ]], ['观测正例', '观测负例',"合理比例"],
-                         loc='upper center', bbox_to_anchor=(0.5, 1.0), ncol=3, prop={'size': 6},fontsize= sup_fontsize *0.9)
+    #ax4.plot(mark_line_x, mark_line_y, '.', color='k',markersize = bar_width * 300)
+    #lines = ax4.get_children()
+    #ax4.legend([lines[0], lines[grade_count],lines[grade_count * legend_num * 2 ]], ['观测正例', '观测负例',"合理比例"],
+    #                     loc='upper center', bbox_to_anchor=(0.5, 1.0), ncol=3, prop={'size': 6},fontsize= sup_fontsize *0.9)
     ax4.set_xticks(np.arange(0,1.01,1/grade_count))
     if save_path is None:
         show = True
