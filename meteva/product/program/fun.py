@@ -10,7 +10,47 @@ import numpy as np
 
 
 def get_time_str_one_by_one(time1,time0 = None,row = 1):
-    if row == 2:
+    if row == 3:
+        if time0 is None:
+            time2 = meteva.base.tool.time_tools.all_type_time_to_datetime(time1)
+            if time2.hour == 0 and time2.minute == 0:
+                time_str = time2.strftime('%d{d}\n%m{m}\n%Y{y}').format(y='年', m='月', d='日')
+            elif time2.minute == 0:
+                time_str = time2.strftime('%H{h}\n%d{d}\n%Y{y}%m{m}').format(y='年', m='月', d='日',h='时')
+            else:
+                time_str = time2.strftime('%M{mi}\n%H{h}\n%Y{y}%m{m}%d{d}').format(y='年', m='月', d='日',h='时',mi = '分')
+        else:
+            time00 = meteva.base.tool.time_tools.all_type_time_to_datetime(time0)
+            time2 = meteva.base.tool.time_tools.all_type_time_to_datetime(time1)
+            if time2.year != time00.year:
+                if time2.hour == 0 and time2.minute == 0:
+                    time_str = time1.strftime('%d{d}\n%m{m}\n%Y{y}').format(y='年', m='月', d='日')
+                elif time1.minute == 0:
+                    time_str = time1.strftime('%H{h}\n%d{d}\n%Y{y}%m{m}').format(y='年', m='月', d='日',h='时')
+                else:
+                    time_str = time1.strftime('%M{mi}\n%H{h}\n%Y{y}%m{m}%d{d}').format(y='年', m='月', d='日',h='时',mi = '分')
+            elif time2.month != time00.month:
+                if time2.hour == 0 and time2.minute == 0:
+                    time_str = time2.strftime('%d{d}\n%m{m}').format(m='月', d='日')
+                elif time2.minute == 0:
+                    time_str = time2.strftime('%H{h}\n%d{d}\n%m{m}').format(m='月', d='日',h='时')
+                else:
+                    time_str = time2.strftime('%M{mi}\n%H{h}\n%m{m}%d{d}').format(m='月', d='日',h='时',mi = '分')
+            elif time2.day != time00.day:
+                if time2.hour == 0 and time2.minute == 0:
+                    time_str = time2.strftime('%d{d}').format(d='日')
+                elif time2.minute == 0:
+                    time_str = time2.strftime('%H{h}\n%d{d}').format(d='日',h='时')
+                else:
+                    time_str = time2.strftime('%M{mi}\n%H{h}\n%d{d}').format(d='日',h='时',mi = '分')
+            elif time2.hour != time00.hour:
+                if time2.minute == 0:
+                    time_str = time2.strftime('%H{h}').format(h='时')
+                else:
+                    time_str = time2.strftime('%M{mi}\n%H{h}').format(h='时',mi = '分')
+            else:
+                time_str = time2.strftime("%M分")
+    elif row == 2:
         if time0 is None:
             time2 = meteva.base.tool.time_tools.all_type_time_to_datetime(time1)
             if time2.hour == 0 and time2.minute == 0:
@@ -432,7 +472,7 @@ def get_x_label(groupy_by):
         return "预报时效包含的天数"
     elif groupy_by == "dday":
         return "预报时效整除24小时后的余数"
-def get_x_ticks(ticks,width):
+def get_x_ticks(ticks,width,row = 2):
     w_one_tick = 0.5
     max_tick_num = int(width / w_one_tick)
     tick0 = ticks[0]
@@ -446,6 +486,8 @@ def get_x_ticks(ticks,width):
         ticks1 = list(set(ticks1))
         ticks1.sort()
         times = np.array(ticks1)
+        pd_times = pd.Series(0, index=times)
+        hours_pd = set(pd_times.index.hour)
         dtimes = (times[1:] - times[0:-1])
         dhs =  dtimes / np.timedelta64(1, 'h')
         dhs_set = set(dhs.tolist())
@@ -459,28 +501,29 @@ def get_x_ticks(ticks,width):
             nt = dh_max/dhs_u0
             sp_rate = int(math.ceil(nt/max_tick_num))
             dhs_u1 = dhs_u0 * sp_rate
-            if dhs_u1 ==1:
-                hour_list = np.arange(24).tolist()
-            elif dhs_u1 <=3:
-                hour_list = np.arange(2,24,3).tolist()
-            elif dhs_u1 <=6:
-                hour_list = np.arange(2,24,6).tolist()
-            elif dhs_u1 <=12:
-                hour_list = np.arange(8,24,12).tolist()
-            elif dhs_u1 <=24:
-                hour_list = [8]
+            if dhs_u1 <=24:
+                if dhs_u1 ==1:
+                    hour_list = np.arange(24).tolist()
+                elif dhs_u1 <=3:
+                    hour_list = np.arange(2,24,3).tolist()
+                elif dhs_u1 <=6:
+                    hour_list = np.arange(2,24,6).tolist()
+                elif dhs_u1 <=12:
+                    hour_list = np.arange(8,24,12).tolist()
+                elif dhs_u1 <=24:
+                    hour_list = hours_pd
+                index1 = np.where(pd_times.index.hour.isin(hour_list))
             else:
-                hour_list = [8]
-            pd_times = pd.Series(0, index=times)
-            index1 = np.where(pd_times.index.hour.isin(hour_list))
+                hour_list = hours_pd
+                index1 = np.where(pd_times.index.hour.isin(hour_list))
+                index1 = index1[0][::sp_rate]
             times_used = times[index1]
-
             xticks = (times_used - times[0]) / np.timedelta64(1, 'h')
-            xtick_labels = get_time_str_list(times_used,row=2)
+            xtick_labels = get_time_str_list(times_used,row=row)
             #print(xticks)
         else:
             #无规律，需穷举
-            xtick_labels = get_time_str_list(times,row=2)
+            xtick_labels = get_time_str_list(times,row=row)
             xticks = []
             for i in range(len(xtick_labels)):
                 xticks.append((times[i] - times[0]) / np.timedelta64(1, 'h'))
