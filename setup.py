@@ -5,7 +5,7 @@ from setuptools import find_packages, setup
 from codecs import open
 name = "meteva"
 author ="liucouhua,daikan,wangbaoli"
-version ="1.2.9.4"
+version ="1.3.1"
 
 here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
@@ -38,7 +38,7 @@ setup(
 
     install_requires=['numpy>=1.12.1',
                       'scipy>=0.19.0',
-                      'pandas>=0.20.0',
+                      'pandas>=1.0.1',
                       'xarray>=0.11.0',
                       'scikit-learn>=0.21.2',
                       'matplotlib>=3.1.2',
