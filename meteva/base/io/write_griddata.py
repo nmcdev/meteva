@@ -69,17 +69,16 @@ def write_griddata_to_micaps4(da,save_path = "a.txt",creat_dir = False,effective
         if title is None:
             title = ("diamond 4 " + save_path[start:end] + "\n"
                      + year + " " + month + " " + day + " " + hour + " " + hour_range + " " + str(level) + "\n"
-                     + str(grid.dlon) + " " + str(grid.dlat) + " " + str(grid.slon) + " " + str(grid.elon) + " "
+                     + "{:.6f}".format(grid.dlon) + " " + "{:.6f}".format(grid.dlat) + " " + str(grid.slon) + " " + str(grid.elon) + " "
                      + str(grid.slat) + " " + str(grid.elat) + " " + str(grid.nlon) + " " + str(grid.nlat) + " "
                      + str(inte) + " " + str(vmin) + " " + str(vmax) + " 1 0")
         else:
 
             title = ("diamond 4 "+ title +"\n"
             + year + " " + month + " " + day + " " + hour + " " + hour_range + " " + str(level) + "\n"
-            + str(grid.dlon) + " " + str(grid.dlat) + " " + str(grid.slon) + " " + str(grid.elon) + " "
+            + "{:.6f}".format(grid.dlon) + " " + "{:.6f}".format(grid.dlat) + " " + str(grid.slon) + " " + str(grid.elon) + " "
             + str(grid.slat) + " " + str(grid.elat) + " " + str(grid.nlon) + " " + str(grid.nlat) + " "
             + str(inte) + " " + str(vmin) + " " + str(vmax) + " 1 0")
-        print(title)
 
         # 二维数组写入micaps文件
         format_str = "%." + str(effectiveNum) + "f "
