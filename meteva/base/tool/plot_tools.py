@@ -645,7 +645,8 @@ def scatter_sta(sta0,value_column=None,
             add_china_map_2basemap(ax, name="world", edgecolor='k', lw=0.3, encoding='gbk', grid0=None)  # "国界"
 
 
-        add_china_map_2basemap(ax, name="province", edgecolor='k', lw=0.3, encoding='gbk',grid0 = None)  # "省界"
+        add_china_map_2basemap(ax, name="nation", edgecolor='k', lw=0.3, encoding='gbk',grid0 = None)  # "省界"
+        add_china_map_2basemap(ax, edgecolor='k', lw=0.3, encoding='gbk')  # "省界"
         if add_county_line:
             add_china_map_2basemap(ax, name="county", edgecolor='k', lw=0.2, encoding='gbk', grid0=None)  # "县界"
         ax.set_xlim((slon, elon))
@@ -1222,7 +1223,14 @@ def bar(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",v
         newshape = (keys.index(subplot),keys.index(legend),keys.index(axis))
         data = array.transpose(newshape)
         legend_num = len(name_list_dict[legend])
-        width_axis = meteva.base.plot_tools.caculate_axis_width(name_list_dict[axis], sup_fontsize,legend_num)
+
+        x_one = name_list_dict[axis][0]
+        if isinstance(x_one,datetime.datetime):
+            xticks_labels = meteva.product.get_time_str_list(name_list_dict[axis],3)
+        else:
+            xticks_labels = name_list_dict[axis]
+        width_axis = meteva.base.plot_tools.caculate_axis_width(xticks_labels, sup_fontsize,legend_num)
+
         width_wspace = sup_fontsize * 0.1
         width_one_subplot = width_axis +width_wspace
         if width_one_subplot <1.5:width_one_subplot = 1.5
@@ -1231,6 +1239,14 @@ def bar(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",v
         if width_one_subplot >10:
             spasify = int(math.ceil(width_one_subplot/10))
             width_one_subplot = 10
+
+        x = np.arange(len(name_list_dict[axis]))
+        xticks = x[::spasify]
+        if isinstance(x_one,datetime.datetime):
+            xticks_labels = meteva.product.get_time_str_list(name_list_dict[axis][::spasify],3)
+        else:
+            xticks_labels = name_list_dict[axis][::spasify]
+
         if ncol is None:
             ncol = int(10/width_one_subplot)
             nrow = int(math.ceil(subplot_num/ncol))
@@ -1281,7 +1297,7 @@ def bar(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",v
 
         for k in range(subplot_num):
             plt.subplot(nrow, ncol, k + 1)
-            x = np.arange(len(name_list_dict[axis]))
+            #x = np.arange(len(name_list_dict[axis]))
 
             for i in range(legend_num):
                 x1 = x + (i - legend_num / 2 + 0.5) * width
@@ -1305,7 +1321,8 @@ def bar(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",v
             #print(knext_row)
             #print(subplot_num)
             if knext_row>=subplot_num:
-                plt.xticks(x[::spasify], name_list_dict[axis][::spasify], fontsize=sup_fontsize * 0.8)
+                #plt.xticks(x[::spasify], name_list_dict[axis][::spasify], fontsize=sup_fontsize * 0.8)
+                plt.xticks(xticks, xticks_labels, fontsize=sup_fontsize * 0.8)
                 plt.xlabel(axis, fontsize=sup_fontsize * 0.9)
             else:
                 plt.xticks([])
@@ -1602,15 +1619,29 @@ def plot(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",
         newshape = (keys.index(subplot),keys.index(legend),keys.index(axis))
         data = array.transpose(newshape)
         legend_num = len(name_list_dict[legend])
-        width_axis = meteva.base.plot_tools.caculate_axis_width(name_list_dict[axis], sup_fontsize,legend_num)
+        x_one = name_list_dict[axis][0]
+        if isinstance(x_one,datetime.datetime):
+            xticks_labels = meteva.product.get_time_str_list(name_list_dict[axis],3)
+        else:
+            xticks_labels = name_list_dict[axis]
+        width_axis = meteva.base.plot_tools.caculate_axis_width(xticks_labels, sup_fontsize,legend_num)
 
         width_wspace = sup_fontsize * 0.1
         width_one_subplot = width_axis +width_wspace
         subplot_num = len(name_list_dict[subplot])
         spasify = 1
         if width_one_subplot >10:
-            spasify = int(math.ceil(width_one_subplot/10))
+            spasify = int(math.ceil(width_one_subplot/10)) + 1
             width_one_subplot = 10
+
+        #重新绘制时间的刻度
+        x = np.arange(len(name_list_dict[axis]))
+        xticks = x[::spasify]
+        if isinstance(x_one,datetime.datetime):
+            xticks_labels = meteva.product.get_time_str_list(name_list_dict[axis][::spasify],3)
+        else:
+            xticks_labels = name_list_dict[axis][::spasify]
+
         if ncol is None:
             ncol = int(10/width_one_subplot)
             nrow = int(math.ceil(subplot_num/ncol))
@@ -1656,7 +1687,7 @@ def plot(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",
 
         for k in range(subplot_num):
             plt.subplot(nrow, ncol, k + 1)
-            x = np.arange(len(name_list_dict[axis]))
+
             width = 0.8 / (legend_num + 2)
             for i in range(legend_num):
                 dat0 = data[k, i, :]
@@ -1684,7 +1715,8 @@ def plot(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",
             kj = int(k / ncol)
             knext_row = ki + (kj+1) * ncol
             if knext_row>=subplot_num:
-                plt.xticks(x[::spasify], name_list_dict[axis][::spasify], fontsize=sup_fontsize * 0.8)
+                #plt.xticks(x[::spasify], xticks_labels[::spasify], fontsize=sup_fontsize * 0.8)
+                plt.xticks(xticks,xticks_labels,fontsize = sup_fontsize * 0.8)
                 plt.xlabel(axis, fontsize=sup_fontsize * 0.9)
             else:
                 plt.xticks([])
@@ -1744,10 +1776,12 @@ def plot(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",
             else:
                 plt.legend(fontsize=sup_fontsize * 0.9, ncol=legend_col, loc="upper center")
 
-            '''
-            plt.ylim(vmin1, vmax1)
             if len(name_list_dict[axis]) > 30:
                 plt.grid()
+
+            '''
+            plt.ylim(vmin1, vmax1)
+
             if legend_num>1:
                 width_axis = width_fig/ncol
                 legend_col = int(width_axis *0.8)

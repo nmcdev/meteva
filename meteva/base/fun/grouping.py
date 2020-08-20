@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 
 
+
 def group(sta_ob_and_fos,g = None,gll = None):
     valid_group_list_list = []
     sta_ob_and_fos_list = []
@@ -425,3 +426,26 @@ def group(sta_ob_and_fos,g = None,gll = None):
         valid_group_list_list = None
     valid_group_list =  np.array(valid_group_list_list).squeeze().tolist()
     return sta_ob_and_fos_list,valid_group_list
+
+
+def split(sta_ob_and_fos,used_coords = ["level","time","dtime"],sta_list = None):
+    '''
+
+    :param sta_ob_and_fos: 包含多个层次，时间，时效，站点的观测和预报数据
+    :param used_coords: 拆分的维度
+    :param sta_list: 最终返回的结果
+    :return:
+    '''
+
+    if sta_list is None:
+        sta_list = []
+    sta_group = group(sta_ob_and_fos, g=used_coords[0])[0]
+    if len(used_coords) >1:
+        # 取出第一个coord
+        for sta in sta_group:
+            split(sta,used_coords=used_coords[1:],sta_list = sta_list)
+    else:
+        for sta in sta_group:
+            sta_list.append(sta)
+
+    return sta_list
