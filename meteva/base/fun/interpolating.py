@@ -248,23 +248,76 @@ def interp_sg_idw(sta0, grid, background=None, effectR=1000, nearNum=8,decrease 
     if nearNum > len(sta.index):
         nearNum = len(sta.index)
     d, inds = tree.query(xyz_grid, k=nearNum)
-    d += 1e-6
-    w = 1.0 / d ** decrease
-    input_dat = sta.values[:,-1]
-    dat = np.sum(w * input_dat[inds], axis=1) / np.sum(w, axis=1)
-    bg = meteva.base.basicdata.grid_data(grid2)
-    if (background is not None):
-        bg = interp_gg_linear(background, grid2)
-    bg_dat = bg.values.flatten()
-    dat = np.where(d[:, 0] > effectR, bg_dat, dat)
+    if nearNum >1:
+        d += 1e-6
+        w = 1.0 / d ** decrease
+        input_dat = sta.values[:,-1]
+        dat = np.sum(w * input_dat[inds], axis=1) / np.sum(w, axis=1)
+        bg = meteva.base.basicdata.grid_data(grid2)
+        if (background is not None):
+            bg = interp_gg_linear(background, grid2)
+        bg_dat = bg.values.flatten()
+        dat = np.where(d[:, 0] > effectR, bg_dat, dat)
+    else:
+        input_dat = sta0.iloc[:,-1].values
+        dat = input_dat[inds]
+        bg = meteva.base.basicdata.grid_data(grid2)
+        if (background is not None):
+            bg = interp_gg_linear(background, grid2)
+        bg_dat = bg.values.flatten()
+        dat = np.where(d[:] > effectR, bg_dat, dat)
     grd = meteva.base.basicdata.grid_data(grid2, dat)
     grd.name = "data0"
     return grd
 
 
-def interp_ss_idw(sta0, station, effectR=1000, nearNum=8,decrease = 2):
-    '''
+def interp_sg_cressman(sta0, grid, r_list,background=None , nearNum=100):
+    sta = meteva.base.sele_by_para(sta0,drop_IV=True)
+    data_name = meteva.base.get_stadata_names(sta)
+    index0 = sta.index[0]
+    grid2 = meteva.base.basicdata.grid(grid.glon, grid.glat, [sta.loc[index0, 'time']],
+                                                       [sta.loc[index0, 'dtime']],
+                                                       [sta.loc[index0, 'level']], data_name)
+    xyz_sta = meteva.base.tool.math_tools.lon_lat_to_cartesian(sta['lon'].values,
+                                                                                sta['lat'].values,
+                                                                                R=meteva.base.basicdata.const.ER)
+    lon = np.arange(grid2.nlon) * grid2.dlon + grid2.slon
+    lat = np.arange(grid2.nlat) * grid2.dlat + grid2.slat
+    grid_lon, grid_lat = np.meshgrid(lon, lat)
+    xyz_grid = meteva.base.tool.math_tools.lon_lat_to_cartesian(grid_lon.flatten(),
+                                                                                 grid_lat.flatten(),
+                                                                                 R=meteva.base.basicdata.const.ER)
+    tree = cKDTree(xyz_sta)
+    # d,inds 分别是站点到格点的距离和id
+    nsta = len(sta.index)
+    if nearNum > nsta:
+        nearNum = nsta
+    d, inds = tree.query(xyz_grid, k=nearNum)
+    d += 1e-6
+    bg = meteva.base.basicdata.grid_data(grid2)
+    if (background is not None):
+        bg = interp_gg_linear(background, grid2)
 
+    bg_dat = bg.values.flatten()
+    input_dat = sta.values[:, -1]
+
+    d2 = d ** 2
+    for R in r_list:
+        index_in = np.where(d[:,0] < R)[0]
+        inds_in = inds[index_in,:]
+        r2 = R ** 2
+        d2_in = d2[index_in,:]
+        w = (r2 -  d2_in)/(r2 + d2_in)
+        w[w <0] = 0
+        dat = np.sum(w * input_dat[inds_in], axis=1) / np.sum(w, axis=1)
+        bg_dat[index_in] = dat[:]
+    grd = meteva.base.basicdata.grid_data(grid2, bg_dat)
+    grd.name = "data0"
+    return grd
+
+
+def interp_ss_idw(sta0, station, effectR=1000, nearNum=8,decrease = 2,defalut_value =0):
+    '''
     :param sta0: 包含原始数据的站点数据
     :param station: 插值后的目标站点
     :param effectR: 反距离插值最大半径
@@ -277,12 +330,18 @@ def interp_ss_idw(sta0, station, effectR=1000, nearNum=8,decrease = 2):
     xyz_sta1 = meteva.base.tool.math_tools.lon_lat_to_cartesian(sta1['lon'].values,sta1['lat'].values,R=meteva.base.basicdata.const.ER)
     tree = cKDTree(xyz_sta0)
     d, inds = tree.query(xyz_sta1, k=nearNum)
-    d += 1e-6
-    w = 1.0 / d ** decrease
-    input_dat = sta0.iloc[:,-1].values
-    dat = np.sum(w * input_dat[inds], axis=1) / np.sum(w, axis=1)
-    dat[:] = np.where(d[:,0] > effectR,0,dat[:])
-    sta1.iloc[:,-1] = dat[:]
+    if nearNum >1:
+        d += 1e-6
+        w = 1.0 / d ** decrease
+        input_dat = sta0.iloc[:,-1].values
+        dat = np.sum(w * input_dat[inds], axis=1) / np.sum(w, axis=1)
+        dat[:] = np.where(d[:,0] > effectR,defalut_value,dat[:])
+        sta1.iloc[:,-1] = dat[:]
+    else:
+        input_dat = sta0.iloc[:,-1].values
+        dat = input_dat[inds]
+        dat[:] = np.where(d[:] > effectR,defalut_value,dat[:])
+        sta1.iloc[:,-1] = dat[:]
     return sta1
 
 
