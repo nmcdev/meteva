@@ -187,6 +187,7 @@ def combine_on_obTime_id(sta_ob,sta_fo_list,need_match_ob = False):
         sta_combine_fo = combine_on_level_time_dtime_id(sta_combine_fo, sta_fo)
 
     if need_match_ob:
+        sta_combine = meteva.base.not_IV(sta_combine)
         sta_combine = combine_on_level_time_dtime_id(sta_combine, sta_combine_fo, how="inner")
     else:
         sta_combine = combine_on_level_time_dtime_id(sta_combine,sta_combine_fo,how="right")
@@ -248,21 +249,21 @@ def combine_expand_IV(sta,sta_with_IV):
         :return:
         '''
 
-    sta_expand = []
     sta_with_IV1 = copy.deepcopy(sta_with_IV)
+    columns = ["level","time","dtime","id"]
     for i in range(4):
+        sta_expand = []
         if sta_with_IV.iloc[0,i] == meteva.base.IV or pd.isnull(sta_with_IV.iloc[0,i]):
-
             value_list = list(set(sta.iloc[:,i].values.tolist()))
-            #print(value_list)
+            if i == 1:
+                for j in range(len(value_list)):
+                    value_list[j] = meteva.base.tool.all_type_time_to_time64(value_list[j])
             for value in value_list:
                 sta1 = copy.deepcopy(sta_with_IV1)
                 sta1.iloc[:,i] = value
                 sta_expand.append(sta1)
-            #print(len(sta_expand))
             sta_with_IV1 = pd.concat(sta_expand, axis=0)
-    #print(sta_with_IV1)
-
+    #sta_with_IV1 = sta_with_IV1.dropna()
     sta_combine = combine_on_level_time_dtime_id(sta, sta_with_IV1)
     return sta_combine
 
