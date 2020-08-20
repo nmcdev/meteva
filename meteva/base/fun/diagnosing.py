@@ -5,10 +5,18 @@ from scipy.spatial import cKDTree
 import numpy as np
 import copy
 import pandas as pd
+import datetime
 
 
 def accumulate_time(sta_ob,step,keep_all = True):
-    '''观测数据累加'''
+    '''
+    观测数据累加
+    :param sta_ob:
+    :param step:
+    :param keep_all:
+    :return:
+    '''
+
     times= sta_ob.loc[:,'time'].values
     times = list(set(times))
     times.sort()
@@ -25,6 +33,7 @@ def accumulate_time(sta_ob,step,keep_all = True):
         dh = (dtimes/min_dtime).astype(np.int32)
         new_times = times[dh%step ==0]
         rain_ac = meteva.base.in_time_list(rain_ac,new_times)
+    print("warning: accumulate_time函数将在后续升级中不再支持，请重新使用sum_of_sta函数满足相关需求")
     return rain_ac
 
 def accumulate_dtime(sta,step,keep_all = True):
@@ -41,6 +50,7 @@ def accumulate_dtime(sta,step,keep_all = True):
     for i in range(step):
         rain1 = sta.copy()
         rain1["dtime"] = rain1["dtime"] + dhour_unit * i
+        #print(dhour_unit * i)
         rain_ac = meteva.base.add_on_level_time_dtime_id(rain_ac,rain1,how="inner")
     if not keep_all:
         dh =((dtimes - dtimes[-1])/dhour_unit).astype(np.int32)
@@ -48,19 +58,93 @@ def accumulate_dtime(sta,step,keep_all = True):
         rain_ac = meteva.base.in_dtime_list(rain_ac,new_dtimes)
     return rain_ac
 
+def change(sta,delta = 24,used_coords = "time"):
 
-def t_rh_to_tw(t,rh):
+    if used_coords == "time":
+        names_0 = meteva.base.get_stadata_names(sta)
+        names_1 = []
+        for name in names_0:
+            names_1.append(name + "_new")
+        sta1 = sta.copy()
+        meteva.base.set_stadata_names(sta1, names_1)
+        sta1["time"] = sta1["time"] + datetime.timedelta(hours= delta)
+        sta01 = meteva.base.combine_on_all_coords(sta1, sta)
+        fn = len(names_1)
+        dvalue = sta01.iloc[:, (-fn):].values - sta01.iloc[:, (-fn * 2):(-fn)].values
+        sta01.iloc[:, (-fn):] = dvalue
+        sta01 = sta01.drop(names_1, axis=1)
+        return sta01
+    else:
+        names_0 = meteva.base.get_stadata_names(sta)
+        names_1 = []
+        for name in names_0:
+            names_1.append(name+"_new")
+        sta1 = sta.copy()
+        meteva.base.set_stadata_names(sta1,names_1)
+        sta1["dtime"] = sta1["dtime"] + delta
+        sta01 = meteva.base.combine_on_all_coords(sta1,sta)
+        fn= len(names_1)
+        dvalue = sta01.iloc[:,(-fn):].values - sta01.iloc[:,(-fn * 2):(-fn)].values
+        sta01.iloc[:,(-fn):] = dvalue
+        sta01 = sta01.drop(names_1,axis=1)
+        return sta01
+
+def t_rh_to_tw(temp,rh,rh_unit = "%"):
     '''根据温度和相对湿度计算湿球温度'''
-    sta = meteva.base.combine_on_all_coords(t,rh)
-    meteva.base.set_stadata_names(sta,["t","rh"])
-    T = sta["t"].values
-    RH = sta["rh"].values
-    Tw = T * np.arctan(0.151977 * np.sqrt(RH + 8.313659)) + np.arctan(T + RH) - np.arctan(
-        RH - 1.676331) + 0.00391838 * np.power(RH, 1.5) * np.arctan(0.023101 * RH) - 4.686035
+    if isinstance(temp,pd.DataFrame):
+        sta1 = meteva.base.combine_on_all_coords(temp, rh)
+        meteva.base.set_stadata_names(sta1, ["t", "rh"])
+        sta2 = meteva.base.not_IV(sta1)
+        T = sta2.loc[:,"t"].values
+        RH = sta2["rh"].values
+        if(T[0]>120):
+            T -= 273.16
 
-    sta["tw"] = Tw
-    sta = sta.drop(["t", "rh"], axis=1)
-    return sta
+        if rh_unit == "%":
+            pass
+        else:
+            RH = RH * 100
+        max_rh = np.max(RH)
+        min_rh = np.min(RH)
+        if max_rh>100 or min_rh <0:
+            print("相对湿度取值不能超过100%或小于0%")
+            return
+        if max_rh < 1:
+            print("警告：最大的相对湿度小于1%，请确认rh的单位是否为%，如果不是,请设置rh_unit = 1")
+
+        Tw = T * np.arctan(0.151977 * np.sqrt(RH + 8.313659)) + np.arctan(T + RH) - np.arctan(
+            RH - 1.676331) + 0.00391838 * np.power(RH, 1.5) * np.arctan(0.023101 * RH) - 4.686035
+
+        sta2["tw"] = Tw
+        sta = sta2.drop(["t", "rh"], axis=1)
+        return sta
+    else:
+        grid0 = meteva.base.get_grid_of_data(temp)
+        if temp.values[0,0,0,0,0,0] >120:
+            T = temp.values - 273.16
+        else:
+            T = temp.values
+
+        RH = rh.values
+        if rh_unit == "%":
+            RH /= 100
+        else:
+            pass
+        max_rh = np.max(RH)
+        min_rh = np.min(RH)
+        if max_rh>1 or min_rh <0:
+            print("相对湿度取值不能超过100%或小于0%")
+            return
+        if max_rh < 0.01:
+            print("警告：最大的相对湿度小于1%，请确认rh的单位是否为%，如果不是,请设置rh_unit = 1")
+
+        Tw = T * np.arctan(0.151977 * np.sqrt(RH + 8.313659)) + np.arctan(T + RH) - np.arctan(
+            RH - 1.676331) + 0.00391838 * np.power(RH, 1.5) * np.arctan(0.023101 * RH) - 4.686035
+
+        grd = meteva.base.grid_data(grid0,Tw)
+        return grd
+
+
 
 def u_v_to_wind(u,v):
     if isinstance(u,pd.DataFrame):
@@ -115,9 +199,10 @@ def t_dtp_to_rh(temp,dtp):
     if isinstance(temp,pd.DataFrame):
         sta = meteva.base.combine_on_all_coords(temp, dtp)
         meteva.base.set_stadata_names(sta, ["t", "dtp"])
-        T = sta["t"].values
+        T = sta.loc[:,"t"].values
         if(T[0]>120):
             T -= 273.16
+
         D = sta["dtp"].values
         if D[0] >120:
             D -= 273.16
@@ -143,14 +228,12 @@ def t_dtp_to_rh(temp,dtp):
         e0 = 6.11 * np.exp(17.15 * T/(235 + T))
         e1 = 6.11 * np.exp(17.15 * D / (235 + D))
 
-        rh = 100 * e0/e1
+        rh = e0/e1
         grd = meteva.base.grid_data(grid0,rh)
 
         return grd
 
-
-
-def t_rh_p_to_q(temp,rh,pressure):
+def t_rh_p_to_q(temp,rh,pressure,rh_unit = "%"):
     '''
     根据温度、相对湿度和气压计算比湿
     :param temp: 温度，可以是摄氏度，也可以是绝对温度
@@ -167,15 +250,27 @@ def t_rh_p_to_q(temp,rh,pressure):
         sta1 = meteva.base.combine_on_all_coords(temp, rh)
         sta2 = meteva.base.combine_on_all_coords(sta1, level_s)
         meteva.base.set_stadata_names(sta2, ["t", "rh","p"])
-        T = sta2["t"].values
-        R = sta2["rh"].values
-        P = sta2["p"].values
+        sta2 = meteva.base.not_IV(sta2)
+        T = sta2.loc[:,"t"].values
+        R = sta2.loc[:,"rh"].values
+        P = sta2.loc[:,"p"].values
         if(T[0]>120):
             T -= 273.16
         e0 = 6.11 * np.exp(5420 * (1.0 / 273.15 - 1 / (T + 273.15))) * 622
-        max_rh = np.max(R)
-        if max_rh >1.0:
+
+        if rh_unit == "%":
             R /= 100
+        else:
+            pass
+
+        max_rh = np.max(R)
+        min_rh = np.min(R)
+        if max_rh>1 or min_rh <0:
+            print("相对湿度取值不能超过100%或小于0%")
+            return
+        if max_rh < 0.01:
+            print("警告：最大的相对湿度小于1%，请确认rh的单位是否为%，如果不是,请设置rh_unit = 1")
+
         q = e0 * R/P
         sta2["q"] = q
         sta = sta2.drop(["t", "rh","p"], axis=1)
@@ -186,13 +281,23 @@ def t_rh_p_to_q(temp,rh,pressure):
             T = temp.values - 273.16
         else:
             T = temp.values
-        max_rh = np.max(rh.values)
-        if max_rh >1.0:
-            R = rh.values /100
+
+
+        R = rh.values
+        if rh_unit == "%":
+            R /= 100
         else:
-            R = rh.values
+            pass
+
+        max_rh = np.max(R)
+        min_rh = np.min(R)
+        if max_rh>1 or min_rh <0:
+            print("相对湿度取值不能超过100%或小于0%")
+            return
+
         e0 = 6.11 * np.exp(5420 * (1.0 / 273.15 - 1 / (T + 273.15))) * 622
-        if isinstance(pressure,int):
+
+        if isinstance(pressure,float) or isinstance(pressure,float):
             P = pressure
         else:
             P = pressure.values
@@ -202,173 +307,3 @@ def t_rh_p_to_q(temp,rh,pressure):
 
 
 
-def sta_index_ensemble_near_by_sta(sta_to,nearNum = 100,sta_from = None,drop_frist = False):
-    if(sta_to is None):
-        return None
-    if(sta_from is None):
-        sta_from = copy.deepcopy(sta_to)
-    xyz_sta0 = lon_lat_to_cartesian(sta_to['lon'].values[:], sta_to['lat'].values[:],R = meteva.base.basicdata.ER)
-    xyz_sta1 = lon_lat_to_cartesian(sta_from['lon'].values[:], sta_from['lat'].values[:],R = meteva.base.basicdata.ER)
-    tree = cKDTree(xyz_sta0)
-    _,indexs = tree.query(xyz_sta1, k=nearNum)
-    sta_ensemble = sta_to[meteva.base.get_coord_names()]
-    for i in range(nearNum):
-        data_name = "data" + str(i)
-        sta_ensemble[data_name] = indexs[:,i]
-    if drop_frist:
-        sta_ensemble = sta_ensemble.drop(columns=['data0'])
-    return sta_ensemble
-
-def sta_id_ensemble_near_by_sta(sta_to,nearNum = 100,sta_from = None,drop_frist = False):
-    if(sta_to is None):
-        return None
-    if(sta_from is None):
-        sta_from = copy.deepcopy(sta_to)
-    xyz_sta0 = lon_lat_to_cartesian(sta_to['lon'].values[:], sta_to['lat'].values[:],R = meteva.base.basicdata.ER)
-    xyz_sta1 = lon_lat_to_cartesian(sta_from['lon'].values[:], sta_from['lat'].values[:],R = meteva.base.basicdata.ER)
-    tree = cKDTree(xyz_sta0)
-    _,indexs = tree.query(xyz_sta1, k=nearNum)
-    input_dat = sta_from.ix[:, 'id'].values
-    sta_ensemble = sta_to[meteva.base.get_coord_names()]
-    for i in range(nearNum):
-        data_name = "data" + str(i)
-        sta_ensemble[data_name] = input_dat[indexs[:,i]]
-    if drop_frist:
-        sta_ensemble = sta_ensemble.drop(columns=['data0'])
-    return sta_ensemble
-
-def sta_value_ensemble_near_by_sta(sta_to,nearNum = 100,sta_from = None,drop_frist = False):
-    if(sta_to is None):
-        return None
-    if(sta_from is None):
-        sta_from = copy.deepcopy(sta_to)
-    xyz_sta0 = lon_lat_to_cartesian(sta_to['lon'].values[:], sta_to['lat'].values[:],R = meteva.base.basicdata.ER)
-    xyz_sta1 = lon_lat_to_cartesian(sta_from['lon'].values[:], sta_from['lat'].values[:],R = meteva.base.basicdata.ER)
-    tree = cKDTree(xyz_sta0)
-    _,indexs = tree.query(xyz_sta1, k=nearNum)
-    data_name = meteva.base.get_stadata_names(sta_from)[0]
-    input_dat = sta_from[data_name].values
-    sta_ensemble = sta_to[meteva.base.get_coord_names()]
-    for i in range(nearNum):
-        data_name = "data" + str(i)
-        sta_ensemble[data_name] = input_dat[indexs[:,i]]
-    if drop_frist:
-        sta_ensemble = sta_ensemble.drop(columns=['data0'])
-    return sta_ensemble
-
-def sta_dis_ensemble_near_by_sta(sta_to,nearNum = 100,sta_from = None,drop_frist = False):
-    if(sta_to is None):
-        return None
-    if(sta_from is None):
-        sta_from = copy.deepcopy(sta_to)
-    xyz_sta0 = lon_lat_to_cartesian(sta_to['lon'].values[:], sta_to['lat'].values[:],R = meteva.base.basicdata.ER)
-    xyz_sta1 = lon_lat_to_cartesian(sta_from['lon'].values[:], sta_from['lat'].values[:],R = meteva.base.basicdata.ER)
-    tree = cKDTree(xyz_sta0)
-    d,_ = tree.query(xyz_sta1, k=nearNum)
-    sta_ensemble = sta_to[meteva.base.get_coord_names()]
-    for i in range(nearNum):
-        data_name = "data" + str(i)
-        sta_ensemble[data_name] = d[:,i]
-    if drop_frist:
-        sta_ensemble = sta_ensemble.drop(columns=['data0'])
-    return sta_ensemble
-
-def sta_index_ensemble_near_by_grid(sta, grid,nearNum = 1):
-    ER = meteva.base.ER
-    members = np.arange(nearNum).tolist()
-    grid1 = meteva.base.grid(grid.glon,grid.glat,member_list=members)
-    grd_en = meteva.base.grid_data(grid1)
-    xyz_sta =  meteva.base.tool.math_tools.lon_lat_to_cartesian(sta.loc[:,"lon"], sta.loc[:,"lat"],R = ER)
-    lon = np.arange(grid1.nlon) * grid1.dlon + grid1.slon
-    lat = np.arange(grid1.nlat) * grid1.dlat + grid1.slat
-    grid_lon,grid_lat = np.meshgrid(lon,lat)
-    xyz_grid = meteva.base.tool.math_tools.lon_lat_to_cartesian(grid_lon.flatten(), grid_lat.flatten(),R = ER)
-    tree = cKDTree(xyz_sta)
-    value, inds = tree.query(xyz_grid, k=nearNum)
-    grd_en.values = inds.reshape((nearNum,1,1,1,grid1.nlat,grid1.nlon))
-    return grd_en
-
-def mean_of_sta(sta,used_coords = ["member"]):
-    sta_mean = sta.loc[:,meteva.base.get_coord_names()]
-    sta_data = sta[meteva.base.get_stadata_names(sta)]
-    value = sta_data.values
-    mean = np.mean(value,axis=1)
-    sta_mean['mean'] = mean
-    return sta_mean
-
-def std_of_sta(sta,used_coords = ["member"]):
-    sta_std = sta.loc[:,meteva.base.get_coord_names()]
-    sta_data = sta[meteva.base.get_stadata_names(sta)]
-    value = sta_data.values
-    std = np.std(value, axis=1)
-    sta_std['std'] = std
-    return sta_std
-
-def var_of_sta(sta,used_coords = ["member"]):
-    sta_var = sta.loc[:,meteva.base.get_coord_names()]
-    sta_data = sta[meteva.base.get_stadata_names(sta)]
-    value = sta_data.values
-    var = np.var(value, axis=1)
-    sta_var['var'] = var
-    return sta_var
-
-def max_of_sta(sta,used_coords = ["member"]):
-    sta_max = sta.loc[:,meteva.base.get_coord_names()]
-    sta_data = sta[meteva.base.get_stadata_names(sta)]
-    value = sta_data.values
-    max1 = np.max(value, axis=1)
-    sta_max['max'] = max1
-    return sta_max
-
-def min_of_sta(sta,used_coords = ["member"]):
-    sta_min = sta.loc[:,meteva.base.get_coord_names()]
-    sta_data = sta[meteva.base.get_stadata_names(sta)]
-    value = sta_data.values
-    min1 = np.min(value, axis=1)
-    sta_min['min'] = min1
-    return sta_min
-
-#获取网格数据的平均值
-def mean_of_grd(grd,used_coords = ["member"]):
-    grid0 = meteva.base.basicdata.get_grid_of_data(grd)
-    grid1 = meteva.base.basicdata.grid(grid0.glon,grid0.glat,grid0.gtime,grid0.dtimes,grid0.levels,member_list=["mean"])
-    dat = np.squeeze(grd.values)
-    dat = np.mean(dat,axis = 0)
-    grd1 = meteva.base.basicdata.grid_data(grid1,dat)
-    return grd1
-
-#获取网格数据的方差
-def var_of_grd(grd,used_coords = ["member"]):
-    grid0 = meteva.base.basicdata.get_grid_of_data(grd)
-    grid1 = meteva.base.basicdata.grid(grid0.glon,grid0.glat,grid0.gtime,grid0.dtimes,grid0.levels,member_list=["var"])
-    dat = np.squeeze(grd.values)
-    dat = np.var(dat,axis = 0)
-    grd1 = meteva.base.basicdata.grid_data(grid1,dat)
-    return grd1
-
-#获取网格数据的标准差
-def std_of_grd(grd,used_coords = ["member"]):
-    grid0 = meteva.base.basicdata.get_grid_of_data(grd)
-    grid1 = meteva.base.basicdata.grid(grid0.glon,grid0.glat,grid0.gtime,grid0.dtimes,grid0.levels,member_list=["std"])
-    dat = np.squeeze(grd.values)
-    dat = np.std(dat,axis = 0)
-    grd1 = meteva.base.basicdata.grid_data(grid1,dat)
-    return grd1
-
-#获取网格数据的最小值
-def min_of_grd(grd,used_coords = ["member"]):
-    grid0 = meteva.base.basicdata.get_grid_of_data(grd)
-    grid1 = meteva.base.basicdata.grid(grid0.glon,grid0.glat,grid0.gtime,grid0.dtimes,grid0.levels,member_list=["min"])
-    dat = np.squeeze(grd.values)
-    dat = np.min(dat,axis = 0)
-    grd1 = meteva.base.basicdata.grid_data(grid1,dat)
-    return grd1
-
-#获取网格数据的最大值
-def max_of_grd(grd,used_coords = ["member"]):
-    grid0 = meteva.base.basicdata.get_grid_of_data(grd)
-    grid1 = meteva.base.basicdata.grid(grid0.glon,grid0.glat,grid0.gtime,grid0.dtimes,grid0.levels,member_list=["max"])
-    dat = np.squeeze(grd.values)
-    dat = np.max(dat,axis = 0)
-    grd1 = meteva.base.basicdata.grid_data(grid1,dat)
-    return grd1
