@@ -10,6 +10,10 @@ def all_type_time_to_time64(time0):
         return np.datetime64(time0)
     elif type(time0) == str:
         return str_to_time64(time0)
+    elif isinstance(time0,int):
+        time1 = datetime.datetime.utcfromtimestamp(time0 / 1000000000)
+        np.datetime64(time1)
+        return np.datetime64(time1)
     else:
         print("时间类型不识别")
         return None
