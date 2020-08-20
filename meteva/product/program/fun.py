@@ -511,7 +511,13 @@ def get_x_ticks(ticks,width,row = 2):
                 elif dhs_u1 <=12:
                     hour_list = np.arange(8,24,12).tolist()
                 elif dhs_u1 <=24:
-                    hour_list = hours_pd
+                    if 8 in hours_pd:
+                        hour_list = [8]
+                    elif 0 in hours_pd:
+                        hour_list = [0]
+                    else:
+                        hour_list = [hours_pd[0]]
+
                 index1 = np.where(pd_times.index.hour.isin(hour_list))
             else:
                 hour_list = hours_pd
