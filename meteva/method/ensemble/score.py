@@ -1,6 +1,6 @@
 import numpy as np
 
-def cr(ob,fo,grade_list=[1e-300]):
+def cr(ob,fo,grade_list=[1e-30]):
     '''
     cr指数，代表集合成员集中且于观测一致的程度，即所有成员及观测在某个阈值以上的落区的交集与并集的比值
     :param ob:实况数据 一维的numpy
