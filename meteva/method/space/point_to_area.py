@@ -14,7 +14,6 @@ def p2p_vto01(sta_all,threshold = 1e-30,compair = ">="):
         return
 
     sta_happen_all = sta_all.copy()
-
     fo_names = meteva.base.get_stadata_names(sta_all)
 
     if isinstance(threshold,pd.DataFrame):
@@ -23,12 +22,13 @@ def p2p_vto01(sta_all,threshold = 1e-30,compair = ">="):
             name = fo_names[i]
             if compair == ">=":
                 sta_happen_all.loc[:,name] = 0 + (sta_compair.loc[:,name] >= sta_compair.iloc[:,-1])
-            elif compair ==">":
-                sta_happen_all.loc[:, name] = 0 + (sta_compair.loc[:, name] > sta_compair.iloc[:, -1])
             elif compair =="<=":
                 sta_happen_all.loc[:, name] = 0 + (sta_compair.loc[:, name] <= sta_compair.iloc[:, -1])
+            elif compair ==">":
+                sta_happen_all.loc[:, name] = 0 + (sta_compair.loc[:, name] > sta_compair.iloc[:, -1])
             else:
                 sta_happen_all.loc[:, name] = 0 + (sta_compair.loc[:, name] < sta_compair.iloc[:, -1])
+
 
             sta_happen_all.loc[sta_compair.loc[:,name] == meteva.base.IV, name] = meteva.base.IV
     else:
