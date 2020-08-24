@@ -1033,16 +1033,41 @@ def bar(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",v
             name_list_dict["x"] = np.arange(array.size).tolist()
 
         xlabel = list(name_list_dict.keys())[0]
-        xticks = name_list_dict[xlabel]
-        width = meteva.base.plot_tools.caculate_axis_width(xticks, sup_fontsize)
+        #xticks = name_list_dict[xlabel]
+
+
+        x_one = name_list_dict[axis][0]
+        if isinstance(x_one,datetime.datetime):
+            xticks_labels = meteva.product.get_time_str_list(name_list_dict[xlabel],3)
+        else:
+            xticks_labels = name_list_dict[axis]
+        width_axis = meteva.base.plot_tools.caculate_axis_width(xticks_labels, sup_fontsize,legend_num= 1)
+
+        width_wspace = sup_fontsize * 0.01
+        width_one_subplot = width_axis +width_wspace
+
+
+        if width_one_subplot >8:
+            spasify = int(math.ceil(width_one_subplot/8))
+        #spasify = 14
+        x = np.arange(len(name_list_dict[axis]))
+        #xticks = x[::spasify]
+        if isinstance(x_one,datetime.datetime):
+            xticks_labels = meteva.product.get_time_str_list(name_list_dict[axis][::spasify],3)
+        else:
+            xticks_labels = name_list_dict[axis][::spasify]
+
+        width = width_one_subplot
         if width > 10:
-            for i in range(len(xticks)):
-                if i % 2 == 1:
-                    xticks[i] = "|\n" + xticks[i]
+            if not isinstance(x_one, datetime.datetime):
+                for i in range(len(xticks_labels)):
+                    if i % 2 == 1:
+                        xticks_labels[i] = "|\n" + xticks_labels[i]
             width = 10
         elif width < 5:
             width = 5
         height = width / 2
+
         fig = plt.figure(figsize=(width, height), dpi=dpi)
         x = np.arange(array.size)
         y_plot = array[array != meteva.base.IV]
@@ -1058,7 +1083,7 @@ def bar(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",v
             y_iv = np.zeros(x_iv.size)
             plt.plot(x_iv,y_iv,"^", color='k')
 
-        plt.xticks(x,xticks,fontsize = sup_fontsize * 0.8)
+        plt.xticks(x[::spasify],xticks_labels,fontsize = sup_fontsize * 0.8)
         plt.yticks(fontsize=sup_fontsize * 0.8)
         plt.xlabel(xlabel,fontsize=sup_fontsize * 0.9)
         plt.ylabel(ylabel,fontsize = sup_fontsize * 0.9)
@@ -1340,8 +1365,11 @@ def bar(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",v
                     title1 = title +"("+ subplot +"_"+ str(name_list_dict[subplot][k])+")"
                 else:
                     title1 = title
-            y1 =  1 - 0.035 *  sup_fontsize / (height_fig/nrow)
-            plt.title(title1, fontsize=sup_fontsize,y = y1)
+            if subplot_num >1:
+                y1 =  1 - 0.035 *  sup_fontsize / (height_fig/nrow)
+                plt.title(title1, fontsize=sup_fontsize,y = y1)
+            else:
+                plt.title(title1, fontsize=sup_fontsize)
             plt.xlim(-0.5, len(name_list_dict[axis]) - 0.5)
 
             data_k = data[k,:,:]
