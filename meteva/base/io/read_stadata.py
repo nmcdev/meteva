@@ -438,7 +438,6 @@ def read_stadata_from_micaps1_2_8(filename, column, station=None, level=None,tim
             print(filename+"文件格式不能识别。可能原因：文件未按micaps第1、2、8类格式存储")
             return None
 
-
 def read_gds_ip_port(filename,show = False):
     file = open(filename)
     for i in range(6):
@@ -471,8 +470,8 @@ def read_stadata_from_gds(ip, port, filename,element_id = None,station = None, l
         element_id_str0 = str(element_id)
 
     try:
-        filename = filename.replace("mdfs:///", "")
-        filename = filename.replace("\\","/")
+        directory = directory.replace("mdfs:///", "")
+        directory = directory.replace("\\","/")
         status, response = service.getData(directory, filename)
     except ValueError:
         print('Can not retrieve data' + filename + ' from ' + directory)
@@ -804,8 +803,8 @@ def read_stawind_from_gds(ip,port,filename,station = None, level=None,time=None,
     service = GDSDataService(ip, port)
 
     try:
-        filename = filename.replace("mdfs:///", "")
-        filename = filename.replace("\\","/")
+        directory = directory.replace("mdfs:///", "")
+        directory = directory.replace("\\","/")
         #print(filename)
         status, response = service.getData(directory, filename)
 

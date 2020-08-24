@@ -142,7 +142,10 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
         else:
             if not isinstance(group_list_list1,list):
                 group_list_list1 = [group_list_list1]
-            name_list_dict[group_dict_name] = get_group_name(group_list_list1)
+            if (group_dict_name == "time" or group_dict_name == "ob_time")and gll is None:
+                name_list_dict[group_dict_name] = group_list_list1
+            else:
+                name_list_dict[group_dict_name] = get_group_name(group_list_list1)
 
         #设置成员名称
         name_list_dict["member"] = fo_name
@@ -464,6 +467,7 @@ def score_tdt(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_lis
                     for gg in range(grade_num):
                         dict_result = {}
                         dict_result["dtime"] = dtime_list
+                        print(fo_name)
                         dict_result[fo_name[0]] = result[:,gg]
                         sta_result = pd.DataFrame(dict_result)
                         sta_result["time"] = time_list[st]
