@@ -8,7 +8,7 @@ import math
 import meteva
 
 
-def performance(ob, fo,grade_list=[1e-30], member_list=None, save_path=None,show = False,dpi = 300, title="综合表现图"):
+def performance(ob, fo,grade_list=[1e-30],compair = ">=", member_list=None, save_path=None,show = False,dpi = 300, title="综合表现图"):
     '''
 
     :param ob:
@@ -17,7 +17,7 @@ def performance(ob, fo,grade_list=[1e-30], member_list=None, save_path=None,show
     :return:
     '''
     sup_fontsize = 10
-    hfmc_array = hfmc(ob, fo, grade_list)
+    hfmc_array = hfmc(ob, fo, grade_list,compair=compair)
     pod = pod_hfmc(hfmc_array)
     sr = sr_hfmc(hfmc_array)
     leftw = 0.6
@@ -145,6 +145,7 @@ def performance(ob, fo,grade_list=[1e-30], member_list=None, save_path=None,show
 
 
 def performance_hfmc(hfmc_array,axis_list_list,suplot_lengend = [1,0],save_dir = None):
+    pass
     '''
     :param ob:
     :param fo:
