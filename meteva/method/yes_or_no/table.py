@@ -5,7 +5,7 @@ import copy
 import numpy as np
 import pandas as pd
 
-def contingency_table_yesorno(ob, fo, grade_list=[1e-30],member_list=None,  save_path=None):
+def contingency_table_yesorno(ob, fo, grade_list=[1e-30],compair = ">=",member_list=None,  save_path=None):
     '''
     contingency_table 预测列联表
     :param ob: 实况数据 任意维numpy数组
@@ -15,6 +15,9 @@ def contingency_table_yesorno(ob, fo, grade_list=[1e-30],member_list=None,  save
     其中每一个sheet为一个等级的列联表
     :return: 返回一个列表，列表中的元素为一个阈值条件下，观测-预报列联表
     '''
+    if compair not in [">=",">","<","<="]:
+        print("compair 参数只能是 >=   >  <  <=  中的一种")
+        return
     Fo_shape = fo.shape
     Ob_shape = ob.shape
     Ob_shpe_list = list(Ob_shape)
@@ -50,9 +53,21 @@ def contingency_table_yesorno(ob, fo, grade_list=[1e-30],member_list=None,  save
             new_ob = np.zeros(shape)
             new_fo = np.zeros(shape)
             index_list = ["No"]
-            ob_index_list = np.where(ob >= grade)
+
+            if compair == ">=":
+                ob_index_list = np.where(ob >= grade)
+                fo_index_list = np.where(fo_piece >= grade)
+            elif compair == "<=":
+                ob_index_list = np.where(ob <= grade)
+                fo_index_list = np.where(fo_piece <= grade)
+            elif compair == ">":
+                ob_index_list = np.where(ob > grade)
+                fo_index_list = np.where(fo_piece > grade)
+            elif compair == "<":
+                ob_index_list = np.where(ob < grade)
+                fo_index_list = np.where(fo_piece < grade)
+
             new_ob[ob_index_list] = 1
-            fo_index_list = np.where(fo_piece >= grade)
             new_fo[fo_index_list] = 1
             index_list.append("Yes")
 
@@ -95,6 +110,7 @@ def contingency_table_yesorno(ob, fo, grade_list=[1e-30],member_list=None,  save
     return result
 
 def performance_hfmc(hfmc_array, axis_list_list, suplot_lengend=[1, 0], save_dir=None):
+    pass
     '''
     :param ob:
     :param fo:
