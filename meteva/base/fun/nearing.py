@@ -3,6 +3,7 @@ from meteva.base.tool.math_tools import lon_lat_to_cartesian
 from scipy.spatial import cKDTree
 import copy
 import numpy as np
+import pandas as pd
 
 def sta_index_ensemble_near_by_sta(sta_to,nearNum = 100,sta_from = None,drop_frist = False):
     if(sta_to is None):
@@ -182,3 +183,27 @@ def mean_in_r_of_sta(sta_to, r = 40, sta_from = None,drop_first = False):
     '''
 
     return statistic_in_r_of_sta(sta_to,np.mean, r = r, sta_from = sta_from,drop_first = drop_first)
+
+
+def add_stavalue_to_nearest_grid(sta,grid):
+    grd = meteva.base.grid_data(meteva.base.grid(grid.glon,grid.glat))
+    sta1 = meteva.base.sele.in_grid_xy(sta, grid)
+    data_names = meteva.base.get_stadata_names(sta1)
+    ig = np.round((sta1.loc[:,'lon'].values - grid.slon) // grid.dlon).astype(dtype = 'int16')
+    jg = np.round((sta1.loc[:,'lat'].values - grid.slat) // grid.dlat).astype(dtype = 'int16')
+    df = pd.DataFrame({"jg":jg,"ig":ig,"value":sta1.iloc[:,-1]})
+    duplicate_data_sum = df.groupby(by=['jg','ig'],as_index=False)["value"].sum()
+    ig_d = duplicate_data_sum["ig"].values
+    jg_d = duplicate_data_sum["jg"].values
+    value = duplicate_data_sum["value"].values
+    grd.values[0, 0, 0, 0, jg_d, ig_d] = value[:]
+
+    meteva.base.set_griddata_coords(grd, member_list=data_names)
+    return grd
+
+def add_stacount_to_nearest_grid(sta,grid):
+    sta1 = sta.copy()
+    data_names = meteva.base.get_stadata_names(sta)
+    sta1 = meteva.base.sele_by_para(sta1,member=data_names[0])
+    sta1.iloc[:,-1] = 1
+    return add_stavalue_to_nearest_grid(sta1,grid)
