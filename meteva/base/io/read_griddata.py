@@ -56,7 +56,7 @@ def read_griddata_from_micaps4(filename,grid=None,level = None,time = None,dtime
     '''
     try:
         if not os.path.exists(filename):
-            print(filename + " is not exist")
+            print(filename + " does not exist")
             return None
         encoding,str1 = meteva.base.io.get_encoding_of_file(filename)
         if encoding is None:
@@ -271,7 +271,7 @@ def read_griddata_from_nc(filename,grid = None,
                 lons = ds0.coords[lon_dim]
             else:
                 lons = ds0[lon_dim]
-                print(lons)
+                #print(lons)
                 drop_list.append(lon_dim)
 
             dims = lons.dims
@@ -287,7 +287,7 @@ def read_griddata_from_nc(filename,grid = None,
         else:
             ds.coords["lon"] = ("lon",[0])
 
-
+        #print(ds)
         da = None
         if value_name is not None:
             da = ds0[value_name]
@@ -354,7 +354,7 @@ def read_griddata_from_nc(filename,grid = None,
             da = da .expand_dims("lon")
 
 
-
+        #print(ds)
         da = da.transpose(dim_order["member"],dim_order["level"],dim_order["time"],
                           dim_order["dtime"],dim_order["lat"],dim_order["lon"])
         #print(da)
@@ -446,7 +446,7 @@ def read_griddata_from_nc(filename,grid = None,
 def read_griddata_from_gds_file(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
     try:
         if not os.path.exists(filename):
-            print(filename + " is not exist")
+            print(filename + " does not exist")
             return None
         file = open(filename, 'rb')
         byteArray = file.read()
@@ -722,7 +722,7 @@ def decode_gridwind_from_gds_byteArray(byteArray,grid = None,level = None,time =
 def read_gridwind_from_gds_file(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
     try:
         if not os.path.exists(filename):
-            print(filename + " is not exist")
+            print(filename + " does not exist")
             return None
         file = open(filename, 'rb')
         byteArray = file.read()
@@ -1004,7 +1004,7 @@ def decode_griddata_from_AWX_byteArray(byteArray,grid = None,level = None,time =
 def read_griddata_from_AWX_file(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
     try:
         if not os.path.exists(filename):
-            print(filename + " is not exist")
+            print(filename + " does not exist")
             return None
         file = open(filename, 'rb')
         byteArray = file.read()
@@ -1023,7 +1023,7 @@ def read_griddata_from_AWX_file(filename,grid = None,level = None,time = None,dt
 def read_griddata_from_binary(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
     try:
         if not os.path.exists(filename):
-            print(filename + " is not exist")
+            print(filename + " does not exist")
             return None
         file = open(filename, 'rb')
         bytes = file.read()
@@ -1143,7 +1143,7 @@ def decode_griddata_from_radar_byteArray(byteArray,grid = None,level = None,time
 def read_griddata_from_radar_latlon_file(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
     try:
         if not os.path.exists(filename):
-            print(filename + " is not exist")
+            print(filename + " does not exist")
             return None
         file = open(filename, 'rb')
         byteArray = file.read()
