@@ -77,6 +77,7 @@ def read_sta_alt_from_micaps3(filename, station=None, drop_same_id=True,show = F
     :return:
     '''
 
+    #print(os.path.exists(filename))
     if not os.path.exists(filename):
         print(filename+"文件不存在")
         return None
@@ -184,6 +185,7 @@ def read_stadata_from_micaps3(filename, station=None,  level=None,time=None, dti
             while 1 > 0:
                 skip_num += 1
                 str1 = file.readline()
+                #print(str1)
                 strs.extend(str1.split())
 
                 if (len(strs) > 8):
@@ -194,9 +196,10 @@ def read_stadata_from_micaps3(filename, station=None,  level=None,time=None, dti
                     if (len(strs) == nstart):
                         break
             file.close()
+            #print(skip_num)
             if int(strs[-1]) == 0:return None
 
-            file_sta = open(filename)
+            file_sta = open(filename, 'r',encoding=encoding)
             sta1 = pd.read_csv(file_sta, skiprows=skip_num, sep="\s+", header=None, usecols=[0, 1, 2, 4])
             sta1.columns = ['id', 'lon', 'lat', data_name]
             sta1.drop_duplicates(keep='first', inplace=True)
@@ -204,7 +207,7 @@ def read_stadata_from_micaps3(filename, station=None,  level=None,time=None, dti
                 sta1 = sta1.drop_duplicates(['id'])
             # sta = bd.sta_data(sta1)
             sta = meteva.base.basicdata.sta_data(sta1)
-            # print(sta)
+            #print(sta)
 
             y2 = ""
             if len(strs[3]) == 2:
@@ -223,6 +226,7 @@ def read_stadata_from_micaps3(filename, station=None,  level=None,time=None, dti
             sta.loc[:,"time"] = time_file
             sta.loc[:,"dtime"] = 0
             sta.loc[:,"level"] = 0 #int(strs[7])
+            #print(time_str)
             meteva.base.set_stadata_coords(sta, level=level, time=time, dtime=dtime)
 
             if (station is not None):
@@ -239,7 +243,7 @@ def read_stadata_from_micaps3(filename, station=None,  level=None,time=None, dti
             print(filename+"文件格式不能识别。可能原因：文件未按micaps3格式存储")
             return None
 
-def read_stadata_from_txt(filename, columns , skiprows=0,level = None,time = None,dtime = None,data_name = "data0", drop_same_id=True,show = False,):
+def read_stadata_from_txt(filename, columns,  skiprows=0,level = None,time = None,dtime = None,data_name = "data0", drop_same_id=True,show = False,):
 
     """
     读取站点数据
@@ -259,7 +263,7 @@ def read_stadata_from_txt(filename, columns , skiprows=0,level = None,time = Non
             file_sta = open(filename, 'r',encoding = encoding)
             sta0 = pd.read_csv(file_sta, skiprows=skiprows, sep="\s+", header=None)
             sta0.columns = columns
-            station_column = ['id', 'lon', 'lat', 'alt']
+            station_column = ['id', 'lon', 'lat']
             colums1 = []
             for name in station_column:
                 if name in columns:
@@ -283,7 +287,8 @@ def read_stadata_from_txt(filename, columns , skiprows=0,level = None,time = Non
             sta.loc[:,'level'] = 0
             sta.loc[:,'dtime'] = 0
             # sta.coloumns = ['level', 'time', 'dtime', 'id', 'lon', 'lat', 'alt', 'data0']
-            sta.loc[:,data_name] = 0
+
+            sta.loc[:,data_name] = sta0.loc[:,data_name]
             meteva.base.basicdata.reset_id(sta)
             meteva.base.set_stadata_coords(sta, level=level, time=time,dtime = dtime)
             if show:
@@ -299,6 +304,8 @@ def read_stadata_from_txt(filename, columns , skiprows=0,level = None,time = Non
     else:
         print(filename + " not exist")
         return None
+
+
 
 def read_stadata_from_sevp(filename, element_id,level=None,time=None,data_name = "data0",show = False):
     '''
