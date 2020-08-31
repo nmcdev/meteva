@@ -12,7 +12,7 @@ import meteva
 import math
 
 
-def reliability(Ob, Fo, grade_count=10, member_list=None, vmax = None,save_path=None,show = False,dpi = 300, title="可靠性图"):
+def reliability(Ob, Fo, grade_count=10, member_list=None, vmax = None,log_y = False,save_path=None,show = False,dpi = 300, title="可靠性图"):
     '''
     :param Ob:
     :param Fo:
@@ -21,10 +21,10 @@ def reliability(Ob, Fo, grade_count=10, member_list=None, vmax = None,save_path=
     '''
     hnh_array = meteva.method.hnh(Ob, Fo, grade_count)
 
-    reliability_hnh(hnh_array, member_list=member_list,vmax = vmax,dpi = dpi, save_path=save_path,show = show, title=title)
+    reliability_hnh(hnh_array, member_list=member_list,vmax = vmax,log_y = log_y,dpi = dpi, save_path=save_path,show = show, title=title)
 
 
-def reliability_hnh(hnh_array,  member_list=None,vmax = None, save_path=None,show = False,dpi = 300, title="可靠性图"):
+def reliability_hnh(hnh_array,  member_list=None,vmax = None,log_y = False, save_path=None,show = False,dpi = 300, title="可靠性图"):
     '''
     根据中间结果计算
     :param th:
@@ -111,6 +111,7 @@ def reliability_hnh(hnh_array,  member_list=None,vmax = None, save_path=None,sho
         x1 = x + (line - legend_num/2 + 0.5) * bar_width
         plt.bar(x1, total_grade_num, width=bar_width*0.8,color=color_list[line])
         plt.ylabel("样本数",fontsize = sup_fontsize * 0.9)
+        if log_y: plt.yscale('log')
         plt.xlim(0.0, 1.0)
         plt.xticks(np.arange(0.1, 1.01, 0.1))
         plt.xlabel("预测的概率",fontsize = sup_fontsize * 0.9)
@@ -241,7 +242,7 @@ def roc_hnh(hnh_array,  member_list=None, save_path=None,show  =False, dpi = 300
     roc_hfmc(hfmc_array,  member_list=member_list,dpi=dpi,show=show, save_path=save_path, title=title)
 
 
-def discrimination(Ob, Fo, grade_count=10,member_list=None,  vmax = None, save_path=None,show = False,dpi = 300, title="区分能力图"):
+def discrimination(Ob, Fo, grade_count=10,member_list=None,  vmax = None,log_y  = False, save_path=None,show = False,dpi = 300, title="区分能力图"):
     '''
 
     :param Ob:
@@ -251,10 +252,10 @@ def discrimination(Ob, Fo, grade_count=10,member_list=None,  vmax = None, save_p
     :return:
     '''
     hnh_array = meteva.method.hnh(Ob, Fo, grade_count)
-    discrimination_hnh(hnh_array, member_list = member_list,vmax = vmax, save_path=save_path,show = show,dpi = dpi, title=title)
+    discrimination_hnh(hnh_array, member_list = member_list,vmax = vmax,log_y = log_y, save_path=save_path,show = show,dpi = dpi, title=title)
 
 
-def discrimination_hnh(hnh_array,  member_list=None, vmax = None,save_path=None,show = False,dpi = 300, title="区分能力图"):
+def discrimination_hnh(hnh_array,  member_list=None, vmax = None,log_y = False,save_path=None,show = False,dpi = 300, title="区分能力图"):
     '''
 
     :param th_array:
@@ -326,10 +327,15 @@ def discrimination_hnh(hnh_array,  member_list=None, vmax = None,save_path=None,
     lines = axes.get_children()
     plt.xlabel("预测的概率", fontsize=sup_fontsize * 0.9)
     plt.ylabel("占总样本数的比例", fontsize=sup_fontsize * 0.9)
+    if log_y: plt.yscale("log")
+
     if vmax is None:
-        vmax = ymax * 1.5
-    else:
-        vmax = vmax * 1.5
+        if log_y:
+            vmax = ymax * 10
+        else:
+            vmax = ymax * 1.5
+
+
     plt.ylim(0.0, vmax)
     plt.xlim(0.0, 1)
     nlabel = len(label)
@@ -356,7 +362,7 @@ def discrimination_hnh(hnh_array,  member_list=None, vmax = None,save_path=None,
     plt.close()
 
 
-def comprehensive_probability(Ob, Fo, grade_count=10, member_list=None,vmax = None,save_path=None,dpi = 300,show = False, title="概率预报综合检验图"):
+def comprehensive_probability(Ob, Fo, grade_count=10, member_list=None,vmax = None,log_y = False,save_path=None,dpi = 300,show = False, title="概率预报综合检验图"):
     '''
     :param Ob:
     :param Fo:
@@ -364,10 +370,10 @@ def comprehensive_probability(Ob, Fo, grade_count=10, member_list=None,vmax = No
     :return:
     '''
     hnh_array = meteva.method.hnh(Ob, Fo, grade_count)
-    comprehensive_hnh(hnh_array,member_list = member_list,vmax = vmax,save_path=save_path,show = show, dpi = dpi,title=title)
+    comprehensive_hnh(hnh_array,member_list = member_list,vmax = vmax,log_y = log_y,save_path=save_path,show = show, dpi = dpi,title=title)
 
 
-def comprehensive_hnh(hnh_array,  member_list=None,vmax = None, save_path=None,show = False,dpi = 300, title="概率预报综合检验图"):
+def comprehensive_hnh(hnh_array,  member_list=None,vmax = None,log_y = False, save_path=None,show = False,dpi = 300, title="概率预报综合检验图"):
     '''
 
     :param th_array:
@@ -484,20 +490,23 @@ def comprehensive_hnh(hnh_array,  member_list=None,vmax = None, save_path=None,s
     ax3.legend(loc=4,fontsize= sup_fontsize *0.9)
     ax4.set_xlim(0.0, 1)
     ax4.set(title='\n')
+    ax4.set_xticks(np.arange(0,1.01,1/grade_count))
     #ax4.legend(loc="upper right", ncol=2)
-    if vmax is None:
-        ax4.set_ylim(0.0, ymax * 1.5)
-    else:
-        ax4.set_ylim(0.0, vmax)
-    mark_line_x = np.array(mark_line_x)
-    mark_line_y = np.array(mark_line_y)
-    mark_line_x = mark_line_x.T.flatten()
-    mark_line_y = mark_line_y.T.flatten()
+
+    #mark_line_x = np.array(mark_line_x)
+    #mark_line_y = np.array(mark_line_y)
+    #mark_line_x = mark_line_x.T.flatten()
+    #mark_line_y = mark_line_y.T.flatten()
     #ax4.plot(mark_line_x, mark_line_y, '.', color='k',markersize = bar_width * 300)
     #lines = ax4.get_children()
     #ax4.legend([lines[0], lines[grade_count],lines[grade_count * legend_num * 2 ]], ['观测正例', '观测负例',"合理比例"],
     #                     loc='upper center', bbox_to_anchor=(0.5, 1.0), ncol=3, prop={'size': 6},fontsize= sup_fontsize *0.9)
-    ax4.set_xticks(np.arange(0,1.01,1/grade_count))
+
+    if log_y: ax4.set_yscale('log')
+    if vmax is None:
+        ax4.set_ylim(0.0, ymax * 1.5)
+    else:
+        ax4.set_ylim(0.0, vmax)
     if save_path is None:
         show = True
     else:
