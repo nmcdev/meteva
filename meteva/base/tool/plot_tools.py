@@ -203,7 +203,10 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = None,a
         if cmap is None:
             cmap1 = plt.get_cmap("rainbow")
         else:
-            cmap1 = cmap
+            if isinstance(cmap,str):
+                cmap1 = plt.get_cmap(cmap)
+            else:
+                cmap1 = cmap
     norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
     im = ax.contourf(x, y, np.squeeze(grd.values), levels=clevs1, cmap=cmap1,norm = norm)
     left_low = (width +0.1 - right_plots_width) / width
@@ -231,7 +234,7 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = None,a
     xticks = np.arange(vmin,vmax,inte)
     xticks_label = []
     for x in range(len(xticks)):
-        xticks_label.append(str(xticks[x]))
+        xticks_label.append(str(round(xticks[x],6)))
     xticks_label[-1] += "°E"
     ax.set_xticks(xticks)
     ax.set_xticklabels(xticks_label,fontsize = 12)
@@ -257,7 +260,7 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = None,a
     yticks = np.arange(vmin,vmax,inte)
     yticks_label = []
     for y in range(len(yticks)):
-        yticks_label.append(str(yticks[y]))
+        yticks_label.append(str(round(yticks[y],6)))
     yticks_label[-1] += "°N"
     ax.set_yticks(yticks)
     ax.set_yticklabels(yticks_label,fontsize = 12)
@@ -354,7 +357,10 @@ def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = None
         if cmap is None:
             cmap1 = plt.get_cmap("rainbow")
         else:
-            cmap1 = plt.get_cmap(cmap)
+            if isinstance(cmap, str):
+                cmap1 = plt.get_cmap(cmap)
+            else:
+                cmap1 = cmap
     norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
     im = ax.pcolormesh(x, y, np.squeeze(grd.values), cmap=cmap1,norm=norm)
     left_low = (width + 0.1 - right_plots_width) / width
@@ -382,7 +388,7 @@ def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = None
     xticks = np.arange(vmin,vmax,inte)
     xticks_label = []
     for x in range(len(xticks)):
-        xticks_label.append(str(xticks[x]))
+        xticks_label.append(str(round(xticks[x],6)))
     xticks_label[-1] += "°E"
     ax.set_xticks(xticks)
     ax.set_xticklabels(xticks_label,fontsize = 12)
@@ -410,7 +416,7 @@ def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = None
     yticks = np.arange(vmin,vmax,inte)
     yticks_label = []
     for y in range(len(yticks)):
-        yticks_label.append(str(yticks[y]))
+        yticks_label.append(str(round(yticks[y],6)))
     yticks_label[-1] += "°N"
     ax.set_yticks(yticks)
     ax.set_yticklabels(yticks_label,fontsize = 12)
@@ -536,7 +542,10 @@ def scatter_sta(sta0,value_column=None,
         if cmap is None:
             cmap1 = plt.get_cmap("rainbow")
         else:
-            cmap1 = plt.get_cmap(cmap)
+            if isinstance(cmap, str):
+                cmap1 = plt.get_cmap(cmap)
+            else:
+                cmap1 = cmap
     norm = BoundaryNorm(clevs1, ncolors=cmap1.N, clip=True)
     pointsize = int(100 * map_area / len(sta.index))
     if (pointsize > 30): pointsize = 30
@@ -566,7 +575,7 @@ def scatter_sta(sta0,value_column=None,
     xticks = np.arange(vmin, vmax, inte)
     xticks_label = []
     for x in range(len(xticks)):
-        xticks_label.append(str(xticks[x]))
+        xticks_label.append(str(round(xticks[x],6)))
     xticks_label[-1] += "°E"
 
 
@@ -591,7 +600,7 @@ def scatter_sta(sta0,value_column=None,
     yticks = np.arange(vmin, vmax, inte)
     yticks_label = []
     for y in range(len(yticks)):
-        yticks_label.append(str(yticks[y]))
+        yticks_label.append(str(round(yticks[y],6)))
     yticks_label[-1] += "°N"
 
     nplot = len(plot_data_names)
