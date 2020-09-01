@@ -188,6 +188,8 @@ def in_day_list(sta,day_list):
     time0 = datetime.datetime(1900,1,1,0,0)
     seconds = 3600*24
     for day0 in day_list:
+        if isinstance(day0,str):
+            day0 = meteva.base.tool.time_tools.all_type_time_to_datetime(day0)
         day = (day0 - time0).total_seconds()//seconds
         days_list.append(day)
     indexs = (sta['time'] - time0)//np.timedelta64(1,"D")
@@ -296,6 +298,8 @@ def in_ob_day_list(sta,day_list):
     time0 = datetime.datetime(1900, 1, 1, 0, 0)
     seconds = 3600 * 24
     for day0 in day_list:
+        if isinstance(day0,str):
+            day0 = meteva.base.tool.time_tools.all_type_time_to_datetime(day0)
         day = (day0 - time0).total_seconds() // seconds
         days_list.append(day)
     indexs = (obtimes - time0) // np.timedelta64(1, "D")
@@ -514,6 +518,8 @@ def by_loc_dict(data,s):
             sta1 = in_month_list(sta1,s["month"])
         if "day" in s.keys():
             sta1 = in_day_list(sta1,s["day"])
+        if "date" in s.keys():
+            sta1 = in_day_list(sta1,s["date"])
         if "dayofyear" in s.keys():
             sta1 = in_dayofyear_list(sta1,s["dayofyear"])
         if "hour" in s.keys():
@@ -550,6 +556,7 @@ def by_loc_dict(data,s):
             sta1 = between_lat_range(sta1,s["lat"][0],s["lat"][1])
         if "id" in s.keys():
             sta1 = in_id_list(sta1,s["id"])
+
 
         return sta1
 
@@ -594,6 +601,16 @@ def sele_by_dict(data,s):
     }
     '''
     if s is None:return data
+
+    p_set = {"member","level","time","time_range","year","month","day","dayofyear","hour", "ob_time","ob_time_range" ,"ob_year",
+              "ob_month", "ob_day","ob_dayofyear","ob_hour","dtime","dtime_range","dday","dhour" ,
+              "lon","lat", "id","grid","gxy", "gxyz" ,"stadata","value","drop_IV","last" , "last_range","drop_last"}
+
+    key_set = s.keys() #set(list(s.keys()))
+    if(not p_set >= key_set):
+        print("参数s的字典中包含本程序不能识别的关键词")
+        return None
+
     member = None
     if "member" in s.keys():
         member = s["member"]
@@ -722,6 +739,10 @@ def sele_by_dict(data,s):
     drop_last = True
     if "drop_last" in s.keys():
         drop_last = s["drop_last"]
+
+
+
+
     sta1 = sele_by_para(data,member,level,time,time_range,year,month,day,dayofyear,hour,ob_time,ob_time_range,ob_year,ob_month,ob_day,ob_dayofyear,
                  ob_hour,dtime,dtime_range,dday,dhour,lon,lat,id,grid,gxy,gxyz,stadata,value,drop_IV,last,last_range,drop_last)
     return sta1
