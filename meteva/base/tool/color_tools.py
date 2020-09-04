@@ -357,3 +357,54 @@ def get_color_list(legend_num):
             color_grade = i / legend_num
             colors_list.append(colors(color_grade))
     return colors_list
+
+
+def reset_clevs_cmap(clevs = None,cmap = "rainbow",vmin = None,vmax = None):
+    if clevs is None and (vmin is None or vmax is None):
+        print("clev and vmin/vmax cann't be None at the same time")
+        return
+    if (vmin is None and vmax is not None) or (vmin is not None and vmax is None):
+        print("vmin and vmax must be None of not None at the same time")
+
+    elif clevs is not None:
+        if isinstance(cmap,str):
+            nclev = len(clevs)
+            colors0 = cm.get_cmap(cmap, nclev)
+            colors_list = []
+            for i in range(nclev):
+                colors_list.append(colors0(i))
+            cmap = colors.ListedColormap(colors_list, 'indexed')
+        if vmin is not None:
+            clevs1, cmap1 = get_part_clev_and_cmap(clevs, cmap, vmax,vmin)
+        else:
+            clevs1, cmap1 = clevs, cmap
+    else:
+        if isinstance(cmap,str):
+            if vmax - vmin < 1e-10 :
+                vmax = vmin + 1.1
+            dif=(vmax - vmin) / 10.0
+            inte=math.pow(10,math.floor(math.log10(dif)));
+            #用基本间隔，将最大最小值除于间隔后小数点部分去除，最后把间隔也整数化
+            r=dif/inte
+            if  r<3 and r>=1.5:
+                inte = inte*2
+            elif r<4.5 and r>=3 :
+                inte = inte*4
+            elif r<5.5 and r>=4.5:
+                inte=inte*5
+            elif r<7 and r>=5.5:
+                inte=inte*6
+            elif r>=7 :
+                inte=inte*8
+            vmin = inte * ((int)(vmin / inte)-1)
+            vmax = inte * ((int)(vmax / inte) + 2)
+            clevs1 = np.arange(vmin,vmax,inte)
+            cmap1 = plt.get_cmap(cmap)
+        else:
+            colors0 = np.array(cmap.colors)
+            nlevs = len(colors0)
+            inte = (vmax - vmin)/nlevs
+            clevs1 = np.arange(vmin,vmax,inte)
+            cmap1 = cmap
+
+    return clevs1,cmap1
