@@ -4,11 +4,10 @@ from matplotlib import cm
 plt.rcParams['font.sans-serif']=['SimHei'] #用来正常显示中文标签
 plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
 from meteva.method.yes_or_no.score import *
-import math
 import meteva
 
 
-def performance(ob, fo,grade_list=[1e-30],compair = ">=", member_list=None, save_path=None,show = False,dpi = 300, title="综合表现图"):
+def performance(ob, fo,grade_list=[1e-30],compair = ">=", member_list=None,x_y = "sr_pod", save_path=None,show = False,dpi = 300, title="综合表现图"):
     '''
 
     :param ob:
@@ -129,8 +128,19 @@ def performance(ob, fo,grade_list=[1e-30],compair = ">=", member_list=None, save
 
     ax1.set_xlim(0, 1)
     ax1.set_ylim(0, 1)
-    ax1.set_xlabel("成功率", fontsize=sup_fontsize * 0.9)
-    ax1.set_ylabel("命中率", fontsize=sup_fontsize * 0.9)
+    if x_y == "sr_pod":
+        ax1.set_xlabel("成功率", fontsize=sup_fontsize * 0.9)
+        ax1.set_ylabel("命中率", fontsize=sup_fontsize * 0.9)
+    else:
+        ax1.set_xlabel("空报率", fontsize=sup_fontsize * 0.9)
+        ax1.set_ylabel("漏报率", fontsize=sup_fontsize * 0.9)
+        x = np.arange(0,1.01,0.2)
+        ax1.set_xticks(x)
+        ax1.set_xticklabels(np.round(1-x,1))
+        y = np.arange(0,1.01,0.2)
+        ax1.set_yticks(y)
+        ax1.set_yticklabels(np.round(1-y,1))
+
     title = title + "\n"
     ax1.set_title(title,fontsize = sup_fontsize)
     if save_path is None:
