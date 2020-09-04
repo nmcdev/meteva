@@ -225,9 +225,9 @@ def get_grid_of_data(grid_data0):
     attrs_name = list(grid_data0.attrs)
 
     lons = grid_data0['lon'].values
-    glon = [lons[0],lons[-1],lons[1]-lons[0]]
+    glon = [lons[0],round(lons[-1],6),round(lons[1]-lons[0],6)]
     lats = grid_data0['lat'].values
-    glat = [lats[0],lats[-1],lats[1]-lats[0]]
+    glat = [lats[0],round(lats[-1],6),round(lats[1]-lats[0],6)]
     grid01 = grid(glon, glat, gtime, gdt, level_list, member_list)
     return grid01
 

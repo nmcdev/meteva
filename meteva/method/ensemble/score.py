@@ -1,6 +1,6 @@
 import numpy as np
 
-def cr(ob,fo,grade_list=[1e-30]):
+def cr(ob,fo,grade_list=[1e-30],compair = ">="):
     '''
     cr指数，代表集合成员集中且于观测一致的程度，即所有成员及观测在某个阈值以上的落区的交集与并集的比值
     :param ob:实况数据 一维的numpy
@@ -9,7 +9,9 @@ def cr(ob,fo,grade_list=[1e-30]):
     :return: 一维numpy数组，其中每个元素为0-1的实数，最优值为1
     '''
     #print(fo.shape)
-
+    if compair not in [">=",">","<","<="]:
+        print("compair 参数只能是 >=   >  <  <=  中的一种")
+        return
     rmse_list = []
     Fo_shape = fo.shape
     Ob_shape = ob.shape
@@ -36,12 +38,30 @@ def cr(ob,fo,grade_list=[1e-30]):
 
     for g in range(grade_num):
         ob1 = np.zeros_like(ob)
-        ob1[ob >=grade_list[g]] = 1
+        if compair == ">=":
+            ob1[ob >=grade_list[g]] = 1
+        elif compair == "<=":
+            ob1[ob <=grade_list[g]] = 1
+        elif compair == ">":
+            ob1[ob > grade_list[g]] = 1
+        elif compair == "<":
+            ob1[ob < grade_list[g]] = 1
+
+
+
         intersecti[:] = ob1[:]
         union[:] = ob1[:]
         for i in range(ensemble_num):
             fo1 = np.zeros_like(ob)
-            fo1[fo[i,:] >= grade_list[g]] = 1
+            if compair == ">=":
+                fo1[fo[i,:] >= grade_list[g]] = 1
+            elif compair == "<=":
+                fo1[fo[i, :] <= grade_list[g]] = 1
+            elif compair == ">":
+                fo1[fo[i, :] > grade_list[g]] = 1
+            elif compair == "<":
+                fo1[fo[i, :] < grade_list[g]] = 1
+
             intersecti[:] = intersecti[:] * fo1[:]
             union[:] = union[:] + fo1[:]
         union[union>0] = 1

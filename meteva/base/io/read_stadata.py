@@ -77,6 +77,7 @@ def read_sta_alt_from_micaps3(filename, station=None, drop_same_id=True,show = F
     :return:
     '''
 
+    #print(os.path.exists(filename))
     if not os.path.exists(filename):
         print(filename+"文件不存在")
         return None
@@ -184,6 +185,7 @@ def read_stadata_from_micaps3(filename, station=None,  level=None,time=None, dti
             while 1 > 0:
                 skip_num += 1
                 str1 = file.readline()
+                #print(str1)
                 strs.extend(str1.split())
 
                 if (len(strs) > 8):
@@ -194,9 +196,10 @@ def read_stadata_from_micaps3(filename, station=None,  level=None,time=None, dti
                     if (len(strs) == nstart):
                         break
             file.close()
+            #print(skip_num)
             if int(strs[-1]) == 0:return None
 
-            file_sta = open(filename)
+            file_sta = open(filename, 'r',encoding=encoding)
             sta1 = pd.read_csv(file_sta, skiprows=skip_num, sep="\s+", header=None, usecols=[0, 1, 2, 4])
             sta1.columns = ['id', 'lon', 'lat', data_name]
             sta1.drop_duplicates(keep='first', inplace=True)
@@ -204,7 +207,7 @@ def read_stadata_from_micaps3(filename, station=None,  level=None,time=None, dti
                 sta1 = sta1.drop_duplicates(['id'])
             # sta = bd.sta_data(sta1)
             sta = meteva.base.basicdata.sta_data(sta1)
-            # print(sta)
+            #print(sta)
 
             y2 = ""
             if len(strs[3]) == 2:
@@ -223,6 +226,7 @@ def read_stadata_from_micaps3(filename, station=None,  level=None,time=None, dti
             sta.loc[:,"time"] = time_file
             sta.loc[:,"dtime"] = 0
             sta.loc[:,"level"] = 0 #int(strs[7])
+            #print(time_str)
             meteva.base.set_stadata_coords(sta, level=level, time=time, dtime=dtime)
 
             if (station is not None):
@@ -239,7 +243,8 @@ def read_stadata_from_micaps3(filename, station=None,  level=None,time=None, dti
             print(filename+"文件格式不能识别。可能原因：文件未按micaps3格式存储")
             return None
 
-def read_stadata_from_txt(filename, columns , skiprows=0,level = None,time = None,dtime = None,data_name = "data0", drop_same_id=True,show = False,):
+def read_stadata_from_csv(filename, columns, member_list,skiprows=0,level = None,time = None,dtime = None, drop_same_id=False,show = False,
+                          sep = "\s+"):
 
     """
     读取站点数据
@@ -257,14 +262,25 @@ def read_stadata_from_txt(filename, columns , skiprows=0,level = None,time = Non
             return None
         try:
             file_sta = open(filename, 'r',encoding = encoding)
-            sta0 = pd.read_csv(file_sta, skiprows=skiprows, sep="\s+", header=None)
-            sta0.columns = columns
-            station_column = ['id', 'lon', 'lat', 'alt']
-            colums1 = []
-            for name in station_column:
-                if name in columns:
-                    colums1.append(name)
-            sta1 = sta0[colums1]
+            if "time" in columns:
+                index = columns.index("time")
+                sta0 = pd.read_csv(file_sta, skiprows=skiprows,  header=None,sep=sep,parse_dates=[index])
+                sta0.columns = columns
+
+            else:
+                sta0 = pd.read_csv(file_sta, skiprows=skiprows, header=None, sep=sep)
+                sta0.columns = columns
+
+            station_column = []
+            for column in columns:
+                if column in meteva.base.get_coord_names():
+                    station_column.append(column)
+            if not isinstance(member_list,list):
+                member_list = [member_list]
+
+            sta0.drop_duplicates(keep='first', inplace=True)
+            station_column.extend(member_list)
+            sta1 = sta0[station_column]
             nsta = len(sta1.index)
             for i in range(nsta):
                 if sta1.loc[i, 'lon'] > 1000:
@@ -275,17 +291,27 @@ def read_stadata_from_txt(filename, columns , skiprows=0,level = None,time = Non
                     sta1.loc[i, 'lat'] = a
             # sta = bd.sta_data(sta1)
             sta = meteva.base.basicdata.sta_data(sta1)
+
             if drop_same_id:
                 sta = sta.drop_duplicates(['id'])
 
             # sta['time'] = method.time_tools.str_to_time64("2099010108")
-            sta.loc[:,'time'] = meteva.base.tool.time_tools.str_to_time64("2099010108")
-            sta.loc[:,'level'] = 0
-            sta.loc[:,'dtime'] = 0
-            # sta.coloumns = ['level', 'time', 'dtime', 'id', 'lon', 'lat', 'alt', 'data0']
-            sta.loc[:,data_name] = 0
+            if time is not None:
+                sta.loc[:,"time"] = time
+            elif pd.isnull(sta.iloc[0,1]):
+                sta.loc[:,'time'] = meteva.base.tool.time_tools.str_to_time64("2099010108")
+            if dtime is not None:
+                sta.loc[:,"dtime"] = dtime
+            elif pd.isnull(sta.iloc[0,2]):
+                sta.loc[:,"dtime"] = 0
+
+            if level is not None:
+                sta.loc[:,"level"] = level
+            elif pd.isnull(sta.iloc[0,0]):
+                sta.loc[:,"level"] = 0
+
+
             meteva.base.basicdata.reset_id(sta)
-            meteva.base.set_stadata_coords(sta, level=level, time=time,dtime = dtime)
             if show:
                 print("success read from "+filename)
             return sta
@@ -293,12 +319,13 @@ def read_stadata_from_txt(filename, columns , skiprows=0,level = None,time = Non
             if show:
                 exstr = traceback.format_exc()
                 print(exstr)
-
             print(filename+"文件格式不能识别。可能原因：文件未按pandas能够识别的csv格式存储")
             return None
     else:
         print(filename + " not exist")
         return None
+
+
 
 def read_stadata_from_sevp(filename, element_id,level=None,time=None,data_name = "data0",show = False):
     '''
@@ -1371,20 +1398,6 @@ def read_stadata_from_micaps16(filename,level = None,time= None,dtime = None,dat
             print(filename+"文件格式不能识别。可能原因：文件未按micaps16格式存储")
             return None
 
-def read_stadata_from_csv(filename,show = False):
-    '''
-    从利用pd.to_csv函数将sta_data导出的csv文件中读取sta_data
-    :param filename:
-    :param show:
-    :return:
-    '''
-    file = open(filename,"r")
-    sta = pd.read_csv(file,parse_dates=['time'],sep = "\s+")
-    sta.drop(sta.columns[[0]], axis=1, inplace=True)
-    sta.dropna(axis=0, how='any', inplace=True)
-    if show:
-        print("success read from " + filename)
-    return sta
 
 def read_stadata_from_gds_griddata_file(filename,station,level = None,time = None,dtime = None,data_name = "data0",show = False):
     if os.path.exists(filename):

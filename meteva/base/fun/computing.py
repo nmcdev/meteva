@@ -3,7 +3,7 @@ import numpy as np
 import meteva
 from scipy.ndimage import convolve
 import math
-
+import copy
 #将两个站点数据信息进行合并，并去重。
 
 def put_stadata_on_station(sta,station):
@@ -64,24 +64,75 @@ def smooth(grd,smooth_times = 1,used_coords = "xy"):
     return grd_new
 
 
-def moving_avarage(grd, half_window_size, skip=1):
+
+
+def moving_avarage(grd, half_window_size):
     # 该函数计算网格点附近矩形方框内的平均值
     # 使用同规格的场，确保网格范围和分辨率一致
-    # window_size 窗口尺度，为了避免窗口较大时计算太慢，可选择跳点取平均，再插值回到原始分辨率
-    if (skip > half_window_size):
-        print("pdf_skip is larger than half pdf_window_size")
-        return None
-    grid0 = meteva.base.get_grid_of_data(grd)
-    step_num_lon = int(math.ceil((grid0.nlon - 1) / skip)) + 1
-    dlon_skip = grid0.dlon * skip
-    elon_skip = grid0.slon + dlon_skip * (step_num_lon - 1)
-    step_num_lat = int(math.ceil((grid0.nlat - 1) / skip)) + 1
-    dlat_skip = grid0.dlat * skip
-    elat_skip = grid0.slat + dlat_skip * (step_num_lat - 1)
-    grid_skip = meteva.base.grid([grid0.slon, elon_skip, dlon_skip],
-                                                  [grid0.slat, elat_skip, dlat_skip])
-    dat0 = grd.values.squeeze()
-    dat = np.zeros((step_num_lat, step_num_lon))
+    # window_size 窗口尺度
+
+    levels = copy.deepcopy(grd["level"].values)
+    times = copy.deepcopy(grd["time"].values)
+    dtimes = copy.deepcopy(grd["dtime"].values)
+    members = copy.deepcopy(grd["member"].values)
+
+    nlon = len(grd["lon"])
+    nlat = len(grd["lat"])
+
+    grd1 = copy.deepcopy(grd)
+
+    i0 = np.arange(nlon)
+    i_s = i0 - half_window_size
+    i_s[i_s < 0] = 0
+    i_e = i0 + half_window_size+1
+    i_e[i_e > nlon] = nlon
+
+    j0 = np.arange(nlat)
+    j_s = j0 - half_window_size
+    j_s[j_s < 0] = 0
+    j_e = j0 + half_window_size+1
+    j_e[j_e > nlat] = nlat
+
+
+    IS,J = np.meshgrid(i_s,j0)
+    IE,_ = np.meshgrid(i_e,j0)
+
+    I,JS = np.meshgrid(i0,j_s)
+    _,JE = np.meshgrid(i0,j_e)
+
+    #计算每个网格点上的累计格点数
+    accu_num = (IE - IS ) * (JE - JS)
+    dat_accumulate_x = np.zeros((nlat,nlon+1))
+    dat_accumulate_y = np.zeros((nlat+1, nlon))
+
+    for i in range(len(levels)):
+        for j in range(len(times)):
+            for k in range(len(dtimes)):
+                for m in range(len(members)):
+                    dat = grd1.values[m,i,j,k,:,:]
+                    # 首先在x方向做累加
+                    dat_accumulate_x[:,1:] = dat[:,:]
+                    for ii in range(nlon):
+                        dat_accumulate_x[:,ii+1] = dat_accumulate_x[:,ii] + dat[:,ii]
+
+                    #计算x方向左右累积量的差，即得到格点附近东西向滑动累加
+                    dat = dat_accumulate_x[J,IE] - dat_accumulate_x[J,IS]
+
+                    # 然后在y方向做累加
+                    dat_accumulate_y[1:,:] = dat[:,:]
+                    for jj in range(nlat):
+                        dat_accumulate_y[jj+1,:] = dat_accumulate_y[jj,:] + dat[jj,:]
+
+                    #计算y方向上下累计量的差，即得到格点附近东西向滑动累加
+                    dat = dat_accumulate_y[JE, I] - dat_accumulate_y[JS, I]
+
+                    # 计算平均
+                    grd1.values[m,i,j,k,:,:] = dat/accu_num
+
+
+    return grd1
+
+
 
 
 #将两个站点dataframe相加在一起
@@ -232,8 +283,6 @@ def max_on_id(sta1_0, sta2_0, how="left"):
         df.columns = columns
 
         return df
-
-
 
 def min_on_id(sta1_0, sta2_0, how="left"):
     if sta1_0 is None:

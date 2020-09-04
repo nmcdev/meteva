@@ -414,6 +414,81 @@ def interp_gg_linear(grd, grid,used_coords = "xy",outer_value = None):
 
 
 
+def interp_gg_cubic(grd, grid,used_coords = "xy",outer_value = None):
+    '''
+    格点到格点插值
+    :param grd:左边的网格数据信息
+    :param grid :右边的网格数据信息
+    :other_info:网格数据除了xy方向的数值之外，还有time,dtime，leve member 等维度的值，如果other_info= 'left’则返回结果中这些维度的值就采用grd里的值，
+    否则采用grid里的值，默认为：left
+    :return:双线性插值之后的结果
+    '''
+    if (grd is None):
+        return None
+    levels = grd["level"].values
+    times = grd["time"].values
+    dtimes = grd["dtime"].values
+    members = grd["member"].values
+    grid0 = meteva.base.basicdata.get_grid_of_data(grd)
+    icycle = int(360/grid0.dlon)
+    iscycle = (grid0.dlon * grid0.nlon >= 360)
+    if used_coords == "xy":
+        is_out = False
+        if not iscycle:
+            if (grid.elon > grid0.elon or grid.slon < grid0.slon or grid.elat > grid0.elat or grid.slat < grid0.slat):
+                if outer_value is None:
+                    print("当目标网格超出数据网格时，outer_value参数必须赋值")
+                    return None
+                is_out = True
+
+        if is_out:
+            grid_new0 = meteva.base.get_inner_grid(grid,grid0)
+            grid_new = meteva.base.grid(grid_new0.glon, grid_new0.glat, grid0.gtime, grid0.dtimes, grid0.levels, grid0.members)
+        else:
+            grid_new = meteva.base.grid(grid.glon, grid.glat, grid0.gtime, grid0.dtimes, grid0.levels, grid0.members)
+        grd_new = meteva.base.grid_data(grid_new)
+        for i in range(len(levels)):
+            for j in range(len(times)):
+                for k in range(len(dtimes)):
+                    for m in range(len(members)):
+                        # 六维转换为二维的值
+
+
+                        dat = grd.values[m,i,j,k,:,:]
+                        #插值处理
+                        x = ((np.arange(grid_new.nlon) * grid_new.dlon + grid_new.slon - grid0.slon) / grid0.dlon)
+                        ig = x[:].astype(dtype='int16')
+                        dx = x - ig
+                        y = (np.arange(grid_new.nlat) * grid_new.dlat + grid_new.slat - grid0.slat) / grid0.dlat
+                        jg = y[:].astype(dtype='int16')
+                        dy = y - jg
+                        ii, jj = np.meshgrid(ig, jg)
+                        if iscycle:
+                            ii1 = ii+1
+                            ii = ii%icycle
+                            ii1 = ii1%icycle
+                        else:
+                            ii1 = np.minimum(ii + 1, grid0.nlon - 1)
+                        jj1 = np.minimum(jj + 1, grid0.nlat - 1)
+                        ddx, ddy = np.meshgrid(dx, dy)
+
+                        for p in range(-1, 3, 1):
+                            iip = np.minimum(np.maximum(ii + p, 0), grid0.nlon - 1)
+                            fdx = cubic_f(p, dx)
+                            for q in range(-1, 3, 1):
+                                jjq = np.minimum(np.maximum(jj + q, 0), grid0.nlat - 1)
+                                fdy = cubic_f(q, dy)
+                                fdxx, fdyy = np.meshgrid(fdx, fdy)
+                                fdxy = fdxx * fdyy
+                                grd_new.values[m,i,j,k,:,:] += fdxy * dat[jjq, iip]
+
+        if is_out:
+            grid_new1 = meteva.base.grid(grid.glon, grid.glat, grid0.gtime, grid0.dtimes, grid0.levels, grid0.members)
+            grd_new = meteva.base.expand_to_contain_another_grid(grd_new,grid_new1,outer_value=outer_value)
+    return grd_new
+
+
+
 def cubic_f(n, dx):
     if (n == -1):
         return -dx * (dx - 1) * (dx - 2) / 6

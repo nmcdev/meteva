@@ -13,12 +13,10 @@ def get_time_str_one_by_one(time1,time0 = None,row = 1):
     if row == 3:
         if time0 is None:
             time2 = meteva.base.tool.time_tools.all_type_time_to_datetime(time1)
-            if time2.hour == 0 and time2.minute == 0:
-                time_str = time2.strftime('%d{d}\n%m{m}\n%Y{y}').format(y='年', m='月', d='日')
-            elif time2.minute == 0:
-                time_str = time2.strftime('%H{h}\n%d{d}\n%Y{y}%m{m}').format(y='年', m='月', d='日',h='时')
+            if  time2.minute == 0:
+                time_str = time2.strftime('%H{h}\n%d{d}\n%Y{y}%m{m}').format(y='年', m='月', d='日',h = "时")
             else:
-                time_str = time2.strftime('%M{mi}\n%H{h}\n%Y{y}%m{m}%d{d}').format(y='年', m='月', d='日',h='时',mi = '分')
+                time_str = time2.strftime('%H{h}%M{mi}\n%m{m}%d{d}\n%Y{y}').format(y='年', m='月', d='日',h='时',mi = '分')
         else:
             time00 = meteva.base.tool.time_tools.all_type_time_to_datetime(time0)
             time2 = meteva.base.tool.time_tools.all_type_time_to_datetime(time1)
@@ -37,7 +35,7 @@ def get_time_str_one_by_one(time1,time0 = None,row = 1):
                 else:
                     time_str = time2.strftime('%M{mi}\n%H{h}\n%m{m}%d{d}').format(m='月', d='日',h='时',mi = '分')
             elif time2.day != time00.day:
-                if time2.hour == 0 and time2.minute == 0:
+                if time2.hour == 0 and time2.minute == 0 and time00.hour ==0:
                     time_str = time2.strftime('%d{d}').format(d='日')
                 elif time2.minute == 0:
                     time_str = time2.strftime('%H{h}\n%d{d}').format(d='日',h='时')
@@ -131,6 +129,7 @@ def get_time_str_one_by_one(time1,time0 = None,row = 1):
                     time_str = time2.strftime('%H{h}%M{mi}').format(h='时', mi='分')
             else:
                 time_str = time2.strftime("%M分")
+
     return time_str
 
 def get_time_str_list(time_list,row = 1):

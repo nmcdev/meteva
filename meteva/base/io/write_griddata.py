@@ -4,6 +4,9 @@ import math
 import meteva
 import os
 import traceback
+import zlib
+import warnings
+warnings.filterwarnings("ignore")
 
 def write_griddata_to_micaps4(da,save_path = "a.txt",creat_dir = False,effectiveNum = 6,show = False,title = None):
     """
@@ -105,7 +108,7 @@ def write_griddata_to_nc(da,save_path = "a.txt",creat_dir = False,effectiveNum =
         scale_factor = math.pow(10,-effectiveNum)
         #print(scale_factor)
         encodingdict = {da.name:{
-                            'dtype': 'float32',
+                            'dtype': 'int32',
                             'scale_factor': scale_factor,
                              'zlib': True,
                             '_FillValue':None
@@ -173,8 +176,4 @@ def write_griddata_to_micaps11(wind,save_path = "a.txt",creat_dir = False,effect
         exstr = traceback.format_exc()
         print(exstr)
         return False
-
-
-
-
 
