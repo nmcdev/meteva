@@ -297,7 +297,7 @@ def read_stadata_from_csv(filename, columns, member_list,skiprows=0,level = None
 
             # sta['time'] = method.time_tools.str_to_time64("2099010108")
             if time is not None:
-                sta.loc["time"] = time
+                sta.loc[:,"time"] = time
             elif pd.isnull(sta.iloc[0,1]):
                 sta.loc[:,'time'] = meteva.base.tool.time_tools.str_to_time64("2099010108")
             if dtime is not None:
