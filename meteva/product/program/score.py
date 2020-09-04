@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = None,plot = None,
           vmax = None,vmin = None,bar_width = None,save_path = None,show = False,dpi = 300,title = "",excel_path = None,**kwargs):
 
+
     if s is not None:
         if g is not None:
             if g == "last_range" or g == "last_step":
@@ -23,8 +24,36 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
         if g == "dtime":
             print("FSS_time 检验时，参数group_by不能选择dtime")
             return
+
+    # get method_args and plot_args
+    method_args = {}
+    plot_args = {}
+    method_para_list = method.__code__.co_varnames
+    plot_mehod = None
+    if plot == "bar":
+        plot_mehod = meteva.base.plot_tools.bar
+    elif plot == "line":
+        plot_mehod = meteva.base.plot_tools.plot
+
+    plot_para_list = []
+    if plot_mehod is not None:
+        plot_para_list = plot_mehod.__code__.co_varnames
+
+    for key in kwargs.keys():
+        if key in method_para_list and key not in plot_para_list:
+            method_args[key] = kwargs[key]
+        elif key not in method_para_list and key  in plot_para_list:
+            plot_args[key] = kwargs[key]
+        elif key  in method_para_list and key  in plot_para_list:
+            print(method.__name__ + " and " + plot_mehod.__name__ + " have same args:" + key)
+            return
+        else:
+            print(key + " is not args of " + method.__name__ + " or " + plot_mehod.__name__)
+            return
+
     sta_ob_and_fos_list,group_list_list1 = group(sta_ob_and_fos,g,gll)
     group_num = len(sta_ob_and_fos_list)
+
 
     data_name = meteva.base.get_stadata_names(sta_ob_and_fos_list[0])
     if method.__name__.find("ob_fo")>=0:
@@ -122,7 +151,7 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
             #else:
             ob = sta[data_name[0]].values
             fo = sta[data_name[1:]].values.T
-            result1 = method(ob,fo,**kwargs)
+            result1 = method(ob,fo,**method_args)
             result_list.append(result1)
 
         result = np.array(result_list)
@@ -170,7 +199,10 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
             else:
                 legend = keys[1]
                 axis = keys[0]
-        ylabel = method.__name__.upper()
+        if "ylabel" not in plot_args.keys():
+            plot_args["ylabel"] = method.__name__.upper()
+
+
         bigthan0_method = [meteva.method.ts,meteva.method.ob_fo_hr,meteva.method.ob_fo_std,meteva.method.ts_multi,
                            meteva.method.s,meteva.method.pc_of_sun_rain,meteva.method.bias_multi,meteva.method.bias,
                            meteva.method.pc,meteva.method.mr,meteva.method.far,meteva.method.tc,
@@ -181,13 +213,11 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
             if method in bigthan0_method:
                 vmin = 0
 
-
-
         if plot is not None:
             if plot =="bar":
-                meteva.base.plot_tools.bar(result_plot,name_list_dict,legend=legend,axis = axis,vmin =vmin,vmax = vmax,bar_width=bar_width,ylabel= ylabel,save_path=save_path,show=show,dpi =dpi,title = title)
+                meteva.base.plot_tools.bar(result_plot,name_list_dict,legend=legend,axis = axis,vmin =vmin,vmax = vmax,bar_width=bar_width,save_path=save_path,show=show,dpi =dpi,title = title,**plot_args)
             else:
-                meteva.base.plot_tools.plot(result_plot,name_list_dict,legend=legend,axis = axis,vmin =vmin,vmax = vmax,ylabel= ylabel,save_path=save_path,show=show,dpi = dpi,title= title)
+                meteva.base.plot_tools.plot(result_plot,name_list_dict,legend=legend,axis = axis,vmin =vmin,vmax = vmax,save_path=save_path,show=show,dpi = dpi,title= title,**plot_args)
         if excel_path is not None:
             meteva.base.write_array_to_excel(result_plot,excel_path,name_list_dict,index= axis,columns=legend)
     result = result.squeeze()
@@ -260,10 +290,38 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
 
 
 
+
+    # get method_args and plot_args
+    method_args = {}
+    plot_args = {}
+    method_para_list = method.__code__.co_varnames
+    plot_mehod = None
+    if plot == "scatter":
+        plot_mehod = meteva.base.plot_tools.scatter_sta
+
+    plot_para_list = []
+    if plot_mehod is not None:
+        plot_para_list = plot_mehod.__code__.co_varnames
+
+    for key in kwargs.keys():
+        if key in method_para_list and key not in plot_para_list:
+            method_args[key] = kwargs[key]
+        elif key not in method_para_list and key  in plot_para_list:
+            plot_args[key] = kwargs[key]
+        elif key  in method_para_list and key  in plot_para_list:
+            print(method.__name__ + " and " + plot_mehod.__name__ + " have same args:" + key)
+            return
+        else:
+            print(key + " is not args of " + method.__name__ + " or " + plot_mehod.__name__)
+            return
+
+    if "fix_size" not in plot_args.keys():
+        plot_args["fix_size"] = False
+
     result_all = []
     for k in range(g_num):
         g_id = "id"
-        result,id_list= score(sta_ob_and_fos_list[k],method,g = g_id,**kwargs)
+        result,id_list= score(sta_ob_and_fos_list[k],method,g = g_id,**method_args)
         station = sta_ob_and_fos1.drop_duplicates(['id'],inplace=False)
         station1 = meteva.base.in_id_list(station,id_list)
         id_s = pd.Series(id_list)
@@ -307,7 +365,6 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
             sta_result1 = sta_result[i]
             if plot == "scatter":
 
-                title1_list = None
                 if isinstance(title, list):
                     kk = k * grade_num + i
                     title1_list = title[kk * fo_num: (kk + 1) * fo_num]
@@ -324,22 +381,7 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
                             title1 += "(grade_" + str(grade_names[i])+")"
                         title1_list.append(title1)
 
-                '''        
-                if save_path is None:
-                    if save_dir is None:
-                        save_path1 = None
-                        show = True
-                    else:
-                        fileName = title1.replace("\n", "").replace(":", "")
-                        save_path1 = save_dir + "/" + fileName + ".png"
-                else:
-                    save_path1 = save_path
-                #if save_path1 is not None: meteva.base.creat_path(save_path1)
-                meteva.base.tool.plot_tools.scatter_sta(sta_result1, save_path=save_path1, show=show,
-                                                        title=title1, print_max=print_max,print_min = print_min,
-                                                        add_county_line=add_county_line,
-                                                        map_extend=map_extend, dpi=dpi)
-                                                        '''
+
 
                 save_path1 = None
                 if save_path is None:
@@ -354,10 +396,10 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
                     save_path1 = save_path[k * fo_num: (k + 1) * fo_num]
 
                 meteva.base.tool.plot_tools.scatter_sta(sta_result1, save_path=save_path1, show=show,
-                                                        fix_size=False, title=title1_list, print_max=print_max,
+                                                        title=title1_list, print_max=print_max,
                                                         print_min=print_min
                                                         , add_county_line=add_county_line,
-                                                         map_extend=map_extend, dpi=dpi)
+                                                         map_extend=map_extend, dpi=dpi,**plot_args)
 
 
         if len(sta_result) == 1:
@@ -372,7 +414,7 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
 
 
 def score_tdt(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = None,
-              x_y = "obtime_time",save_dir = None,save_path = None,show = False,
+              x_y = "obtime_time",annot = 0,save_dir = None,save_path = None,show = False,
         dpi = 300,title = None,**kwargs):
     if s is not None:
         if g is not None:
@@ -432,6 +474,35 @@ def score_tdt(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_lis
             print("手动设置的save_path数目和要绘制的图形数目不一致")
             return
 
+
+    # get method_args and plot_args
+    method_args = {}
+    plot_args = {}
+    method_para_list = method.__code__.co_varnames
+    plot_mehod = None
+    if x_y == "obtime_dtime":
+        plot_mehod = meteva.base.plot_tools.mesh_time_dtime
+    elif x_y == "obtime_time":
+        plot_mehod = meteva.base.plot_tools.mesh_obtime_time
+    elif x_y == "time_dtime":
+        plot_mehod = meteva.base.plot_tools.mesh_time_dtime
+
+    plot_para_list = []
+    if plot_mehod is not None:
+        plot_para_list = plot_mehod.__code__.co_varnames
+
+    for key in kwargs.keys():
+        if key in method_para_list and key not in plot_para_list:
+            method_args[key] = kwargs[key]
+        elif key not in method_para_list and key  in plot_para_list:
+            plot_args[key] = kwargs[key]
+        elif key  in method_para_list and key  in plot_para_list:
+            print(method.__name__ + " and " + plot_mehod.__name__ + " have same args:" + key)
+            return
+        else:
+            print(key + " is not args of " + method.__name__ + " or " + plot_mehod.__name__)
+            return
+
     result_all = []
     for k in range(g_num):
         sta_time_list,time_list = meteva.base.group(sta_ob_and_fos_list[k],g ="time")
@@ -442,7 +513,7 @@ def score_tdt(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_lis
 
         for st in range(len(sta_time_list)):
             sta_time = sta_time_list[st]
-            result, dtime_list = score(sta_time, method, g="dtime", **kwargs)
+            result, dtime_list = score(sta_time, method, g="dtime", **method_args)
 
             if len(result.shape) <=1:
                 # 没有等级，只有一个预报成员
@@ -530,12 +601,12 @@ def score_tdt(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_lis
             #绘制图形
             #print("start plot")
             if x_y == "obtime_time":
-                meteva.base.tool.plot_tools.mesh_obtime_time(sta_result1,save_dir=save_dir,save_path=save_path1,show = show,dpi = dpi,title = title1_list)
+                meteva.base.tool.plot_tools.mesh_obtime_time(sta_result1,save_dir=save_dir,save_path=save_path1,show = show,dpi = dpi,title = title1_list,annot = annot,**plot_args)
             elif x_y == "obtime_dtime":
-                meteva.base.tool.plot_tools.mesh_obtime_dtime(sta_result1, save_dir=save_dir,save_path=save_path1,show = show,dpi = dpi, title=title1_list)
+                meteva.base.tool.plot_tools.mesh_obtime_dtime(sta_result1, save_dir=save_dir,save_path=save_path1,show = show,dpi = dpi, title=title1_list,annot = annot,**plot_args)
             elif x_y == "time_dtime":
                 #print(sta_result1)
-                meteva.base.tool.plot_tools.mesh_time_dtime(sta_result1, save_dir=save_dir,save_path=save_path1,show = show,dpi = dpi, title=title1_list)
+                meteva.base.tool.plot_tools.mesh_time_dtime(sta_result1, save_dir=save_dir,save_path=save_path1,show = show,dpi = dpi, title=title1_list,annot = annot,**plot_args)
             else:
                 print("目前绘图样式参数 x_y仅支持 obtime_time, obtime_dtime, time_dtime三种形式")
         if len(sta_all_g_list) == 1:
