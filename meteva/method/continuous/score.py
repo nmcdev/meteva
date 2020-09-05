@@ -208,7 +208,7 @@ def fo_mean(Ob, Fo):
     return Fo_mean_array
 
 
-def tc_count(Ob, Fo, threshold):
+def tc_count(Ob, Fo, grade_list = [2]):
     '''
     计算准确率的中间结果
     :param Ob:
@@ -216,7 +216,8 @@ def tc_count(Ob, Fo, threshold):
     :param threshold:
     :return:
     '''
-
+    if not isinstance(grade_list,list):
+        grade_list = [grade_list]
     correct_rate_list = []
     Fo_shape = Fo.shape
     Ob_shape = Ob.shape
@@ -234,22 +235,20 @@ def tc_count(Ob, Fo, threshold):
     new_Fo_shape = new_Fo.shape
     for line in range(new_Fo_shape[0]):
         total_count = Ob.size
-
         error = np.abs(new_Fo[line, :] - Ob)
-        index = np.where(error <= threshold)
-        correct_count = len(index[0])
-        correct_rate_list.append(np.array([total_count, correct_count]))
+        count_list = [total_count]
+        for grade in grade_list:
+            index = np.where(error <= grade)
+            count_list.append(len(index[0]))
+        correct_rate_list.append(count_list)
     correct_rate_np = np.array(correct_rate_list)
-
     shape = list(Fo_shape[:ind])
-    shape.append(2)
-
+    shape.append(1 + len(grade_list))
     correct_rate_array = correct_rate_np.reshape(shape)
-
     return correct_rate_array
 
 
-def correct_rate(Ob, Fo, threshold):
+def correct_rate(Ob, Fo, grade_list = [2]):
     '''
     计算准确率
     :param Ob:
@@ -257,10 +256,12 @@ def correct_rate(Ob, Fo, threshold):
     :param threshold:
     :return:
     '''
-    tc_array = tc_count(Ob, Fo, threshold)
-    return tc_array[..., 1] / tc_array[..., 0]
 
-def wrong_rate(Ob,Fo,threshold):
+    tc_array = tc_count(Ob, Fo, grade_list)
+    crate = correct_rate_tc(tc_array)
+    return crate
+
+def wrong_rate(Ob,Fo,grade_list = [2]):
     '''
     计算错误率
     :param Ob:
@@ -268,8 +269,10 @@ def wrong_rate(Ob,Fo,threshold):
     :param threshold:
     :return:
     '''
-    tc_array = tc_count(Ob, Fo, threshold)
-    return 1- tc_array[..., 1] / tc_array[..., 0]
+
+    tc_array = tc_count(Ob, Fo, grade_list)
+    wrate = wrong_rate_tc(tc_array)
+    return wrate
 
 
 def wrong_rate_tc(tc_count_array):
@@ -280,15 +283,21 @@ def wrong_rate_tc(tc_count_array):
     :param threshold:
     :return:
     '''
-    wr = 1- tc_count_array[..., 1] / tc_count_array[..., 0]
-    return wr
+    crate = correct_rate_tc(tc_count_array)
+    return 1 - crate
 
 def correct_rate_tc(tc_count_array):
     '''
     :param tc_count_array:
     :return:
     '''
-    cr1 = tc_count_array[..., 1] / tc_count_array[..., 0]
+    if tc_count_array.shape[-1] > 2:
+        total_count =  tc_count_array[..., 0]
+        total_count = total_count.reshape((-1,1))
+        cr1 = tc_count_array[..., 1:] / total_count
+    else:
+        cr1 = tc_count_array[..., 1] / tc_count_array[..., 0]
+
     return cr1
 
 
