@@ -25,8 +25,8 @@ def interp_gs_nearest(grd,sta,used_coords = "xy"):
 
     if used_coords == "xy":
         sta1 = meteva.base.sele.in_grid_xy(sta, grid)
-        ig = np.round((sta1.loc[:,'lon'].values - grid.slon) // grid.dlon).astype(dtype = 'int16')
-        jg = np.round((sta1.loc[:,'lat'].values - grid.slat) // grid.dlat).astype(dtype = 'int16')
+        ig = np.round((sta1.loc[:,'lon'].values - grid.slon) / grid.dlon).astype(dtype = 'int16')
+        jg = np.round((sta1.loc[:,'lat'].values - grid.slat) / grid.dlat).astype(dtype = 'int16')
         sta_list = []
         for i in range(len(levels)):
             for j in range(len(times)):
