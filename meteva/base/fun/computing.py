@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import meteva
 from scipy.ndimage import convolve
+from scipy.ndimage.filters import uniform_filter
 import math
 import copy
 #将两个站点数据信息进行合并，并去重。
@@ -75,11 +76,11 @@ def moving_avarage(grd, half_window_size):
     times = copy.deepcopy(grd["time"].values)
     dtimes = copy.deepcopy(grd["dtime"].values)
     members = copy.deepcopy(grd["member"].values)
-
+    grd1 = copy.deepcopy(grd)
+    '''
     nlon = len(grd["lon"])
     nlat = len(grd["lat"])
-
-    grd1 = copy.deepcopy(grd)
+    
 
     i0 = np.arange(nlon)
     i_s = i0 - half_window_size
@@ -104,11 +105,16 @@ def moving_avarage(grd, half_window_size):
     accu_num = (IE - IS ) * (JE - JS)
     dat_accumulate_x = np.zeros((nlat,nlon+1))
     dat_accumulate_y = np.zeros((nlat+1, nlon))
-
+    '''
+    size = half_window_size* 2 + 1
     for i in range(len(levels)):
         for j in range(len(times)):
             for k in range(len(dtimes)):
                 for m in range(len(members)):
+                    dat = grd1.values[m, i, j, k, :, :]
+                    dat1 = uniform_filter(dat,size=size)
+                    grd1.values[m, i, j, k, :, :] = np.round(dat1[:,:],10)
+                    '''
                     dat = grd1.values[m,i,j,k,:,:]
                     # 首先在x方向做累加
                     dat_accumulate_x[:,1:] = dat[:,:]
@@ -129,7 +135,7 @@ def moving_avarage(grd, half_window_size):
                     # 计算平均
                     grd1.values[m,i,j,k,:,:] = dat/accu_num
 
-
+                    '''
     return grd1
 
 
