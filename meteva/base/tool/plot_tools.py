@@ -1119,6 +1119,7 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
         height_hspace = sup_fontsize * 0.01
         height_suplegend = 1
         height_fig = nrow * (height_axis+height_hspace) + height_suplegend
+
         if width_fig>10:width_fig = 10
         if height_fig >7:height_fig = 7
         if width_fig<5: width_fig=5
@@ -1285,11 +1286,10 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
             if legend_col <1:legend_col = 1
             legend_row = int(math.ceil(legend_num / legend_col))
             legend_col = int(math.ceil(legend_num / legend_row))
-
-            by = 0.97 + legend_row * 0.03
+            by = 1  -  (height_suplegend - legend_row * sup_fontsize *0.9 * 0.03)/height_fig + 0.02
             if subplot_num >1:
                 fig.legend(fontsize = sup_fontsize *0.9,ncol = legend_col,loc = "upper center",
-                       bbox_to_anchor=(0.55,by))
+                       bbox_to_anchor=(0.52,by))
             else:
                 plt.legend(fontsize = sup_fontsize *0.9,ncol = legend_col,loc = "upper center")
 
