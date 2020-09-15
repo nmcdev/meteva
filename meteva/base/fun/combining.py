@@ -214,8 +214,11 @@ def combine_on_obTime_id(sta_ob,sta_fo_list,need_match_ob = False):
     dtime_list = list(set(sta_fo_list[0]['dtime'].values.tolist()))
     nsta_ob = len(sta_ob.index)
     if(nsta_ob * len(dtime_list) >= 10000000):
-        print("请注意，在大规模数据匹配合并时，need_match_ob 参数将自动切换为True")
-        return combine_on_obTime_id_bigData(sta_ob,sta_fo_list)
+        if nsta_ob >= 10000000:
+            print("请注意，在大规模数据匹配合并时，need_match_ob 参数将自动切换为True")
+            return combine_on_obTime_id_bigData(sta_ob,sta_fo_list)
+        else:
+            return combine_on_obTime_id_bigData(sta_ob, sta_fo_list,need_match_ob=need_match_ob,g = "dtime")
     else:
         if sta_ob is None:
             sta_combine = None
@@ -280,7 +283,7 @@ def combine_on_obTime_one_id(sta_ob,sta_fo_list,how = "inner"):
 
 
 
-def combine_on_obTime_id_bigData(sta_ob,sta_fo_list,need_match_ob = True):
+def combine_on_obTime_id_bigData(sta_ob,sta_fo_list,need_match_ob = True,g = "id"):
     import sys,gc
     '''
     将观测
@@ -291,41 +294,72 @@ def combine_on_obTime_id_bigData(sta_ob,sta_fo_list,need_match_ob = True):
     if not isinstance(sta_fo_list, list):
         print("the second args shold be a list")
         return
-    grouped_ob = dict(list(sta_ob.groupby("id")))
-    nfo = len(sta_fo_list)
-    grouped_fo_list=[]
-    for i in range(nfo):
-        grouped_fo_list.append(dict(list(sta_fo_list[i].groupby("id"))))
-    id_ob = list(grouped_ob.keys())
-    sys._clear_type_cache()
-    gc.collect()
-    sta_all = []
-    n_id = len(id_ob)
-    if need_match_ob:
-        how = "inner"
-    else:
-        how = "right"
-    for i in range(n_id):
-        rate = int((i/n_id)*100)
-        if rate%5 == 0:
-            if abs(i - rate * 0.01 * n_id)<1:
-                print(str(rate) + "% combined")
-
-        key = id_ob[i]
-        all_fos_have = True
-        sta_ob_one_id = grouped_ob.pop(key)
-        sta_fos_one_id = []
+    sta_all = None
+    if g =="id":
+        grouped_ob = dict(list(sta_ob.groupby("id")))
+        nfo = len(sta_fo_list)
+        grouped_fo_list=[]
         for i in range(nfo):
-            if key in grouped_fo_list[i].keys():
-               sta_fos_one_id.append(grouped_fo_list[i].pop(key))
-            else:
-                all_fos_have = False
-        if all_fos_have:
-            combine_one = combine_on_obTime_one_id(sta_ob_one_id,sta_fos_one_id,how = how)
-            sta_all.append(combine_one)
-    sta_all = pd.concat(sta_all,axis=0)
+            grouped_fo_list.append(dict(list(sta_fo_list[i].groupby("id"))))
+        id_ob = list(grouped_ob.keys())
+        sys._clear_type_cache()
+        gc.collect()
+        sta_all = []
+        n_id = len(id_ob)
+        if need_match_ob:
+            how = "inner"
+        else:
+            how = "right"
+        for i in range(n_id):
+            rate = int((i/n_id)*100)
+            if rate%5 == 0:
+                if abs(i - rate * 0.01 * n_id)<1:
+                    print(str(rate) + "% combined")
 
+            key = id_ob[i]
+            all_fos_have = True
+            sta_ob_one_id = grouped_ob.pop(key)
+            sta_fos_one_id = []
+            for i in range(nfo):
+                if key in grouped_fo_list[i].keys():
+                   sta_fos_one_id.append(grouped_fo_list[i].pop(key))
+                else:
+                    all_fos_have = False
+            if all_fos_have:
+                combine_one = combine_on_obTime_one_id(sta_ob_one_id,sta_fos_one_id,how = how)
+                sta_all.append(combine_one)
+        sta_all = pd.concat(sta_all,axis=0)
+    elif g == "dtime":
+        nfo = len(sta_fo_list)
+        grouped_fo_list = []
+        for i in range(nfo):
+            grouped_fo_list.append(dict(list(sta_fo_list[i].groupby("dtime"))))
+        dtime_list = list(grouped_fo_list[0].keys())
+        sys._clear_type_cache()
+        gc.collect()
+        sta_all = []
+        n_dtime = len(dtime_list)
+
+        for i in range(n_dtime):
+            rate = int((i/n_dtime)*100)
+            print(str(rate) + "% combined")
+
+            key = dtime_list[i]
+            all_fos_have = True
+            sta_fos_one_dtime= []
+            for i in range(nfo):
+                if key in grouped_fo_list[i].keys():
+                    sta_fos_one_dtime.append(grouped_fo_list[i].pop(key))
+                else:
+                    all_fos_have = False
+            if all_fos_have:
+                combine_one = combine_on_obTime_id(sta_ob, sta_fos_one_dtime, need_match_ob=need_match_ob)
+                sta_all.append(combine_one)
+        sta_all = pd.concat(sta_all, axis=0)
+    if sta_all is not None:
+        sta_all = sta_all.fillna(meteva.base.IV)
     return sta_all
+
 
 
 def combine_on_obTime(sta_ob,sta_fo_list,need_match_ob = False):
