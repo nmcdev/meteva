@@ -78,7 +78,7 @@ def get_path_without_star(dir,time,dt = None,dt_cell = "hour"):
     :return:
     '''
     if(dt is not None):
-        if not (isinstance(dt,np.int16) or isinstance(dt,np.int32)):
+        if not (isinstance(dt,np.int16) or isinstance(dt,np.int32) or type(dt) == type(1)):
             if(dt_cell.lower()=="hour"):
                 dt = int(dt.total_seconds() / 3600)
             elif(dt_cell.lower()=="minute"):
