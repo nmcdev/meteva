@@ -153,7 +153,9 @@ def get_save_path(save_dir,method,group_by,group_list,model_name = "",type = "",
             save_path = save_dir + "/"+method.__name__+"_" +model_name+discription+type
         else:
             print(model_name)
-            save_path = save_dir + "/" +method.__name__+"_" + model_name + "_"+ group_by + str(group_list)+discription+type
+            group_list_str = str(group_list)
+            group_list_str = group_list_str.replace(":","").replace(" ","")
+            save_path = save_dir + "/" +method.__name__+"_" + model_name + "_"+ group_by + group_list_str+discription+type
     return save_path
 
 
@@ -421,7 +423,7 @@ def get_group_name(group_list_list):
             if isinstance(group_list,list):
                islist
         if not islist:
-            group_name = get_time_str_list(group_list_list,row=2)
+            group_name = get_time_str_list(group_list_list,row=3)
         else:
             for i in range(len(group_list_list)):
                 group_name.append("tg"+str(i))
