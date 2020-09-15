@@ -185,5 +185,5 @@ def frequency_table(ob,fo,grade_list=None, member_list = None,save_path=None):
                                   index=pd.MultiIndex.from_product([['ob-fo'], label])
                                   )
         table_data.to_excel(save_path, sheet_name='sheet1')
-        print("列联表已以excel表格形式保存至" + save_path)
+        print("频率表已以excel表格形式保存至" + save_path)
     return conf_mx

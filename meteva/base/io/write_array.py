@@ -98,5 +98,5 @@ def write_array_to_excel(array,save_path,name_list_dict,columns = None,index = N
         return
 
 
-    print("列联表已以excel表格形式保存至" + save_path)
+    print("数据已以excel表格形式保存至" + save_path)
 

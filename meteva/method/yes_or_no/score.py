@@ -596,7 +596,6 @@ def hfmc(Ob, Fo, grade_list=[1e-30],compair = ">="):
         hfmc_array = np.zeros((len(grade_list), 4))
         for i in range(len(grade_list)):
             threshold = grade_list[i]
-            num = np.size(Ob)
             obhap = np.zeros_like(Ob)
             fohap = np.zeros_like(fo)
             if compair ==">=":

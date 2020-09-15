@@ -224,6 +224,7 @@ def sum_of_sta(sta,used_coords = ["member"],span = None,keep_all = True):
             rain_ac = meteva.base.add_on_level_time_dtime_id(rain_ac, rain1, default=0)
 
         rain_ac = meteva.base.between_dtime_range(rain_ac,span,dtimes[-1])  # 删除时效小于range的部分
+        dtimes =set(rain_ac.loc[:, "dtime"].values.tolist())
         if not keep_all:
             dh = ((dtimes - dtimes[-1]) / dhour_unit).astype(np.int32)
             new_dtimes = dtimes[dh % step == 0]
