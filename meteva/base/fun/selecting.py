@@ -465,6 +465,17 @@ def by_stadata(sta,loc_sta):
     sta_sele = sta_combine.loc[:,columns[0:-1]]
     return sta_sele
 
+def in_province_list(sta,province_name_list):
+    if not isinstance(province_name_list,list):
+        province_name_list = [province_name_list]
+    ids = list(set(sta["id"].values))
+    sta_province_name = meteva.base.tool.get_station_format_province_set(ids)
+    sta_with_province_name = meteva.base.combine_expand_IV(sta, sta_province_name)
+    sta1 = sta_with_province_name.loc[sta_with_province_name['province_name'].isin(province_name_list)]
+    sta1 = sta1.drop(['province_name'], axis=1)
+
+    return sta1
+
 
 
 #返回站点参数字典列表
@@ -604,7 +615,7 @@ def sele_by_dict(data,s):
 
     p_set = {"member","level","time","time_range","year","month","day","dayofyear","hour", "ob_time","ob_time_range" ,"ob_year",
               "ob_month", "ob_day","ob_dayofyear","ob_hour","dtime","dtime_range","dday","dhour" ,
-              "lon","lat", "id","grid","gxy", "gxyz" ,"stadata","value","drop_IV","last" , "last_range","drop_last"}
+              "lon","lat", "id","grid","gxy", "gxyz" ,"stadata","value","drop_IV","last" , "last_range","drop_last","province_name"}
 
     key_set = s.keys() #set(list(s.keys()))
     if(not p_set >= key_set):
@@ -736,6 +747,10 @@ def sele_by_dict(data,s):
     if "last_range" in s.keys():
         last_range = s["last_range"]
 
+    province_name = None
+    if "province_name" in s.keys():
+        province_name = s["province_name"]
+
     drop_last = True
     if "drop_last" in s.keys():
         drop_last = s["drop_last"]
@@ -743,15 +758,17 @@ def sele_by_dict(data,s):
 
 
 
+
+
     sta1 = sele_by_para(data,member,level,time,time_range,year,month,day,dayofyear,hour,ob_time,ob_time_range,ob_year,ob_month,ob_day,ob_dayofyear,
-                 ob_hour,dtime,dtime_range,dday,dhour,lon,lat,id,grid,gxy,gxyz,stadata,value,drop_IV,last,last_range,drop_last)
+                 ob_hour,dtime,dtime_range,dday,dhour,lon,lat,id,grid,gxy,gxyz,stadata,value,drop_IV,last,last_range,province_name,drop_last)
     return sta1
 
 
 def sele_by_para(data,member = None,level = None,time = None,time_range = None,year = None,month = None,day = None,dayofyear = None,hour = None,
            ob_time=None, ob_time_range=None, ob_year=None, ob_month=None, ob_day=None, ob_dayofyear=None, ob_hour=None,
            dtime = None,dtime_range = None,dday = None, dhour = None,lon = None,lat = None,id = None,grid = None,gxy = None,gxyz = None,stadata = None,
-                 value = None,drop_IV = False,last = None,last_range = None,drop_last = True):
+                 value = None,drop_IV = False,last = None,last_range = None,province_name = None,drop_last = True):
     '''
     :param data: [站点数据](https://www.showdoc.cc/nmc?page_id=3744334022014027)
     :param member:成员的名称，同时提取多个时采用列表形式
@@ -862,6 +879,10 @@ def sele_by_para(data,member = None,level = None,time = None,time_range = None,y
         sta1 = between_last_range(sta1,last_range[0],last_range[1],drop_last)
     if last is not None:
         sta1 = in_last_list(sta1,last,drop_last)
+
+    if province_name is not None:
+        sta1 = in_province_list(sta1,province_name)
+
     return sta1
 
 

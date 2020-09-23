@@ -349,41 +349,40 @@ def read_stadata_from_sevp(filename, element_id,level=None,time=None,data_name =
             #lines = heads.split("\n")
             file = open(filename,encoding = encoding)
             sta1 = pd.read_csv(file, skiprows=6, sep="\s+", header=None)
-            #file.close()
-            num_list = re.findall(r"\d+", lines[2])
+            file.close()
             strs4 = lines[3].split()
             time_file = meteva.base.tool.time_tools.str_to_time(strs4[1])
             line6_list = re.findall(r'[0-9.]+', lines[5])
             nline0 = int(line6_list[4])
-            sta_all = sta1.iloc[0:nline0,[0,element_id]]
-            sta_all.loc[:,"id"] = int(line6_list[0])
-            sta_all.loc[:,"lon"] = float(line6_list[1])
-            sta_all.loc[:,"lat"] = float(line6_list[2])
+
+            sta_list = []
+            sta_one = sta1.iloc[0:nline0,[0,element_id]]
+            sta_one.loc[:,"id"] = line6_list[0]
+            sta_one.loc[:,"lon"] = float(line6_list[1])
+            sta_one.loc[:,"lat"] = float(line6_list[2])
+            sta_list.append(sta_one)
             #print(sta_all)
             dat_station = sta1.values[nline0,0:5]
             nline_all = len(sta1.index)
-
             while True:
                 nline1 = nline0 + int(dat_station[-1])+1
                 sta_one = sta1.iloc[nline0+1:nline1,[0,element_id]]
-                sta_one.loc[:,"id"] = str(dat_station[0])
-                sta_one.loc[:,"lon"] = int(dat_station[1])
-                sta_one.loc[:,"lat"] = int(dat_station[2])
-                sta_all = pd.concat([sta_all, sta_one])
-
+                sta_one.loc[:,"id"] = dat_station[0]
+                sta_one.loc[:,"lon"] = float(dat_station[1])
+                sta_one.loc[:,"lat"] = float(dat_station[2])
+                sta_list.append(sta_one)
                 if nline1 >= nline_all - 1:break
                 nline0 = nline1
                 dat_station = sta1.values[nline0,0:5]
-
-            #sta_all.loc[:,"time"] = time_file
+            sta_all = pd.concat(sta_list,axis = 0)
             sta_all["time"] = time_file
-            #print(sta_all)
-            sta_all.columns = ["dtime","data0","id","lon","lat","time"]
+            sta_all.columns = ["dtime",data_name,"id","lon","lat","time"]
             sta_all.loc[:,"level"] = 0
             sta = meteva.base.sta_data(sta_all)
-            meteva.base.reset_id(sta)
-            meteva.base.set_stadata_coords(sta, level=level, time=time)
-            meteva.base.set_stadata_names(sta, data_name_list=[data_name])
+            sta[["dtime"]] = sta[["dtime"]].apply(pd.to_numeric)
+            #meteva.base.reset_id(sta)
+            #meteva.base.set_stadata_coords(sta, level=level, time=time)
+            #meteva.base.set_stadata_names(sta, data_name_list=[data_name])
             if show:
                 print("success read from " + filename)
             return sta

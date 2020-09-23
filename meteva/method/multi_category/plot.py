@@ -8,7 +8,7 @@ import math
 
 
 
-def frequency_histogram(ob, fo,grade_list=None, member_list=None,  vmax = None,save_path=None,show = False,dpi = 300, title="频率统计图"):
+def frequency_histogram(ob, fo,grade_list=None, member_list=None,  vmax = None,log_y = False,save_path=None,show = False,dpi = 300,plot = "bar", title="频率统计图"):
     '''
     frequency_histogram 对比测试数据和实况数据的发生的频率
     :param ob: 实况数据 任意维numpy数组
@@ -48,10 +48,20 @@ def frequency_histogram(ob, fo,grade_list=None, member_list=None,  vmax = None,s
     total_count = np.sum(result_array[0,:])
     result_array /= total_count
     if grade_list is not None:
-        axis = ["<" + str(grade_list[0])]
-        for index in range(len(grade_list) - 1):
-            axis.append("[" + str(grade_list[index]) + "," + str(grade_list[index + 1]) + ")")
-        axis.append(">=" + str(grade_list[-1]))
+
+
+        if len(grade_list) >10:
+            axis = ["<\n" + str(grade_list[0])]
+            for index in range(len(grade_list)):
+                axis.append(str(grade_list[index]))
+            axis.append(">=\n" + str(grade_list[-1]))
+        else:
+            axis = ["<" + str(grade_list[0])]
+            for index in range(len(grade_list) - 1):
+                axis.append("[" + str(grade_list[index]) + "," + str(grade_list[index + 1]) + ")")
+            axis.append(">=" + str(grade_list[-1]))
+
+
     else:
         new_fo = copy.deepcopy(fo).flatten()
         new_ob = copy.deepcopy(ob).flatten()
@@ -62,5 +72,9 @@ def frequency_histogram(ob, fo,grade_list=None, member_list=None,  vmax = None,s
     name_list_dict = {}
     name_list_dict["legend"] = legend
     name_list_dict["类别"] = axis
-    meteva.base.plot_tools.bar(result_array,name_list_dict,ylabel= "样本占比",vmin = 0,vmax = vmax,save_path = save_path,show = show,dpi = dpi,title=title)
+    if plot == "bar":
+        meteva.base.plot_tools.bar(result_array,name_list_dict,ylabel= "样本占比",vmin = 0,vmax = vmax,save_path = save_path,show = show,dpi = dpi,title=title)
+    else:
+        meteva.base.plot_tools.plot(result_array, name_list_dict, ylabel="样本占比", vmin=0, vmax=vmax, save_path=save_path,
+                                   show=show, dpi=dpi, title=title)
 

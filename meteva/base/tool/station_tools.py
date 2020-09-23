@@ -1,6 +1,8 @@
 import pkg_resources
 import re
 import meteva
+import pandas as pd
+
 def fuzzyfinder(input_str, collection):
     suggestions = []
     pattern = '.*?'.join(input_str)    # Converts 'djm' to 'd.*?j.*?m'
@@ -78,3 +80,25 @@ def find_station_id_by_city_name(input_strs):
         names_ids[names] = station_name_id_dict[names]
         #print(names + " : " + str(names_ids[names]))
     return names_ids
+
+
+def get_station_format_province_set(id_list):
+    pro_names = []
+    no_province_ids = []
+    for id in id_list:
+        if id in station_id_name_dict.keys():
+            str1 = station_id_name_dict[id]
+            str1s = str1.split("_")
+            pro_names.append(str1s[0])
+        else:
+            pro_names.append("未区分")
+            no_province_ids.append(id)
+
+    df = pd.DataFrame({
+        "id":id_list,
+        "province_name":pro_names
+    })
+
+    sta = meteva.base.sta_data(df)
+
+    return sta
