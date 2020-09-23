@@ -45,9 +45,9 @@ def sta_data(df,columns = None):
     if len(sta.columns) == 6:
         sta["data0"] =0
     else:
-        for i in range(6,len(sta.columns)):
-            sta.iloc[:,i] = (sta.values[:,i]).astype(np.float32)
-
+        #for i in range(6,len(sta.columns)):
+        #    sta.iloc[:,i] = (sta.values[:,i]).astype(np.float32)
+        pass
 
     return sta
 
@@ -138,6 +138,7 @@ def reset_id(sta):
     '''
     #print(sta)
     values = sta['id'].values
+    #print(values)
     if type(values[0]) == str:
         int_id = np.zeros(len(values))
         for i in range(len(values)):
