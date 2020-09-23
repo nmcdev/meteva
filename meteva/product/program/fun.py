@@ -502,6 +502,7 @@ def get_x_ticks(ticks,width,row = 2):
             nt = dh_max/dhs_u0
             sp_rate = int(math.ceil(nt/max_tick_num))
             dhs_u1 = dhs_u0 * sp_rate
+            #print(dhs_u1)
             if dhs_u1 <=24:
                 if dhs_u1 ==1:
                     hour_list = np.arange(24).tolist()
@@ -520,12 +521,31 @@ def get_x_ticks(ticks,width,row = 2):
                         hour_list = [hours_pd[0]]
 
                 index1 = np.where(pd_times.index.hour.isin(hour_list))
+                if len(index1[0]) == 0:
+                    if dhs_u1 == 1:
+                        hour_list = np.arange(24).tolist()
+                    elif dhs_u1 <= 3:
+                        hour_list = np.arange(0, 24, 3).tolist()
+                    elif dhs_u1 <= 6:
+                        hour_list = np.arange(0, 24, 6).tolist()
+                    elif dhs_u1 <= 12:
+                        hour_list = np.arange(0, 24, 12).tolist()
+                    elif dhs_u1 <= 24:
+                        if 0 in hours_pd:
+                            hour_list = [0]
+                        elif 12 in hours_pd:
+                            hour_list = [12]
+                        else:
+                            hour_list = [hours_pd[0]]
+                    #print(hour_list)
+                    index1 = np.where(pd_times.index.hour.isin(hour_list))
             else:
                 hour_list = hours_pd
                 index1 = np.where(pd_times.index.hour.isin(hour_list))
                 index1 = index1[0][::sp_rate]
             times_used = times[index1]
             xticks = (times_used - times[0]) / np.timedelta64(1, 'h')
+
             xtick_labels = get_time_str_list(times_used,row=row)
             #print(xticks)
         else:
