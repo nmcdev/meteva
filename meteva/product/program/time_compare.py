@@ -241,7 +241,6 @@ def time_list_line(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,sho
         dtime_all = pd.Series(time_all) - times_fo[0]
         x_all = dtime_all/np.timedelta64(1, 'h')
         x_all = x_all.values
-
         x_plot,time_strs = meteva.product.program.get_x_ticks(time_all,width-1)
         time_strs_null = []
         for i in range(len(time_strs)):
@@ -663,6 +662,7 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
             for j in range(row):
                 jr = row - j - 1
                 time_fo = times_fo[0] + np.timedelta64(1, 'h') * dh_y * jr
+
                 sta_on_row = meteva.base.in_time_list(sta_one_id,time_fo)
                 dhx0 = (time_fo - times_ob[0])/np.timedelta64(1, 'h')
                 dhxs = sta_on_row["dtime"].values + dhx0
@@ -716,9 +716,11 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
                 #plt.tick_params(top='on', right='on', which='both')  # 显示上侧和右侧的刻度
                 plt.rcParams['xtick.direction'] = 'in'  # 将x轴的刻度线方向设置抄向内
                 plt.rcParams['ytick.direction'] = 'in'  # 将y轴的刻度方知向设置向内
+
                 for k in range(row + 1):
                     jr = row - k - 1
-                    dhx0 = (times_fo[jr] - times_ob[0]) / np.timedelta64(1, 'h') + min_dtime
+                    time_fo = times_fo[0] + np.timedelta64(1, 'h') * dh_y * jr
+                    dhx0 = (time_fo- times_ob[0]) / np.timedelta64(1, 'h') + min_dtime
                     x1 = (dhx0 - dh_y) / dh_x
                     y1 = k
                     rect = patches.Rectangle((x1, y1), dh_y / dh_x, 1, linewidth=2, edgecolor='k', facecolor='none')
