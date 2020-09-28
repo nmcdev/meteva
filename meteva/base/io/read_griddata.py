@@ -96,8 +96,13 @@ def read_griddata_from_micaps4(filename,grid=None,level = None,time = None,dtime
             dat = (np.array(strs[k:])).astype(float).reshape((1, 1, 1, 1, nlat1, nlon1))
             lon = np.arange(nlon1) * dlon1 + slon1
             lat = np.arange(nlat1) * dlat1 + slat1
+
             if time is None:
-                time = pd.to_datetime(ymd, format = "%Y%m%d%H%M" )
+                try:
+                    time = pd.to_datetime(ymd, format = "%Y%m%d%H%M" )
+                except:
+                    print("m4 文件时间格式错误，因此数据时间被强制设置为2099年1月1日08时，建议在读取时设置参数time")
+                    time = datetime.datetime(2099,1,1,8,0)
             else:
                 time = meteva.base.tool.time_tools.all_type_time_to_time64(time)
             #print(dates)
