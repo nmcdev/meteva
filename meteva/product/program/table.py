@@ -11,6 +11,9 @@ def table(sta_ob_and_fos0,method,s = None,g = None,gll = None,save_dir = None,**
             else:
                 s["drop_last"] = True
     sta_ob_and_fos = sele_by_dict(sta_ob_and_fos0, s)
+    if(len(sta_ob_and_fos.index) == 0):
+        print("there is no data to verify")
+        return
     sta_ob_and_fos_list,gll1 = group(sta_ob_and_fos,g,gll)
     data_name = meteva.base.get_stadata_names(sta_ob_and_fos_list[0])
     ensemble_score_method = [meteva.method.cr]
