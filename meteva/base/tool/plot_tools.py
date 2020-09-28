@@ -1869,11 +1869,15 @@ def mesh_obtime_dtime(sta,save_dir = None,save_path = None,
     vmax = np.max(dat[dat != meteva.base.IV])
     if cmap is None:
         cmap = "bwr"
-        cmap_part = cmap
-    if clevs is not None:
-        clev_part, cmap_part = meteva.base.tool.color_tools.get_part_clev_and_cmap(clevs, cmap, vmax, vmin)
-        vmax = clev_part[-1]
-        vmin = 2 * clev_part[0] - clev_part[1]
+    clevs_part,cmap_part = meteva.base.tool.color_tools.reset_clevs_cmap(clevs=clevs,cmap=cmap,vmin=vmin,vmax = vmax)
+
+    #if cmap is None:
+    #    cmap = "bwr"
+    #    cmap_part = cmap
+    #if clevs is not None:
+    #    clev_part, cmap_part = meteva.base.tool.color_tools.get_part_clev_and_cmap(clevs, cmap, vmax, vmin)
+    vmax = clevs_part[-1]
+    vmin = 2 * clevs_part[0] - clevs_part[1]
 
     if annot is None:
         if vmax>1:
@@ -2033,11 +2037,15 @@ def mesh_time_dtime(sta,save_dir = None,save_path = None,
     vmax = np.max(dat[dat != meteva.base.IV])
     if cmap is None:
         cmap = "bwr"
-        cmap_part = cmap
-    if clevs is not None:
-        clev_part, cmap_part = meteva.base.tool.color_tools.get_part_clev_and_cmap(clevs, cmap, vmax, vmin)
-        vmax = clev_part[-1]
-        vmin = 2 * clev_part[0] - clev_part[1]
+    clevs_part,cmap_part = meteva.base.tool.color_tools.reset_clevs_cmap(clevs=clevs,cmap=cmap,vmin=vmin,vmax = vmax)
+
+    #if cmap is None:
+    #    cmap = "bwr"
+    #    cmap_part = cmap
+    #if clevs is not None:
+    #    clev_part, cmap_part = meteva.base.tool.color_tools.get_part_clev_and_cmap(clevs, cmap, vmax, vmin)
+    vmax = clevs_part[-1]
+    vmin = 2 * clevs_part[0] - clevs_part[1]
 
     if annot is None:
         if vmax>1:
