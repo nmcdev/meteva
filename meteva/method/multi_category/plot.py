@@ -44,6 +44,8 @@ def frequency_histogram(ob, fo,grade_list=None, member_list=None,  vmax = None,l
     else:
         legend.extend(member_list)
 
+
+
     result_array = meteva.method.frequency_table(ob, fo, grade_list=grade_list)
     total_count = np.sum(result_array[0,:])
     result_array /= total_count
@@ -51,15 +53,15 @@ def frequency_histogram(ob, fo,grade_list=None, member_list=None,  vmax = None,l
 
 
         if len(grade_list) >10:
-            axis = ["<\n" + str(grade_list[0])]
+            axis = ["<\n" + str(round(grade_list[0],6))]
             for index in range(len(grade_list)):
-                axis.append(str(grade_list[index]))
-            axis.append(">=\n" + str(grade_list[-1]))
+                axis.append(str(round(grade_list[index],6)))
+            axis.append(">=\n" + str(round(grade_list[-1],6)))
         else:
-            axis = ["<" + str(grade_list[0])]
+            axis = ["<" + str(round(grade_list[0],6))]
             for index in range(len(grade_list) - 1):
-                axis.append("[" + str(grade_list[index]) + "," + str(grade_list[index + 1]) + ")")
-            axis.append(">=" + str(grade_list[-1]))
+                axis.append("[" + str(round(grade_list[index],6)) + "," + str(round(grade_list[index + 1],6)) + ")")
+            axis.append(">=" + str(round(grade_list[-1],6)))
 
 
     else:

@@ -34,6 +34,9 @@ def error_boxplot(sta_ob_and_fos0,s = None, g = None, gll=None,
 
 
     sta_ob_and_fos = meteva.base.sele_by_dict(sta_ob_and_fos0, s)
+    if(len(sta_ob_and_fos.index) == 0):
+        print("there is no data to verify")
+        return
     sta_ob_and_fos_list, gll1 = meteva.base.fun.group(sta_ob_and_fos, g, gll)
     data_names = meteva.base.get_stadata_names(sta_ob_and_fos_list[0])
     if(len(data_names) ==1):
@@ -170,6 +173,9 @@ def error_boxplot_abs(sta_ob_and_fos0,s = None, g = None, gll=None,
                 s["drop_last"] = True
 
     sta_ob_and_fos = meteva.base.sele_by_dict(sta_ob_and_fos0, s)
+    if(len(sta_ob_and_fos.index) == 0):
+        print("there is no data to verify")
+        return
     data_names = meteva.base.get_stadata_names(sta_ob_and_fos)
     if(len(data_names) ==1):
         print("error infomation: only one data column, can't caculate error")

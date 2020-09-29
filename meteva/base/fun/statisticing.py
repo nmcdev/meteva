@@ -5,6 +5,7 @@ from scipy.spatial import cKDTree
 import numpy as np
 import copy
 import pandas as pd
+import datetime
 
 
 def mean_of_sta(sta,used_coords = ["member"],span = 24,equal_weight = False,keep_all = True):
@@ -183,53 +184,76 @@ def sum_of_sta(sta,used_coords = ["member"],span = None,keep_all = True):
         return sta_sum
     elif used_coords == ["time"]:
         if span is None:
-            print("if used_coords == [time], span must be int of float bigger than 0 ")
-        times = sta.loc[:, 'time'].values
-        times = list(set(times))
-        times.sort()
-        times = np.array(times)
-        dtimes = times[1:] - times[0:-1]
-        min_dtime = np.min(dtimes)
-        min_dhour = min_dtime / np.timedelta64(1, 'h')
-        rain_ac = None
-        step = int(round(span/min_dhour))
-        for i in range(step):
-            rain1 = sta.copy()
-            rain1["time"] = rain1["time"] + min_dtime * i
-            rain_ac = meteva.base.add_on_level_time_dtime_id(rain_ac, rain1, how="inner")
-        if not keep_all:
-            dtimes = times[:] - times[-1]
-            dh = (dtimes / min_dtime).astype(np.int32)
-            new_times = times[dh % step == 0]
-            rain_ac = meteva.base.in_time_list(rain_ac, new_times)
-        return rain_ac
+            times = sta.loc[:, 'time'].values
+            times = list(set(times))
+            times.sort()
+            rain_ac = meteva.base.in_time_list(sta,[times[0]])
+            meteva.base.set_stadata_coords(rain_ac, time=times[-1])
+            for i in range(1,len(times)):
+                rain01 = meteva.base.in_time_list(sta,times[i])
+                meteva.base.set_stadata_coords(rain01,time=times[-1])
+                rain_ac = meteva.base.add_on_level_time_dtime_id(rain_ac, rain01, how="inner")
+            return rain_ac
+        else:
+            times = sta.loc[:, 'time'].values
+            times = list(set(times))
+            times.sort()
+            times = np.array(times)
+            dtimes = times[1:] - times[0:-1]
+            min_dtime = np.min(dtimes)
+            min_dhour = min_dtime / np.timedelta64(1, 'h')
+            rain_ac = None
+            step = int(round(span/min_dhour))
+            for i in range(step):
+                rain1 = sta.copy()
+                rain1["time"] = rain1["time"] + min_dtime * i
+                rain_ac = meteva.base.add_on_level_time_dtime_id(rain_ac, rain1, how="inner")
+            time0_add_span = times[0] + datetime.timedelta(hours=span)
+            rain_ac = meteva.base.sele_by_para(rain_ac,time_range=[time0_add_span,times[-1]])
+
+            if not keep_all:
+                dtimes = times[:] - times[-1]
+                dh = (dtimes / min_dtime).astype(np.int32)
+                new_times = times[dh % step == 0]
+                rain_ac = meteva.base.in_time_list(rain_ac, new_times)
+
+            return rain_ac
     elif used_coords ==["dtime"]:
         if span is None:
-            print("if used_coords == [dtime], span must be int of float bigger than 0 ")
+            dtimes = sta.loc[:, 'dtime'].values
+            dtimes = list(set(dtimes))
+            dtimes.sort()
+            rain_ac = meteva.base.in_dtime_list(sta, [dtimes[0]])
+            meteva.base.set_stadata_coords(rain_ac, dtime=dtimes[-1])
+            for i in range(1, len(dtimes)):
+                rain01 = meteva.base.in_dtime_list(sta, dtimes[i])
+                meteva.base.set_stadata_coords(rain01, dtime=dtimes[-1])
+                rain_ac = meteva.base.add_on_level_time_dtime_id(rain_ac, rain01, how="inner")
+            return rain_ac
+        else:
+            dtimes = sta.loc[:, 'dtime'].values
+            dtimes = list(set(dtimes))
+            dtimes.sort()
+            dtimes = np.array(dtimes)
+            dhour_unit = dtimes[0]
+            if dhour_unit == 0:
+                dhour_unit = dtimes[1]
+            rain_ac = sta.copy()
+            step = int(round(span/dhour_unit))
+            print(step)
+            for i in range(1,step):
+                rain1 = sta.copy()
+                rain1["dtime"] = rain1["dtime"] + dhour_unit * i
+                # print(dhour_unit * i)
+                rain_ac = meteva.base.add_on_level_time_dtime_id(rain_ac, rain1, default=0)
 
-        dtimes = sta.loc[:, 'dtime'].values
-        dtimes = list(set(dtimes))
-        dtimes.sort()
-        dtimes = np.array(dtimes)
-        dhour_unit = dtimes[0]
-        if dhour_unit == 0:
-            dhour_unit = dtimes[1]
-        rain_ac = sta.copy()
-        step = int(round(span/dhour_unit))
-        print(step)
-        for i in range(1,step):
-            rain1 = sta.copy()
-            rain1["dtime"] = rain1["dtime"] + dhour_unit * i
-            # print(dhour_unit * i)
-            rain_ac = meteva.base.add_on_level_time_dtime_id(rain_ac, rain1, default=0)
-
-        rain_ac = meteva.base.between_dtime_range(rain_ac,span,dtimes[-1])  # 删除时效小于range的部分
-        dtimes =set(rain_ac.loc[:, "dtime"].values.tolist())
-        if not keep_all:
-            dh = ((dtimes - dtimes[-1]) / dhour_unit).astype(np.int32)
-            new_dtimes = dtimes[dh % step == 0]
-            rain_ac = meteva.base.in_dtime_list(rain_ac, new_dtimes)
-        return rain_ac
+            rain_ac = meteva.base.between_dtime_range(rain_ac,span,dtimes[-1])  # 删除时效小于range的部分
+            dtimes =set(rain_ac.loc[:, "dtime"].values.tolist())
+            if not keep_all:
+                dh = ((dtimes - dtimes[-1]) / dhour_unit).astype(np.int32)
+                new_dtimes = dtimes[dh % step == 0]
+                rain_ac = meteva.base.in_dtime_list(rain_ac, new_dtimes)
+            return rain_ac
 
 
 

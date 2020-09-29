@@ -17,6 +17,9 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
             else:
                 s["drop_last"] = True
     sta_ob_and_fos = sele_by_dict(sta_ob_and_fos0, s)
+    if(len(sta_ob_and_fos.index) == 0):
+        print("there is no data to verify")
+        return
 
     if type(method) == str:
         method =  globals().get(method)
@@ -143,7 +146,6 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
 
     else:
         result_list = []
-
         for i in range(group_num):
             sta = sta_ob_and_fos_list[i]
             #if(len(sta.index) == 0):
@@ -226,7 +228,7 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
 
 
 def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = None,plot = None,save_dir = None,save_path = None,show = False,
-             add_county_line = False,map_extend= None,print_max=0,print_min=0,dpi = 300,title = None,**kwargs):
+             add_county_line = False,map_extend= None,print_max=0,print_min=0,dpi = 300,title = None,sort_by = None,**kwargs):
 
     if s is not None:
         if g is not None:
@@ -236,6 +238,10 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
                 s["drop_last"] = True
 
     sta_ob_and_fos1 = meteva.base.sele_by_dict(sta_ob_and_fos0,s = s)
+    if(len(sta_ob_and_fos1.index) == 0):
+        print("there is no data to verify")
+        return
+
     sta_ob_and_fos_list, gll1 = meteva.base.group(sta_ob_and_fos1, g = g, gll = gll)
 
     if "grade_list" in kwargs.keys():
@@ -404,6 +410,8 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
 
         if len(sta_result) == 1:
             sta_result = sta_result[0]
+        if sort_by is not None:
+            sta_result.sort_values(by = sort_by,axis = 0,ascending = False,inplace=True)
         result_all.append(sta_result)
 
     if len(result_all)==1:
@@ -424,6 +432,9 @@ def score_tdt(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_lis
                 s["drop_last"] = True
 
     sta_ob_and_fos1 = meteva.base.sele_by_dict(sta_ob_and_fos0, s=s)
+    if(len(sta_ob_and_fos1.index) == 0):
+        print("there is no data to verify")
+        return
     sta_ob_and_fos_list, gll1 = meteva.base.group(sta_ob_and_fos1, g=g, gll=gll)
 
     if "grade_list" in kwargs.keys():
@@ -457,15 +468,19 @@ def score_tdt(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_lis
 
     if method.__name__.find("ob_fo") >= 0:
         fo_name = data_names
+    elif method.__name__ == "sample_count":
+        fo_name = [data_names[0]]
     else:
         fo_name = data_names[1:]
     fo_num = len(fo_name)
+
 
     if title is not None:
         if isinstance(title, list):
             if fo_num * g_num * grade_num != len(title):
                 print("手动设置的title数目和要绘制的图形数目不一致")
                 return
+
 
     if save_path is not None:
         if isinstance(save_path, str):
@@ -551,7 +566,8 @@ def score_tdt(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_lis
                         dict_result[fo_name[f]] = result[:,f,gg]
                     sta_result = pd.DataFrame(dict_result)
                     sta_result["time"] = time_list[st]
-                    sta_result_list_dict[g].append(sta_result)
+
+                    sta_result_list_dict[gg].append(sta_result)
 
         sta_all_g_list = []
         for gg in range(grade_num):
@@ -618,3 +634,9 @@ def score_tdt(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_lis
     if len(result_all) == 1:
         result_all = result_all[0]
     return result_all, gll1
+
+
+def score_obhour_dtime(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = None,
+              x_y = "obtime_time",annot = 0,save_dir = None,save_path = None,show = False,
+        dpi = 300,title = None,**kwargs):
+    pass

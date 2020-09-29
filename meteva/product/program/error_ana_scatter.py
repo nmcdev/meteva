@@ -19,6 +19,9 @@ def error_scatter(sta_ob_and_fos,method,s = None,g = None,gll = None,group_name_
         print("绘制误差平面分布时，g 不能设置为id")
         return
     sta_ob_and_fos1 = meteva.base.sele_by_dict(sta_ob_and_fos,s = s)
+    if(len(sta_ob_and_fos1.index) == 0):
+        print("there is no data to verify")
+        return
     sta_ob_and_fos_list, gll1 = meteva.base.group(sta_ob_and_fos1, g = g, gll = gll)
     g_num = len(sta_ob_and_fos_list)
     #if(g_num == 1):gll1 = [None]

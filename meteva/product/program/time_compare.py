@@ -335,6 +335,9 @@ def time_list_mesh_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
 
     sta_ob_and_fos1 = meteva.base.sele_by_dict(sta_ob_and_fos0, s)
     sta_ob_and_fos1 = meteva.base.sele_by_para(sta_ob_and_fos1,drop_IV=True)
+    if(len(sta_ob_and_fos1.index) == 0):
+        print("there is no data to verify")
+        return
     ids = list(set(sta_ob_and_fos1.loc[:, "id"]))
     data_names = meteva.base.get_stadata_names(sta_ob_and_fos1)
     times_fo = sta_ob_and_fos1.loc[:, "time"].values
