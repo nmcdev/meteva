@@ -276,6 +276,8 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
 
     if method.__name__.find("ob_fo")>=0:
         fo_name = data_names
+    elif method.__name__ == "sample_count":
+        fo_name = [data_names[0]]
     else:
         fo_name = data_names[1:]
     fo_num = len(fo_name)
