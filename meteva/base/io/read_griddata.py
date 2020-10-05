@@ -14,6 +14,7 @@ from .GDS_data_service import GDSDataService
 import bz2
 import copy
 
+
 def grid_ragular(slon,dlon,elon,slat,dlat,elat):
     """
     规范化格点（起始经纬度，间隔经度，格点数）
@@ -445,9 +446,6 @@ def read_griddata_from_nc(filename,grid = None,
         print(e)
         return None
 
-
-
-
 def read_griddata_from_gds_file(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
     try:
         if not os.path.exists(filename):
@@ -465,11 +463,14 @@ def read_griddata_from_gds_file(filename,grid = None,level = None,time = None,dt
 
 
 
-def read_griddata_from_gds(ip,port,filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
+def read_griddata_from_gds(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
     # ip 为字符串形式，示例 “10.20.30.40”
     # port 为整数形式
     # filename 为字符串形式 示例 "ECMWF_HR/TCDC/19083108.000"
-
+    if meteva.base.gds_ip_port is None:
+        print("请先使用set_config 配置gds的ip和port")
+        return
+    ip, port = meteva.base.gds_ip_port
     service = GDSDataService(ip, port)
     try:
         if(service is None):
@@ -485,6 +486,7 @@ def read_griddata_from_gds(ip,port,filename,grid = None,level = None,time = None
             ByteArrayResult.ParseFromString(response)
             if ByteArrayResult is not None:
                 byteArray = ByteArrayResult.byteArray
+
                 grd = decode_griddata_from_gds_byteArray(byteArray,grid,level,time,dtime,data_name)
                 if show:
                     print("success read from " + filename)
@@ -504,12 +506,15 @@ def read_griddata_from_gds(ip,port,filename,grid = None,level = None,time = None
         return None
 
 
-def read_gridwind_from_gds(ip,port,filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
+def read_gridwind_from_gds(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
     # ip 为字符串形式，示例 “10.20.30.40”
     # port 为整数形式
     # filename 为字符串形式 示例 "ECMWF_HR/TCDC/19083108.000"
-
-    service = GDSDataService(ip, port)
+    if meteva.base.gds_ip_port is None:
+        print("请先使用set_config 配置gds的ip和port")
+        return
+    ip, port = meteva.base.gds_ip_port
+    service = GDSDataService(ip,port)
     try:
         if(service is None):
             print("service is None")
@@ -834,11 +839,14 @@ def read_gridwind_from_micaps11(filename,grid = None,level = None,time = None,dt
         return None
 
 
-def read_AWX_from_gds(ip,port,filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
+def read_AWX_from_gds(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
     # ip 为字符串形式，示例 “10.20.30.40”
     # port 为整数形式
     # filename 为字符串形式 示例 "ECMWF_HR/TCDC/19083108.000"
-
+    if meteva.base.gds_ip_port is None:
+        print("请先使用set_config 配置gds的ip和port")
+        return
+    ip, port = meteva.base.gds_ip_port
     service = GDSDataService(ip, port)
     try:
         filename = filename.replace("mdfs:///", "")
@@ -1186,13 +1194,14 @@ def read_griddata_from_bz2_file(filename,decode_method,grid = None,level = None,
         return None
 
 
-
-
-def read_radar_latlon_from_gds(ip,port,filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
+def read_radar_latlon_from_gds(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
     # ip 为字符串形式，示例 “10.20.30.40”
     # port 为整数形式
     # filename 为字符串形式 示例 "ECMWF_HR/TCDC/19083108.000"
-
+    if meteva.base.gds_ip_port is None:
+        print("请先使用set_config 配置gds的ip和port")
+        return
+    ip, port = meteva.base.gds_ip_port
     service = GDSDataService(ip, port)
     try:
         filename = filename.replace("mdfs:///", "")
