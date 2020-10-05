@@ -326,7 +326,6 @@ def read_stadata_from_csv(filename, columns, member_list,skiprows=0,level = None
         return None
 
 
-
 def read_stadata_from_sevp(filename, element_id,level=None,time=None,data_name = "data0",show = False):
     '''
     兼容多个时次的预报产品文件 txt格式
@@ -465,10 +464,32 @@ def read_stadata_from_micaps1_2_8(filename, column, station=None, level=None,tim
             print(filename+"文件格式不能识别。可能原因：文件未按micaps第1、2、8类格式存储")
             return None
 
+
+def set_io_config(filename):
+    if os.path.exists(filename):
+        try:
+            ip,port = read_gds_ip_port(filename)
+            ips = ip.split(".")
+            if len(ips) == 4:
+                for i in range(4):
+                    digital = int(ips[i])
+            else:
+                print("filename  内容的格式不符合要求")
+            meteva.base.gds_ip_port = ip,port
+            print("配置文件设置成功")
+        except:
+            print("filename  内容的格式不符合要求")
+    else:
+        print("filename not exist")
+
 def read_gds_ip_port(filename,show = False):
+    if filename is None:
+        print("请使用set_config_ip_port 函数设置存储ip，port的配置文件的路径")
     file = open(filename)
-    for i in range(6):
-        file.readline()
+    for i in range(100):
+        title = file.readline()
+        if title.find("MICAPS") >=0:
+            break
     ip = file.readline().split("=")[1]
     ip = ip.strip()
     port = int(file.readline().split("=")[1])
@@ -477,7 +498,7 @@ def read_gds_ip_port(filename,show = False):
         print("success read from " + filename)
     return ip,port
 
-def read_stadata_from_gds(ip, port, filename,element_id = None,station = None, level=None,time=None, dtime=None, data_name='data0',show = False):
+def read_stadata_from_gds(filename,element_id = None,station = None, level=None,time=None, dtime=None, data_name='data0',show = False):
     '''
     :param ip: 为字符串形式，示例 “10.20.30.40”
     :param port: 为整数形式 示例 8080
@@ -489,6 +510,10 @@ def read_stadata_from_gds(ip, port, filename,element_id = None,station = None, l
     '''
     directory, filename = os.path.split(filename)
     # connect to data service
+    if meteva.base.gds_ip_port is None:
+        print("请先使用set_config 配置gds的ip和port")
+        return
+    ip,port = meteva.base.gds_ip_port
     service = GDSDataService(ip, port)
 
     # get data file name
@@ -824,9 +849,13 @@ def read_stadata_from_gdsfile(filename,element_id = None,station = None, level=N
     else:
         print(filename + " not exist")
 
-def read_stawind_from_gds(ip,port,filename,station = None, level=None,time=None, dtime=None,data_name = "",show = True):
+def read_stawind_from_gds(filename,station = None, level=None,time=None, dtime=None,data_name = "",show = True):
+
+    if meteva.base.gds_ip_port is None:
+        print("请先使用set_config 配置gds的ip和port")
+        return
     directory, filename = os.path.split(filename)
-    # connect to data service
+    ip,port = meteva.base.gds_ip_port
     service = GDSDataService(ip, port)
 
     try:
@@ -1199,11 +1228,14 @@ def read_stawind_from_gdsfile(filename,station = None, level=None,time=None, dti
         print(filename +" not exists")
         return None
 
-def read_stadata_from_gds_griddata(ip,port,filename,station,level = None,time =None,dtime = None,data_name = "data0",show = False):
+def read_stadata_from_gds_griddata(filename,station,level = None,time =None,dtime = None,data_name = "data0",show = False):
     # ip 为字符串形式，示例 “10.20.30.40”
     # port 为整数形式
     # filename 为字符串形式 示例 "ECMWF_HR/TCDC/19083108.000"
-
+    if meteva.base.gds_ip_port is None:
+        print("请先使用set_config 配置gds的ip和port")
+        return
+    ip,port = meteva.base.gds_ip_port
     service = GDSDataService(ip, port)
     try:
         if(service is None):
@@ -1280,11 +1312,20 @@ def read_stadata_from_gds_griddata(ip,port,filename,station,level = None,time =N
         print(filename +" 数据读取失败")
         return None
 
-def print_gds_file_values_names(filename,ip = None,port = None):
+def print_gds_file_values_names(filename):
     # ip 为字符串形式，示例 “10.20.30.40”
     # port 为整数形式
     # filename 为字符串形式 示例 "ECMWF_HR/TCDC/19083108.000"
     value_id_list= []
+
+    if os.path.exists(filename):
+        ip,port = None,None
+    else:
+        if meteva.base.gds_ip_port is None:
+            print("请先使用set_config 配置gds的ip和port")
+            return
+        ip,port = meteva.base.gds_ip_port
+
     filename = filename.replace("mdfs:///", "")
     filename = filename.replace("\\", "/")
 
@@ -1298,6 +1339,8 @@ def print_gds_file_values_names(filename,ip = None,port = None):
                 ByteArrayResult.ParseFromString(response)
                 if ByteArrayResult is not None:
                     byteArray = ByteArrayResult.byteArray
+            else:
+                print("数据内容不可读")
         except:
             exstr = traceback.format_exc()
             print(exstr)
