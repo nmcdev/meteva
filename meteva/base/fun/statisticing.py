@@ -208,15 +208,13 @@ def sum_of_sta(sta,used_coords = ["member"],span = None,keep_all = True):
                 rain1 = sta.copy()
                 rain1["time"] = rain1["time"] + min_dtime * i
                 rain_ac = meteva.base.add_on_level_time_dtime_id(rain_ac, rain1, how="inner")
-            time0_add_span = times[0] + datetime.timedelta(hours=span)
+            time0_add_span = times[0] + np.timedelta64(span,'h')
             rain_ac = meteva.base.sele_by_para(rain_ac,time_range=[time0_add_span,times[-1]])
-
             if not keep_all:
                 dtimes = times[:] - times[-1]
                 dh = (dtimes / min_dtime).astype(np.int32)
                 new_times = times[dh % step == 0]
                 rain_ac = meteva.base.in_time_list(rain_ac, new_times)
-
             return rain_ac
     elif used_coords ==["dtime"]:
         if span is None:
@@ -235,19 +233,23 @@ def sum_of_sta(sta,used_coords = ["member"],span = None,keep_all = True):
             dtimes = list(set(dtimes))
             dtimes.sort()
             dtimes = np.array(dtimes)
-            dhour_unit = dtimes[0]
-            if dhour_unit == 0:
-                dhour_unit = dtimes[1]
+            dhour_unit = dtimes[1] - dtimes[0]
+
+            #if dhour_unit == 0:
+            #    dhour_unit = dtimes[1]
+
             rain_ac = sta.copy()
+            #print(span)
+            #print(dhour_unit)
             step = int(round(span/dhour_unit))
-            print(step)
+            #print(step)
             for i in range(1,step):
                 rain1 = sta.copy()
                 rain1["dtime"] = rain1["dtime"] + dhour_unit * i
                 # print(dhour_unit * i)
                 rain_ac = meteva.base.add_on_level_time_dtime_id(rain_ac, rain1, default=0)
 
-            rain_ac = meteva.base.between_dtime_range(rain_ac,span,dtimes[-1])  # 删除时效小于range的部分
+            rain_ac = meteva.base.between_dtime_range(rain_ac,dtimes[0]+span,dtimes[-1])  # 删除时效小于range的部分
             dtimes =set(rain_ac.loc[:, "dtime"].values.tolist())
             if not keep_all:
                 dh = ((dtimes - dtimes[-1]) / dhour_unit).astype(np.int32)
