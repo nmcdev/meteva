@@ -12,7 +12,8 @@ import meteva
 import math
 
 
-def reliability(Ob, Fo, grade_count=10, member_list=None, vmax = None,log_y = False,save_path=None,show = False,dpi = 300, title="可靠性图"):
+def reliability(Ob, Fo, grade_count=10, member_list=None, vmax = None,log_y = False,save_path=None,show = False,dpi = 300, title="可靠性图",
+                sup_fontsize =10,width = None,height = None):
     '''
     :param Ob:
     :param Fo:
@@ -21,17 +22,19 @@ def reliability(Ob, Fo, grade_count=10, member_list=None, vmax = None,log_y = Fa
     '''
     hnh_array = meteva.method.hnh(Ob, Fo, grade_count)
 
-    reliability_hnh(hnh_array, member_list=member_list,vmax = vmax,log_y = log_y,dpi = dpi, save_path=save_path,show = show, title=title)
+    reliability_hnh(hnh_array, member_list=member_list,vmax = vmax,log_y = log_y,dpi = dpi, save_path=save_path,show = show, title=title,
+                    width=width, height=height, sup_fontsize=sup_fontsize)
 
 
-def reliability_hnh(hnh_array,  member_list=None,vmax = None,log_y = False, save_path=None,show = False,dpi = 300, title="可靠性图"):
+def reliability_hnh(hnh_array,  member_list=None,vmax = None,log_y = False, save_path=None,show = False,dpi = 300, title="可靠性图",
+                    sup_fontsize= 10,width = None,height = None):
     '''
     根据中间结果计算
     :param th:
     :param save_path:
     :return:
     '''
-    sup_fontsize = 10
+
     grade_count = hnh_array.shape[-2]
     grade = 1 / grade_count
     if grade_count < 1:
@@ -54,6 +57,11 @@ def reliability_hnh(hnh_array,  member_list=None,vmax = None,log_y = False, save
 
     color_list = meteva.base.tool.color_tools.get_color_list(legend_num)
 
+    if width is None:
+        width = 5.5
+    if height is None:
+        height = 6.1
+
     for line in range(new_hnh_array_shape[0]):
         total_grade_num = hnh_array[line, :, 0]
         observed_grade_num = hnh_array[line, :, 1]
@@ -74,7 +82,7 @@ def reliability_hnh(hnh_array,  member_list=None,vmax = None,log_y = False, save
         x = np.arange(grade / 2, 1, grade)
 
         if line == 0:
-            fig = plt.figure(figsize=(5.5, 6.1),dpi = dpi)
+            fig = plt.figure(figsize=(width,height),dpi = dpi)
             grid_plt = plt.GridSpec(5, 1, hspace=0)
             ax1 = plt.subplot(grid_plt[0:4, 0])
             plt.plot(line_x, prefect_line_y, '--', label="完美", color="k")
@@ -127,7 +135,8 @@ def reliability_hnh(hnh_array,  member_list=None,vmax = None,log_y = False, save
     plt.close()
 
 
-def roc(Ob, Fo, grade_count=10, member_list=None, save_path=None,show = False,dpi = 300, title="ROC图"):
+def roc(Ob, Fo, grade_count=10, member_list=None, save_path=None,show = False,dpi = 300, title="ROC图",
+        sup_fontsize =10,width = None,height = None):
     '''
 
     :param Ob:
@@ -137,20 +146,24 @@ def roc(Ob, Fo, grade_count=10, member_list=None, save_path=None,show = False,dp
     :return:
     '''
     hnh_array = meteva.method.hnh(Ob, Fo, grade_count)
-    roc_hnh(hnh_array,  member_list=member_list, save_path=save_path,show = show,dpi = dpi, title=title)
+    roc_hnh(hnh_array,  member_list=member_list, save_path=save_path,show = show,dpi = dpi, title=title,
+            width=width, height=height, sup_fontsize=sup_fontsize)
 
 
-def roc_hfmc(hfmc_array, member_list=None, save_path=None,show = False,dpi = 300, title="ROC图"):
+def roc_hfmc(hfmc_array, member_list=None, save_path=None,show = False,dpi = 300, title="ROC图",
+            sup_fontsize =10,width = None,height = None):
     '''
 
     :param hfmc:
     :param save_path:
     :return:
     '''
-
-    fig = plt.figure(figsize=(5, 5),dpi = dpi)
+    if width is None:
+        width = 5
+    if height is None:
+        height = 5
+    fig = plt.figure(figsize=(width, height),dpi = dpi)
     grade_count = hfmc_array.shape[-2]
-    sup_fontsize = 10
     grade = 1 / grade_count
     if grade_count < 1:
         print('grade_count输入错误，不能小于1')
@@ -203,7 +216,8 @@ def roc_hfmc(hfmc_array, member_list=None, save_path=None,show = False,dpi = 300
         plt.show()
     plt.close()
 
-def roc_hnh(hnh_array,  member_list=None, save_path=None,show  =False, dpi = 300, title="ROC图"):
+def roc_hnh(hnh_array,  member_list=None, save_path=None,show  =False, dpi = 300, title="ROC图",
+            sup_fontsize =10,width = None,height = None):
     '''
 
     :param th_array:
@@ -239,10 +253,11 @@ def roc_hnh(hnh_array,  member_list=None, save_path=None,show  =False, dpi = 300
     shape.append(len(grade_list) - 1)
     shape.append(4)
     hfmc_array.reshape(shape)
-    roc_hfmc(hfmc_array,  member_list=member_list,dpi=dpi,show=show, save_path=save_path, title=title)
+    roc_hfmc(hfmc_array,  member_list=member_list,dpi=dpi,show=show, save_path=save_path, title=title,sup_fontsize=sup_fontsize,width= width,height= height)
 
 
-def discrimination(Ob, Fo, grade_count=10,member_list=None,  vmax = None,log_y  = False, save_path=None,show = False,dpi = 300, title="区分能力图"):
+def discrimination(Ob, Fo, grade_count=10,member_list=None,  vmax = None,log_y  = False, save_path=None,show = False,dpi = 300, title="区分能力图",
+                    sup_fontsize =10,width = None,height = None):
     '''
 
     :param Ob:
@@ -252,10 +267,12 @@ def discrimination(Ob, Fo, grade_count=10,member_list=None,  vmax = None,log_y  
     :return:
     '''
     hnh_array = meteva.method.hnh(Ob, Fo, grade_count)
-    discrimination_hnh(hnh_array, member_list = member_list,vmax = vmax,log_y = log_y, save_path=save_path,show = show,dpi = dpi, title=title)
+    discrimination_hnh(hnh_array, member_list = member_list,vmax = vmax,log_y = log_y, save_path=save_path,show = show,dpi = dpi, title=title,
+                       width=width, height=height, sup_fontsize=sup_fontsize)
 
 
-def discrimination_hnh(hnh_array,  member_list=None, vmax = None,log_y = False,save_path=None,show = False,dpi = 300, title="区分能力图"):
+def discrimination_hnh(hnh_array,  member_list=None, vmax = None,log_y = False,save_path=None,show = False,dpi = 300, title="区分能力图",
+                        sup_fontsize =10,width = None,height = None):
     '''
 
     :param th_array:
@@ -271,13 +288,15 @@ def discrimination_hnh(hnh_array,  member_list=None, vmax = None,log_y = False,s
     grade_list = (np.arange(0, 1+0.5* grade, grade) *100).astype(np.int16)/100
     new_th_array = hnh_array.reshape((-1, len(grade_list) - 1, 2))
     new_th_array_shape = new_th_array.shape
-    sup_fontsize = 10
-    width = meteva.base.plot_tools.caculate_axis_width(grade_list,sup_fontsize,new_th_array_shape[0])
-    if width > 10:
-        width = 10
-    if width<5:
-        width =5
-    height = width *0.5
+
+    if width is None:
+        width = meteva.base.plot_tools.caculate_axis_width(grade_list,sup_fontsize,new_th_array_shape[0])
+        if width > 10:
+            width = 10
+        if width<5:
+            width =5
+    if height is None:
+        height = width *0.5
     label = []
     legend_num = new_th_array_shape[0]
     if member_list is None:
@@ -362,7 +381,8 @@ def discrimination_hnh(hnh_array,  member_list=None, vmax = None,log_y = False,s
     plt.close()
 
 
-def comprehensive_probability(Ob, Fo, grade_count=10, member_list=None,vmax = None,log_y = False,save_path=None,dpi = 300,show = False, title="概率预报综合检验图"):
+def comprehensive_probability(Ob, Fo, grade_count=10, member_list=None,vmax = None,log_y = False,save_path=None,dpi = 300,show = False, title="概率预报综合检验图",
+                                sup_fontsize =10,width = None,height = None):
     '''
     :param Ob:
     :param Fo:
@@ -370,18 +390,23 @@ def comprehensive_probability(Ob, Fo, grade_count=10, member_list=None,vmax = No
     :return:
     '''
     hnh_array = meteva.method.hnh(Ob, Fo, grade_count)
-    comprehensive_hnh(hnh_array,member_list = member_list,vmax = vmax,log_y = log_y,save_path=save_path,show = show, dpi = dpi,title=title)
+    comprehensive_hnh(hnh_array,member_list = member_list,vmax = vmax,log_y = log_y,save_path=save_path,show = show, dpi = dpi,title=title,
+                      width=width, height=height, sup_fontsize=sup_fontsize)
 
 
-def comprehensive_hnh(hnh_array,  member_list=None,vmax = None,log_y = False, save_path=None,show = False,dpi = 300, title="概率预报综合检验图"):
+def comprehensive_hnh(hnh_array,  member_list=None,vmax = None,log_y = False, save_path=None,show = False,dpi = 300, title="概率预报综合检验图",
+                      sup_fontsize =10,width = None,height = None):
     '''
 
     :param th_array:
     :param save_path:
     :return:
     '''
-    sup_fontsize = 10
-    fig = plt.figure(figsize=(8, 5.6),dpi = dpi)
+    if width is None:
+        width  = 8
+    if height is None:
+        height = 5.6
+    fig = plt.figure(figsize=(width,height),dpi = dpi)
     grade_count = hnh_array.shape[-2]
     grade = 1 / grade_count
     if grade_count < 1:
