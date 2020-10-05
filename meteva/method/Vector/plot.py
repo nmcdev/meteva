@@ -4,22 +4,28 @@ import os
 
 import numpy as np
 
-def scatter_uv(ob,fo,labels = None,save_path=None,show = False,title = "风矢量频率分布图"):
+def scatter_uv(ob,fo,labels = None,save_path=None,show = False,title = "风矢量频率分布图",
+               sup_fontsize = 10,width = None,height = None):
 
     u1 = ob[:,0]
     v1 = ob[:,1]
     u2 = fo[:,0]
     v2 = fo[:,1]
 
-    fig = plt.figure(figsize = (5,5))
+    if width is None:
+        width = 5
+    if height is None:
+        height = width
+    fig = plt.figure(figsize = (width,height))
     plt.plot(u1,v1,'.',color= 'b',  markersize=5,label ="839005")
     plt.plot(u2,v2,'.',color= 'r',  markersize=5,label ="838967")
-    plt.xlabel("u分量")
-    plt.ylabel("v分量")
+    plt.xlabel("u分量",fontsize = sup_fontsize *0.9)
+    plt.ylabel("v分量",fontsize = sup_fontsize *0.9)
+    plt.title(title,fontsize = sup_fontsize)
     s1 = np.sqrt(u1 * u1 + v1 * v1)
     s2 = np.sqrt(u2 * u2 + v2 * v2)
     maxs = np.maximum(np.max(s1),np.max(s2))
-    print(maxs)
+    #print(maxs)
     plt.xlim(-8,8)
     plt.ylim(-8,8)
     plt.legend()

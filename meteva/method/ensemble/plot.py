@@ -7,7 +7,8 @@ import copy
 import meteva
 
 
-def box_plot_ensemble(ob, fo,member_list = None, vmax = None,vmin = None,save_path=None,show = False,dpi = 300,title ="频率对比箱须图"):
+def box_plot_ensemble(ob, fo,member_list = None, vmax = None,vmin = None,save_path=None,show = False,dpi = 300,title ="频率对比箱须图",
+                      sup_fontsize = 10,width = None,height = None):
     '''
     box_plot 画一两组数据的箱型图
     ---------------
@@ -17,18 +18,21 @@ def box_plot_ensemble(ob, fo,member_list = None, vmax = None,vmin = None,save_pa
     :return: 无
     '''
     en_num = fo.shape[0]
-    width = en_num * 0.22 + 0.3
-    if width < 6:
-        width = 6
-    if width >10:
-        width = 10
+    if width is None:
+        width = en_num * 0.22 + 0.3
+        if width < 4:
+            width = 4
+        if width >8:
+            width = 8
+    if height is None:
+        height = 0.6 * width
     data = np.zeros((len(ob),en_num+1))
     data[:,0] = ob[:]
     data[:,1:] = fo[:,:].T
 
-    fig = plt.figure(figsize=(width,width * 0.6),dpi = dpi)
+    fig = plt.figure(figsize=(width,height),dpi = dpi)
     #plt.boxplot((observed, forecast), labels=["观测","预报" ])
-    sup_fontsize = 10
+
 
     if member_list is None:
         labels = ["ob\n观测"]
@@ -77,7 +81,8 @@ def box_plot_ensemble(ob, fo,member_list = None, vmax = None,vmin = None,save_pa
     plt.close()
 
 
-def rank_histogram(ob,fo,vmax = None,save_path= None,show = False,dpi = 300,title = "排序柱状图"):
+def rank_histogram(ob,fo,vmax = None,save_path= None,show = False,dpi = 300,title = "排序柱状图",
+                   sup_fontsize=10, width=None, height=None):
     '''
     :param ob:一维numpy数组
     :param fo: 二维numpy数组
@@ -91,13 +96,17 @@ def rank_histogram(ob,fo,vmax = None,save_path= None,show = False,dpi = 300,titl
     index = np.where(ob<fo1[0,:])
 
     en_num = fo.shape[0]
-    width = en_num * 0.22 + 0.3
-    if width < 6:
-        width = 6
-    if width >10:
-        width = 10
-    fig = plt.figure(figsize=(width,width * 0.4),dpi = dpi)
-    sup_fontsize = 10
+    if width is None:
+        width = en_num * 0.22 + 0.3
+        if width < 6:
+            width = 6
+        if width >10:
+            width = 10
+    if height is None:
+        height = width * 0.4
+
+    fig = plt.figure(figsize=(width,height),dpi = dpi)
+
     rank_num = [len(index[0])]
     for i in range(en_num-1):
         index = np.where((ob>=fo1[i,:]) & (ob < fo1[i+1,:]))

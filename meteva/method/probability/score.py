@@ -1,7 +1,7 @@
 
 import numpy as np
 from sklearn.metrics import roc_auc_score
-from sklearn.metrics import brier_score_loss
+#from sklearn.metrics import brier_score_loss
 from meteva.base.tool.math_tools import ss_iteration
 from meteva.base import IV
 from meteva.method.yes_or_no.score import pofd_hfmc,pod_hfmc
@@ -10,6 +10,7 @@ from meteva.method.yes_or_no.score import pofd_hfmc,pod_hfmc
 
 def tems(Ob, Fo):
     '''
+    计算bs评分的中间结果
     :param Ob:
     :param Fo:
     :return:
@@ -40,6 +41,7 @@ def tems(Ob, Fo):
     shape.append(4)
     tems_array = tems_array.reshape(shape)
     return tems_array
+
 def tems_merge(tems0, tems1):
     '''
     :param tems0:
@@ -73,6 +75,7 @@ def bs(Ob, Fo):
     :param Fo: 预报的概率值，多维的numpy
     :return: 实数形式的评分值
     '''
+    '''
     Ob_shape = Ob.shape
     Fo_shape = Fo.shape
     bs_list = []
@@ -90,7 +93,8 @@ def bs(Ob, Fo):
     new_Fo_shape = new_Fo.shape
 
     for line in range(new_Fo_shape[0]):
-        bs0 = brier_score_loss(Ob.flatten(), new_Fo[line, :].flatten())
+        #bs0 = brier_score_loss(Ob.flatten(), new_Fo[line, :].flatten())
+        bs0 = np.mean((Ob-new_Fo[line, :])**2)
         bs_list.append(bs0)
     if len(bs_list) == 1:
         bs_array = bs_list[0]
@@ -98,6 +102,10 @@ def bs(Ob, Fo):
         bs_array = np.array(bs_list)
         shape = list(Fo_shape[:ind])
         bs_array = bs_array.reshape(shape)
+        
+    '''
+    tems_array = tems(Ob,Fo)
+    bs_array = bs_tems(tems_array)
     return bs_array
 
 def bs_tems(tems_array):

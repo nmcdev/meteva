@@ -165,19 +165,32 @@ def creat_fo_dataset(model,para):
         data_left = meteva.base.sele_by_para(data0, time_range=[begin_date, end_date])
         meteva.base.set_stadata_names(data_left,model)
         sta_list.append(data_left)
-        id0 = station["id"].values[0]
-        data_id0 = meteva.base.sele_by_para(data0, id=id0)
+        #id0 = station["id"].values[0]
+        #data_id0 = meteva.base.sele_by_para(data0, id=id0)
         #print(data_id0)
-        times = data_id0.loc[:, "time"].values.tolist()
-        times = list(set(times))
-        times.sort()
+
+        grouped_dict = dict(list(data_left.groupby("time")))
+        keys = grouped_dict.keys()
         exist_time_list = []
-        for i in range(len(times)):
-            time1 = meteva.base.time_tools.all_type_time_to_datetime(times[i])
+        for key in keys:
+            time1 = meteva.base.time_tools.all_type_time_to_datetime(key)
             exist_time_list.append(time1)
-            data_id0_time0 = meteva.base.sele_by_para(data_id0, time=time1)
-            ehours = data_id0_time0.loc[:, "dtime"].values.tolist()
+            ehours = grouped_dict[time1].loc[:, "dtime"].values.tolist()
             exist_dtimes[time1] = ehours
+            #valid_group_list_list.append([key])
+            #sta_ob_and_fos_list.append(grouped_dict[key])
+
+
+        #times = data_left.loc[:, "time"].values.tolist()
+        #times = list(set(times))
+        #times.sort()
+        #exist_time_list = []
+        #for i in range(len(times)):
+        #    time1 = meteva.base.time_tools.all_type_time_to_datetime(times[i])
+        #    exist_time_list.append(time1)
+        #    data_id0_time0 = meteva.base.sele_by_para(data_left, time=time1)
+        #    ehours = data_id0_time0.loc[:, "dtime"].values.tolist()
+        #    exist_dtimes[time1] = ehours
 
         if hours is None:
             hours = []
@@ -186,7 +199,7 @@ def creat_fo_dataset(model,para):
             hours = list(set(hours))
             hours.sort()
         if dtimes is None:
-            dtimes = data_id0.loc[:, "dtime"].values.tolist()
+            dtimes = data_left.loc[:, "dtime"].values.tolist()
             dtimes = list(set(dtimes))
             dtimes.sort()
         if len(hours) == 0:
@@ -200,16 +213,21 @@ def creat_fo_dataset(model,para):
         for hh in range(len(hours)):
             hour = hours[hh]
             time1 = end_date - datetime.timedelta(days=dd) + datetime.timedelta(hours=hour)
+            if time1 > end_date or time1< begin_date:continue
             if para_model["time_type"] == "BT":
                 file_time = time1
             else:
                 file_time = time1 - datetime.timedelta(hours = 8)
 
+
             for dt in dtimes:
+                #data_exist = False
                 if time1 in exist_dtimes.keys():
                     exist_dtime = exist_dtimes[time1]
                     if dt in exist_dtime:
+                        #data_exist = True
                         continue
+                #if data_exist:continue
                 path = meteva.base.get_path(dir_fo, file_time, dt)
                 if os.path.exists(path):
                     try:
@@ -217,6 +235,8 @@ def creat_fo_dataset(model,para):
                         if dat is not None:
                             if not isinstance(dat, pd.DataFrame):
                                 dat = interp(dat, station)
+                            else:
+                                dat = meteva.base.put_stadata_on_station(dat,station)
                             meteva.base.set_stadata_coords(dat,time = time1,dtime = dt)
                             meteva.base.set_stadata_names(dat,model)
                             sta_list.append(dat)
@@ -272,9 +292,9 @@ def creat_ob_dataset(para):
         data_left = meteva.base.sele_by_para(data0, time_range=[begin_date, end_date])
         meteva.base.set_stadata_names(data_left, data_name)
         sta_list.append(data_left)
-        id0 = station["id"].values[0]
-        data_id0 = meteva.base.sele_by_para(data0, id=id0)
-        times = data_id0.loc[:, "time"].values.tolist()
+        #id0 = station["id"].values[0]
+        #data_id0 = meteva.base.sele_by_para(data0, id=id0)
+        times = data_left.loc[:, "time"].values.tolist()
         times = list(set(times))
         times.sort()
 
@@ -295,6 +315,7 @@ def creat_ob_dataset(para):
         for hh in range(len(hours)):
             hour = hours[hh]
             time1 = end_date - datetime.timedelta(days=dd) + datetime.timedelta(hours=hour)
+            if time1 > end_date or time1 < begin_date: continue
             if time1 in exist_time_list:
                 continue
             if para["ob_data"]["time_type"] == "BT":

@@ -4,7 +4,10 @@ import math
 
 
 def error_scatter(sta_ob_and_fos,method,s = None,g = None,gll = None,group_name_list= None,save_dir=None,save_path = None,show = False,
-                 print_max = 0,print_min = 0,threshold = 0,add_county_line = False,map_extend = None,dpi = 300,title=None):
+                 print_max = 0,print_min = 0,threshold = 0,add_county_line = False,map_extend = None,dpi = 300,title=None,
+                  sup_fontsize=10,
+                  height=None, width=None
+                  ):
     if len(sta_ob_and_fos.index) == 0:
         print("error infomation: 站点数据内容为空")
         return
@@ -68,27 +71,46 @@ def error_scatter(sta_ob_and_fos,method,s = None,g = None,gll = None,group_name_
         meteva.base.tool.plot_tools.scatter_sta(rmse_sta, save_path=save_path1, show=show,
                                                 fix_size=False, title=title1, print_max=print_max,print_min = print_min
                                                 , add_county_line=add_county_line,
-                                                threshold=threshold, map_extend=map_extend, dpi=dpi)
+                                                threshold=threshold, map_extend=map_extend, dpi=dpi,sup_fontsize = sup_fontsize,
+                                                width = width,height=height)
 
 def rmse_scatter(sta_ob_and_fos,s = None,g = None,gll = None,group_name_list= None,save_dir=None,save_path = None,show = False,
-                 print_max = 1,threshold = 0,add_county_line = False,map_extend = None,dpi = 300,title="均方根误差站点分布"):
+                 print_max = 1,threshold = 0,add_county_line = False,map_extend = None,dpi = 300,title="均方根误差站点分布",
+                 sup_fontsize=10,
+                 height=None, width=None
+                 ):
 
     error_scatter(sta_ob_and_fos,meteva.method.rmse,s = s,g = g,gll = gll,group_name_list= group_name_list,
                   save_dir= save_dir,save_path = save_path,show = show,print_max =print_max,threshold = threshold,
-                  add_county_line= add_county_line,map_extend=map_extend,dpi = dpi,title = title)
+                  add_county_line= add_county_line,map_extend=map_extend,dpi = dpi,title = title,
+                  sup_fontsize=sup_fontsize,
+                  height=height, width=width
+                  )
 
 def mae_scatter(sta_ob_and_fos,s = None,g = None,gll = None,group_name_list= None, save_dir=None,save_path = None,show = False,
-                print_max = 1,threshold = 0,add_county_line = False,map_extend= None,dpi = 300,title="绝对误差站点分布图"):
+                print_max = 1,threshold = 0,add_county_line = False,map_extend= None,dpi = 300,title="绝对误差站点分布图",
+                sup_fontsize=10,
+                height=None, width=None
+                ):
 
     error_scatter(sta_ob_and_fos,meteva.method.mae,s = s,g = g,gll = gll,group_name_list= group_name_list,
                   save_dir= save_dir,save_path = save_path,show = show,print_max =print_max,threshold = threshold,
-                  add_county_line= add_county_line,map_extend=map_extend,dpi = dpi,title = title)
+                  add_county_line= add_county_line,map_extend=map_extend,dpi = dpi,title = title,
+                  sup_fontsize=sup_fontsize,
+                  height=height, width=width
+                  )
 
 
 
 def me_scatter(sta_ob_and_fos,s= None,g = None,gll = None,group_name_list= None, save_dir=None,save_path = None,show = False,
-               print_max = 1,print_min = 1,threshold = 0,add_county_line = False,map_extend= None,dpi = 300,title="误差站点分布图"):
+               print_max = 1,print_min = 1,threshold = 0,add_county_line = False,map_extend= None,dpi = 300,title="误差站点分布图",
+               sup_fontsize=10,
+               height=None, width=None
+               ):
 
     error_scatter(sta_ob_and_fos,meteva.method.me,s = s,g = g,gll = gll,group_name_list= group_name_list,
                   save_dir= save_dir,save_path = save_path,show = show,print_max =print_max,print_min = print_min,
-                  threshold = threshold,add_county_line= add_county_line,map_extend=map_extend,dpi = dpi,title = title)
+                  threshold = threshold,add_county_line= add_county_line,map_extend=map_extend,dpi = dpi,title = title,
+                  sup_fontsize=sup_fontsize,
+                  height=height, width=width
+                  )

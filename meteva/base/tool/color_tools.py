@@ -7,84 +7,179 @@ plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
 import matplotlib.colors as colors
 import pkg_resources
 import math
+import os
 
 def clev_cmap_temper_2m_k():
     path = pkg_resources.resource_filename('meteva', "resources/colormaps/color_temp_2m.txt")
-    clev,cmap =  get_clev_and_cmap_from_file(path)
-    clev += 273.15
-    return clev,cmap
+    cmap,clevs =  get_cmap_and_clevs_from_file(path)
+    clevs += 273.15
+    print("不再推荐使用该函数，推荐使用meb.def_cmap_clevs相应功能,请参考color工具中相关说明")
+    return clevs,cmap
 
 def clev_cmap_temper_2m():
     path = pkg_resources.resource_filename('meteva', "resources/colormaps/color_temp_2m.txt")
-    return get_clev_and_cmap_from_file(path)
+    cmap, clevs = get_cmap_and_clevs_from_file(path)
+    print("不再推荐使用该函数，推荐使用meb.def_cmap_clevs相应功能,请参考color工具中相关说明")
+    return clevs, cmap
+
 def clev_cmap_rain_1h():
     path = pkg_resources.resource_filename('meteva', "resources/colormaps/color_rain_1h.txt")
-    return get_clev_and_cmap_from_file(path)
+    cmap, clevs = get_cmap_and_clevs_from_file(path)
+    print("不再推荐使用该函数，推荐使用meb.def_cmap_clevs相应功能,请参考color工具中相关说明")
+    return clevs, cmap
 def clev_cmap_rain_3h():
     path = pkg_resources.resource_filename('meteva', "resources/colormaps/color_rain_3h.txt")
-    return get_clev_and_cmap_from_file(path)
+    cmap, clevs = get_cmap_and_clevs_from_file(path)
+    print("不再推荐使用该函数，推荐使用meb.def_cmap_clevs相应功能,请参考color工具中相关说明")
+    return clevs, cmap
 def clev_cmap_rain_24h():
     path = pkg_resources.resource_filename('meteva', "resources/colormaps/color_rain_24h.txt")
-    return get_clev_and_cmap_from_file(path)
+    cmap, clevs = get_cmap_and_clevs_from_file(path)
+    print("不再推荐使用该函数，推荐使用meb.def_cmap_clevs相应功能,请参考color工具中相关说明")
+    return clevs, cmap
 def clev_cmap_rh():
     path = pkg_resources.resource_filename('meteva', "resources/colormaps/color_rh.txt")
-    return get_clev_and_cmap_from_file(path)
+    cmap, clevs = get_cmap_and_clevs_from_file(path)
+    print("不再推荐使用该函数，推荐使用meb.def_cmap_clevs相应功能,请参考color工具中相关说明")
+    return clevs, cmap
 def clev_cmap_vis():
     path = pkg_resources.resource_filename('meteva', "resources/colormaps/color_vis.txt")
-    return get_clev_and_cmap_from_file(path)
+    cmap, clevs = get_cmap_and_clevs_from_file(path)
+    print("不再推荐使用该函数，推荐使用meb.def_cmap_clevs相应功能,请参考color工具中相关说明")
+    return clevs, cmap
 def clev_cmap_wind_speed():
     path = pkg_resources.resource_filename('meteva', "resources/colormaps/color_wind_speed.txt")
-    return get_clev_and_cmap_from_file(path)
+    cmap, clevs = get_cmap_and_clevs_from_file(path)
+    print("不再推荐使用该函数，推荐使用meb.def_cmap_clevs相应功能,请参考color工具中相关说明")
+    return clevs, cmap
 def clev_cmap_cloud_total():
     path = pkg_resources.resource_filename('meteva', "resources/colormaps/color_tcdc.txt")
-    return get_clev_and_cmap_from_file(path)
+    cmap, clevs = get_cmap_and_clevs_from_file(path)
+    print("不再推荐使用该函数，推荐使用meb.def_cmap_clevs相应功能,请参考color工具中相关说明")
+    return clevs, cmap
 
 def clev_cmap_rain_1h_error():
     path = pkg_resources.resource_filename('meteva', "resources/colormaps/color_rain_1h_error.txt")
-    return get_clev_and_cmap_from_file(path)
+    cmap, clevs = get_cmap_and_clevs_from_file(path)
+    print("不再推荐使用该函数，推荐使用meb.def_cmap_clevs相应功能,请参考color工具中相关说明")
+    return clevs, cmap
 def clev_cmap_rain_3h_error():
     path = pkg_resources.resource_filename('meteva', "resources/colormaps/color_rain_3h_error.txt")
-    return get_clev_and_cmap_from_file(path)
+    cmap, clevs = get_cmap_and_clevs_from_file(path)
+    print("不再推荐使用该函数，推荐使用meb.def_cmap_clevs相应功能,请参考color工具中相关说明")
+    return clevs, cmap
 def clev_cmap_rh_error():
     path = pkg_resources.resource_filename('meteva', "resources/colormaps/color_rh_error.txt")
-    return get_clev_and_cmap_from_file(path)
+    cmap, clevs = get_cmap_and_clevs_from_file(path)
+    print("不再推荐使用该函数，推荐使用meb.def_cmap_clevs相应功能,请参考color工具中相关说明")
+    return clevs, cmap
 def clev_cmap_vis_error():
     path = pkg_resources.resource_filename('meteva', "resources/colormaps/color_vis_error.txt")
-    return get_clev_and_cmap_from_file(path)
+    cmap, clevs = get_cmap_and_clevs_from_file(path)
+    print("不再推荐使用该函数，推荐使用meb.def_cmap_clevs相应功能,请参考color工具中相关说明")
+    return clevs, cmap
 def clev_cmap_wind_speed_error():
     path = pkg_resources.resource_filename('meteva', "resources/colormaps/color_wind_speed_error.txt")
-    return get_clev_and_cmap_from_file(path)
+    cmap, clevs = get_cmap_and_clevs_from_file(path)
+    print("不再推荐使用该函数，推荐使用meb.def_cmap_clevs相应功能,请参考color工具中相关说明")
+    return clevs, cmap
 def clev_cmap_cloud_total_error():
     path = pkg_resources.resource_filename('meteva', "resources/colormaps/color_tcdc_error.txt")
-    return get_clev_and_cmap_from_file(path)
+    cmap, clevs = get_cmap_and_clevs_from_file(path)
+    print("不再推荐使用该函数，推荐使用meb.def_cmap_clevs相应功能,请参考color工具中相关说明")
+    return clevs, cmap
 
-def get_clev_and_cmap_from_file(path):
+def get_cmap_and_clevs_from_file(path):
     clev_cmap = np.loadtxt(path)
-    clev = clev_cmap[:, 0]
+    clevs = clev_cmap[:, 0]
     cmap = clev_cmap[:, 1:] / 255
     cmap = cmap.tolist()
     cmap = colors.ListedColormap(cmap, 'indexed')
-    return clev,cmap
+    return cmap,clevs
 
-def clev_cmap_bias_1(vmax):
+def cmap_clevs_bias(vmax):
+    if vmax is None:
+        print("设置bias的cmap时需要指定vmax")
     blue = np.array([0, 0, 255]) / 255
     white = np.array([255, 255, 255]) / 255
     red = np.array([255, 0, 0]) / 255
     black = np.array([0, 0, 0]) / 255
     clev_list = [0]
     cmap_list = [blue]
-    for v in range(5):
+    for v in range(1,6):
         clev_list.append(v * 0.2)
         cmap_list.append(blue * (1 - v * 0.2) + white * v * 0.2)
-    for v in range(5):
+    for v in range(1,6):
         clev_list.append(1 + v * 0.2)
         cmap_list.append(white * (1 - v * 0.2) + red * v * 0.2)
 
-    for value in range(2, vmax + 1, 1):
+    for value in range(2, int(vmax + 1), 1):
         clev_list.append(value)
         cmap_list.append((red * (vmax - value) + black * (value - 2)) / (vmax - 2))
     cmap = colors.ListedColormap(cmap_list, 'indexed')
-    return clev_list,cmap
+    return cmap,clev_list
+
+def cmap_clevs_ts():
+    clevs = np.arange(0,1.01,0.1)
+    nclev = len(clevs)
+    colors0 = cm.get_cmap("jet", nclev)
+    colors_list = []
+    for i in range(nclev):
+        colors_list.append(colors0(i))
+    cmap = colors.ListedColormap(colors_list, 'indexed')
+    return cmap,clevs
+
+def cmap_clevs_far():
+    clevs = np.arange(0,1.01,0.1)
+    nclev = len(clevs)
+    colors0 = cm.get_cmap("jet", nclev)
+    colors_list = []
+    for i in range(nclev):
+        colors_list.append(colors0(i))
+    cmap = colors.ListedColormap(colors_list, 'indexed')
+    return cmap,clevs
+
+def cmap_clevs_mr():
+    clevs = np.arange(0,1.01,0.1)
+    nclev = len(clevs)
+    colors0 = cm.get_cmap("jet", nclev)
+    colors_list = []
+    for i in range(nclev):
+        colors_list.append(colors0(i))
+    cmap = colors.ListedColormap(colors_list, 'indexed')
+    return cmap,clevs
+
+
+def cmap_clevs_error(vmax,vmin):
+
+    max_abs = max(abs(vmax),abs(vmin))
+    vmax = max_abs
+    vmin = -max_abs
+    dif = (vmax - vmin) / 10.0
+    inte = math.pow(10, math.floor(math.log10(dif)));
+    # 用基本间隔，将最大最小值除于间隔后小数点部分去除，最后把间隔也整数化
+    r = dif / inte
+    if r < 3 and r >= 1.5:
+        inte = inte * 2
+    elif r < 4.5 and r >= 3:
+        inte = inte * 4
+    elif r < 5.5 and r >= 4.5:
+        inte = inte * 5
+    elif r < 7 and r >= 5.5:
+        inte = inte * 6
+    elif r >= 7:
+        inte = inte * 8
+    vmin = inte * ((int)(vmin / inte) - 1)
+    vmax = inte * ((int)(vmax / inte) + 2)
+    clevs = np.arange(vmin, vmax, inte)
+    nclev = len(clevs)
+    colors0 = cm.get_cmap("bwr", nclev)
+    colors_list = []
+    for i in range(nclev):
+        colors_list.append(colors0(i))
+    cmap = colors.ListedColormap(colors_list, 'indexed')
+
+    return cmap,clevs
 
 def get_steps_range(line):
     num = len(line)
@@ -231,7 +326,7 @@ def get_cmap_from_picture(path,show = False):
     cmap = colors.ListedColormap(color_list, 'indexed')
     return cmap
 
-def get_clev_and_cmap_by_element_name(element_name):
+def get_cmap_and_clevs_by_element_name(element_name):
     path = None
     if element_name == "temp":
         path = pkg_resources.resource_filename('meteva', "resources/colormaps/color_temp_2m.txt")
@@ -259,10 +354,12 @@ def get_clev_and_cmap_by_element_name(element_name):
         path = pkg_resources.resource_filename('meteva', "resources/colormaps/color_tcdc.txt")
     elif element_name == "tcdc_error":
         path = pkg_resources.resource_filename('meteva', "resources/colormaps/color_tcdc_error.txt")
-    clev,cmap = get_clev_and_cmap_from_file(path)
-    return clev,cmap
+    cmap,clevs = get_cmap_and_clevs_from_file(path)
+    return cmap,clevs
 
-def get_part_clev_and_cmap(clev_all,cmap_all,vmax,vmin):
+def get_part_cmap_and_clevs(cmap_all,clev_all,vmax,vmin):
+    if len(clev_all) < 20:
+        return cmap_all,clev_all
     start_i = 0
     for i in range(len(clev_all)-1):
         if vmin<clev_all[i+1]:
@@ -272,24 +369,22 @@ def get_part_clev_and_cmap(clev_all,cmap_all,vmax,vmin):
     for i in range(len(clev_all)-1):
         if vmax > clev_all[i]:
             end_i = i+2
-    #print(start_i)
-    #print(end_i)
-    if end_i - start_i<=3:
-        end_i = start_i+3
+    if end_i - start_i<=15:
+        end_i = start_i+15
 
-    clev_part = clev_all[start_i:end_i]
+    clevs_part = clev_all[start_i:end_i]
     if hasattr(cmap_all,"colors"):
         cmap_colors = cmap_all.colors
         cmap_colors_part = cmap_colors[start_i:end_i]
         cmap_part = colors.ListedColormap(cmap_colors_part, 'indexed')
     else:
         cmap_part = cmap_all
-    return clev_part,cmap_part
+    return cmap_part,clevs_part
 
-def write_clev_and_cmap(clev,cmap,path):
-    num = len(clev)
+def write_cmap_and_clevs(cmap,clevs,path):
+    num = len(clevs)
     clev_cmap = np.zeros((num,4))
-    clev_cmap[:,0] = clev[:]
+    clev_cmap[:,0] = clevs[:]
     cmap_data = np.array(cmap.colors)
     max_data = np.max(cmap_data)
     if max_data <=1:
@@ -332,11 +427,11 @@ def show_cmap_clev(cmap,clev = None):
         max_tick = 10
         step = int(math.ceil(n_colors/max_tick))
         x = np.arange(0,n_colors,step).astype(np.int32)
-        print(x)
+        #print(x)
         ax.set_xticks(x)
         labels = []
         for i in range(x.size):
-            labels.append(clev[x[i]])
+            labels.append(round(clev[x[i]],6))
         ax.set_xticklabels(labels)
     ax.imshow(im, cmap=cmap)
 
@@ -359,52 +454,136 @@ def get_color_list(legend_num):
     return colors_list
 
 
-def reset_clevs_cmap(clevs = None,cmap = "rainbow",vmin = None,vmax = None):
-    if clevs is None and (vmin is None or vmax is None):
-        print("clev and vmin/vmax cann't be None at the same time")
-        return
-    if (vmin is None and vmax is not None) or (vmin is not None and vmax is None):
-        print("vmin and vmax must be None of not None at the same time")
+def get_cmap_and_clevs_by_name(cmap_name,vmin,vmax):
+    path = pkg_resources.resource_filename('meteva', "resources/colormaps/color_"+cmap_name+".txt")
+    if os.path.exists(path):
+        cmap,clevs = get_cmap_and_clevs_from_file(path)
+    elif cmap_name == "bias":
+        cmap,clevs = cmap_clevs_bias(vmax)
+    elif cmap_name == "error":
+        cmap,clevs = cmap_clevs_error(vmax,vmin)
+    elif cmap_name == "ts":
+        cmap,clevs= cmap_clevs_ts()
+    elif cmap_name == "far":
+        cmap,clevs = cmap_clevs_far()
+    elif cmap_name == "far":
+        cmap,clevs = cmap_clevs_far()
+    else:
+        print("该配色方案名称不识别")
+        return None,None
+    return cmap,clevs
 
-    elif clevs is not None:
+
+class cmaps:
+    rain_1h = "rain_1h"
+    rain_1h_error = "rain_1h_error"
+    rain_3h = "rain_3h"
+    rain_3h_error = "rain_3h_error"
+    rain_24h = "rain_24h"
+    rain_24h_error = "rain_24h_error"
+    temp_2m = "temp_2m"
+    temp_2m_error = "temp_2m_error"
+    rh = "rh"
+    rh_error = "rh_error"
+    vis = "vis"
+    vis_error = "vis_error"
+    wind_speed = "wind_speed"
+    wind_speed_error = "wind_speed_error"
+    tcdc = "tcdc"
+    tcdc_error  = "tcdc_error"
+    bias = "bias"
+    error = "error"
+    ts = "ts"
+    far = "far"
+    mr = "mr"
+
+
+def coordinate_cmap_to_clevs(cmap,clevs):
+    if hasattr(cmap, "colors"):
+        colors0 = np.array(cmap.colors)
+        colors_list = []
+        ncmap = len(colors0)
+        nclev = len(clevs)
+        if nclev <2:
+            print("clevs' size must bigger than 1")
+        for i in range(nclev):
+            j = i * (ncmap-1) /(nclev-1)
+            j0 = int(j)
+            j1 = min(j0 + 1,ncmap-1)
+            dj = j - j0
+            color1 = (colors0[j0, :] * (1 - dj) + colors0[j1, :] * dj)
+            colors_list.append(color1.tolist())
+        cmap_co = colors.ListedColormap(colors_list, 'indexed')
+        return cmap_co,clevs
+    else:
+        print("cmap is not colormap")
+        return
+
+
+
+def def_cmap_clevs(cmap = "rainbow",clevs = None,vmin = None,vmax = None):
+    #  # 判断是meteva自定义的颜色类型，这从meteva资源文件或函数里生成cmap1 和clevs1
+    clevs1 = None
+    cmap1 = None
+    if isinstance(cmap,str):
+        cmap_class = cmaps()
+        if hasattr(cmap_class, cmap):
+            cmap,clevs1,= get_cmap_and_clevs_by_name(cmap, vmin, vmax)
+
+    #设置clevs2
+    if clevs is None:
+        if clevs1 is None:
+            # 如果cmap字符不是meteva内集成的，则判断它是matplotlib集成的，则进一步根据最大最小值生成cmap，clevs
+            if vmin is None or vmax is None:
+                print("clev and vmin/vmax cann't be None at the same time while cmap is matplotlib strType cmap")
+                return
+            if vmax - vmin < 1e-10:
+                vmax = vmin + 1.1
+            dif = (vmax - vmin) / 10.0
+            inte = math.pow(10, math.floor(math.log10(dif)));
+            # 用基本间隔，将最大最小值除于间隔后小数点部分去除，最后把间隔也整数化
+            r = dif / inte
+            if r < 3 and r >= 1.5:
+                inte = inte * 2
+            elif r < 4.5 and r >= 3:
+                inte = inte * 4
+            elif r < 5.5 and r >= 4.5:
+                inte = inte * 5
+            elif r < 7 and r >= 5.5:
+                inte = inte * 6
+            elif r >= 7:
+                inte = inte * 8
+            vmin = inte * ((int)(vmin / inte))
+            vmax = inte * ((int)(vmax / inte)+1)
+            clevs2 = np.arange(vmin, vmax, inte)
+        else:
+            clevs2 = clevs1
+    else:
+        clevs2 = clevs
+
+    # 设置cmap2
+    if cmap1 is None:
         if isinstance(cmap,str):
-            nclev = len(clevs)
+            nclev = len(clevs2)
             colors0 = cm.get_cmap(cmap, nclev)
             colors_list = []
             for i in range(nclev):
                 colors_list.append(colors0(i))
-            cmap = colors.ListedColormap(colors_list, 'indexed')
-        if vmin is not None:
-            clevs1, cmap1 = get_part_clev_and_cmap(clevs, cmap, vmax,vmin)
+            cmap2 = colors.ListedColormap(colors_list, 'indexed')
         else:
-            clevs1, cmap1 = clevs, cmap
+            cmap2 = cmap
     else:
-        if isinstance(cmap,str):
-            if vmax - vmin < 1e-10 :
-                vmax = vmin + 1.1
-            dif=(vmax - vmin) / 10.0
-            inte=math.pow(10,math.floor(math.log10(dif)));
-            #用基本间隔，将最大最小值除于间隔后小数点部分去除，最后把间隔也整数化
-            r=dif/inte
-            if  r<3 and r>=1.5:
-                inte = inte*2
-            elif r<4.5 and r>=3 :
-                inte = inte*4
-            elif r<5.5 and r>=4.5:
-                inte=inte*5
-            elif r<7 and r>=5.5:
-                inte=inte*6
-            elif r>=7 :
-                inte=inte*8
-            vmin = inte * ((int)(vmin / inte)-1)
-            vmax = inte * ((int)(vmax / inte) + 2)
-            clevs1 = np.arange(vmin,vmax,inte)
-            cmap1 = plt.get_cmap(cmap)
-        else:
-            colors0 = np.array(cmap.colors)
-            nlevs = len(colors0)
-            inte = (vmax - vmin)/nlevs
-            clevs1 = np.arange(vmin,vmax,inte)
-            cmap1 = cmap
+        cmap2 = cmap1
 
-    return clevs1,cmap1
+
+    #将cmap2 和clev2 协调
+    cmap3,clevs3 = coordinate_cmap_to_clevs(cmap2,clevs2)
+
+    # 从cmap3 和cmap3中提取部分colorbar
+    if vmin is not None and vmax is not None:
+        cmap4,clevs4 = get_part_cmap_and_clevs(cmap3, clevs3, vmax, vmin)
+    else:
+        cmap4,clevs4  = cmap3,clevs3
+
+
+    return cmap4,clevs4

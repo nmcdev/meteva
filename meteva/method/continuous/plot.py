@@ -7,7 +7,8 @@ from sklearn.linear_model import LinearRegression
 from  matplotlib import  cm
 
 
-def scatter_regress(ob, fo,member_list = None, rtype="linear",vmax = None,vmin = None, ncol = None,save_path=None,show = False,dpi = 300, title="散点回归图"):
+def scatter_regress(ob, fo,member_list = None, rtype="linear",vmax = None,vmin = None, ncol = None,save_path=None,show = False,dpi = 300, title="散点回归图",
+                    sup_fontsize = 10,width = None,height = None):
     '''
     绘制观测-预报散点图和线性回归曲线
     :param Ob: 实况数据  任意维numpy数组
@@ -57,18 +58,22 @@ def scatter_regress(ob, fo,member_list = None, rtype="linear",vmax = None,vmin =
             ncols = 3
     else:
         ncols = ncol
+
     nrows = math.ceil(new_Fo_shape[0] / ncols)
 
-    if nrows==1:
-        if ncols <3:
-            height_fig = 3.5
+    if height is None:
+        if nrows==1:
+            if ncols <3:
+                height_fig = 3.5
+            else:
+                height_fig = 2.5
         else:
-            height_fig = 2.5
+            if ncols > nrows:
+                height_fig = 6
+            else:
+                height_fig = 7
     else:
-        if ncols > nrows:
-            height_fig = 6
-        else:
-            height_fig = 7
+        height_fig = height
 
     height_suptitle = 0.4
     height_xticks_title = 0.1
@@ -77,8 +82,11 @@ def scatter_regress(ob, fo,member_list = None, rtype="linear",vmax = None,vmin =
     width_axis = heidht_axis
     width_yticks = 0.1
     width_wspace = width_yticks * 5
-    width_fig = width_axis * ncols + width_wspace * (ncols - 1) + width_yticks
-    fontsize_sup = 10
+    if width is None:
+        width_fig = width_axis * ncols + width_wspace * (ncols - 1) + width_yticks
+    else:
+        width_fig = width
+
 
     fig = plt.figure(figsize=(width_fig,height_fig),dpi = dpi)
     for line in range(new_Fo_shape[0]):
@@ -100,7 +108,7 @@ def scatter_regress(ob, fo,member_list = None, rtype="linear",vmax = None,vmin =
             fo_rg = ob_line * np.mean(ob) / np.mean(fo)
             plt.plot(ob_line, fo_rg, color="k")
             rg_text2 = "Y = " + '%.2f' % rate + "* X"
-            plt.text(num_min + 0.05 * dmm, num_min + 0.90 * dmm, rg_text2, fontsize=0.8 * fontsize_sup, color="r")
+            plt.text(num_min + 0.05 * dmm, num_min + 0.90 * dmm, rg_text2, fontsize=0.8 * sup_fontsize, color="r")
         elif rtype == "linear":
             X = np.zeros((len(fo), 1))
             X[:, 0] = fo
@@ -111,29 +119,29 @@ def scatter_regress(ob, fo,member_list = None, rtype="linear",vmax = None,vmin =
             fo_rg = clf.predict(X)
             plt.plot(ob_line, fo_rg, color="k")
             rg_text2 = "Y = " + '%.2f' % (clf.coef_[0]) + "* X + " + '%.2f' % (clf.intercept_)
-            plt.text(num_min + 0.05 * dmm, num_min + 0.90 * dmm, rg_text2, fontsize=0.8 * fontsize_sup, color="r")
+            plt.text(num_min + 0.05 * dmm, num_min + 0.90 * dmm, rg_text2, fontsize=0.8 * sup_fontsize, color="r")
 
         plt.plot(ob_line, ob_line, '--', color="k",linewidth = 0.5)
         plt.xlim(num_min, num_max)
         plt.ylim(num_min, num_max)
-        plt.xticks(fontsize = 0.8 * fontsize_sup)
-        plt.yticks(fontsize = 0.8 * fontsize_sup)
+        plt.xticks(fontsize = 0.8 * sup_fontsize)
+        plt.yticks(fontsize = 0.8 * sup_fontsize)
 
 
         if member_list is None:
             #plt.title('预报'+str(line+1),fontsize = 0.9 * fontsize_sup)
-            plt.xlabel('预报'+str(line+1), fontsize=0.9 * fontsize_sup)
+            plt.xlabel('预报'+str(line+1), fontsize=0.9 * sup_fontsize)
         else:
             #plt.title(member_list[line],fontsize = 0.9 * fontsize_sup)
-            plt.xlabel(member_list[line], fontsize=0.9 * fontsize_sup)
+            plt.xlabel(member_list[line], fontsize=0.9 * sup_fontsize)
         #plt.xlabel("预报", fontsize=0.9 * fontsize_sup)
 
-        plt.ylabel("观测", fontsize=0.9 * fontsize_sup)
+        plt.ylabel("观测", fontsize=0.9 * sup_fontsize)
         plt.rcParams['xtick.direction'] = 'in'  # 将x轴的刻度线方向设置抄向内
         plt.rcParams['ytick.direction'] = 'in'  # 将y轴的刻度方知向设置向内
         #plt.grid(linestyle='--', linewidth=0.5)
     titlelines = title.split("\n")
-    fig.suptitle(title, fontsize=fontsize_sup, y=0.99+0.01 * len(titlelines))
+    fig.suptitle(title, fontsize=sup_fontsize, y=0.99+0.01 * len(titlelines))
 
     if save_path is None:
         show = True
@@ -147,7 +155,8 @@ def scatter_regress(ob, fo,member_list = None, rtype="linear",vmax = None,vmin =
     return None
 
 
-def pdf_plot(ob, fo,member_list = None,vmax = None,vmin = None, save_path=None,  show = False,dpi = 300,title="频率匹配检验图"):
+def pdf_plot(ob, fo,member_list = None,vmax = None,vmin = None, save_path=None,  show = False,dpi = 300,title="频率匹配检验图",
+             sup_fontsize = 10,width = None,height = None):
     '''
     sorted_ob_fo 将传入的两组数据先进行排序
     然后画出折线图
@@ -163,7 +172,6 @@ def pdf_plot(ob, fo,member_list = None,vmax = None,vmin = None, save_path=None, 
     size = len(Ob_shpe_list)
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
-    sup_fontsize = 12
     if Fo_Ob_index != Ob_shpe_list:
         print('实况数据和观测数据维度不匹配')
         return
@@ -172,8 +180,11 @@ def pdf_plot(ob, fo,member_list = None,vmax = None,vmin = None, save_path=None, 
     new_Fo = fo.reshape(new_Fo_shape)
     new_Fo_shape = new_Fo.shape
 
-    width = 10
-    height = width * 0.45
+    if width is None:
+        width = 8
+    if height is None:
+        height = width * 0.45
+
     fig = plt.figure(figsize=(width, height),dpi = dpi)
     num_max = max(np.max(ob), np.max(fo))
     num_min = min(np.min(ob), np.min(fo))
@@ -217,7 +228,7 @@ def pdf_plot(ob, fo,member_list = None,vmax = None,vmin = None, save_path=None, 
         plt.yticks(yticks, fontsize=0.8 * sup_fontsize)
         plt.xticks(fontsize=0.8 * sup_fontsize)
         plt.legend(loc="lower right")
-
+        #plt.yscale('logit')
 
     plt.subplot(1, 2, 2)
     ob_line = np.arange(num_min, num_max, dmm / 30)
@@ -255,7 +266,8 @@ def pdf_plot(ob, fo,member_list = None,vmax = None,vmin = None, save_path=None, 
     plt.close()
 
 
-def box_plot_continue(ob, fo,  member_list=None,vmax = None,vmin = None, save_path=None, show = False,dpi = 300,title="频率对比箱须图"):
+def box_plot_continue(ob, fo,  member_list=None,vmax = None,vmin = None, save_path=None, show = False,dpi = 300,title="频率对比箱须图",
+                      sup_fontsize = 10,width = None,height = None):
     '''
     box_plot 画一两组数据的箱型图
     ---------------
@@ -270,7 +282,7 @@ def box_plot_continue(ob, fo,  member_list=None,vmax = None,vmin = None, save_pa
     size = len(Ob_shpe_list)
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
-    sup_fontsize = 10
+
     if Fo_Ob_index != Ob_shpe_list:
         print('实况数据和观测数据维度不匹配')
         return
@@ -290,8 +302,6 @@ def box_plot_continue(ob, fo,  member_list=None,vmax = None,vmin = None, save_pa
     else:
         xticks.extend(member_list)
 
-
-    width = meteva.base.plot_tools.caculate_axis_width(xticks,sup_fontsize)
     #print(width)
     new_list_fo = []
     for fo_piece in list_fo:
@@ -299,15 +309,20 @@ def box_plot_continue(ob, fo,  member_list=None,vmax = None,vmin = None, save_pa
     ob = ob.flatten()
     new_list_fo.append(ob)
     tuple_of_ob = tuple(new_list_fo)
-    width = width+0.5
-    if width >10:
-        for i in range(len(xticks)):
-            if i % 2 ==1:
-                xticks[i] ="|\n" + xticks[i]
-        width = 10
-    elif width < 5:
-        width = 5
-    height = width/2
+
+    if width is None:
+        width = meteva.base.plot_tools.caculate_axis_width(xticks, sup_fontsize) +0.5
+        if width >10:
+            for i in range(len(xticks)):
+                if i % 2 ==1:
+                    xticks[i] ="|\n" + xticks[i]
+            width = 10
+        elif width < 5:
+            width = 5
+
+    if height is None:
+        height = width/2
+
     fig = plt.figure(figsize=(width, height), dpi=dpi)
 
     markersize = 5 * width * height / np.sqrt(ob.size)
