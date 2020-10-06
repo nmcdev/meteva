@@ -13,6 +13,7 @@ import struct
 from collections import OrderedDict
 import datetime
 import math
+from io import StringIO
 
 
 
@@ -347,49 +348,42 @@ def read_stadata_from_sevp(filename, element_id,level=None,time=None,data_name =
         try:
             #lines = heads.split("\n")
             file = open(filename,encoding = encoding)
-            sta1 = pd.read_csv(file, skiprows=6, sep="\s+", header=None)
-            file.close()
-            strs4 = lines[3].split()
-            time_file = meteva.base.tool.time_tools.str_to_time(strs4[1])
-            line6_list = re.findall(r'[0-9.]+', lines[5])
-            nline0 = int(line6_list[4])
+            str_lines = file.readlines()
+            if time is None:
+                strs4 = lines[3].split()
+                time_file = meteva.base.tool.time_tools.str_to_time(strs4[1])
+            else:
+                time_file = time
+            if level is None:
+                level = 0
 
-            sta_list = []
-            sta_one = sta1.iloc[0:nline0,[0,element_id]]
-            sta_one.loc[:,"id"] = line6_list[0]
-            sta_one.loc[:,"lon"] = float(line6_list[1])
-            sta_one.loc[:,"lat"] = float(line6_list[2])
-            sta_list.append(sta_one)
-            #print(sta_all)
-            dat_station = sta1.values[nline0,0:5]
-            nline_all = len(sta1.index)
-            while True:
-                nline1 = nline0 + int(dat_station[-1])+1
-                sta_one = sta1.iloc[nline0+1:nline1,[0,element_id]]
-                sta_one.loc[:,"id"] = dat_station[0]
-                sta_one.loc[:,"lon"] = float(dat_station[1])
-                sta_one.loc[:,"lat"] = float(dat_station[2])
-                sta_list.append(sta_one)
-                if nline1 >= nline_all - 1:break
-                nline0 = nline1
-                dat_station = sta1.values[nline0,0:5]
-            sta_all = pd.concat(sta_list,axis = 0)
-            sta_all["time"] = time_file
-            sta_all.columns = ["dtime",data_name,"id","lon","lat","time"]
-            sta_all.loc[:,"level"] = 0
-            sta = meteva.base.sta_data(sta_all)
-            sta[["dtime"]] = sta[["dtime"]].apply(pd.to_numeric)
-            #meteva.base.reset_id(sta)
-            #meteva.base.set_stadata_coords(sta, level=level, time=time)
-            #meteva.base.set_stadata_names(sta, data_name_list=[data_name])
-            if show:
-                print("success read from " + filename)
+            num_all = len(str_lines) - 1
+            str_lines_list = []
+            nline = 5
+            while nline< num_all:
+                str1 = str_lines[nline][:-1] +" "
+                strs = str1.split()
+                next_num = int(strs[4])
+                for i in range(1,next_num+1):
+                    e_str = str1 + str_lines[nline+i]
+                    str_lines_list.append(e_str)
+                nline += next_num+1
+            strs_all = "".join(str_lines_list)
+
+            f = StringIO(strs_all)
+            df = pd.read_csv(f,header = None,sep="\s+")
+            df = df.loc[:,[0,1,2,6,6 + element_id]]
+            df.columns = ["id", "lon", "lat", "dtime",data_name]
+            df["time"] = time_file
+            df["level"] = level
+            sta = meteva.base.sta_data(df)
             return sta
         except:
             if show:
                 exstr = traceback.format_exc()
                 print(exstr)
-            print(filename +" 文件格式异常")
+            print(filename + " 文件格式异常")
+
 
 def read_stadata_from_micaps1_2_8(filename, column, station=None, level=None,time=None, dtime=None, data_name='data0', drop_same_id=True,show = False):
     '''

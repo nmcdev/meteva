@@ -137,24 +137,29 @@ def reset_id(sta):
     返回sta站号为整型
     '''
     #print(sta)
-    values = sta['id'].values
-    #print(values)
-    if type(values[0]) == str:
-        int_id = np.zeros(len(values))
-        for i in range(len(values)):
-            strs = values[i]
-            strs_int = ""
-            for s in strs:
-                if s.isdigit():
-                    strs_int += s
+
+    id_type = str(sta["id"].dtype)
+    if id_type.find("int32") <0:
+        values = sta['id'].values
+        if id_type.find("int") >=0 or id_type.find("float") >=0:
+            int_id = values.astype(np.int32)
+            sta['id'] = int_id
+        else:
+            int_id = np.zeros(len(values))
+            for i in range(len(values)):
+                if isinstance(values[i],str):
+                    strs = values[i]
+                    strs_int = ""
+                    for s in strs:
+                        if s.isdigit():
+                            strs_int += s
+                        else:
+                            strs_int += str(ord(s))
+                    int_id[i] = int(strs_int)
                 else:
-                    strs_int += str(ord(s))
-            int_id[i] = int(strs_int)
-        int_id = int_id.astype(np.int32)
-        sta['id'] = int_id
-    if isinstance(values[0],float):
-        int_id = values.astype(np.int32)
-        sta["id"] = int_id
+                    int_id[i] = values[i]
+            int_id = int_id.astype(np.int32)
+            sta['id'] = int_id
     return
 
 
