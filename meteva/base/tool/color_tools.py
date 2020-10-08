@@ -125,7 +125,12 @@ def cmap_clevs_ts():
     colors0 = cm.get_cmap("jet", nclev)
     colors_list = []
     for i in range(nclev):
-        colors_list.append(colors0(i))
+        clev = clevs[i]
+        cl = []
+        cl[0:3] = colors0(i)[0:3]
+        cl.append(clev)
+        colors_list.append(tuple(cl))
+        #print(colors0(i))
     cmap = colors.ListedColormap(colors_list, 'indexed')
     return cmap,clevs
 
