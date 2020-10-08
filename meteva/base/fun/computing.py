@@ -192,6 +192,114 @@ def add_on_level_time_dtime_id(sta1,sta2,how = "left",default = None):
         df.columns = columns
         return df
 
+def max_on_level_time_dtime_id(sta1,sta2,how = "left",default = None):
+    if sta1 is None:
+        return sta2
+    elif sta2 is None:
+        return sta1
+    else:
+        # 删除重复行
+        df = pd.merge(sta1, sta2, on=["level","time","dtime","id"], how=how)
+        #print(len(sta1.index))
+        #print(len(sta2.index))
+        #print(len(df.index))
+        #时间，时效和层次，采用df1的
+
+        #站点取df1，df2中非缺省的
+        columns = list(sta1.columns)
+        len_c1 = len(columns)
+        columns_m = list(df.columns)
+        #print(columns_m)
+        for i in range(4,6):
+            name1 = columns_m[i]
+            name2 = columns_m[i+len_c1-4]
+            df.loc[df[name1].isnull(), name1] = df[df[name1].isnull()][name2]
+
+
+        #删除合并后第二组时空坐标信
+        drop_col = list(df.columns[len_c1:len_c1+2])
+        df.drop(drop_col, axis=1, inplace=True)
+
+        #print(df)
+        #相加前是否要先设定缺省值
+        columns_m = list(df.columns)
+        len_m = len(columns_m)
+        if default is not None:
+            for i in range(6, len_m):
+                df.iloc[:, i].fillna(default, inplace=True)
+
+        #对数据列进行相加
+        len_d = len_m - len_c1
+        for i in range(6,len_c1):
+
+            values = df[[df.columns[i],df.columns[i+len_d]]].values
+            max_value = values.max(axis = 1)
+            df[df.columns.values[i]] = max_value
+
+        #print(df)
+        #删除df2对应的数据列
+        columns_drop = list(df.columns[len_c1:len_m])
+        df.drop(columns_drop, axis=1, inplace=True)
+
+        #重新命名列名称
+        df.columns = columns
+        return df
+
+
+def min_on_level_time_dtime_id(sta1,sta2,how = "left",default = None):
+    if sta1 is None:
+        return sta2
+    elif sta2 is None:
+        return sta1
+    else:
+        # 删除重复行
+        df = pd.merge(sta1, sta2, on=["level","time","dtime","id"], how=how)
+        #print(len(sta1.index))
+        #print(len(sta2.index))
+        #print(len(df.index))
+        #时间，时效和层次，采用df1的
+
+        #站点取df1，df2中非缺省的
+        columns = list(sta1.columns)
+        len_c1 = len(columns)
+        columns_m = list(df.columns)
+        #print(columns_m)
+        for i in range(4,6):
+            name1 = columns_m[i]
+            name2 = columns_m[i+len_c1-4]
+            df.loc[df[name1].isnull(), name1] = df[df[name1].isnull()][name2]
+
+
+        #删除合并后第二组时空坐标信
+        drop_col = list(df.columns[len_c1:len_c1+2])
+        df.drop(drop_col, axis=1, inplace=True)
+
+        #print(df)
+        #相加前是否要先设定缺省值
+        columns_m = list(df.columns)
+        len_m = len(columns_m)
+        if default is not None:
+            for i in range(6, len_m):
+                df.iloc[:, i].fillna(default, inplace=True)
+
+        #对数据列进行相加
+        len_d = len_m - len_c1
+        for i in range(6,len_c1):
+
+            values = df[[df.columns[i],df.columns[i+len_d]]].values
+            min_value = values.min(axis = 1)
+            df[df.columns.values[i]] = min_value
+
+        #print(df)
+        #删除df2对应的数据列
+        columns_drop = list(df.columns[len_c1:len_m])
+        df.drop(columns_drop, axis=1, inplace=True)
+
+        #重新命名列名称
+        df.columns = columns
+        return df
+
+
 def add_on_id(sta1_0, sta2_0, how="left", default=None):
     if sta1_0 is None:
         return sta2_0
