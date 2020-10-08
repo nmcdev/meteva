@@ -969,7 +969,7 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
 
         if height is None:
             height = width / 2
-        legend_col = int(width * 0.8)
+        legend_col = int(width * 8/ sup_fontsize)
         legend_row = int(math.ceil(legend_num/legend_col))
         legend_col = int(math.ceil(legend_num/legend_row))
 
@@ -1428,11 +1428,12 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
                         plt.grid()
 
         if legend_num>1:
-            legend_col = int(width_fig *0.8)
+            legend_col = int(width_fig *8 / sup_fontsize)
             if legend_col <1:legend_col = 1
             legend_row = int(math.ceil(legend_num / legend_col))
             legend_col = int(math.ceil(legend_num / legend_row))
             by = 1  -  (height_suplegend - legend_row * sup_fontsize *0.9 * 0.03)/height_fig + 0.02
+            #print(by)
             if subplot_num >1:
                 fig.legend(fontsize = sup_fontsize *0.9,ncol = legend_col,loc = "upper center",
                        bbox_to_anchor=(0.52,by))
@@ -1566,13 +1567,13 @@ def mesh(array,name_list_dict = None,axis_x = None,axis_y = None,cmap = "rainbow
         subplot_num = len(name_list_dict[subplot])
         spasify = 1
         if ncol is not None:
-            if width_one_subplot > 10 / ncol:
+            if width_one_subplot > 8/ ncol:
                 spasify = int(math.ceil(width_axis_labels / (10 / ncol - width_wspace)))
-                width_one_subplot = 10 / ncol
+                width_one_subplot = 8/ ncol
         else:
-            if width_one_subplot > 10:
+            if width_one_subplot > 8:
                 spasify = int(math.ceil(width_axis_labels / (10 - width_wspace)))
-                width_one_subplot = 10
+                width_one_subplot = 8
 
         if spasify_xticks is not None:
             xticks_font = sup_fontsize * 0.8 * spasify_xticks * (width - width_wspace) / width_axis_labels
@@ -1601,7 +1602,8 @@ def mesh(array,name_list_dict = None,axis_x = None,axis_y = None,cmap = "rainbow
                 yticks_labels.append(str(local))
 
         if ncol is None:
-            ncol = int(8 / width_one_subplot)
+            ncol = int(round(8 / width_one_subplot))
+
             nrow = int(math.ceil(subplot_num / ncol))
             ncol = int(math.ceil(subplot_num / nrow))
         else:
@@ -2119,7 +2121,7 @@ def mesh_time_dtime(sta,save_dir = None,save_path = None,
 
     dhs_fo = sta.loc[:, "dtime"].values
     dhs_fo = list(set(dhs_fo))
-    dhs_fo.sort()
+    dhs_fo.sort(reverse = True)
     #print(times_fo)
     dhs_x = (times_fo[1:] - times_fo[0:-1])
     if isinstance(dhs_x[0], np.timedelta64):
@@ -2142,7 +2144,7 @@ def mesh_time_dtime(sta,save_dir = None,save_path = None,
 
 
     width0 = col * 0.15 + 2
-    height0 = row * 0.1 + 2
+    height0 = row * 0.15 + 2
     x_plot, x_ticks = meteva.product.get_x_ticks(times_fo, width0 - 2,row = 3)
     #sup_fontsize = 10
 
@@ -2242,7 +2244,8 @@ def mesh_time_dtime(sta,save_dir = None,save_path = None,
             ax2.set_yticks(np.arange(len(y_ticks))+0.5)
             ax2.set_yticklabels(y_ticks, rotation=360, fontsize=sup_fontsize * 0.8)
 
-            ax2.grid(linestyle='--', linewidth=0.5)
+
+            ax2.grid(linestyle='--', linewidth=min(0.5,2*width/col))
             ax2.set_ylim(row, 0)
             ax2.set_title(title[kk], loc='left', fontweight='bold', fontsize=sup_fontsize)
             rect = patches.Rectangle((0,0 ), col, row, linewidth=0.8, edgecolor='k', facecolor='none')
