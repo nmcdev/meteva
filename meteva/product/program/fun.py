@@ -170,10 +170,18 @@ def get_title_from_dict(method,s,g,group_list,model_name,title = None):
             method_str = method
         else:
             #method_str =  method.__defaults__[-1]
+
+
             method_para = method.__code__.co_varnames[:method.__code__.co_argcount]
+
             #print(method_para)
             if "title" in method_para:
-                method_str = method.__defaults__[-1]
+                len1 =   len(method_para)
+                len2 = len(method.__defaults__)
+                dlen = len1 - len2
+                for ii in range(len2):
+                    if method_para[ii+dlen] == "title":
+                        method_str = method.__defaults__[ii]
             else:
                 method_str = method.__name__.upper()
 
@@ -265,6 +273,7 @@ def get_title_from_dict(method,s,g,group_list,model_name,title = None):
             model_name = "(" + model_name + ")"
         else:
             model_name = ""
+        print()
         title1 = method_str + model_name + s_str +group_name
 
     return title1
