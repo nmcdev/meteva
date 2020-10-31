@@ -98,6 +98,21 @@ def readshapefile(shapefile, default_encoding='utf-8'):
     return coords
 
 
+def set_customized_shpfile_list(shpfile_list = None):
+    if shpfile_list is None:
+        meteva.base.customized_basemap_list = None
+    else:
+        meteva.base.customized_basemap_list = []
+        for shpfile_filename in shpfile_list:
+            if shpfile_filename.find("/") <0 and shpfile_filename.find("\\") <0:
+                shpfile = pkg_resources.resource_filename(
+                    'meteva', "resources/maps/" + shpfile_filename)
+
+                meteva.base.customized_basemap_list.append(shpfile)
+            else:
+                meteva.base.customized_basemap_list.append(shpfile_filename)
+    #print(meteva.base.customized_basemap_list)
+
 def add_china_map_2basemap(ax,name ="province", facecolor='none',
                            edgecolor='c', lw=2, encoding='utf-8', **kwargs):
     """
@@ -112,23 +127,34 @@ def add_china_map_2basemap(ax,name ="province", facecolor='none',
     :return: None.
     """
     # map name
-    names = {'world':"worldmap",'nation': "bou1_4p", 'province': "Province",
-             'county': "BOUNT_poly", 'river': "hyd1_4p",
-             'river_high': "hyd2_4p"}
 
-    names = {'world':"worldmap",'nation': "NationalBorder", 'province': "Province",
-             'county': "BOUNT_poly", 'river': "hyd1_4p",
-             'river_high': "hyd2_4p"}
-        # get shape file and information
-    shpfile = pkg_resources.resource_filename(
-        'meteva', "resources/maps/" + names[name])
-    #print(shpfile)
-    shp1 = readshapefile(shpfile, default_encoding=encoding)
-    lines = LineCollection(shp1,antialiaseds=(1,))
-    lines.set_color(edgecolor)
-    lines.set_linewidth(lw)
-    lines.set_label('_nolabel_')
-    ax.add_collection(lines)
+    if meteva.base.customized_basemap_list is None:
+        names = {'world':"worldmap",'nation': "bou1_4p", 'province': "Province",
+                 'county': "BOUNT_poly", 'river': "hyd1_4p",
+                 'river_high': "hyd2_4p"}
+
+        names = {'world':"worldmap",'nation': "NationalBorder", 'province': "Province",
+                 'county': "BOUNT_poly", 'river': "hyd1_4p",
+                 'river_high': "hyd2_4p"}
+            # get shape file and information
+        shpfile = pkg_resources.resource_filename(
+            'meteva', "resources/maps/" + names[name])
+        #print(shpfile)
+        shp1 = readshapefile(shpfile, default_encoding=encoding)
+        lines = LineCollection(shp1,antialiaseds=(1,))
+        lines.set_color(edgecolor)
+        lines.set_linewidth(lw)
+        lines.set_label('_nolabel_')
+        ax.add_collection(lines)
+    else:
+        for shpfile in meteva.base.customized_basemap_list:
+            #print(shpfile)
+            shp1 = readshapefile(shpfile, default_encoding=encoding)
+            lines = LineCollection(shp1,antialiaseds=(1,))
+            lines.set_color(edgecolor)
+            lines.set_linewidth(lw)
+            lines.set_label('_nolabel_')
+            ax.add_collection(lines)
 
 
 def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap ="rainbow",add_county_line = False,add_worldmap =False,show = False,dpi = 300,
@@ -143,12 +169,13 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap ="rainbo
 
     if height is None:
         height = 4
-    title_hight = 0.6
-    legend_hight = 0.3
+    title_hight = 0.3
+    legend_hight = 0.1
     left_plots_width  = 0.8
     right_plots_width = 0.8
     if width is None:
         width = (height - title_hight - legend_hight) * rlon / rlat + left_plots_width + right_plots_width
+    #print(width)
     fig = plt.figure(figsize=(width, height),dpi = dpi)
     rect1 = [left_plots_width / width, legend_hight/height, (width - right_plots_width - left_plots_width) / width, 1-title_hight/height]
     ax = plt.axes(rect1)
@@ -180,6 +207,7 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap ="rainbo
 
     vmax = np.max(grd.values)
     vmin = np.min(grd.values)
+
     cmap1,clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap,clevs=clevs,vmin=vmin,vmax = vmax)
     norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
     im = ax.contourf(x, y, np.squeeze(grd.values), levels=clevs1, cmap=cmap1,norm = norm)
@@ -209,7 +237,10 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap ="rainbo
     xticks_label = []
     for x in range(len(xticks)):
         xticks_label.append(str(round(xticks[x],6)))
-    xticks_label[-1] += "°E"
+    if xticks[-1] >0:
+        xticks_label[-1] ="   " +xticks_label[-1] + "°E"
+    else:
+        xticks_label[-1] ="   " +xticks_label[-1] + "°W"
     ax.set_xticks(xticks)
     ax.set_xticklabels(xticks_label,fontsize = sup_fontsize * 0.9)
 
@@ -234,8 +265,10 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap ="rainbo
     yticks = np.arange(vmin,vmax,inte)
     yticks_label = []
     for y in range(len(yticks)):
-        yticks_label.append(str(round(yticks[y],6)))
-    yticks_label[-1] += "°N"
+        if yticks[y] >= 0:
+            yticks_label.append(str(round(yticks[y],6))+"°N")
+        else:
+            yticks_label.append(str(round(-yticks[y], 6)) +"°S")
     ax.set_yticks(yticks)
     ax.set_yticklabels(yticks_label,fontsize = sup_fontsize * 0.9)
 
@@ -305,7 +338,6 @@ def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = "rai
 
     vmax = np.max(grd.values)
     vmin = np.min(grd.values)
-
     cmap1,clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap,clevs=clevs,vmin=vmin,vmax = vmax)
 
     norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
@@ -336,7 +368,10 @@ def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = "rai
     xticks_label = []
     for x in range(len(xticks)):
         xticks_label.append(str(round(xticks[x],6)))
-    xticks_label[-1] += "°E"
+    if xticks[-1] >0:
+        xticks_label[-1] ="   " +xticks_label[-1] + "°E"
+    else:
+        xticks_label[-1] ="   " +xticks_label[-1] + "°W"
     ax.set_xticks(xticks)
     ax.set_xticklabels(xticks_label,fontsize = sup_fontsize * 0.9)
 
@@ -361,8 +396,10 @@ def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = "rai
     yticks = np.arange(vmin,vmax,inte)
     yticks_label = []
     for y in range(len(yticks)):
-        yticks_label.append(str(round(yticks[y],6)))
-    yticks_label[-1] += "°N"
+        if yticks[y] >= 0:
+            yticks_label.append(str(round(yticks[y],6))+"°N")
+        else:
+            yticks_label.append(str(round(-yticks[y], 6)) +"°S")
     ax.set_yticks(yticks)
     ax.set_yticklabels(yticks_label,fontsize = sup_fontsize * 0.9)
 
@@ -378,6 +415,7 @@ def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = "rai
     plt.close()
 
 
+
 def scatter_sta(sta0,value_column=None,
                 map_extend = None,add_county_line = False,add_worldmap = False,
                 clevs=None, cmap="rainbow",
@@ -386,7 +424,7 @@ def scatter_sta(sta0,value_column=None,
                 save_path=None,show = False,dpi = 300,title=None,
                 sup_fontsize = 10,
                 height = None,width = None,
-                best_value = 0):
+                best_value = 0,grid = False,subplot = None,ncol = None):
 
     sta = sta0
     if save_path is None:
@@ -455,8 +493,6 @@ def scatter_sta(sta0,value_column=None,
     if mean_value is None:
         mean_value = np.sum(np.abs(values)) / values.size
 
-    #print(mean_value)
-
     vmax = np.max(sta_without_iv[plot_data_names].values)
     vmin = np.min(sta_without_iv[plot_data_names].values)
 
@@ -465,9 +501,9 @@ def scatter_sta(sta0,value_column=None,
     #meteva.base.tool.color_tools.show_cmap_clev(cmap1,clevs1)
 
     norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
-    pointsize = int(100 * map_area / len(sta.index))
+    pointsize = 100 * map_area / len(sta.index)
     if (pointsize > 30): pointsize = 30
-    if (pointsize < 1): pointsize = 1
+    if (pointsize < 0.1): pointsize = 0.1
     pointsize *=3
     left_low = (width + 0.1 - right_plots_width) / width
 
@@ -494,7 +530,10 @@ def scatter_sta(sta0,value_column=None,
     xticks_label = []
     for x in range(len(xticks)):
         xticks_label.append(str(round(xticks[x],6)))
-    xticks_label[-1] += "°E"
+    if xticks[-1] >0:
+        xticks_label[-1] ="   " +xticks_label[-1] + "°E"
+    else:
+        xticks_label[-1] ="   " +xticks_label[-1] + "°W"
 
 
     vmax = elat
@@ -518,42 +557,342 @@ def scatter_sta(sta0,value_column=None,
     yticks = np.arange(vmin, vmax, inte)
     yticks_label = []
     for y in range(len(yticks)):
-        yticks_label.append(str(round(yticks[y],6)))
-    yticks_label[-1] += "°N"
+        if yticks[y] >= 0:
+            yticks_label.append(str(round(yticks[y],6))+"°N")
+        else:
+            yticks_label.append(str(round(-yticks[y], 6)) +"°S")
 
-    nplot = len(plot_data_names)
+    if subplot is None:
+        nplot = len(plot_data_names)
+        if isinstance(title, list):
+            if nplot != len(title):
+                print("手动设置的title数目和要绘制的图形数目不一致")
+                return
+        if save_path is not None:
+            if isinstance(save_path,str):
+                save_path = [save_path]
+            if nplot != len(save_path):
+                print("手动设置的save_path数目和要绘制的图形数目不一致")
+                return
+        for p in range(nplot):
+            data_name = data_names[p]
+            sta_one_member = meteva.base.sele_by_para(sta,member=[data_name],drop_IV=True)
+
+            x = sta_one_member.loc[:, "lon"].values
+            y = sta_one_member.loc[:, "lat"].values
+            value = sta_one_member.loc[:, data_name].values
+
+            fig = plt.figure(figsize=(width, height),dpi = dpi)
+            rect1 = [left_plots_width / width, legend_hight / height, (width - right_plots_width - left_plots_width) / width,
+                     1 - title_hight / height]
+            ax = plt.axes(rect1)
+
+
+            if title is None:
+                try:
+                    time_str = meteva.base.tool.time_tools.time_to_str(sta.iloc[0, 1])
+                    dati_str = time_str[0:4] + "年" + time_str[4:6] + "月" + time_str[6:8] + "日" + time_str[8:10] + "时"
+                    title1 = data_name + " " + dati_str + str(sta.iloc[0,2]) + "H时效 "
+                except:
+                    print("time or dtime or level 格式错误，请更改相应数据格式或直接指定title")
+                    title1= ""
+            else:
+                #title1 = title.replace("NNN",data_name)
+                if isinstance(title,list):
+                    title1 = title[p]
+                else:
+                    title1 = title +"(" +data_name+")"
+
+            plt.title(title1,fontsize = sup_fontsize)
+
+            if slon < 70 or elon > 140 or slat < 10 or elat > 60:
+                add_worldmap = True
+            if add_worldmap:
+                add_china_map_2basemap(ax, name="world", edgecolor='k', lw=0.3, encoding='gbk', grid0=None)  # "国界"
+
+
+            add_china_map_2basemap(ax, name="nation", edgecolor='k', lw=0.3, encoding='gbk',grid0 = None)  # "省界"
+            add_china_map_2basemap(ax, edgecolor='k', lw=0.3, encoding='gbk')  # "省界"
+            if add_county_line:
+                add_china_map_2basemap(ax, name="county", edgecolor='k', lw=0.2, encoding='gbk', grid0=None)  # "县界"
+            ax.set_xlim((slon, elon))
+            ax.set_ylim((slat, elat))
+            colors = value
+            if fix_size:
+                im = ax.scatter(x, y, c=colors, cmap=cmap1, norm=norm, s=pointsize)
+            else:
+
+                area = pointsize * np.abs(value - best_value)/mean_value
+                if(threshold is not None):
+                    area[np.abs(value- best_value)<threshold] *= 0.1
+                im = ax.scatter(x, y, c=colors, cmap=cmap1, norm=norm, s=area)
+                if grid:plt.grid()
+            if print_max>0:
+                print("取值最大的"+str(print_max)+"个站点：")
+                indexs = value.argsort()[-print_max:][::-1]
+                for index in indexs:
+                    print("id:" + str(sta_one_member.iloc[index,3]) +"   lon:"+str(sta_one_member.iloc[index,4])+"  lat:" + str(sta_one_member.iloc[index,5]) +
+                          " value:"+str(sta_one_member.iloc[index,6]))
+            if print_min>0:
+                print("取值最小的"+str(print_min)+"个站点：")
+                indexs = value.argsort()[:print_min]
+                for index in indexs:
+                    print("id:" + str(sta_one_member.iloc[index,3]) +"   lon:"+str(sta_one_member.iloc[index,4])+"  lat:" + str(sta_one_member.iloc[index,5]) +
+                          " value:"+str(sta_one_member.iloc[index,6]))
+
+            colorbar_position = fig.add_axes([left_low, legend_hight / height, 0.02, 1-title_hight/height])  # 位置[左,下,宽,高]
+            plt.colorbar(im, cax=colorbar_position)
+
+
+            ax.set_xticks(xticks)
+            ax.set_xticklabels(xticks_label,fontsize = sup_fontsize * 0.8)
+
+            ax.set_yticks(yticks)
+            ax.set_yticklabels(yticks_label,fontsize = sup_fontsize * 0.8)
+
+
+            save_path1 = None
+            if save_path is None:
+                if save_dir is None:
+                    show = True
+                else:
+                    save_path1 = save_dir + "/" + data_name + ".png"
+            else:
+                save_path1 = save_path[p]
+            if save_path1 is not None:
+                meteva.base.tool.path_tools.creat_path(save_path1)
+                file1, extension = os.path.splitext(save_path1)
+                if(len(extension) ==0):
+                    print("save_path中没包含后缀，如.png等,未能输出至指定路径")
+                    return
+                extension = extension[1:]
+                plt.savefig(save_path1,format = extension,bbox_inches='tight')
+                print("图片已保存至" + save_path1)
+            if show:
+                plt.show()
+            plt.close()
+
+
+    else:
+        split = ["level","time","dtime","member"]
+        split.remove(subplot)
+        sta_list = meteva.base.split(sta0,used_coords=split)
+        ng = len(sta_list)
+
+
+        for n in range(ng):
+            sta1 = sta_list[n]
+            sta_g1,gll  = meteva.base.group(sta1,g = subplot)
+            ng1 = len(sta_g1)
+            if isinstance(title,list):
+                title1 = title[(ng1 * n):(ng1 * (n+1))]
+            else:
+                title1= title
+
+            if isinstance(save_path,list):
+                save_path1 = save_path[n]
+            else:
+                save_path1 = save_path
+
+            scatter_sta_list(sta_g1,map_extend = map_extend,add_county_line = add_county_line,
+            add_worldmap=add_worldmap,clevs = clevs,cmap = cmap,vmax=vmax,vmin = vmin,fix_size=fix_size,threshold=threshold,
+                             mean_value = mean_value,save_path = save_path1,show = show,dpi = dpi,
+                            title = title1,sup_fontsize = sup_fontsize,
+                             height=height,width= width,best_value=best_value,grid = grid,ncol = ncol)
+
+
+def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_worldmap = False,
+                clevs=None, cmap="rainbow",vmax = None,vmin = None,
+                fix_size = True,threshold = None,mean_value = None,
+                save_path=None,show = False,dpi = 300,title = None,
+                sup_fontsize = 10,
+                height = None,width = None,
+                best_value = 0,grid = False,ncol = None):
+
+    sta0 = sta0_list[0]
+    if isinstance(map_extend, list):
+        slon = map_extend[0]
+        elon = map_extend[1]
+        slat = map_extend[2]
+        elat = map_extend[3]
+        rlon = elon - slon
+        rlat = elat - slat
+    elif isinstance(map_extend, meteva.base.grid):
+        slon = map_extend.slon
+        slat = map_extend.slat
+        elon = map_extend.elon
+        elat = map_extend.elat
+        rlon = map_extend.elon - map_extend.slon
+        rlat = map_extend.elat - map_extend.slat
+    else:
+        slon0 = np.min(sta0.loc[:, "lon"].values)
+        slat0 = np.min(sta0.loc[:, "lat"].values)
+        elon0 = np.max(sta0.loc[:, "lon"].values)
+        elat0 = np.max(sta0.loc[:, "lat"].values)
+        if elon0 > 180:
+            sta = sta0.copy()
+            sta.loc[sta0["lon"] > 180, "lon"] = sta0.loc[sta0["lon"] > 180, "lon"] - 360
+            slon0 = np.min(sta.loc[:, "lon"].values)
+            elon0 = np.max(sta.loc[:, "lon"].values)
+
+        dlon0 = (elon0 - slon0) * 0.03
+        if dlon0 > 1:
+            dlon0 = 1
+        dlat0 = (elon0 - slon0) * 0.03
+        if dlat0 > 1:
+            dlat0 = 1
+        slon = slon0 - dlon0
+        elon = elon0 + dlon0
+        slat = slat0 - dlat0
+        elat = elat0 + dlat0
+        rlon = elon - slon
+        rlat = elat - slat
+
+    height_title = sup_fontsize * 0.1
+    height_bottem_xticsk = sup_fontsize * 0.05
+    height_hspace = sup_fontsize * 0.03
+
+    width_wspace = height_hspace
+
+    width_colorbar = 0.5
+    width_left_yticks = sup_fontsize * 0.1
+
+    nplot = len(sta0_list)
+    if ncol is None:
+        match_list = []
+        for i in range(nplot,0,-1):
+            ncol = i
+            nrow = int(math.ceil(len(sta0_list) / ncol))
+            rate = ncol * rlon/(nrow * rlat)
+            if rate <2 and rate > 9/16:
+                match_list.append([i,ncol * nrow - nplot])
+        if len(match_list)  ==0:
+            ncol = nplot
+        else:
+            match_array = np.array(match_list)
+            min_index = np.argmin(match_array[:,1])
+            ncol = match_array[min_index,0]
+    nrow = int(math.ceil(nplot / ncol))
+
+    if width is None and height is None:
+        width = 8
+
+    if width is None:
+        height_all_plot = height - height_title - height_bottem_xticsk - (nrow-1) * height_hspace
+        height_map = height_all_plot / nrow
+        width_map = height_map * rlon / rlat
+        width_all_plot = width_map * ncol + (ncol-1) * width_wspace
+        width = width_all_plot + width_colorbar + width_left_yticks
+    else:
+        width_all_plot = width - width_colorbar - width_left_yticks - (ncol - 1) * width_wspace
+        width_map = width_all_plot / ncol
+        height_map = width_map * rlat / rlon
+        height_all_plot = height_map * nrow + (nrow-1) * height_hspace
+        height = height_all_plot + height_title + height_bottem_xticsk
+
+
+    map_area = height_map *width_map
+
+    cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap, clevs=clevs, vmin=vmin, vmax=vmax)
+
+    norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
+    pointsize = int(100 * map_area / len(sta0_list[0].index))
+    if (pointsize > 30): pointsize = 30
+    if (pointsize < 1): pointsize = 1
+    pointsize *=3
+
+
+    vmax = elon
+    vmin = slon
+    r = rlon
+    if r <= 1:
+        inte = 0.1
+    elif r <= 5 and r > 1:
+        inte = 1
+    elif r <= 10 and r > 5:
+        inte = 2
+    elif r < 20 and r >= 10:
+        inte = 4
+    elif r <= 30 and r >= 20:
+        inte = 5
+    else:
+        inte = 10
+
+    vmin = inte * (math.ceil(vmin / inte))
+    vmax = inte * ((int)(vmax / inte) + 1)
+
+    xticks = np.arange(vmin, vmax, inte)
+    xticks_label = []
+    xticks_label_None = []
+    for x in range(len(xticks)):
+        xticks_label.append(str(round(xticks[x],6)))
+        xticks_label_None.append("")
+    if xticks[-1] >0:
+        xticks_label[-1] ="   " +xticks_label[-1] + "°E"
+    else:
+        xticks_label[-1] ="   " +xticks_label[-1] + "°W"
+
+
+    vmax = elat
+    vmin = slat
+    r = rlat
+    if r <= 1:
+        inte = 0.1
+    elif r <= 5 and r > 1:
+        inte = 1
+    elif r <= 10 and r > 5:
+        inte = 2
+    elif r < 20 and r >= 10:
+        inte = 4
+    elif r <= 30 and r >= 20:
+        inte = 5
+    else:
+        inte = 10
+
+    vmin = inte * (math.ceil(vmin / inte))
+    vmax = inte * ((int)(vmax / inte) + 1)
+    yticks = np.arange(vmin, vmax, inte)
+    yticks_label = []
+    yticks_label_None = []
+    for y in range(len(yticks)):
+        if yticks[y] >= 0:
+            yticks_label.append(str(round(yticks[y],6))+"°N")
+        else:
+            yticks_label.append(str(round(-yticks[y], 6)) +"°S")
+        yticks_label_None.append("")
+
 
     if isinstance(title, list):
         if nplot != len(title):
             print("手动设置的title数目和要绘制的图形数目不一致")
             return
 
-    if save_path is not None:
-        if isinstance(save_path,str):
-            save_path = [save_path]
-        if nplot != len(save_path):
-            print("手动设置的save_path数目和要绘制的图形数目不一致")
-            return
+
+    fig = plt.figure(figsize=(width, height), dpi=dpi)
 
     for p in range(nplot):
-        data_name = data_names[p]
-        sta_one_member = meteva.base.sele_by_para(sta,member=[data_name],drop_IV=True)
+        sta_one_member = meteva.base.sele_by_para(sta0_list[p],drop_IV=True)
+        data_name = meteva.base.get_stadata_names(sta_one_member)
 
         x = sta_one_member.loc[:, "lon"].values
         y = sta_one_member.loc[:, "lat"].values
         value = sta_one_member.loc[:, data_name].values
 
-        fig = plt.figure(figsize=(width, height),dpi = dpi)
-        rect1 = [left_plots_width / width, legend_hight / height, (width - right_plots_width - left_plots_width) / width,
-                 1 - title_hight / height]
-        ax = plt.axes(rect1)
+        pi = p % ncol
+        pj = int(p / ncol)
 
+
+        rect1 = [(width_left_yticks + pi * (width_map + width_wspace))/width,
+                 (height_bottem_xticsk + (nrow -1- pj) * (height_map + height_hspace))/height,
+                 width_map / width,
+                 height_map / height]
+        ax = plt.axes(rect1)
 
         if title is None:
             try:
-                time_str = meteva.base.tool.time_tools.time_to_str(sta.iloc[0, 1])
+                time_str = meteva.base.tool.time_tools.time_to_str(sta_one_member.iloc[0, 1])
                 dati_str = time_str[0:4] + "年" + time_str[4:6] + "月" + time_str[6:8] + "日" + time_str[8:10] + "时"
-                title1 = data_name + " " + dati_str + str(sta.iloc[0,2]) + "H时效 "
+                title1 = data_name[0] + " " + dati_str + str(sta_one_member.iloc[0,2]) + "H时效 "
             except:
                 print("time or dtime or level 格式错误，请更改相应数据格式或直接指定title")
                 title1= ""
@@ -562,9 +901,9 @@ def scatter_sta(sta0,value_column=None,
             if isinstance(title,list):
                 title1 = title[p]
             else:
-                title1 = title +"(" +data_name+")"
+                title1 = title
 
-        plt.title(title1,fontsize = sup_fontsize)
+        plt.title(title1,fontsize = sup_fontsize,pad = 0)
 
         if slon < 70 or elon > 140 or slat < 10 or elat > 60:
             add_worldmap = True
@@ -587,51 +926,45 @@ def scatter_sta(sta0,value_column=None,
             if(threshold is not None):
                 area[np.abs(value- best_value)<threshold] *= 0.1
             im = ax.scatter(x, y, c=colors, cmap=cmap1, norm=norm, s=area)
-
-        if print_max>0:
-            print("取值最大的"+str(print_max)+"个站点：")
-            indexs = value.argsort()[-print_max:][::-1]
-            for index in indexs:
-                print("id:" + str(sta_one_member.iloc[index,3]) +"   lon:"+str(sta_one_member.iloc[index,4])+"  lat:" + str(sta_one_member.iloc[index,5]) +
-                      " value:"+str(sta_one_member.iloc[index,6]))
-        if print_min>0:
-            print("取值最小的"+str(print_min)+"个站点：")
-            indexs = value.argsort()[:print_min]
-            for index in indexs:
-                print("id:" + str(sta_one_member.iloc[index,3]) +"   lon:"+str(sta_one_member.iloc[index,4])+"  lat:" + str(sta_one_member.iloc[index,5]) +
-                      " value:"+str(sta_one_member.iloc[index,6]))
-
-        colorbar_position = fig.add_axes([left_low, legend_hight / height, 0.02, 1-title_hight/height])  # 位置[左,下,宽,高]
-        plt.colorbar(im, cax=colorbar_position)
+            if grid:plt.grid()
 
 
-        ax.set_xticks(xticks)
-        ax.set_xticklabels(xticks_label,fontsize = sup_fontsize * 0.8)
-
-        ax.set_yticks(yticks)
-        ax.set_yticklabels(yticks_label,fontsize = sup_fontsize * 0.8)
-
-
-        save_path1 = None
-        if save_path is None:
-            if save_dir is None:
-                show = True
-            else:
-                save_path1 = save_dir + "/" + data_name + ".png"
+        knext_row = pi + (pj + 1) * ncol
+        if knext_row >= nplot:
+            ax.set_xticks(xticks)
+            ax.set_xticklabels(xticks_label, fontsize=sup_fontsize * 0.8)
         else:
-            save_path1 = save_path[p]
-        if save_path1 is not None:
-            meteva.base.tool.path_tools.creat_path(save_path1)
-            file1, extension = os.path.splitext(save_path1)
-            if(len(extension) ==0):
-                print("save_path中没包含后缀，如.png等,未能输出至指定路径")
-                return
-            extension = extension[1:]
-            plt.savefig(save_path1,format = extension,bbox_inches='tight')
-            print("图片已保存至" + save_path1)
-        if show:
-            plt.show()
-        plt.close()
+            ax.set_xticks(xticks)
+            ax.set_xticklabels(xticks_label_None, fontsize=sup_fontsize * 0.8)
+
+        if pi ==0:
+            ax.set_yticks(yticks)
+            ax.set_yticklabels(yticks_label, fontsize=sup_fontsize * 0.8)
+        else:
+            ax.set_yticks(yticks)
+            ax.set_yticklabels(yticks_label_None, fontsize=sup_fontsize * 0.8)
+
+    left_low = (width_left_yticks + ncol * (width_map  + width_wspace))/width
+    colorbar_position = fig.add_axes([left_low, height_bottem_xticsk / height,0.02, height_all_plot/height])  # 位置[左,下,宽,高]
+    cb = plt.colorbar(im, cax=colorbar_position)
+    cb.ax.tick_params(labelsize=sup_fontsize *0.8)  #设置色标刻度字体大小。
+    if save_path is None:
+        show = True
+
+    if save_path is not None:
+        meteva.base.tool.path_tools.creat_path(save_path)
+        file1, extension = os.path.splitext(save_path)
+        if(len(extension) ==0):
+            print("save_path中没包含后缀，如.png等,未能输出至指定路径")
+            return
+        extension = extension[1:]
+        plt.savefig(save_path,format = extension,bbox_inches='tight')
+        print("图片已保存至" + save_path)
+    if show:
+        plt.show()
+    plt.close()
+
+
 
 
 def set_plot_IV(dat0):
@@ -1177,7 +1510,6 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
         width_one_subplot = width_axis +width_wspace
         if width_one_subplot <2:width_one_subplot = 2
         subplot_num = len(name_list_dict[subplot])
-
         spasify = 1
 
 
@@ -1193,7 +1525,7 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
 
 
         if spasify_xticks is not None:
-            xticks_font = sup_fontsize * 0.8 * spasify_xticks * (width - width_wspace) / width_axis_labels
+            xticks_font = sup_fontsize * 0.8 * spasify_xticks * (width_one_subplot - width_wspace) / width_axis_labels
             spasify = spasify_xticks
         else:
             xticks_font = sup_fontsize * 0.8
