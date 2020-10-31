@@ -23,7 +23,7 @@ def group(sta_ob_and_fos,g = None,gll = None):
         valid_group = ["level","time","time_range","year","month","day","dayofyear","hour",
                        "ob_time","ob_time_range","ob_year","ob_month","ob_day","ob_dayofyear","ob_hour",
                        "dtime","dtime_range","dday","dhour","id","lon_range","lon_step","lat_range","lat_step","last_range","last_step","grid",
-                       "province_name"]
+                       "province_name","member"]
 
         sta_names = meteva.base.get_stadata_names(sta_ob_and_fos)
         if not g in valid_group and not g in sta_names:
@@ -434,6 +434,14 @@ def group(sta_ob_and_fos,g = None,gll = None):
                 valid_group_list_list.append([key])
                 sta1 = grouped_dict[key].drop([g], axis=1)
                 sta_ob_and_fos_list.append(sta1)
+        elif g== "member":
+            if group_list_list is None:
+                group_list_list = meteva.base.get_stadata_names(sta_ob_and_fos)
+            for group_list in group_list_list:
+                sta = meteva.base.in_member_list(sta_ob_and_fos,group_list)
+                if sta is not None and len(sta.index) != 0:
+                    valid_group_list_list.append(group_list)
+                    sta_ob_and_fos_list.append(sta)
 
         else:
             if group_list_list is None:
