@@ -32,6 +32,8 @@ def sta_data(df,columns = None):
     sta = copy.deepcopy(df)
 
     sta.columns = columns
+    if "id" not in columns:
+        sta["id"] = meteva.base.IV
     reset_id(sta)
     sta.reset_index(inplace=True)
 
