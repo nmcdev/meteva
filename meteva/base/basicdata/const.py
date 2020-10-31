@@ -13,3 +13,4 @@ station_国家站_考核区域站 = pkg_resources.resource_filename('meteva', "r
 station_全球城市 = pkg_resources.resource_filename('meteva', "resources/stations/station_global_alt_11621.txt")
 station_全球重点城市 = pkg_resources.resource_filename('meteva', "resources/stations/sta_global_alt_243.txt")
 gds_ip_port = None
+customized_basemap_list = None
