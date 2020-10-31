@@ -267,7 +267,6 @@ def read_stadata_from_csv(filename, columns, member_list,skiprows=0,level = None
                 index = columns.index("time")
                 sta0 = pd.read_csv(file_sta, skiprows=skiprows,  header=None,sep=sep,parse_dates=[index])
                 sta0.columns = columns
-
             else:
                 sta0 = pd.read_csv(file_sta, skiprows=skiprows, header=None, sep=sep)
                 sta0.columns = columns
@@ -283,13 +282,16 @@ def read_stadata_from_csv(filename, columns, member_list,skiprows=0,level = None
             station_column.extend(member_list)
             sta1 = sta0[station_column]
             nsta = len(sta1.index)
-            for i in range(nsta):
-                if sta1.loc[i, 'lon'] > 1000:
-                    a = sta1.loc[i, 'lon'] // 100 + (a % 100) / 60
-                    sta1.loc[i, 'lon'] = a
-                if sta1.loc[i, 'lat'] > 1000:
-                    a = sta1.loc[i, 'lat'] // 100 + (a % 100) / 60
-                    sta1.loc[i, 'lat'] = a
+            if "lon" in station_column:
+                for i in range(nsta):
+                    if sta1.loc[i, 'lon'] > 1000:
+                        a = sta1.loc[i, 'lon'] // 100 + (a % 100) / 60
+                        sta1.loc[i, 'lon'] = a
+            if "lat" in station_column:
+                for i in range(nsta):
+                    if sta1.loc[i, 'lat'] > 1000:
+                        a = sta1.loc[i, 'lat'] // 100 + (a % 100) / 60
+                        sta1.loc[i, 'lat'] = a
             # sta = bd.sta_data(sta1)
             sta = meteva.base.basicdata.sta_data(sta1)
 
@@ -459,6 +461,48 @@ def read_stadata_from_micaps1_2_8(filename, column, station=None, level=None,tim
             return None
 
 
+def read_stadata_from_micaps41_lightning(filename, column, level=0,data_name='data0', show = False,keep_millisecond = False):
+    '''
+        read_from_micaps41  读取m41格式的文件
+        :param filename: 文件路径
+        :param column: 选取哪列要素  4-len
+        :param station: 站号 默认为None
+        :param drop_same_id: 是否要删除相同id的行  默认为True
+        :return:
+        '''
+    if not os.path.exists(filename):
+        print(filename + "文件不存在")
+        return None
+    else:
+        encoding, heads = meteva.base.io.get_encoding_of_file(filename, read_rows=2)
+        if encoding is None:
+            print("文件编码格式不识别")
+            return None
+
+        try:
+            file = open(filename, encoding=encoding)
+            sta1 = pd.read_csv(file, skiprows=2, sep="\s+", header=None, usecols=[0, 1, 4,5,column])
+            sta1.columns = ['id','time', 'lon', 'lat', data_name]
+            sta1['time'] = pd.to_datetime(sta1['time'],format="%Y%m%d%H%M%S%f")
+            if not keep_millisecond:
+                sta1['time'] = sta1['time'].dt.ceil("S")
+            sta2 = meteva.base.basicdata.sta_data(sta1)
+
+            sta2.loc[:, "level"] = level
+            sta2.loc[:, "dtime"] = 0
+
+            if show:
+                print("success read from " + filename)
+            return sta2
+
+        except:
+            if show:
+                exstr = traceback.format_exc()
+                print(exstr)
+            print(filename + "文件格式不能识别。可能原因：文件未按micaps第41类格式存储")
+            return None
+
+
 def set_io_config(filename):
     if os.path.exists(filename):
         try:
@@ -539,7 +583,7 @@ def read_stadata_from_gds(filename,element_id = None,station = None, level=None,
 
                 # read head information
                 head_info = np.frombuffer(byteArray[0:288], dtype=head_dtype)
-
+                #print(head_info)
                 if time is None:
                     time = datetime.datetime(
                         head_info['year'][0], head_info['month'][0],
