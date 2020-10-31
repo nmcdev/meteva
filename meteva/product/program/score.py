@@ -185,8 +185,9 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
         keys = list(name_list_dict.keys())
         if fo_num ==1:
             if grade_num > 1:
-                legend = keys[0]
-                axis = keys[2]
+                print(keys)
+                legend = keys[2]
+                axis = keys[0]
             else:
                 axis = keys[0]
                 legend = keys[1]
