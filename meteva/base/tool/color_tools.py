@@ -530,6 +530,7 @@ def def_cmap_clevs(cmap = "rainbow",clevs = None,vmin = None,vmax = None):
     #  # 判断是meteva自定义的颜色类型，这从meteva资源文件或函数里生成cmap1 和clevs1
     clevs1 = None
     cmap1 = None
+
     if isinstance(cmap,str):
         cmap_class = cmaps()
         if hasattr(cmap_class, cmap):
@@ -558,8 +559,9 @@ def def_cmap_clevs(cmap = "rainbow",clevs = None,vmin = None,vmax = None):
                 inte = inte * 6
             elif r >= 7:
                 inte = inte * 8
+
             vmin = inte * ((int)(vmin / inte))
-            vmax = inte * ((int)(vmax / inte)+1)
+            vmax = inte * ((int)(vmax / inte)+1.5)
             clevs2 = np.arange(vmin, vmax, inte)
         else:
             clevs2 = clevs1
@@ -589,6 +591,5 @@ def def_cmap_clevs(cmap = "rainbow",clevs = None,vmin = None,vmax = None):
         cmap4,clevs4 = get_part_cmap_and_clevs(cmap3, clevs3, vmax, vmin)
     else:
         cmap4,clevs4  = cmap3,clevs3
-
 
     return cmap4,clevs4
