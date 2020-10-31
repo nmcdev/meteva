@@ -242,10 +242,6 @@ def max_of_sta(sta,used_coords = ["member"],span = None,keep_all = True):
             return rain_ac
 
 
-
-
-
-
 def min_of_sta(sta,used_coords = ["member"],span = None,keep_all = True):
     if not isinstance(used_coords,list):
         used_coords = [used_coords]
@@ -478,3 +474,28 @@ def sum_of_grd(grd,used_coords = ["member"]):
     dat = np.sum(dat,axis = 0)
     grd1 = meteva.base.basicdata.grid_data(grid1,dat)
     return grd1
+
+
+
+def time_ceilling(sta,step = 1, time_unit = "h",begin_hour= 8):
+    '''
+    将不规则时间观测数据累计到固定步长的整点时刻
+    :param sta: 站点数据，例如原始的闪电观测数据
+    :param step:  累计的步长
+    :param time_unit: 累计的时间单位，可选项包括 “H"和”M"，分别代表小时和分钟。
+    :param begin_hour: 时间类型，当累计步长超过1小时,例如3小时，起步累计的时间是从08时还是00时，通常对北京时数据来说以08时起步，世界时则以00时起步
+    :return:
+    '''
+    sta1 = sta.copy()
+    time0 = datetime.datetime(2000,1,1,begin_hour,0)
+    if time_unit.lower() == "h":
+        step *= 3600
+    else:
+        step *= 60
+    delta = ((sta["time"] - time0)/np.timedelta64(1,"s")).values
+    delta =np.ceil(delta/step) * step
+    sta1["time"] = time0
+    sta1["time"] += delta * np.timedelta64(1, "s")
+    return sta1
+
+
