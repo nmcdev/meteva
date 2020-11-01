@@ -560,8 +560,9 @@ def def_cmap_clevs(cmap = "rainbow",clevs = None,vmin = None,vmax = None):
             elif r >= 7:
                 inte = inte * 8
 
-            vmin = inte * ((int)(vmin / inte))
-            vmax = inte * ((int)(vmax / inte)+1.5)
+
+            vmin = inte * (math.floor(vmin / inte))
+            vmax = inte * (math.ceil(vmax / inte)+0.5)
             clevs2 = np.arange(vmin, vmax, inte)
         else:
             clevs2 = clevs1
