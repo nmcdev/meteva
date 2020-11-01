@@ -12,7 +12,7 @@ Other required packages:
    pandas>=0.20.0  
    xarray>=0.11.0  
    scikit-learn>=0.21.2  
-   matplotlib>=3.0.1  
+   matplotlib>=3.3.1  
    httplib2>=0.12.0  
    protobuf>=3.6.1  
    netCDF4>=1.4.2  
