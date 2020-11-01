@@ -684,7 +684,7 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
 
             vmin = np.min(dat[dat != meteva.base.IV])
             vmax = np.max(dat[dat != meteva.base.IV])
-
+            #print(vmax)
             if plot_error:
                 if height is None:
                     height = (width * row / col + 2) * 2
@@ -752,7 +752,7 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
                 cmap = plt.get_cmap("rainbow")
                 cmap_part = cmap
             if clev is not None:
-                clev_part,cmap_part = meteva.base.tool.color_tools.get_part_clev_and_cmap(clev,cmap,vmax,vmin)
+                cmap_part ,clev_part= meteva.base.tool.color_tools.get_part_cmap_and_clevs(cmap,clev,vmax,vmin)
                 vmax = clev_part[-1]
                 vmin = 2 * clev_part[0] - clev_part[1]
             sns.heatmap(dat.T, ax=ax2, mask=mask, cmap=cmap_part, vmin=vmin, vmax=vmax, center=None, robust=False, annot=annot,fmt='.0f'
@@ -819,14 +819,14 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
 def time_list_mesh_temp(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,show = False,dpi = 300,annot =True,
                         title = "温度预报准确性和稳定性对比图",
                         sup_fontsize = 10,width = None,height = None):
-    clev, cmap= meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("temp")
+    cmap,clev= meteva.base.tool.color_tools.get_cmap_and_clevs_by_element_name("temp")
     time_list_mesh(sta_ob_and_fos0,s,save_dir,save_path,clev,cmap,plot_error,cmap_error= "bwr",show = show,dpi = dpi ,annot = annot,
     title = title,sup_fontsize= sup_fontsize,width=width,height=height)
 
 def time_list_mesh_rain01h(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,show = False,dpi = 300,annot =True,
                            title = "1小时降水量预报准确性和稳定性对比图",
                            sup_fontsize = 10,width = None,height = None):
-    clev, cmap= meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("rain_1h")
+    cmap,clev= meteva.base.tool.color_tools.get_cmap_and_clevs_by_element_name("rain_1h")
     #clev_error, cmap_error = meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("rain_1h_error")
     time_list_mesh(sta_ob_and_fos0,s,save_dir,save_path,clev,cmap,plot_error,show = show,xtimetype="right",dpi = dpi ,annot = annot,
     title = title,sup_fontsize= sup_fontsize,width=width,height=height)
@@ -834,7 +834,7 @@ def time_list_mesh_rain01h(sta_ob_and_fos0,s = None,save_dir = None,save_path = 
 def time_list_mesh_rain03h(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,show = False,dpi = 300,annot =True,
                            title = "3小时降水量预报准确性和稳定性对比图",
                            sup_fontsize = 10,width = None,height = None):
-    clev, cmap= meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("rain_3h")
+    cmap,clev= meteva.base.tool.color_tools.get_cmap_and_clevs_by_element_name("rain_3h")
     #clev_error, cmap_error = meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("rain_3h_error")
     time_list_mesh(sta_ob_and_fos0, s, save_dir, save_path, clev, cmap, plot_error, show=show,
                     xtimetype="right",dpi = dpi ,annot = annot,
@@ -843,7 +843,7 @@ def time_list_mesh_rain03h(sta_ob_and_fos0,s = None,save_dir = None,save_path = 
 def time_list_mesh_rh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,show = False,dpi = 300,annot =True,
                       title = "相对湿度预报准确性和稳定性对比图",
                       sup_fontsize = 10,width = None,height = None):
-    clev, cmap= meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("rh")
+    cmap,clev= meteva.base.tool.color_tools.get_cmap_and_clevs_by_element_name("rh")
     #clev_error, cmap_error = meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("rh_error")
     time_list_mesh(sta_ob_and_fos0,s,save_dir,save_path, clev, cmap, plot_error,show = show,dpi = dpi ,annot = annot,
     title = title,sup_fontsize= sup_fontsize,width=width,height=height)
@@ -851,7 +851,7 @@ def time_list_mesh_rh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
 def time_list_mesh_vis(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,show = False,dpi = 300,annot =True,
                        title = "能见度预报准确性和稳定性对比图",
                        sup_fontsize = 10,width = None,height = None):
-    clev, cmap= meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("vis")
+    cmap,clev= meteva.base.tool.color_tools.get_cmap_and_clevs_by_element_name("vis")
     #clev_error,cmap_error = meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("vis_error")
     time_list_mesh(sta_ob_and_fos0,s,save_dir,save_path,clev,cmap,plot_error,show = show,dpi = dpi ,annot = annot,
     title = title,sup_fontsize= sup_fontsize,width=width,height=height)
@@ -860,7 +860,7 @@ def time_list_mesh_vis(sta_ob_and_fos0,s = None,save_dir = None,save_path = None
 def time_list_mesh_tcdc(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,show = False,dpi = 300,annot =True,
                         title = "云量预报准确性和稳定性对比图",
                         sup_fontsize = 10,width = None,height = None):
-    clev, cmap= meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("tcdc")
+    cmap,clev= meteva.base.tool.color_tools.get_cmap_and_clevs_by_element_name("tcdc")
     #clev_error, cmap_error = meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("tcdc_error")
     time_list_mesh(sta_ob_and_fos0,s,save_dir,save_path,clev,cmap,plot_error = plot_error,show = show,dpi = dpi ,annot = annot,
     title = title,sup_fontsize= sup_fontsize,width=width,height=height)
@@ -1107,10 +1107,10 @@ def time_list_mesh_wind(sta_ob_and_fos0,s = None,save_dir = None,save_path = Non
 
             vmin = np.min(dat_speed[dat_speed != meteva.base.IV])
             vmax = np.max(dat_speed[dat_speed != meteva.base.IV])
-            clev, cmap = meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("wind_speed")
+            cmap,clev= meteva.base.tool.color_tools.get_cmap_and_clevs_by_element_name("wind_speed")
             # print(vmax)
             # print(vmin)
-            clev_part, cmap_part = meteva.base.tool.color_tools.get_part_clev_and_cmap(clev, cmap, vmax, vmin)
+            cmap_part,clev_part  = meteva.base.tool.color_tools.get_part_cmap_and_clevs(cmap,clev, vmax, vmin)
             vmax = clev_part[-1]
             vmin = 2 * clev_part[0] - clev_part[1]
 
@@ -1326,7 +1326,7 @@ def time_list_mesh_wind1(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
                             diff_v[j,i] = dat_v[j,i] - top_value
 
                 maxd = np.max(np.abs(diff_speed))
-                clev, cmap_error = meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("wind_speed_error")
+                cmap_error,clev= meteva.base.tool.color_tools.get_cmap_and_clevs_by_element_name("wind_speed_error")
 
                 sns.heatmap(diff_speed, ax=ax1, mask=mask, cmap=cmap_error, vmin=-maxd, vmax=maxd)
                 #sns.heatmap(dvalue.T, ax=ax1, mask=mask, cmap=cmap_error, vmin=-maxd, vmax=maxd, center=None, robust=False, annot=True,
@@ -1359,10 +1359,10 @@ def time_list_mesh_wind1(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
 
             vmin = np.min(dat_speed[dat_speed != meteva.base.IV])
             vmax = np.max(dat_speed[dat_speed != meteva.base.IV])
-            clev, cmap = meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("wind_speed")
+            cmap,clev= meteva.base.tool.color_tools.get_cmap_and_clevs_by_element_name("wind_speed")
             #print(vmax)
             #print(vmin)
-            clev_part,cmap_part = meteva.base.tool.color_tools.get_part_clev_and_cmap(clev,cmap,vmax,vmin)
+            clev_part,cmap_part = meteva.base.tool.color_tools.get_part_cmap_and_clevs(clev,cmap,vmax,vmin)
             vmax = clev_part[-1]
             vmin = 2 * clev_part[0] - clev_part[1]
 

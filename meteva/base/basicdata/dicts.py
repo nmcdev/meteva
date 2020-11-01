@@ -598,6 +598,9 @@ class m1_element_column_environment:
     标志1=  22
     标志2=  23
 
+
+
+
 m1_element_column_dict_environment = {
 '站号' : 0,
 '经度' : 1,
@@ -624,3 +627,49 @@ m1_element_column_dict_environment = {
 '标志1' : 22,
 '标志2' : 23,
 }
+
+
+
+class m41_element_column:
+    id = 0
+    time = 1
+    单位代码 = 2
+    闪电的种类 = 3
+    lon = 4
+    lat = 5
+    alt = 6
+    回击数 = 7
+    上升时间 = 8
+    衰减时间 = 9
+    归一化电流强度值 = 10
+    闪电能量 = 11
+    误差 = 12
+    算法代码 = 13
+    陡度 = 14
+
+
+m41_element_column_dict_environment = {
+'id' : 0,
+'time' : 1,
+'单位代码' : 2,
+'闪电的种类' : 3,
+'lon' : 4,
+'lat' : 5,
+'alt' : 6,
+'回击数' : 7,
+'上升时间' : 8,
+'衰减时间' : 9,
+'归一化电流强度值' : 10,
+'闪电能量' : 11,
+'误差' : 12,
+'算法代码' : 13,
+'陡度' : 14,
+}
+
+
+class shpfile:
+    world = "worldmap"
+    china = "NationalBorder"
+    province = "Province"
+    county = "BOUNT_poly"
+    river = "hyd1_4p"

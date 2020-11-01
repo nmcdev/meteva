@@ -58,6 +58,8 @@ para_example= {
     "output_dir":r"H:\task\other\202009-veri_objective_method"
 }
 
+
+
 def prepare_dataset(para):
     '''
 
@@ -121,8 +123,55 @@ def prepare_dataset(para):
     sta_all = meteva.base.combine_on_obTime_id(sta_ob,sta_fo_list)
     print(time.time() - start)
     output_file = para["output_dir"] + "/" + para["hdf_file_name"]
+    meteva.base.creat_path(output_file)
     sta_all.to_hdf(output_file, "df")
     print("success combined data to " + output_file)
+
+
+
+
+def prepare_dataset_without_combining(para):
+    '''
+
+    :param para: 根据配置参数从站点和网格数据中读取数据插值到指定站表上，在存储成hdf格式文件，然后从hdf格式文件中读取相应的文件合并成检验要的数据集合文件
+    :return:
+    '''
+
+    # 全局参数预处理，站点列表的读取
+    station = meteva.base.read_station(para["station_file"])
+    station.iloc[:,-1] = para["defalut_value"]
+    para["station"] = station
+
+    #全局参数预处理，起止日期的处理
+    #day_num = para["day_num"]
+    end_time = para["end_time"]
+    if end_time is None:
+        end_time = datetime.datetime.now()
+    end_date = datetime.datetime(end_time.year, end_time.month, end_time.day, 0, 0) + datetime.timedelta(days=1)
+
+    begin_time = para["begin_time"]
+    if begin_time is None:
+        begin_time = end_time - datetime.timedelta(days=7)
+    begin_date = datetime.datetime(begin_time.year, begin_time.month, begin_time.day, 0, 0)
+
+    para["begin_date"] = begin_date
+    para["end_date"] = end_date
+    para["day_num"] = int((end_date - begin_date).total_seconds()/3600/24)
+
+    elements = para["ob_data"].keys()
+    for ele in elements:
+        para1 = copy.deepcopy(para)
+        hdf_path = para["ob_data"][ele]["hdf_dir"] + "/" + para["hdf_file_name"]
+        para1["ob_data"] = para["ob_data"][ele]
+        para1["ob_data"]["hdf_path"] = hdf_path
+        creat_ob_dataset(para1,ele)
+
+    models = para["fo_data"].keys()
+    for model in models:
+        hdf_path = para["fo_data"][model]["hdf_dir"] + "/" + para["hdf_file_name"]
+        para["fo_data"][model]["hdf_path"] = hdf_path
+        creat_fo_dataset(model,para)
+
 
 
 def creat_fo_dataset(model,para):
@@ -163,7 +212,15 @@ def creat_fo_dataset(model,para):
             dtimes = np.arange(0, 721, 1).tolist()
     else:
         data_left = meteva.base.sele_by_para(data0, time_range=[begin_date, end_date])
-        meteva.base.set_stadata_names(data_left,model)
+        data_name0 = meteva.base.get_stadata_names(data_left)
+        print(data_name0)
+        if len(data_name0) == 2:
+            data_name1 = [model + "_u", model + "_v"]
+        else:
+            data_name1 = [model]
+        meteva.base.set_stadata_names(data_left, data_name1)
+
+        #meteva.base.set_stadata_names(data_left,model)
         sta_list.append(data_left)
         #id0 = station["id"].values[0]
         #data_id0 = meteva.base.sele_by_para(data0, id=id0)
@@ -238,7 +295,12 @@ def creat_fo_dataset(model,para):
                             else:
                                 dat = meteva.base.put_stadata_on_station(dat,station)
                             meteva.base.set_stadata_coords(dat,time = time1,dtime = dt)
-                            meteva.base.set_stadata_names(dat,model)
+                            data_name0 = meteva.base.get_stadata_names(dat)
+                            if len(data_name0) ==2:
+                                data_name1 = [model +"_u",model+"_v"]
+                            else:
+                                data_name1 = [model]
+                            meteva.base.set_stadata_names(dat,data_name1)
                             sta_list.append(dat)
                             print("success read data from " + path)
                         else:
@@ -261,9 +323,9 @@ def creat_fo_dataset(model,para):
 
 
 
-def creat_ob_dataset(para):
+def creat_ob_dataset(para,ele = "ob"):
     station = para["station"]
-    data_name ="ob"
+    data_name =ele
     day_num = para["day_num"] + 1
     end_date = para["end_date"]
     begin_date = para["begin_date"]
@@ -290,7 +352,9 @@ def creat_ob_dataset(para):
             hours = np.arange(0, 24, 1).tolist()
     else:
         data_left = meteva.base.sele_by_para(data0, time_range=[begin_date, end_date])
-        meteva.base.set_stadata_names(data_left, data_name)
+        data_name0 = meteva.base.get_stadata_names(data_left)
+        if len(data_name0) == 1:
+            meteva.base.set_stadata_names(data_left, data_name)
         sta_list.append(data_left)
         #id0 = station["id"].values[0]
         #data_id0 = meteva.base.sele_by_para(data0, id=id0)
@@ -334,7 +398,9 @@ def creat_ob_dataset(para):
                             dat = interp(dat,station)
                         if reasonable_value is not None:
                             dat = meteva.base.sele_by_para(dat,value=reasonable_value)
-                        meteva.base.set_stadata_names(dat,data_name)
+                        data_name0 = meteva.base.get_stadata_names(dat)
+                        if len(data_name0) == 1:
+                            meteva.base.set_stadata_names(dat,data_name)
                         meteva.base.set_stadata_coords(dat,time = time1)
 
                         sta_list.append(dat)

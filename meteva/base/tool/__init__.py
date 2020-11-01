@@ -16,5 +16,5 @@ from .time_tools import all_type_timedelta_to_timedelta64,all_type_timedelta_to_
 from .grib_tools import grib_to_nc
 from .station_tools import get_station_id_name_dict,station_id_name_dict,station_name_id_dict,find_station_id_by_city_name,get_station_format_province_set
 from .process_tools import multi_run
-from .plot_tools import contourf_2d_grid,pcolormesh_2d_grid,scatter_sta,bar,plot,mesh
+from .plot_tools import contourf_2d_grid,pcolormesh_2d_grid,scatter_sta,bar,plot,mesh,set_customized_shpfile_list
 from .color_tools import cmaps,def_cmap_clevs
