@@ -5,7 +5,7 @@ from setuptools import find_packages, setup
 from codecs import open
 name = "meteva"
 author ="liucouhua,daikan,wangbaoli"
-version ="1.4.1"
+version ="1.4.1.1"
 
 here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
