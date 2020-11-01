@@ -424,7 +424,7 @@ def scatter_sta(sta0,value_column=None,
                 save_path=None,show = False,dpi = 300,title=None,
                 sup_fontsize = 10,
                 height = None,width = None,
-                best_value = 0,grid = False,subplot = None,ncol = None):
+                min_spot_value = 0,grid = False,subplot = None,ncol = None):
 
     sta = sta0
     if save_path is None:
@@ -622,9 +622,9 @@ def scatter_sta(sta0,value_column=None,
                 im = ax.scatter(x, y, c=colors, cmap=cmap1, norm=norm, s=pointsize)
             else:
 
-                area = pointsize * np.abs(value - best_value)/mean_value
+                area = pointsize * np.abs(value - min_spot_value)/mean_value
                 if(threshold is not None):
-                    area[np.abs(value- best_value)<threshold] *= 0.1
+                    area[np.abs(value- min_spot_value)<threshold] *= 0.1
                 im = ax.scatter(x, y, c=colors, cmap=cmap1, norm=norm, s=area)
                 if grid:plt.grid()
             if print_max>0:
@@ -698,7 +698,7 @@ def scatter_sta(sta0,value_column=None,
             add_worldmap=add_worldmap,clevs = clevs,cmap = cmap,vmax=vmax,vmin = vmin,fix_size=fix_size,threshold=threshold,
                              mean_value = mean_value,save_path = save_path1,show = show,dpi = dpi,
                             title = title1,sup_fontsize = sup_fontsize,
-                             height=height,width= width,best_value=best_value,grid = grid,ncol = ncol)
+                             height=height,width= width,min_spot_value=min_spot_value,grid = grid,ncol = ncol)
 
 
 def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_worldmap = False,
@@ -707,7 +707,7 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
                 save_path=None,show = False,dpi = 300,title = None,
                 sup_fontsize = 10,
                 height = None,width = None,
-                best_value = 0,grid = False,ncol = None):
+                min_spot_value = 0,grid = False,ncol = None):
 
     sta0 = sta0_list[0]
     if isinstance(map_extend, list):
@@ -922,9 +922,9 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
             im = ax.scatter(x, y, c=colors, cmap=cmap1, norm=norm, s=pointsize)
         else:
 
-            area = pointsize * np.abs(value - best_value)/mean_value
+            area = pointsize * np.abs(value - min_spot_value)/mean_value
             if(threshold is not None):
-                area[np.abs(value- best_value)<threshold] *= 0.1
+                area[np.abs(value- min_spot_value)<threshold] *= 0.1
             im = ax.scatter(x, y, c=colors, cmap=cmap1, norm=norm, s=area)
             if grid:plt.grid()
 
