@@ -186,7 +186,13 @@ def mean_in_r_of_sta(sta_to, r = 40, sta_from = None,drop_first = False):
 
 
 def add_stavalue_to_nearest_grid(sta,grid):
-    grd = meteva.base.grid_data(meteva.base.grid(grid.glon,grid.glat))
+    '''
+
+    :param sta:
+    :param grid:
+    :return:
+    '''
+    grd = meteva.base.grid_data(meteva.base.grid(grid.glon,grid.glat,gtime=[sta.iloc[0,1]],dtime_list=[sta.iloc[0,2]],level_list=[sta.iloc[0,0]]))
     sta1 = meteva.base.sele.in_grid_xy(sta, grid)
     data_names = meteva.base.get_stadata_names(sta1)
     ig = np.round((sta1.loc[:,'lon'].values - grid.slon) // grid.dlon).astype(dtype = 'int16')
@@ -207,3 +213,5 @@ def add_stacount_to_nearest_grid(sta,grid):
     sta1 = meteva.base.sele_by_para(sta1,member=data_names[0])
     sta1.iloc[:,-1] = 1
     return add_stavalue_to_nearest_grid(sta1,grid)
+
+
