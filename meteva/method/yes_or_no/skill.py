@@ -109,6 +109,11 @@ def sfa(far,far_base):
             return 0
         else:
             return IV
+    elif far_base == IV:
+        if far == IV:
+            return 0
+        else:
+            return -1
     else:
         skill = (far_base - far)/far
         return round(skill,3)
