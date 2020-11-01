@@ -6,3 +6,4 @@ from .plot import plot
 from .fun import get_time_str_list,get_group_name,get_x_label,get_title_from_dict,get_x_ticks,get_y_ticks
 from .error_ana_list import error_boxplot,error_boxplot_abs
 from .error_ana_scatter import mae_scatter,rmse_scatter,me_scatter
+from .sample_statistic import sample_tdt,sample_id
