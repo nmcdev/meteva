@@ -566,7 +566,7 @@ def multiply_on_id(sta1_0, sta2_0, how="left", default=None):
         df.loc[df[name1].isnull(), name1] = df[df[name1].isnull()][name2]
 
     #删除合并后第二组时空坐标信息
-    drop_col = list(df.columns[len_c1:len_c1+6])
+    drop_col = list(df.columns[len_c1:len_c1+5])
     df.drop(drop_col, axis=1, inplace=True)
 
     #相加前是否要先设定缺省值

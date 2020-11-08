@@ -228,8 +228,10 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap ="rainbo
         inte = 4
     elif r <= 30 and r >= 20:
         inte = 5
-    else:
+    elif r <180:
         inte = 10
+    else:
+        inte = 20
 
     vmin = inte * (math.ceil(vmin / inte))
     vmax = inte * ((int)(vmax / inte)+1)
@@ -359,8 +361,10 @@ def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = "rai
         inte = 4
     elif r <= 30 and r >= 20:
         inte = 5
-    else:
+    elif r <180:
         inte = 10
+    else:
+        inte = 20
 
     vmin = inte * (math.ceil(vmin / inte))
     vmax = inte * ((int)(vmax / inte)+1)
@@ -520,8 +524,10 @@ def scatter_sta(sta0,value_column=None,
         inte = 4
     elif r <= 30 and r >= 20:
         inte = 5
-    else:
+    elif r <180:
         inte = 10
+    else:
+        inte = 20
 
     vmin = inte * (math.ceil(vmin / inte))
     vmax = inte * ((int)(vmax / inte) + 1)
@@ -815,8 +821,10 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
         inte = 4
     elif r <= 30 and r >= 20:
         inte = 5
-    else:
+    elif r < 180:
         inte = 10
+    else:
+        inte = 20
 
     vmin = inte * (math.ceil(vmin / inte))
     vmax = inte * ((int)(vmax / inte) + 1)
