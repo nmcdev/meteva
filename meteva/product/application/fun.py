@@ -13,6 +13,7 @@ def get_hour_dhour_list(gds_file_list):
     dh_list1 = list(set(dh_list))
     dh_list1.sort()
     return hour_list1,dh_list1
+
 def get_dati_of_path(path):
     dir,filename = os.path.split(path)
     filename0 = os.path.splitext(filename)[0]
