@@ -147,7 +147,7 @@ def get_time_of_path(path_model,path):
         if(yy_index <0):
             yy = 2000
         else:
-            yy = int(path[yy_index: yy_index + 2])
+            yy = int(path[yy_index: yy_index + 2]) + 2000
     else:
         yy = int(path[yy_index: yy_index+4])
 
