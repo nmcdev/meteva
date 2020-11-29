@@ -144,7 +144,42 @@ def t_rh_to_tw(temp,rh,rh_unit = "%"):
         grd = meteva.base.grid_data(grid0,Tw)
         return grd
 
+def u_v_to_speed_angle(u,v):
+    '''
+    将u，v 转换成风速，风向
+    :param u:
+    :param v:
+    :return:
+    '''
+    if isinstance(u, pd.DataFrame):
+        sta = meteva.base.combine_on_all_coords(u, v)
+        datanames = meteva.base.get_stadata_names(sta)
 
+        nu = int(len(datanames)/2)
+        #nsta = len(sta.indexs)
+        ud = sta.iloc[:,6:(6+nu)].values.astype(np.float32).flatten()
+        vd = sta.iloc[:,(6+nu):].values.astype(np.float32).flatten()
+        s,a = meteva.base.tool.math_tools.u_v_to_s_d(ud,vd)
+        speed = sta.iloc[:,0:(6+nu)].copy()
+        angle = speed.copy()
+        speed.iloc[:,6:(6+nu)] = s[...]
+        angle.iloc[:, 6:(6 + nu)] = a[...]
+        names1 = []
+        names2 = []
+        for i in range(nu):
+            names1.append("speed"+str(i))
+            names2.append("angle"+str(i))
+        meteva.base.set_stadata_names(speed,names1)
+        meteva.base.set_stadata_names(angle,names2)
+        return speed,angle
+    else:
+        ud = u.values
+        vd = u.values
+        s, a = meteva.base.tool.math_tools.u_v_to_s_d(ud, vd)
+        grid = meteva.base.get_grid_of_data(u)
+        speed = meteva.base.grid_data(grid,s)
+        angle = meteva.base.grid_data(grid,a)
+        return speed,angle
 
 def u_v_to_wind(u,v):
     if isinstance(u,pd.DataFrame):
@@ -185,7 +220,6 @@ def speed_angle_to_wind(speed,angle = None):
     else:
         speed_v = speed.values.squeeze()
         angle_v = angle.values.squeeze()
-
         grid0 = meteva.base.get_grid_of_data(speed)
         grid1 = meteva.base.grid(grid0.glon,grid0.glat,grid0.gtime,
                                                   dtime_list=grid0.dtimes,level_list=grid0.levels,member_list=["u","v"])
