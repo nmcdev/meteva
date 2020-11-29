@@ -57,7 +57,6 @@ def lon_lat_to_cartesian(lon, lat, R=1):
     xyz[:, 2] = R * np.sin(lat_r)
     return xyz
 
-
 def mean_iteration(count_old,mean_old,count_new,mean_new):
     count_total = count_new + count_old
     rate1 = count_old/count_total
@@ -101,7 +100,6 @@ def get_index(X,level_list):
         index[X < level] = i - 1
     return index
 
-
 def greatest_common_divisor(value_list):
 
     value_set = np.array(list(set(value_list))).astype(np.int32)
@@ -120,3 +118,45 @@ def greatest_common_divisor(value_list):
                 hcf = i
         x = hcf
     return x
+
+def u_v_to_s_d(u,v):
+    s = np.sqrt(np.power(u, 2) + np.power(v, 2))
+    d = np.zeros(u.shape)
+    index = np.where(s != 0)
+    vd_n0 = v[index]
+    ud_n0 = u[index]
+    s_n0 = s[index]
+    ag_n0 = 180 - np.arccos(vd_n0 / s_n0) * 180 / np.pi
+    ag_n0[ud_n0 > 0] = 360 - ag_n0[ud_n0 > 0]
+
+    d[index] = ag_n0
+    return s,d
+
+def tran_direction_to_8angle(direction):
+    '''
+    将0-360度的风向，转换成8个方位，分布用0,1,2，。。。7代表北风，东北风，东方，东南风，南风，西南风，西风，西北风
+    :param direction: 风向角度， 0-360度。 任意维numpy数组
+    :return: 风向方位，0-7，和direction的shape一致的numpy数组
+    '''
+    angles = np.zeros(direction.shape)
+    for i in range(1,8):
+        angles[np.abs(direction - i * 45) <= 22.5] = i
+    return angles
+
+def tran_speed_to_14grade(speeds):
+    '''
+    将风速（m/s)，转换成14个风速等级，分布用0,1,2，。。。13代表静风，1级、2级，。。。，12级和大于等于13级
+    :param speeds: 风速（m/s)。 任意维numpy数组
+    :return: 风速等级，和speeds的shape一致的numpy数组
+    '''
+    grades = np.zeros(speeds.shape)
+    gs = [0,0.3,1.6,3.4,5.5,8.0,10.8,13.9,17.2,20.8,24.5,28.5,32.7,37,300]
+    for i in range(1,14):
+        gi = gs[i]
+        grades[speeds>=gi] = i
+    return grades
+
+def s_d_to_u_v(speed,direction):
+    u = -speed * np.sin(direction * 3.14 / 180)
+    v = -speed * np.cos(direction * 3.14 / 180)
+    return u,v
