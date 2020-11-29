@@ -61,12 +61,19 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
     data_name = meteva.base.get_stadata_names(sta_ob_and_fos_list[0])
     if method.__name__.find("ob_fo")>=0:
         fo_name = data_name
+    elif method.__name__.find("_uv")>=0:
+        fo_name = []
+        for i in range(2,len(data_name),2):
+            strs = data_name[i]
+            strs = strs.replace("u_","")
+            fo_name.append(strs)
     else:
         ensemble_score_method = [meteva.method.cr]
         if method in ensemble_score_method:
             fo_name = [""]
         else:
             fo_name = data_name[1:]
+
     fo_num = len(fo_name)
 
 
@@ -151,9 +158,16 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
             #if(len(sta.index) == 0):
             #    result[i,:] = meteva.base.IV
             #else:
-            ob = sta[data_name[0]].values
-            fo = sta[data_name[1:]].values.T
-            result1 = method(ob,fo,**method_args)
+            if method.__name__.find("_uv")>=0:
+                u_ob = sta[data_name[0]].values
+                v_ob = sta[data_name[0]].values
+                u_fo = sta[data_name[2::2]].values.T
+                v_fo = sta[data_name[2::2]].values.T
+                result1 = method(u_ob,u_fo,v_ob,v_fo,**method_args)
+            else:
+                ob = sta[data_name[0]].values
+                fo = sta[data_name[1:]].values.T
+                result1 = method(ob,fo,**method_args)
             result_list.append(result1)
 
         result = np.array(result_list)
