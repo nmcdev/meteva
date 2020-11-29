@@ -352,7 +352,7 @@ def sum_of_sta(sta,used_coords = ["member"],span = None,keep_all = True):
             for i in range(1,len(times)):
                 rain01 = meteva.base.in_time_list(sta,times[i])
                 meteva.base.set_stadata_coords(rain01,time=times[-1])
-                rain_ac = meteva.base.add_on_level_time_dtime_id(rain_ac, rain01, how="inner")
+                rain_ac = meteva.base.add_on_level_time_dtime_id(rain_ac, rain01, how="outer",default=0)
             return rain_ac
         else:
             times = sta.loc[:, 'time'].values
@@ -413,6 +413,9 @@ def sum_of_sta(sta,used_coords = ["member"],span = None,keep_all = True):
             begin_dtime = dtimes[0]+dhour_unit * (step - 1)
             rain_ac = meteva.base.between_dtime_range(rain_ac,begin_dtime,dtimes[-1])  # 删除时效小于range的部分
             dtimes =set(rain_ac.loc[:, "dtime"].values.tolist())
+            dtimes = list(dtimes)
+            dtimes.sort()
+            dtimes = np.array(dtimes)
             if not keep_all:
                 dh = ((dtimes - dtimes[-1]) / dhour_unit).astype(np.int32)
                 new_dtimes = dtimes[dh % step == 0]

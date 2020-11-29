@@ -497,10 +497,10 @@ def scatter_sta(sta0,value_column=None,
     if mean_value is None:
         mean_value = np.sum(np.abs(values)) / values.size
 
-    vmax = np.max(sta_without_iv[plot_data_names].values)
-    vmin = np.min(sta_without_iv[plot_data_names].values)
+    vmax_v = np.max(sta_without_iv[plot_data_names].values)
+    vmin_v = np.min(sta_without_iv[plot_data_names].values)
 
-    cmap1,clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap,clevs=clevs,vmin=vmin,vmax = vmax)
+    cmap1,clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap,clevs=clevs,vmin=vmin_v,vmax = vmax_v)
     #clevs1, cmap1 = meteva.base.tool.color_tools.def_cmap_clevs(clevs=clevs, cmap=cmap, vmin = None, vmax=None)
     #meteva.base.tool.color_tools.show_cmap_clev(cmap1,clevs1)
 
@@ -624,15 +624,18 @@ def scatter_sta(sta0,value_column=None,
             ax.set_xlim((slon, elon))
             ax.set_ylim((slat, elat))
             colors = value
-            if fix_size:
-                im = ax.scatter(x, y, c=colors, cmap=cmap1, norm=norm, s=pointsize)
+            if isinstance(fix_size,bool):
+                if fix_size:
+                    im = ax.scatter(x, y, c=colors, cmap=cmap1, norm=norm, s=pointsize)
+                else:
+                    area = pointsize * np.abs(value - min_spot_value)/mean_value
+                    if(threshold is not None):
+                        area[np.abs(value- min_spot_value)<threshold] *= 0.1
+                    im = ax.scatter(x, y, c=colors, cmap=cmap1, norm=norm, s=area)
+                    if grid:plt.grid()
             else:
+                im = ax.scatter(x, y, c=colors, cmap=cmap1, norm=norm, s=fix_size)
 
-                area = pointsize * np.abs(value - min_spot_value)/mean_value
-                if(threshold is not None):
-                    area[np.abs(value- min_spot_value)<threshold] *= 0.1
-                im = ax.scatter(x, y, c=colors, cmap=cmap1, norm=norm, s=area)
-                if grid:plt.grid()
             if print_max>0:
                 print("取值最大的"+str(print_max)+"个站点：")
                 indexs = value.argsort()[-print_max:][::-1]
@@ -681,14 +684,17 @@ def scatter_sta(sta0,value_column=None,
 
     else:
         split = ["level","time","dtime","member"]
-        split.remove(subplot)
+        if not isinstance(subplot,list):
+            subplot = [subplot]
+        for s in subplot:
+            split.remove(s)
         sta_list = meteva.base.split(sta0,used_coords=split)
         ng = len(sta_list)
 
 
         for n in range(ng):
             sta1 = sta_list[n]
-            sta_g1,gll  = meteva.base.group(sta1,g = subplot)
+            sta_g1  = meteva.base.split(sta1,used_coords = subplot)
             ng1 = len(sta_g1)
             if isinstance(title,list):
                 title1 = title[(ng1 * n):(ng1 * (n+1))]
@@ -701,7 +707,7 @@ def scatter_sta(sta0,value_column=None,
                 save_path1 = save_path
 
             scatter_sta_list(sta_g1,map_extend = map_extend,add_county_line = add_county_line,
-            add_worldmap=add_worldmap,clevs = clevs,cmap = cmap,vmax=vmax,vmin = vmin,fix_size=fix_size,threshold=threshold,
+            add_worldmap=add_worldmap,clevs = clevs,cmap = cmap,vmax=vmax_v,vmin = vmin_v,fix_size=fix_size,threshold=threshold,
                              mean_value = mean_value,save_path = save_path1,show = show,dpi = dpi,
                             title = title1,sup_fontsize = sup_fontsize,
                              height=height,width= width,min_spot_value=min_spot_value,grid = grid,ncol = ncol)
@@ -926,15 +932,18 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
         ax.set_xlim((slon, elon))
         ax.set_ylim((slat, elat))
         colors = value
-        if fix_size:
-            im = ax.scatter(x, y, c=colors, cmap=cmap1, norm=norm, s=pointsize)
-        else:
+        if isinstance(fix_size, bool):
+            if fix_size:
+                im = ax.scatter(x, y, c=colors, cmap=cmap1, norm=norm, s=pointsize)
+            else:
 
-            area = pointsize * np.abs(value - min_spot_value)/mean_value
-            if(threshold is not None):
-                area[np.abs(value- min_spot_value)<threshold] *= 0.1
-            im = ax.scatter(x, y, c=colors, cmap=cmap1, norm=norm, s=area)
-            if grid:plt.grid()
+                area = pointsize * np.abs(value - min_spot_value)/mean_value
+                if(threshold is not None):
+                    area[np.abs(value- min_spot_value)<threshold] *= 0.1
+                im = ax.scatter(x, y, c=colors, cmap=cmap1, norm=norm, s=area)
+                if grid:plt.grid()
+        else:
+            im = ax.scatter(x, y, c=colors, cmap=cmap1, norm=norm, s=fix_size)
 
 
         knext_row = pi + (pj + 1) * ncol

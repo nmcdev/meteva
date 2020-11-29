@@ -4,9 +4,11 @@ from . import continuous
 from . import ensemble
 from . import probability
 from . import space
+from . import vector
 from .yes_or_no import *
 from .multi_category import *
 from .continuous import *
 from .ensemble import *
 from .probability import *
 from .space import *
+from .vector import *

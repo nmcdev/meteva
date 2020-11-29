@@ -130,7 +130,7 @@ def prepare_dataset(para):
 
 
 
-def prepare_dataset_without_combining(para):
+def prepare_dataset_without_combining(para,recover = True):
     '''
 
     :param para: 根据配置参数从站点和网格数据中读取数据插值到指定站表上，在存储成hdf格式文件，然后从hdf格式文件中读取相应的文件合并成检验要的数据集合文件
@@ -164,7 +164,7 @@ def prepare_dataset_without_combining(para):
         hdf_path = para["ob_data"][ele]["hdf_dir"] + "/" + para["hdf_file_name"]
         para1["ob_data"] = para["ob_data"][ele]
         para1["ob_data"]["hdf_path"] = hdf_path
-        creat_ob_dataset(para1,ele)
+        creat_ob_dataset(para1,ele,recover = recover)
 
     models = para["fo_data"].keys()
     for model in models:
@@ -175,7 +175,6 @@ def prepare_dataset_without_combining(para):
 
 
 def creat_fo_dataset(model,para):
-
     station = para["station"]
     interp = para["interp"]
     end_date = para["end_date"]
@@ -188,8 +187,6 @@ def creat_fo_dataset(model,para):
     read_para =para_model["read_para"]
     if read_para is None:
         read_para = {}
-
-
     data0 = None
     if os.path.exists(hdf_path):
         data0 = pd.read_hdf(hdf_path, "df")
@@ -238,16 +235,6 @@ def creat_fo_dataset(model,para):
             #sta_ob_and_fos_list.append(grouped_dict[key])
 
 
-        #times = data_left.loc[:, "time"].values.tolist()
-        #times = list(set(times))
-        #times.sort()
-        #exist_time_list = []
-        #for i in range(len(times)):
-        #    time1 = meteva.base.time_tools.all_type_time_to_datetime(times[i])
-        #    exist_time_list.append(time1)
-        #    data_id0_time0 = meteva.base.sele_by_para(data_left, time=time1)
-        #    ehours = data_id0_time0.loc[:, "dtime"].values.tolist()
-        #    exist_dtimes[time1] = ehours
 
         if hours is None:
             hours = []
@@ -323,7 +310,7 @@ def creat_fo_dataset(model,para):
 
 
 
-def creat_ob_dataset(para,ele = "ob"):
+def creat_ob_dataset(para,ele = "ob",recover = True):
     station = para["station"]
     data_name =ele
     day_num = para["day_num"] + 1
@@ -347,6 +334,8 @@ def creat_ob_dataset(para,ele = "ob"):
     data0 = None
     if os.path.exists(hdf_path):
         data0 = pd.read_hdf(hdf_path, "df")
+        if not recover:
+            return data0
     if data0 is None:
         if hours is None:
             hours = np.arange(0, 24, 1).tolist()
@@ -410,6 +399,7 @@ def creat_ob_dataset(para,ele = "ob"):
                     print("fail read data from " + path)
             else:
                 print(path +  "does not exist")
+    if(len(sta_list)==0):return None
     sta_all = pd.concat(sta_list, axis=0)
     if "level" not in read_para.keys():
         meteva.base.set_stadata_coords(sta_all, level=0)
