@@ -162,6 +162,8 @@ def read_griddata_from_nc(filename,grid = None,
         if dtime_dim == "time":
             ds0 = ds0.rename_dims({"time":"dtime"})
             dtime_dim = "dtime"
+
+
         if time_dim == "dtime":
             ds0 = ds0.rename_dims({"dtime": "time"})
             time_dim = "time"
@@ -226,6 +228,9 @@ def read_griddata_from_nc(filename,grid = None,
         # 4判断时效dt
         dtime_dim0 = dtime_dim
 
+        if dtime_dim is None:
+            if "dtime" in ds0.coords or "dtime" in list(ds0.dims):
+                dtime_dim = "dtime"
 
         if dtime_dim in ds0.coords or dtime_dim in list(ds0.dims):
             if dtime_dim in ds0.coords:
