@@ -14,3 +14,4 @@ station_全球城市 = pkg_resources.resource_filename('meteva', "resources/stat
 station_全球重点城市 = pkg_resources.resource_filename('meteva', "resources/stations/sta_global_alt_243.txt")
 gds_ip_port = None
 customized_basemap_list = None
+beaufort_scale = [0.0,0.3,1.6,3.4,5.5,8.0,10.8,13.9,17.2,20.8,24.5,28.5,32.7,37,41.5,46.2,51,56.1]
