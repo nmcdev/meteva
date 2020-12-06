@@ -326,6 +326,7 @@ def creat_ob_dataset(para,ele = "ob",recover = True):
     reasonable_value = para["ob_data"]["reasonable_value"]
 
     hours = None
+    print(para)
     if para["ob_data"]["hour"] is not None:
         hours = np.arange(para["ob_data"]["hour"][0],para["ob_data"]["hour"][1]+1,para["ob_data"]["hour"][2]).tolist()
 
@@ -363,7 +364,6 @@ def creat_ob_dataset(para,ele = "ob",recover = True):
         if len(hours) == 0:
             hours = np.arange(0,24,1).tolist()
 
-
     for dd in range(day_num):
         for hh in range(len(hours)):
             hour = hours[hh]
@@ -377,7 +377,14 @@ def creat_ob_dataset(para,ele = "ob",recover = True):
                 file_time = time1 - datetime.timedelta(hours = 8)
 
             path = meteva.base.get_path(dir_ob, file_time)
-            if os.path.exists(path):
+            file_exit = False
+            if path.find("mdfs:")>=0:
+                if meteva.base.path_tools.exist_in_gds(path):
+                    file_exit = True
+            else:
+                if os.path.exists(path):
+                    file_exit = True
+            if file_exit:
                 try:
                     dat = read_method(path,**read_para)
                     if dat is not None:
@@ -405,7 +412,7 @@ def creat_ob_dataset(para,ele = "ob",recover = True):
         meteva.base.set_stadata_coords(sta_all, level=0)
     meteva.base.creat_path(hdf_path)
     sta_all.to_hdf(hdf_path, "df")
-    print(hdf_path)
+    #print(hdf_path)
 
     return sta_all
 

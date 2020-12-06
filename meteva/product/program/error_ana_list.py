@@ -8,11 +8,11 @@ import math
 
 import meteva
 import pandas as pd
-
+import json
 
 def error_boxplot(sta_ob_and_fos0,s = None, g = None, gll=None,
                   group_name_list=None,threshold = 2,save_dir=None,save_path = None,show = False,dpi = 200,title="误差综合分析图",
-                  vmin  = None,vmax = None,spasify_xticks = None,sup_fontsize =10,width = None,height = None):
+                  vmin  = None,vmax = None,spasify_xticks = None,sup_fontsize =10,width = None,height = None,json_path = None):
     '''
 
     :param sta_ob_and_fos0:
@@ -34,7 +34,6 @@ def error_boxplot(sta_ob_and_fos0,s = None, g = None, gll=None,
                 s["drop_last"] = True
 
 
-
     sta_ob_and_fos = meteva.base.sele_by_dict(sta_ob_and_fos0, s)
     if(len(sta_ob_and_fos.index) == 0):
         print("there is no data to verify")
@@ -50,6 +49,9 @@ def error_boxplot(sta_ob_and_fos0,s = None, g = None, gll=None,
             print("手动设置的title数目和要绘制的图形数目不一致")
             return
 
+    picture_ele_dict = {}
+
+
     if save_path is not None:
         if isinstance(save_path,str):
             save_path = [save_path]
@@ -57,10 +59,21 @@ def error_boxplot(sta_ob_and_fos0,s = None, g = None, gll=None,
             print("手动设置的save_path数目和要绘制的图形数目不一致")
             return
 
+    if json_path is not None:
+        if isinstance(json_path,str):
+            json_path = [json_path]
+        if len(data_names) -1 != len(json_path):
+            print("手动设置的json_path数目和要绘制的图形数目不一致")
+            return
+
     if group_name_list is None:
         group_name_list = meteva.product.program.get_group_name(gll1)
 
     for v in range(len(data_names)-1):
+
+        picture_ele_dict = {}
+
+
         combineData = []
         boxgroup = []
         right_rate = []
@@ -72,8 +85,11 @@ def error_boxplot(sta_ob_and_fos0,s = None, g = None, gll=None,
         min_list = []
         if gll1 is None:
             gll1 = [[0]]
+        picture_ele_dict["box_data"] ={}
+
         for i in range(len(gll1)):
             dat = sta_ob_and_fos_list[i].values[:, 7+v] - sta_ob_and_fos_list[i].values[:, 6]
+            #picture_ele_dict["box_data"][i] = dat.tolist()
             if vmax is None:
                 max_list.append(np.max(dat))
             if vmin is None:
@@ -89,6 +105,15 @@ def error_boxplot(sta_ob_and_fos0,s = None, g = None, gll=None,
             combineData.append(dat)
             bg = np.ones(tt) * i
             boxgroup.append(bg)
+
+
+        picture_ele_dict["me"] = me_list
+        picture_ele_dict["mae"] = mae_list
+        picture_ele_dict["rmse"] = rmse_list
+        picture_ele_dict["correct_rate"] = right_rate
+        picture_ele_dict["sample_count"] = tcount
+        picture_ele_dict["xlabel"] = group_name_list
+
         right_rate = np.array(right_rate)
         tcount = np.array(tcount)
 
@@ -107,6 +132,9 @@ def error_boxplot(sta_ob_and_fos0,s = None, g = None, gll=None,
                 vmin1 = vmin1 - 0.1 * dmax
         if vmax is None:
             vmax1 = vmax1 + 0.2 * dmax
+
+        picture_ele_dict["vmin"] = vmin1
+        picture_ele_dict["vmax"] = vmax1
 
 
 
@@ -215,6 +243,14 @@ def error_boxplot(sta_ob_and_fos0,s = None, g = None, gll=None,
         if show:
             plt.show()
         plt.close()
+
+
+        if json_path is not None:
+            json_path1 = json_path[v]
+            file = open(json_path1,"w")
+            #print(picture_ele_dict)
+            json.dump(picture_ele_dict,file)
+            print("have printed pictrue elements to " + json_path1)
 
 
 def error_boxplot_abs(sta_ob_and_fos0,s = None, g = None, gll=None,

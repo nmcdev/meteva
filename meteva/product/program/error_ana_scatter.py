@@ -46,6 +46,8 @@ def error_scatter(sta_ob_and_fos,method,s = None,g = None,gll = None,group_name_
             print("手动设置的save_path数目和要绘制的图形数目不一致")
             return
 
+    result_all = []
+
     for k in range(g_num):
         sta_ob_and_fos_g1 = sta_ob_and_fos_list[k]
         rmse_sta = meteva.product.score_id(sta_ob_and_fos_g1,method)[0]
@@ -73,6 +75,10 @@ def error_scatter(sta_ob_and_fos,method,s = None,g = None,gll = None,group_name_
                                                 , add_county_line=add_county_line,
                                                 threshold=threshold, map_extend=map_extend, dpi=dpi,sup_fontsize = sup_fontsize,
                                                 width = width,height=height)
+        result_all.append(rmse_sta)
+
+
+    return result_all,gll1
 
 def rmse_scatter(sta_ob_and_fos,s = None,g = None,gll = None,group_name_list= None,save_dir=None,save_path = None,show = False,
                  print_max = 1,threshold = 0,add_county_line = False,map_extend = None,dpi = 300,title="均方根误差站点分布",
@@ -80,7 +86,7 @@ def rmse_scatter(sta_ob_and_fos,s = None,g = None,gll = None,group_name_list= No
                  height=None, width=None
                  ):
 
-    error_scatter(sta_ob_and_fos,meteva.method.rmse,s = s,g = g,gll = gll,group_name_list= group_name_list,
+    return error_scatter(sta_ob_and_fos,meteva.method.rmse,s = s,g = g,gll = gll,group_name_list= group_name_list,
                   save_dir= save_dir,save_path = save_path,show = show,print_max =print_max,threshold = threshold,
                   add_county_line= add_county_line,map_extend=map_extend,dpi = dpi,title = title,
                   sup_fontsize=sup_fontsize,
@@ -93,7 +99,7 @@ def mae_scatter(sta_ob_and_fos,s = None,g = None,gll = None,group_name_list= Non
                 height=None, width=None
                 ):
 
-    error_scatter(sta_ob_and_fos,meteva.method.mae,s = s,g = g,gll = gll,group_name_list= group_name_list,
+    return error_scatter(sta_ob_and_fos,meteva.method.mae,s = s,g = g,gll = gll,group_name_list= group_name_list,
                   save_dir= save_dir,save_path = save_path,show = show,print_max =print_max,threshold = threshold,
                   add_county_line= add_county_line,map_extend=map_extend,dpi = dpi,title = title,
                   sup_fontsize=sup_fontsize,
@@ -108,7 +114,7 @@ def me_scatter(sta_ob_and_fos,s= None,g = None,gll = None,group_name_list= None,
                height=None, width=None
                ):
 
-    error_scatter(sta_ob_and_fos,meteva.method.me,s = s,g = g,gll = gll,group_name_list= group_name_list,
+    return error_scatter(sta_ob_and_fos,meteva.method.me,s = s,g = g,gll = gll,group_name_list= group_name_list,
                   save_dir= save_dir,save_path = save_path,show = show,print_max =print_max,print_min = print_min,
                   threshold = threshold,add_county_line= add_county_line,map_extend=map_extend,dpi = dpi,title = title,
                   sup_fontsize=sup_fontsize,
