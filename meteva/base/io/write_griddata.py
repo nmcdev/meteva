@@ -79,8 +79,8 @@ def write_griddata_to_micaps4(da,save_path = "a.txt",creat_dir = False,effective
 
             title = ("diamond 4 "+ title +"\n"
             + year + " " + month + " " + day + " " + hour + " " + hour_range + " " + str(level) + "\n"
-            + "{:.6f}".format(grid.dlon) + " " + "{:.6f}".format(grid.dlat) + " " + str(grid.slon) + " " + str(grid.elon) + " "
-            + str(grid.slat) + " " + str(grid.elat) + " " + str(grid.nlon) + " " + str(grid.nlat) + " "
+            + "{:.6f}".format(grid.dlon) + " " + "{:.6f}".format(grid.dlat) + " " + "{:.6f}".format(grid.slon) + " " + "{:.6f}".format(grid.elon) + " "
+            + "{:.6f}".format(grid.slat) + " " + "{:.6f}".format(grid.elat) + " " + "{:.6f}".format(grid.nlon) + " " + "{:.6f}".format(grid.nlat) + " "
             + str(inte) + " " + str(vmin) + " " + str(vmax) + " 1 0")
 
         # 二维数组写入micaps文件
