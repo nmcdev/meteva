@@ -5,6 +5,7 @@ import os as os
 import numpy as np
 from ..io import DataBlock_pb2
 from ..io.GDS_data_service import GDSDataService
+import meteva
 import re
 import pathlib
 
@@ -248,8 +249,10 @@ def get_path_of_grd_nc_longname(root_dir,time,dhour,nc_Fname,fhour_add):
     return file
 
 
-def get_gds_file_list_in_one_dir(ip,port,dir):
+def get_gds_file_list_in_one_dir(dir):
     dir = dir.replace("mdfs:///", "")
+
+    ip,port = meteva.base.gds_ip_port
     service = GDSDataService(ip, port)
     # 获得指定目录下的所有文件
     status, response = service.getFileList(dir)
@@ -265,6 +268,14 @@ def get_gds_file_list_in_one_dir(ip,port,dir):
                 if (name_size_pair[1] != 'D'):
                     file_list.append(name_size_pair[0])
     return file_list
+
+def exist_in_gds(path):
+    dir,filename = os.path.split(path)
+    file_list = get_gds_file_list_in_one_dir(dir)
+    if filename in file_list:
+        return True
+    else:
+        return False
 
 def get_gds_all_dir(ip,port,path,all_path,service = None):
     # 初始化GDS客户端
