@@ -9,13 +9,15 @@ import matplotlib.patches as patches
 import copy
 import math
 import pandas as pd
+import json
 import matplotlib as mpl
 
 
 def time_list_line_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,show = False,dpi = 300,title = "多时效预报误差对比图",
-                         sup_fontsize = 10,width = None,height = None):
+                         sup_fontsize = 10,width = None,height = None,json_path = None):
     sta_ob_and_fos1 = meteva.base.sele_by_dict(sta_ob_and_fos0, s)
     sta_ob_and_fos1 = meteva.base.sele_by_para(sta_ob_and_fos1,drop_IV=True)
+
     ids = list(set(sta_ob_and_fos1.loc[:,"id"]))
     nids = len(ids)
 
@@ -30,6 +32,13 @@ def time_list_line_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
         if nids != len(save_path):
             print("手动设置的save_path数目和要绘制的图形数目不一致")
             return
+    if json_path is not None:
+        if isinstance(json_path,str):
+            json_path = [json_path]
+        if nids != len(json_path):
+            print("手动设置的json_path数目和要绘制的图形数目不一致")
+            return
+
     for n in range(nids):
         id = ids[n]
         sta_ob_and_fos = meteva.base.in_id_list(sta_ob_and_fos1,[id])
@@ -102,13 +111,22 @@ def time_list_line_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
         x_all = x_all.values
 
         x_plot, time_strs = meteva.product.program.get_x_ticks(time_all, width-1)
-
         time_strs_null = []
         for i in range(len(time_strs)):
             time_strs_null.append("")
 
+        all_y_label = []
+
+        picture_ele_dict = {}
+
+        picture_ele_dict["x_label"] = meteva.product.program.fun.get_time_str_list(time_all,row=3)
+        picture_ele_dict["vmin"] = vmin
+        picture_ele_dict["vmax"] = vmax
+        picture_ele_dict["subplots"] ={}
+
         for i in range(len(times_fo)):
             ax = plt.subplot(grid_plt[i:i + 1, 0])
+            picture_ele_dict["subplots"][i] = {}
             time_f1 = times_fo[-i - 1]
             dhour0 = (time_f1 - time_f0) / np.timedelta64(1, 'h')
             sta = meteva.base.in_time_list(sta_ob_and_fos, [time_f1])
@@ -123,9 +141,14 @@ def time_list_line_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
                 plt.xlim(x_all[0],x_all[-1])
                 plt.grid(linestyle='-.',linewidth = sup_fontsize *0.07)
 
+                picture_ele_dict["subplots"][i][name] = {}
+                picture_ele_dict["subplots"][i][name]["x"] = x.tolist()
+                picture_ele_dict["subplots"][i][name]["value"] = value.tolist()
+
 
             time_f1 = meteva.base.tool.time_tools.all_type_time_to_datetime(time_f1)
             time_str = time_f1.strftime('%d{d}%H{h}').format(d='日', h='时')+"        "
+            all_y_label.append(time_str)
             plt.ylabel(time_str, rotation='horizontal',fontsize = sup_fontsize * 0.75)
             if i ==0:
                 plt.legend(loc="upper left", ncol=len(data_names),fontsize = sup_fontsize * 0.9)
@@ -142,6 +165,7 @@ def time_list_line_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
 
                     title1 = title1.replace("\n","")
                 plt.title(title1,fontsize = sup_fontsize)
+                picture_ele_dict["title"] = title1
 
             #plt.hlines(0,x_plot[0],x_plot[-1],"k",linewidth = 0.5)
             if i == len(times_fo) - 1:
@@ -149,6 +173,8 @@ def time_list_line_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
                 plt.xlabel("实况时间",fontsize = sup_fontsize * 0.9)
             else:
                 plt.xticks(x_plot,time_strs_null)
+
+        picture_ele_dict["y_label"] = all_y_label
 
         rect_ylabel = [0.03, 0.45, 0.0, 0.0]  # 左下宽高
         ax_ylabel = plt.axes(rect_ylabel)
@@ -171,6 +197,12 @@ def time_list_line_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
         if show:
             plt.show()
         plt.close()
+
+        if json_path is not None:
+            json_path1 = json_path[n]
+            file = open(json_path1,"w")
+            json.dump(picture_ele_dict,file)
+            print("have printed pictrue elements to " + json_path1)
 
 
 def time_list_line(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,show = False,dpi = 300,title = "预报准确性和稳定性对比图",
