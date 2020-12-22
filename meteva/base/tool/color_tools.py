@@ -362,20 +362,35 @@ def get_cmap_and_clevs_by_element_name(element_name):
     cmap,clevs = get_cmap_and_clevs_from_file(path)
     return cmap,clevs
 
-def get_part_cmap_and_clevs(cmap_all,clev_all,vmax,vmin):
-    if len(clev_all) < 20:
-        return cmap_all,clev_all
-    start_i = 0
-    for i in range(len(clev_all)-1):
-        if vmin<clev_all[i+1]:
-            start_i = i
-            break
-    end_i = 0
-    for i in range(len(clev_all)-1):
-        if vmax > clev_all[i]:
-            end_i = i+2
-    if end_i - start_i<=15:
-        end_i = start_i+15
+def get_part_cmap_and_clevs(cmap_all,clev_all,vmax,vmin,cut_accurate = False):
+
+
+    if cut_accurate:
+        start_i = 0
+        for i in range(len(clev_all) - 1):
+            if vmin < clev_all[i + 1]:
+                start_i = i
+                break
+        end_i = 0
+        for i in range(len(clev_all) - 1):
+            if vmax > clev_all[i]:
+                end_i = i+2
+
+    else:
+        if len(clev_all) < 20:
+            return cmap_all, clev_all
+        start_i = 0
+        for i in range(len(clev_all)-1):
+            if vmin<clev_all[i+1]:
+                start_i = i
+                break
+        end_i = 0
+        for i in range(len(clev_all)-1):
+            if vmax > clev_all[i]:
+                end_i = i+2
+        if end_i - start_i<=15:
+            end_i = start_i+15
+
 
     clevs_part = clev_all[start_i:end_i]
     if hasattr(cmap_all,"colors"):
@@ -526,7 +541,7 @@ def coordinate_cmap_to_clevs(cmap,clevs):
 
 
 
-def def_cmap_clevs(cmap = "rainbow",clevs = None,vmin = None,vmax = None):
+def def_cmap_clevs(cmap = "rainbow",clevs = None,vmin = None,vmax = None,cut_accurate = False):
     #  # 判断是meteva自定义的颜色类型，这从meteva资源文件或函数里生成cmap1 和clevs1
     clevs1 = None
     cmap1 = None
@@ -588,9 +603,27 @@ def def_cmap_clevs(cmap = "rainbow",clevs = None,vmin = None,vmax = None):
     cmap3,clevs3 = coordinate_cmap_to_clevs(cmap2,clevs2)
 
     # 从cmap3 和cmap3中提取部分colorbar
+
     if vmin is not None and vmax is not None:
-        cmap4,clevs4 = get_part_cmap_and_clevs(cmap3, clevs3, vmax, vmin)
+        cmap4,clevs4 = get_part_cmap_and_clevs(cmap3, clevs3, vmax, vmin,cut_accurate = cut_accurate)
     else:
         cmap4,clevs4  = cmap3,clevs3
 
     return cmap4,clevs4
+
+
+def merge_cmap_clevs(cmap0,clevs0,cmap1,clevs2):
+    '''
+    合并两个colorbar
+    :param cmap0:
+    :param clevs0:
+    :param cmap1:
+    :param clevs2:
+    :return:
+    '''
+    colors0 = np.array(cmap0.colors).tolist()
+    colors1 = np.array(cmap1.colors).tolist()
+    colors0.extend(colors1)
+    cmap_m = colors.ListedColormap(colors0, 'indexed')
+    clevs0.extend(clevs2)
+    return cmap_m,clevs0

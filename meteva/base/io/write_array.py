@@ -92,7 +92,10 @@ def write_array_to_excel(array,save_path,name_list_dict,columns = None,index = N
             table_data_list.append(table_data)
         with pd.ExcelWriter(save_path) as writer:
             for i in range(len(sheet_list)):
-                table_data_list[i].to_excel(writer, sheet_name=sheet + '_' + str(name_list_dict[sheet][i]))
+                str1 = str(name_list_dict[sheet][i])
+                str1 = str1.replace("[","【")
+                print(str1)
+                table_data_list[i].to_excel(writer, sheet_name=sheet + '_' + str1)
     else:
         print("array不能超过3维")
         return

@@ -160,9 +160,9 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
             #else:
             if method.__name__.find("_uv")>=0:
                 u_ob = sta[data_name[0]].values
-                v_ob = sta[data_name[0]].values
+                v_ob = sta[data_name[1]].values
                 u_fo = sta[data_name[2::2]].values.T
-                v_fo = sta[data_name[2::2]].values.T
+                v_fo = sta[data_name[3::2]].values.T
                 result1 = method(u_ob,u_fo,v_ob,v_fo,**method_args)
             else:
                 ob = sta[data_name[0]].values

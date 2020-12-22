@@ -14,7 +14,7 @@ import matplotlib as mpl
 
 
 def time_list_line_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,show = False,dpi = 300,title = "多时效预报误差对比图",
-                         sup_fontsize = 10,width = None,height = None,json_path = None):
+                         sup_fontsize = 10,width = None,height = None,json_dir = None,json_path = None):
     sta_ob_and_fos1 = meteva.base.sele_by_dict(sta_ob_and_fos0, s)
     sta_ob_and_fos1 = meteva.base.sele_by_para(sta_ob_and_fos1,drop_IV=True)
 
@@ -118,8 +118,7 @@ def time_list_line_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
         all_y_label = []
 
         picture_ele_dict = {}
-
-        picture_ele_dict["x_label"] = meteva.product.program.fun.get_time_str_list(time_all,row=3)
+        picture_ele_dict["xticklabels"] = meteva.product.program.fun.get_time_str_list(time_all,row=3)
         picture_ele_dict["vmin"] = vmin
         picture_ele_dict["vmax"] = vmax
         picture_ele_dict["subplots"] ={}
@@ -198,15 +197,25 @@ def time_list_line_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
             plt.show()
         plt.close()
 
-        if json_path is not None:
+
+        json_path1 = None
+        if json_path is None:
+            if json_dir is None:
+                pass
+            else:
+                json_path1 = json_dir+"\\" + str(id) + ".json"
+        else:
             json_path1 = json_path[n]
+
+        if json_path1 is not None:
+            meteva.base.tool.path_tools.creat_path(json_path1)
             file = open(json_path1,"w")
             json.dump(picture_ele_dict,file)
             print("have printed pictrue elements to " + json_path1)
 
 
 def time_list_line(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,show = False,dpi = 300,title = "预报准确性和稳定性对比图",
-                   sup_fontsize = 10,width = None,height = None):
+                   sup_fontsize = 10,width = None,height = None,json_dir = None,json_path = None):
     sta_ob_and_fos1 = meteva.base.sele_by_dict(sta_ob_and_fos0, s)
     ids = list(set(sta_ob_and_fos1.loc[:,"id"]))
     nids = len(ids)
@@ -280,8 +289,16 @@ def time_list_line(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,sho
         for i in range(len(time_strs)):
             time_strs_null.append("")
 
+        all_y_label = []
+        picture_ele_dict = {}
+        picture_ele_dict["xticklabels"] = meteva.product.program.fun.get_time_str_list(time_all,row=3)
+        picture_ele_dict["vmin"] = vmin
+        picture_ele_dict["vmax"] = vmax
+        picture_ele_dict["subplots"] ={}
+
         for i in range(len(times_fo)):
             ax = plt.subplot(grid_plt[i:i + 1, 0])
+            picture_ele_dict["subplots"][i] = {}
             time_f1 = times_fo[-i - 1]
             dhour0 = (time_f1 - time_f0) / np.timedelta64(1, 'h')
             sta = meteva.base.in_time_list(sta_ob_and_fos, [time_f1])
@@ -295,8 +312,13 @@ def time_list_line(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,sho
                 plt.xlim(x_all[0],x_all[-1])
                 plt.grid(linestyle='-.')
 
+                picture_ele_dict["subplots"][i][name] = {}
+                picture_ele_dict["subplots"][i][name]["x"] = x.tolist()
+                picture_ele_dict["subplots"][i][name]["value"] = value.tolist()
+
             time_f1 = meteva.base.tool.time_tools.all_type_time_to_datetime(time_f1)
             time_str = time_f1.strftime('%d{d}%H{h}').format(d='日', h='时')+"        "
+            all_y_label.append(time_str)
             plt.ylabel(time_str, rotation='horizontal',fontsize = sup_fontsize *0.75)
             if i ==0:
                 plt.legend(loc="upper left", ncol=len(data_names),fontsize = sup_fontsize *0.9)
@@ -312,6 +334,8 @@ def time_list_line(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,sho
                                                                         None)
                     title1 = title1.replace("\n", "")
                 plt.title(title1, fontsize=sup_fontsize)
+                picture_ele_dict["title"] = title1
+
             if i == len(times_fo) - 1:
                 #print(x_plot)
                 plt.xticks(x_plot, time_strs,fontsize = sup_fontsize * 0.8)
@@ -319,6 +343,7 @@ def time_list_line(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,sho
             else:
                 plt.xticks(x_plot,time_strs_null)
 
+        picture_ele_dict["y_label"] = all_y_label
         rect_ylabel = [0.03, 0.45, 0.0, 0.0]  # 左下宽高
         ax_ylabel = plt.axes(rect_ylabel)
         ax_ylabel.axes.set_axis_off()
@@ -339,12 +364,26 @@ def time_list_line(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,sho
         if show:
             plt.show()
         plt.close()
+        json_path1 = None
+        if json_path is None:
+            if json_dir is None:
+                pass
+            else:
+                json_path1 = json_dir+"\\" + str(id) + ".json"
+        else:
+            json_path1 = json_path[n]
+
+        if json_path1 is not None:
+            meteva.base.tool.path_tools.creat_path(json_path1)
+            file = open(json_path1,"w")
+            json.dump(picture_ele_dict,file)
+            print("have printed pictrue elements to " + json_path1)
 
 
 
 def time_list_mesh_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
                    max_error = None,cmap_error = None,show = False,xtimetype = "mid",dpi = 300,annot =True,title = "多时效预报误差对比图",
-                         sup_fontsize = 10,width = None,height = None):
+                         sup_fontsize = 10,width = None,height = None,json_dir = None,json_path = None):
     '''
 
     :param sta_ob_and_fos0:
@@ -425,17 +464,16 @@ def time_list_mesh_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
             step +=1
 
     y_plot = np.arange(0,row,step)+0.5
-    for j in range(0,row,step):
+    yticklabels = []
+    for j in range(0,row,1):
         jr = row - j - 1
         time_fo = t_fo0 + datetime.timedelta(hours=1) * dh_y * jr
         hour = time_fo.hour
         day = time_fo.day
-        #if ((j * int(dh_y)) % 3 == 0):
         str1 = str(day) + "日" + str(hour) + "时"
-        #else:
-        #    str1 = str(hour) + "时"
-        #print(str1)
-        y_ticks.append(str1)
+        yticklabels.append(str1)
+        if j%step ==0:
+            y_ticks.append(str1)
 
     if width is None:
         width = 8
@@ -476,6 +514,10 @@ def time_list_mesh_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
         #sta_one_member = meteva.base.combine_join(sta_ob_part2, sta_fo_all2)
         #以最近的预报作为窗口中间的时刻
         for id in ids:
+            picture_ele_dict = {}
+            picture_ele_dict["xticklabels"] = meteva.product.program.fun.get_time_str_list(times_ob, row=3)
+            picture_ele_dict["yticklabels"] = yticklabels
+            
             sta_one_id = meteva.base.in_id_list(sta_one_member,id)
             dat = np.ones((col, row)) * meteva.base.IV
             for j in range(row):
@@ -488,7 +530,9 @@ def time_list_mesh_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
                 dat[index_i,j] = sta_on_row.values[:,-1] - sta_on_row.values[:,-2]
             mask = np.zeros_like(dat.T)
             mask[dat.T == meteva.base.IV] = True
-
+            
+            picture_ele_dict["error"] = dat.tolist()
+            
             vmin = np.min(dat[dat != meteva.base.IV])
             vmax = np.max(dat[dat != meteva.base.IV])
 
@@ -511,6 +555,7 @@ def time_list_mesh_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
             ax2.set_yticks(y_plot)
             ax2.set_yticklabels(y_ticks, rotation=360, fontsize=sup_fontsize * 0.8)
 
+            
             ax2.grid(linestyle='--', linewidth=0.5)
             ax2.set_ylim(row, 0)
             s1 = s
@@ -549,13 +594,28 @@ def time_list_mesh_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
             if show:
                 plt.show()
             plt.close()
+
+            json_path1 = None
+            if json_path is None:
+                if json_dir is None:
+                    pass
+                else:
+                    json_path1 = json_dir + "\\" + data_name + "_" + str(id) + ".json"
+            else:
+                json_path1 = json_path[kk]
+
+            if json_path1 is not None:
+                meteva.base.tool.path_tools.creat_path(json_path1)
+                file = open(json_path1, "w")
+                json.dump(picture_ele_dict, file)
+                print("have printed pictrue elements to " + json_path1)
             kk += 1
     return
 
 def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
                    clev = None,cmap = None,plot_error = True,max_error = None,cmap_error= None,
                    show = False,xtimetype = "mid",dpi = 300,annot =True,title = "预报准确性和稳定性对比图",
-                   sup_fontsize = 10,width = None,height = None):
+                   sup_fontsize = 10,width = None,height = None,json_dir = None,json_path = None):
     '''
 
     :param sta_ob_and_fos0:
@@ -643,17 +703,18 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
             step +=1
 
     y_plot = np.arange(0,row,step)+0.5
-    for j in range(0,row,step):
+    yticklabels = []
+    for j in range(0,row,1):
         jr = row - j - 1
         time_fo = t_fo0 + datetime.timedelta(hours=1) * dh_y * jr
         hour = time_fo.hour
         day = time_fo.day
-        #if ((j * int(dh_y)) % 3 == 0):
         str1 = str(day) + "日" + str(hour) + "时"
-        #else:
-        #    str1 = str(hour) + "时"
-        #print(str1)
-        y_ticks.append(str1)
+        yticklabels.append(str1)
+        if j%step ==0:
+            y_ticks.append(str1)
+
+
     if width is None:
         width = 8
     x_plot,x_ticks = meteva.product.get_x_ticks(times_ob,width-2)
@@ -700,6 +761,10 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
         #以最近的预报作为窗口中间的时刻
 
         for id in ids:
+            picture_ele_dict = {}
+            picture_ele_dict["xticklabels"] = meteva.product.program.fun.get_time_str_list(times_ob, row=3)
+            picture_ele_dict["yticklabels"] = yticklabels
+
             sta_one_id = meteva.base.in_id_list(sta_one_member,id)
             dat = np.ones((col, row)) * meteva.base.IV
             for j in range(row):
@@ -713,7 +778,7 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
                 dat[index_i,j] = sta_on_row.values[:,-1]
             mask = np.zeros_like(dat.T)
             mask[dat.T == meteva.base.IV] = True
-
+            picture_ele_dict["dat"] = dat.tolist()
             vmin = np.min(dat[dat != meteva.base.IV])
             vmax = np.max(dat[dat != meteva.base.IV])
             #print(vmax)
@@ -732,6 +797,8 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
                     for j in range(row):
                         if dat[i, j] != meteva.base.IV:
                             dvalue[i, j] = dat[i, j] - top_value
+
+                picture_ele_dict["error"] = dvalue.tolist()
 
                 fmt_str = ".0f"
                 if cmap_error is None:
@@ -760,6 +827,7 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
                 #plt.tick_params(top='on', right='on', which='both')  # 显示上侧和右侧的刻度
                 plt.rcParams['xtick.direction'] = 'in'  # 将x轴的刻度线方向设置抄向内
                 plt.rcParams['ytick.direction'] = 'in'  # 将y轴的刻度方知向设置向内
+                picture_ele_dict["ob_rect"] = []
 
                 for k in range(row + 1):
                     jr = row - k - 1
@@ -768,11 +836,11 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
                     x1 = (dhx0 - dh_y) / dh_x
                     y1 = k
                     rect = patches.Rectangle((x1, y1), dh_y / dh_x, 1, linewidth=2, edgecolor='k', facecolor='none')
+                    picture_ele_dict["ob_rect"].append([x1,y1,dh_y/dh_x,1])
                     ax1.add_patch(rect)
                 rect = patches.Rectangle((0, 0), col, row, linewidth=0.8, edgecolor='k', facecolor='none')
                 ax1.set_ylim(row, 0)
                 ax1.add_patch(rect)
-
             else:
                 if height is None:
                     height = width * row / col + 1.2
@@ -843,6 +911,20 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
             if show:
                 plt.show()
             plt.close()
+            json_path1 = None
+            if json_path is None:
+                if json_dir is None:
+                    pass
+                else:
+                    json_path1 = json_dir + "\\" + data_name + "_" + str(id) + ".json"
+            else:
+                json_path1 = json_path[kk1]
+
+            if json_path1 is not None:
+                meteva.base.tool.path_tools.creat_path(json_path1)
+                file = open(json_path1, "w")
+                json.dump(picture_ele_dict, file)
+                print("have printed pictrue elements to " + json_path1)
             kk1 += 1
     return
 
@@ -850,57 +932,57 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
 
 def time_list_mesh_temp(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,show = False,dpi = 300,annot =True,
                         title = "温度预报准确性和稳定性对比图",
-                        sup_fontsize = 10,width = None,height = None):
+                        sup_fontsize = 10,width = None,height = None,json_dir = None,json_path = None):
     cmap,clev= meteva.base.tool.color_tools.get_cmap_and_clevs_by_element_name("temp")
     time_list_mesh(sta_ob_and_fos0,s,save_dir,save_path,clev,cmap,plot_error,cmap_error= "bwr",show = show,dpi = dpi ,annot = annot,
-    title = title,sup_fontsize= sup_fontsize,width=width,height=height)
+    title = title,sup_fontsize= sup_fontsize,width=width,height=height,json_dir = json_dir,json_path = json_path)
 
 def time_list_mesh_rain01h(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,show = False,dpi = 300,annot =True,
                            title = "1小时降水量预报准确性和稳定性对比图",
-                           sup_fontsize = 10,width = None,height = None):
+                           sup_fontsize = 10,width = None,height = None,json_dir = None,json_path = None):
     cmap,clev= meteva.base.tool.color_tools.get_cmap_and_clevs_by_element_name("rain_1h")
     #clev_error, cmap_error = meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("rain_1h_error")
     time_list_mesh(sta_ob_and_fos0,s,save_dir,save_path,clev,cmap,plot_error,show = show,xtimetype="right",dpi = dpi ,annot = annot,
-    title = title,sup_fontsize= sup_fontsize,width=width,height=height)
+    title = title,sup_fontsize= sup_fontsize,width=width,height=height,json_dir = json_dir,json_path = json_path)
 
 def time_list_mesh_rain03h(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,show = False,dpi = 300,annot =True,
                            title = "3小时降水量预报准确性和稳定性对比图",
-                           sup_fontsize = 10,width = None,height = None):
+                           sup_fontsize = 10,width = None,height = None,json_dir = None,json_path = None):
     cmap,clev= meteva.base.tool.color_tools.get_cmap_and_clevs_by_element_name("rain_3h")
     #clev_error, cmap_error = meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("rain_3h_error")
     time_list_mesh(sta_ob_and_fos0, s, save_dir, save_path, clev, cmap, plot_error, show=show,
                     xtimetype="right",dpi = dpi ,annot = annot,
-    title = title,sup_fontsize= sup_fontsize,width=width,height=height)
+    title = title,sup_fontsize= sup_fontsize,width=width,height=height,json_dir = json_dir,json_path = json_path)
 
 def time_list_mesh_rh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,show = False,dpi = 300,annot =True,
                       title = "相对湿度预报准确性和稳定性对比图",
-                      sup_fontsize = 10,width = None,height = None):
+                      sup_fontsize = 10,width = None,height = None,json_dir = None,json_path = None):
     cmap,clev= meteva.base.tool.color_tools.get_cmap_and_clevs_by_element_name("rh")
     #clev_error, cmap_error = meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("rh_error")
     time_list_mesh(sta_ob_and_fos0,s,save_dir,save_path, clev, cmap, plot_error,show = show,dpi = dpi ,annot = annot,
-    title = title,sup_fontsize= sup_fontsize,width=width,height=height)
+    title = title,sup_fontsize= sup_fontsize,width=width,height=height,json_dir = json_dir,json_path = json_path)
 
 def time_list_mesh_vis(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,show = False,dpi = 300,annot =True,
                        title = "能见度预报准确性和稳定性对比图",
-                       sup_fontsize = 10,width = None,height = None):
+                       sup_fontsize = 10,width = None,height = None,json_dir = None,json_path = None):
     cmap,clev= meteva.base.tool.color_tools.get_cmap_and_clevs_by_element_name("vis")
     #clev_error,cmap_error = meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("vis_error")
     time_list_mesh(sta_ob_and_fos0,s,save_dir,save_path,clev,cmap,plot_error,show = show,dpi = dpi ,annot = annot,
-    title = title,sup_fontsize= sup_fontsize,width=width,height=height)
+    title = title,sup_fontsize= sup_fontsize,width=width,height=height,json_dir = json_dir,json_path = json_path)
 
 
 def time_list_mesh_tcdc(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,show = False,dpi = 300,annot =True,
                         title = "云量预报准确性和稳定性对比图",
-                        sup_fontsize = 10,width = None,height = None):
+                        sup_fontsize = 10,width = None,height = None,json_dir = None,json_path = None):
     cmap,clev= meteva.base.tool.color_tools.get_cmap_and_clevs_by_element_name("tcdc")
     #clev_error, cmap_error = meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("tcdc_error")
     time_list_mesh(sta_ob_and_fos0,s,save_dir,save_path,clev,cmap,plot_error = plot_error,show = show,dpi = dpi ,annot = annot,
-    title = title,sup_fontsize= sup_fontsize,width=width,height=height)
+    title = title,sup_fontsize= sup_fontsize,width=width,height=height,json_dir = json_dir,json_path = json_path)
 
 
 def time_list_mesh_wind(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,
                         max_error = None,show = False,dpi = 300,title = "风预报准确性和稳定性对比图",
-                        sup_fontsize = 10,width = None,height = None):
+                        sup_fontsize = 10,width = None,height = None,json_dir = None,json_path = None):
 
     if max_error is None:
         sta_ob_fos0_noIV = meteva.base.not_IV(sta_ob_and_fos0)
@@ -1029,6 +1111,10 @@ def time_list_mesh_wind(sta_ob_and_fos0,s = None,save_dir = None,save_path = Non
 
         # 以最近的预报作为窗口中间的时刻
         for id in ids:
+            picture_ele_dict = {}
+            picture_ele_dict["xticklabels"] = meteva.product.program.fun.get_time_str_list(times_ob, row=3)
+            picture_ele_dict["subplots"] = {}
+
             sta_one_id = meteva.base.in_id_list(sta_one_member, id)
             #dat = np.ones((col, row)) * meteva.base.IV
             dat_u = np.ones((row,col)) * meteva.base.IV
@@ -1198,6 +1284,20 @@ def time_list_mesh_wind(sta_ob_and_fos0,s = None,save_dir = None,save_path = Non
             if show:
                 plt.show()
             plt.close()
+            json_path1 = None
+            if json_path is None:
+                if json_dir is None:
+                    pass
+                else:
+                    json_path1 = json_dir + "\\" + str(id) + ".png"
+            else:
+                json_path1 = json_path[kk1]
+
+            if json_path1 is not None:
+                meteva.base.tool.path_tools.creat_path(json_path1)
+                file = open(json_path1, "w")
+                json.dump(picture_ele_dict, file)
+                print("have printed pictrue elements to " + json_path1)
             kk1 += 1
     return
 
@@ -1206,7 +1306,7 @@ def time_list_mesh_wind(sta_ob_and_fos0,s = None,save_dir = None,save_path = Non
 
 def time_list_mesh_wind1(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,plot_error = True,show = False,
                          dpi = 200,title = "预报准确性和稳定性对比图",
-                         sup_fontsize = 10,width = None,height = None):
+                         sup_fontsize = 10,width = None,height = None,json_dir = None,json_path = None):
 
     sta_ob_and_fos1 = meteva.base.sele_by_dict(sta_ob_and_fos0, s)
     data_names = meteva.base.get_stadata_names(sta_ob_and_fos1)
