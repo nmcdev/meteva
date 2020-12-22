@@ -112,7 +112,7 @@ def error_boxplot(sta_ob_and_fos0,s = None, g = None, gll=None,
         picture_ele_dict["rmse"] = rmse_list
         picture_ele_dict["correct_rate"] = right_rate
         picture_ele_dict["sample_count"] = tcount
-        picture_ele_dict["xlabel"] = group_name_list
+        picture_ele_dict["xticklabels"] = group_name_list
 
         right_rate = np.array(right_rate)
         tcount = np.array(tcount)
@@ -250,7 +250,7 @@ def error_boxplot(sta_ob_and_fos0,s = None, g = None, gll=None,
             if json_dir is None:
                 pass
             else:
-                json_path1 = json_dir + "/" + data_names[v + 1] + ".png"
+                json_path1 = json_dir + "/" + data_names[v + 1] + ".json"
         else:
             json_path1 = json_path[v]
         if json_path1 is not None:
@@ -349,7 +349,7 @@ def error_boxplot_abs(sta_ob_and_fos0,s = None, g = None, gll=None,
         picture_ele_dict["rmse"] = rmse_list
         picture_ele_dict["correct_rate"] = right_rate
         picture_ele_dict["sample_count"] = tcount
-        picture_ele_dict["xlabel"] = group_name_list
+        picture_ele_dict["xticklabels"] = group_name_list
 
         if vmin is None:
             vmin1 = np.min(np.array(me_list))
@@ -461,7 +461,7 @@ def error_boxplot_abs(sta_ob_and_fos0,s = None, g = None, gll=None,
             if json_dir is None:
                 pass
             else:
-                json_path1 = json_dir + "/" + data_names[v + 1] + ".png"
+                json_path1 = json_dir + "/" + data_names[v + 1] + ".json"
         else:
             json_path1 = json_path[v]
         if json_path1 is not None:
