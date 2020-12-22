@@ -45,8 +45,9 @@ def plot(sta_ob_and_fos0,method,s = None,g = None,gll = None,save_dir = None,sav
             else:
                 valid_group_list = gll1[i]
                 valid_gll.append(gll1[i])
-            ob = sta[data_name[0]].values
-            fo = sta[data_name[1:]].values.T
+
+            #ob = sta[data_name[0]].values
+            #fo = sta[data_name[1:]].values.T
 
 
             if isinstance(title, list):
@@ -64,10 +65,27 @@ def plot(sta_ob_and_fos0,method,s = None,g = None,gll = None,save_dir = None,sav
 
             kwargs["title"] = title1
             method_para = method.__code__.co_varnames[:method.__code__.co_argcount]
-            if "member_list" in method_para:
-                kwargs["member_list"] = data_name[1:]
+
             meteva.base.creat_path(save_path1)
-            method(ob, fo,save_path = save_path1,**kwargs)
+            if method.__name__.find("_uv")>=0:
+                if "member_list" in method_para:
+                    member_list = data_name[2::2]
+                    member_list1 = []
+                    for member in member_list:
+                        str1 = member.replace("u_","")
+                        member_list1.append(str1)
+                    kwargs["member_list"] = member_list1
+                u_ob = sta[data_name[0]].values
+                v_ob = sta[data_name[1]].values
+                u_fo = sta[data_name[2::2]].values.T
+                v_fo = sta[data_name[3::2]].values.T
+                method(u_ob,u_fo,v_ob,v_fo,**kwargs)
+            else:
+                if "member_list" in method_para:
+                    kwargs["member_list"] = data_name[1:]
+                ob = sta[data_name[0]].values
+                fo = sta[data_name[1:]].values.T
+                method(ob, fo,save_path = save_path1,**kwargs)
 
     return valid_gll
 
