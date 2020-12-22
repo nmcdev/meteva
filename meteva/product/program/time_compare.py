@@ -118,7 +118,7 @@ def time_list_line_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
         all_y_label = []
 
         picture_ele_dict = {}
-        picture_ele_dict["x_label"] = meteva.product.program.fun.get_time_str_list(time_all,row=3)
+        picture_ele_dict["xticklabels"] = meteva.product.program.fun.get_time_str_list(time_all,row=3)
         picture_ele_dict["vmin"] = vmin
         picture_ele_dict["vmax"] = vmax
         picture_ele_dict["subplots"] ={}
@@ -203,7 +203,7 @@ def time_list_line_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
             if json_dir is None:
                 pass
             else:
-                json_path1 = json_dir+"\\" + str(id) + ".png"
+                json_path1 = json_dir+"\\" + str(id) + ".json"
         else:
             json_path1 = json_path[n]
 
@@ -291,7 +291,7 @@ def time_list_line(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,sho
 
         all_y_label = []
         picture_ele_dict = {}
-        picture_ele_dict["x_label"] = meteva.product.program.fun.get_time_str_list(time_all,row=3)
+        picture_ele_dict["xticklabels"] = meteva.product.program.fun.get_time_str_list(time_all,row=3)
         picture_ele_dict["vmin"] = vmin
         picture_ele_dict["vmax"] = vmax
         picture_ele_dict["subplots"] ={}
@@ -369,7 +369,7 @@ def time_list_line(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,sho
             if json_dir is None:
                 pass
             else:
-                json_path1 = json_dir+"\\" + str(id) + ".png"
+                json_path1 = json_dir+"\\" + str(id) + ".json"
         else:
             json_path1 = json_path[n]
 
@@ -464,17 +464,16 @@ def time_list_mesh_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
             step +=1
 
     y_plot = np.arange(0,row,step)+0.5
-    for j in range(0,row,step):
+    yticklabels = []
+    for j in range(0,row,1):
         jr = row - j - 1
         time_fo = t_fo0 + datetime.timedelta(hours=1) * dh_y * jr
         hour = time_fo.hour
         day = time_fo.day
-        #if ((j * int(dh_y)) % 3 == 0):
         str1 = str(day) + "日" + str(hour) + "时"
-        #else:
-        #    str1 = str(hour) + "时"
-        #print(str1)
-        y_ticks.append(str1)
+        yticklabels.append(str1)
+        if j%step ==0:
+            y_ticks.append(str1)
 
     if width is None:
         width = 8
@@ -516,9 +515,9 @@ def time_list_mesh_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
         #以最近的预报作为窗口中间的时刻
         for id in ids:
             picture_ele_dict = {}
-            picture_ele_dict["x_label"] = meteva.product.program.fun.get_time_str_list(times_ob, row=3)
-            picture_ele_dict["subplots"] = {}
-
+            picture_ele_dict["xticklabels"] = meteva.product.program.fun.get_time_str_list(times_ob, row=3)
+            picture_ele_dict["yticklabels"] = yticklabels
+            
             sta_one_id = meteva.base.in_id_list(sta_one_member,id)
             dat = np.ones((col, row)) * meteva.base.IV
             for j in range(row):
@@ -531,7 +530,9 @@ def time_list_mesh_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
                 dat[index_i,j] = sta_on_row.values[:,-1] - sta_on_row.values[:,-2]
             mask = np.zeros_like(dat.T)
             mask[dat.T == meteva.base.IV] = True
-
+            
+            picture_ele_dict["error"] = dat.tolist()
+            
             vmin = np.min(dat[dat != meteva.base.IV])
             vmax = np.max(dat[dat != meteva.base.IV])
 
@@ -554,6 +555,7 @@ def time_list_mesh_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
             ax2.set_yticks(y_plot)
             ax2.set_yticklabels(y_ticks, rotation=360, fontsize=sup_fontsize * 0.8)
 
+            
             ax2.grid(linestyle='--', linewidth=0.5)
             ax2.set_ylim(row, 0)
             s1 = s
@@ -598,7 +600,7 @@ def time_list_mesh_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
                 if json_dir is None:
                     pass
                 else:
-                    json_path1 = json_dir + "\\" + str(id) + ".png"
+                    json_path1 = json_dir + "\\" + data_name + "_" + str(id) + ".json"
             else:
                 json_path1 = json_path[kk]
 
@@ -701,17 +703,18 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
             step +=1
 
     y_plot = np.arange(0,row,step)+0.5
-    for j in range(0,row,step):
+    yticklabels = []
+    for j in range(0,row,1):
         jr = row - j - 1
         time_fo = t_fo0 + datetime.timedelta(hours=1) * dh_y * jr
         hour = time_fo.hour
         day = time_fo.day
-        #if ((j * int(dh_y)) % 3 == 0):
         str1 = str(day) + "日" + str(hour) + "时"
-        #else:
-        #    str1 = str(hour) + "时"
-        #print(str1)
-        y_ticks.append(str1)
+        yticklabels.append(str1)
+        if j%step ==0:
+            y_ticks.append(str1)
+
+
     if width is None:
         width = 8
     x_plot,x_ticks = meteva.product.get_x_ticks(times_ob,width-2)
@@ -759,8 +762,8 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
 
         for id in ids:
             picture_ele_dict = {}
-            picture_ele_dict["x_label"] = meteva.product.program.fun.get_time_str_list(times_ob, row=3)
-            picture_ele_dict["subplots"] = {}
+            picture_ele_dict["xticklabels"] = meteva.product.program.fun.get_time_str_list(times_ob, row=3)
+            picture_ele_dict["yticklabels"] = yticklabels
 
             sta_one_id = meteva.base.in_id_list(sta_one_member,id)
             dat = np.ones((col, row)) * meteva.base.IV
@@ -775,7 +778,7 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
                 dat[index_i,j] = sta_on_row.values[:,-1]
             mask = np.zeros_like(dat.T)
             mask[dat.T == meteva.base.IV] = True
-
+            picture_ele_dict["dat"] = dat.tolist()
             vmin = np.min(dat[dat != meteva.base.IV])
             vmax = np.max(dat[dat != meteva.base.IV])
             #print(vmax)
@@ -794,6 +797,8 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
                     for j in range(row):
                         if dat[i, j] != meteva.base.IV:
                             dvalue[i, j] = dat[i, j] - top_value
+
+                picture_ele_dict["error"] = dvalue.tolist()
 
                 fmt_str = ".0f"
                 if cmap_error is None:
@@ -822,6 +827,7 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
                 #plt.tick_params(top='on', right='on', which='both')  # 显示上侧和右侧的刻度
                 plt.rcParams['xtick.direction'] = 'in'  # 将x轴的刻度线方向设置抄向内
                 plt.rcParams['ytick.direction'] = 'in'  # 将y轴的刻度方知向设置向内
+                picture_ele_dict["ob_rect"] = []
 
                 for k in range(row + 1):
                     jr = row - k - 1
@@ -830,11 +836,11 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
                     x1 = (dhx0 - dh_y) / dh_x
                     y1 = k
                     rect = patches.Rectangle((x1, y1), dh_y / dh_x, 1, linewidth=2, edgecolor='k', facecolor='none')
+                    picture_ele_dict["ob_rect"].append([x1,y1,dh_y/dh_x,1])
                     ax1.add_patch(rect)
                 rect = patches.Rectangle((0, 0), col, row, linewidth=0.8, edgecolor='k', facecolor='none')
                 ax1.set_ylim(row, 0)
                 ax1.add_patch(rect)
-
             else:
                 if height is None:
                     height = width * row / col + 1.2
@@ -910,7 +916,7 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
                 if json_dir is None:
                     pass
                 else:
-                    json_path1 = json_dir + "\\" + str(id) + ".png"
+                    json_path1 = json_dir + "\\" + data_name + "_" + str(id) + ".json"
             else:
                 json_path1 = json_path[kk1]
 
@@ -1106,7 +1112,7 @@ def time_list_mesh_wind(sta_ob_and_fos0,s = None,save_dir = None,save_path = Non
         # 以最近的预报作为窗口中间的时刻
         for id in ids:
             picture_ele_dict = {}
-            picture_ele_dict["x_label"] = meteva.product.program.fun.get_time_str_list(times_ob, row=3)
+            picture_ele_dict["xticklabels"] = meteva.product.program.fun.get_time_str_list(times_ob, row=3)
             picture_ele_dict["subplots"] = {}
 
             sta_one_id = meteva.base.in_id_list(sta_one_member, id)
