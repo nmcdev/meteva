@@ -119,6 +119,23 @@ def cmap_clevs_bias(vmax):
     cmap = colors.ListedColormap(cmap_list, 'indexed')
     return cmap,clev_list
 
+
+def cmap_clevs_mode(vmax):
+    '''
+    定义mode目标绘制的colorbar
+    :param vmax:  最大的目标编号
+    :return:
+    '''
+    if vmax <12:
+        cmap1,clevs1 = def_cmap_clevs(cmap="Paired",clevs=np.arange(1,vmax+1))
+    elif vmax <20:
+        cmap1, clevs1 = def_cmap_clevs(cmap="tab20b", clevs=np.arange(1, vmax + 1))
+    else:
+        cmap1, clevs1 = def_cmap_clevs(cmap="gist_rainbow", clevs=np.arange(1, vmax + 1))
+    cmap2,clevs2 = def_cmap_clevs(cmap = "gray",clevs = [-2,-1,0],vmin = -1,cut_accurate=True)
+    cmap3,clevs3 = merge_cmap_clevs(cmap2,clevs2,cmap1,clevs1)
+    return cmap3,clevs3
+
 def cmap_clevs_ts():
     clevs = np.arange(0,1.01,0.1)
     nclev = len(clevs)
@@ -488,6 +505,8 @@ def get_cmap_and_clevs_by_name(cmap_name,vmin,vmax):
         cmap,clevs = cmap_clevs_far()
     elif cmap_name == "far":
         cmap,clevs = cmap_clevs_far()
+    elif cmap_name == "mode":
+        cmap, clevs = cmap_clevs_mode(vmax)
     else:
         print("该配色方案名称不识别")
         return None,None
@@ -516,6 +535,7 @@ class cmaps:
     ts = "ts"
     far = "far"
     mr = "mr"
+    mode = "mode"
 
 
 def coordinate_cmap_to_clevs(cmap,clevs):
