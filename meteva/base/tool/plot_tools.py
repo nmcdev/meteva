@@ -286,6 +286,220 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap ="rainbo
     plt.close()
 
 
+def plot_2d_grid_list(grd_list,type = "contour",save_path = None,title = None,clevs= None,cmap ="rainbow",add_county_line = False,add_worldmap =False,show = False,dpi = 300,
+                     sup_fontsize = 10,height = None,width = None,ncol = None,vmax = None,vmin = 0):
+
+
+    if save_path is None:
+        show = True
+    x = grd_list[0]['lon'].values
+    slon = x[0]
+    elon = x[-1]
+    y = grd_list[0]['lat'].values
+    slat = y[0]
+    elat = y[-1]
+    rlon = x[-1] - x[0]
+    rlat = y[-1] - y[0]
+
+
+
+    height_title = sup_fontsize * 0.1
+    height_bottem_xticsk = sup_fontsize * 0.05
+    height_hspace = sup_fontsize * 0.03
+
+    width_wspace = height_hspace
+
+    width_colorbar = 0.5
+    width_left_yticks = sup_fontsize * 0.1
+
+    nplot = len(grd_list)
+    if ncol is None:
+        match_list = []
+        for i in range(nplot,0,-1):
+            ncol = i
+            nrow = int(math.ceil(len(grd_list) / ncol))
+            rate = ncol * rlon/(nrow * rlat)
+            if rate <2 and rate > 9/16:
+                match_list.append([i,ncol * nrow - nplot])
+        if len(match_list)  ==0:
+            ncol = nplot
+        else:
+            match_array = np.array(match_list)
+            min_index = np.argmin(match_array[:,1])
+            ncol = match_array[min_index,0]
+    nrow = int(math.ceil(nplot / ncol))
+
+    if width is None and height is None:
+        width = 8
+
+    if width is None:
+        height_all_plot = height - height_title - height_bottem_xticsk - (nrow-1) * height_hspace
+        height_map = height_all_plot / nrow
+        width_map = height_map * rlon / rlat
+        width_all_plot = width_map * ncol + (ncol-1) * width_wspace
+        width = width_all_plot + width_colorbar + width_left_yticks
+    else:
+        width_all_plot = width - width_colorbar - width_left_yticks - (ncol - 1) * width_wspace
+        width_map = width_all_plot / ncol
+        height_map = width_map * rlat / rlon
+        height_all_plot = height_map * nrow + (nrow-1) * height_hspace
+        height = height_all_plot + height_title + height_bottem_xticsk
+
+
+    cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap, clevs=clevs, vmin=vmin, vmax=vmax)
+    norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
+
+    vmax = elon
+    vmin = slon
+    r = rlon
+    if r <= 1:
+        inte = 0.1
+    elif r <= 5 and r > 1:
+        inte = 1
+    elif r <= 10 and r > 5:
+        inte = 2
+    elif r < 20 and r >= 10:
+        inte = 4
+    elif r <= 30 and r >= 20:
+        inte = 5
+    elif r < 180:
+        inte = 10
+    else:
+        inte = 20
+
+    vmin = inte * (math.ceil(vmin / inte))
+    vmax = inte * ((int)(vmax / inte) + 1)
+
+    xticks = np.arange(vmin, vmax, inte)
+    xticks_label = []
+    xticks_label_None = []
+    for i in range(len(xticks)):
+        xticks_label.append(str(round(xticks[i],6)))
+        xticks_label_None.append("")
+    if xticks[-1] >0:
+        xticks_label[-1] ="   " +xticks_label[-1] + "°E"
+    else:
+        xticks_label[-1] ="   " +xticks_label[-1] + "°W"
+
+
+    vmax = elat
+    vmin = slat
+    r = rlat
+    if r <= 1:
+        inte = 0.1
+    elif r <= 5 and r > 1:
+        inte = 1
+    elif r <= 10 and r > 5:
+        inte = 2
+    elif r < 20 and r >= 10:
+        inte = 4
+    elif r <= 30 and r >= 20:
+        inte = 5
+    else:
+        inte = 10
+
+    vmin = inte * (math.ceil(vmin / inte))
+    vmax = inte * ((int)(vmax / inte) + 1)
+    yticks = np.arange(vmin, vmax, inte)
+    yticks_label = []
+    yticks_label_None = []
+    for j in range(len(yticks)):
+        if yticks[j] >= 0:
+            yticks_label.append(str(round(yticks[j],6))+"°N")
+        else:
+            yticks_label.append(str(round(-yticks[j], 6)) +"°S")
+        yticks_label_None.append("")
+
+
+    if isinstance(title, list):
+        if nplot != len(title):
+            print("手动设置的title数目和要绘制的图形数目不一致")
+            return
+
+
+    fig = plt.figure(figsize=(width, height), dpi=dpi)
+
+    for p in range(nplot):
+        pi = p % ncol
+        pj = int(p / ncol)
+        rect1 = [(width_left_yticks + pi * (width_map + width_wspace))/width,
+                 (height_bottem_xticsk + (nrow -1- pj) * (height_map + height_hspace))/height,
+                 width_map / width,
+                 height_map / height]
+        ax = plt.axes(rect1)
+
+        if title is None:
+            try:
+
+                time_str = meteva.base.tool.time_tools.time_to_str(grd_list[p]["time"].values[0])
+                dati_str = time_str[0:4] + "年" + time_str[4:6] + "月" + time_str[6:8] + "日" + time_str[8:10] + "时"
+                title1 = grd_list[p]["member"].values[0] + " " + dati_str + str(grd_list[p]["dtime"].values[0]) + "H时效 "
+            except:
+                print("time or dtime or level 格式错误，请更改相应数据格式或直接指定title")
+                title1= ""
+        else:
+            #title1 = title.replace("NNN",data_name)
+            if isinstance(title,list):
+                title1 = title[p]
+            else:
+                title1 = title
+
+        plt.title(title1,fontsize = sup_fontsize,pad = 0)
+
+        if slon < 70 or elon > 140 or slat < 10 or elat > 60:
+            add_worldmap = True
+        if add_worldmap:
+            add_china_map_2basemap(ax, name="world", edgecolor='k', lw=0.3, encoding='gbk', grid0=None)  # "国界"
+
+
+        add_china_map_2basemap(ax, name="nation", edgecolor='k', lw=0.3, encoding='gbk',grid0 = None)  # "省界"
+        add_china_map_2basemap(ax, edgecolor='k', lw=0.3, encoding='gbk')  # "省界"
+        if add_county_line:
+            add_china_map_2basemap(ax, name="county", edgecolor='k', lw=0.2, encoding='gbk', grid0=None)  # "县界"
+        ax.set_xlim((slon, elon))
+        ax.set_ylim((slat, elat))
+
+
+
+        knext_row = pi + (pj + 1) * ncol
+        if knext_row >= nplot:
+            ax.set_xticks(xticks)
+            ax.set_xticklabels(xticks_label, fontsize=sup_fontsize * 0.8)
+        else:
+            ax.set_xticks(xticks)
+            ax.set_xticklabels(xticks_label_None, fontsize=sup_fontsize * 0.8)
+
+        if pi ==0:
+            ax.set_yticks(yticks)
+            ax.set_yticklabels(yticks_label, fontsize=sup_fontsize * 0.8)
+        else:
+            ax.set_yticks(yticks)
+            ax.set_yticklabels(yticks_label_None, fontsize=sup_fontsize * 0.8)
+        if type == "contour":
+            im = ax.contourf(x, y, np.squeeze(grd_list[p].values), levels=clevs1, cmap=cmap1, norm=norm)
+        else:
+            im = ax.pcolormesh(x, y, np.squeeze(grd_list[p].values), cmap=cmap1, norm=norm)
+    left_low = (width_left_yticks + ncol * (width_map  + width_wspace))/width
+    colorbar_position = fig.add_axes([left_low, height_bottem_xticsk / height,0.02, height_all_plot/height])  # 位置[左,下,宽,高]
+    cb = plt.colorbar(im, cax=colorbar_position)
+    cb.ax.tick_params(labelsize=sup_fontsize *0.8)  #设置色标刻度字体大小。
+    if save_path is None:
+        show = True
+
+    if save_path is not None:
+        meteva.base.tool.path_tools.creat_path(save_path)
+        file1, extension = os.path.splitext(save_path)
+        if(len(extension) ==0):
+            print("save_path中没包含后缀，如.png等,未能输出至指定路径")
+            return
+        extension = extension[1:]
+        plt.savefig(save_path,format = extension,bbox_inches='tight')
+        print("图片已保存至" + save_path)
+    if show:
+        plt.show()
+    plt.close()
+
+
 def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = "rainbow",add_county_line = False,add_worldmap=False,show = False,dpi = 300,
                        sup_fontsize = 10,height = None,width = None):
 
@@ -808,6 +1022,7 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
     cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap, clevs=clevs, vmin=vmin, vmax=vmax)
 
     norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
+    #print(sta0_list[0])
     pointsize = int(100 * map_area / len(sta0_list[0].index))
     if (pointsize > 30): pointsize = 30
     if (pointsize < 1): pointsize = 1
