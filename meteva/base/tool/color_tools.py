@@ -89,6 +89,26 @@ def clev_cmap_cloud_total_error():
     print("不再推荐使用该函数，推荐使用meb.def_cmap_clevs相应功能,请参考color工具中相关说明")
     return clevs, cmap
 
+def cmap_clevs_temper_2m_error():
+    clevs1 = [-20,-12,-8,-6,-4,-2,-1]
+    nclev = len(clevs1)
+    colors0 = cm.get_cmap("winter", nclev)
+    colors_list = []
+    for i in range(nclev):
+        colors_list.append(colors0(i))
+
+    clevs2 = [0,1,2,4,6,8,12,20]
+    nclev = len(clevs2)
+    colors0 = cm.get_cmap("autumn", nclev)
+    for i in range(nclev):
+        colors_list.append(colors0(nclev - 1 - i))
+    clevs1.extend(clevs2)
+
+    cmap = colors.ListedColormap(colors_list, 'indexed')
+
+    return cmap, clevs1
+
+
 def get_cmap_and_clevs_from_file(path):
     clev_cmap = np.loadtxt(path)
     clevs = clev_cmap[:, 0]
@@ -119,6 +139,49 @@ def cmap_clevs_bias(vmax):
     cmap = colors.ListedColormap(cmap_list, 'indexed')
     return cmap,clev_list
 
+def cmap_clevs_me(vmin,vmax):
+
+    max_abs = max(abs(vmax),abs(vmin))
+    vmax = max_abs
+    vmin = -max_abs
+    dif = (vmax - vmin) / 10.0
+    inte = math.pow(10, math.floor(math.log10(dif)));
+    # 用基本间隔，将最大最小值除于间隔后小数点部分去除，最后把间隔也整数化
+    r = dif / inte
+    if r < 3 and r >= 1.5:
+        inte = inte * 2
+    elif r < 4.5 and r >= 3:
+        inte = inte * 4
+    elif r < 5.5 and r >= 4.5:
+        inte = inte * 5
+    elif r < 7 and r >= 5.5:
+        inte = inte * 6
+    elif r >= 7:
+        inte = inte * 8
+
+    inte = inte/2
+
+    vmin = inte * ((int)(vmin / inte) - 1)
+
+    vmax = inte * ((int)(vmax / inte) + 2)
+    clevs1 = np.arange(vmin, 0, inte)
+    nclev = len(clevs1)
+    colors0 = cm.get_cmap("winter", nclev)
+    colors_list = []
+    for i in range(nclev):
+        colors_list.append(colors0(i))
+
+    clevs2 = np.arange(0, vmax, inte)
+    nclev = len(clevs2)
+    colors0 = cm.get_cmap("autumn", nclev)
+    for i in range(nclev):
+        colors_list.append(colors0(nclev -1 - i))
+    clevs = np.arange(vmin, vmax, inte)
+
+    cmap = colors.ListedColormap(colors_list, 'indexed')
+
+    return cmap,clevs
+
 
 def cmap_clevs_mode(vmax):
     '''
@@ -127,12 +190,12 @@ def cmap_clevs_mode(vmax):
     :return:
     '''
     if vmax <12:
-        cmap1,clevs1 = def_cmap_clevs(cmap="Paired",clevs=np.arange(1,vmax+1))
+        cmap1,clevs1 = def_cmap_clevs(cmap="Paired",clevs=np.arange(0,vmax))
     elif vmax <20:
-        cmap1, clevs1 = def_cmap_clevs(cmap="tab20b", clevs=np.arange(1, vmax + 1))
+        cmap1, clevs1 = def_cmap_clevs(cmap="tab20b", clevs=np.arange(0, vmax ))
     else:
-        cmap1, clevs1 = def_cmap_clevs(cmap="gist_rainbow", clevs=np.arange(1, vmax + 1))
-    cmap2,clevs2 = def_cmap_clevs(cmap = "gray",clevs = [-2,-1,0],vmin = -1,cut_accurate=True)
+        cmap1, clevs1 = def_cmap_clevs(cmap="gist_rainbow", clevs=np.arange(0, vmax ))
+    cmap2,clevs2 = def_cmap_clevs(cmap = "gray",clevs = [-3,-2,-1],vmin = -1,cut_accurate=True)
     cmap3,clevs3 = merge_cmap_clevs(cmap2,clevs2,cmap1,clevs1)
     return cmap3,clevs3
 
@@ -172,7 +235,7 @@ def cmap_clevs_mr():
     return cmap,clevs
 
 
-def cmap_clevs_error(vmax,vmin):
+def cmap_clevs_error(vmin,vmax):
 
     max_abs = max(abs(vmax),abs(vmin))
     vmax = max_abs
@@ -200,8 +263,8 @@ def cmap_clevs_error(vmax,vmin):
     for i in range(nclev):
         colors_list.append(colors0(i))
     cmap = colors.ListedColormap(colors_list, 'indexed')
-
     return cmap,clevs
+
 
 def get_steps_range(line):
     num = len(line)
@@ -498,7 +561,9 @@ def get_cmap_and_clevs_by_name(cmap_name,vmin,vmax):
     elif cmap_name == "bias":
         cmap,clevs = cmap_clevs_bias(vmax)
     elif cmap_name == "error":
-        cmap,clevs = cmap_clevs_error(vmax,vmin)
+        cmap,clevs = cmap_clevs_error(vmin,vmax)
+    elif cmap_name == "me":
+        cmap,clevs = cmap_clevs_me(vmin,vmax)
     elif cmap_name == "ts":
         cmap,clevs= cmap_clevs_ts()
     elif cmap_name == "far":
@@ -507,6 +572,8 @@ def get_cmap_and_clevs_by_name(cmap_name,vmin,vmax):
         cmap,clevs = cmap_clevs_far()
     elif cmap_name == "mode":
         cmap, clevs = cmap_clevs_mode(vmax)
+    elif cmap_name == "temper_2m_error":
+        cmap, clevs = cmap_clevs_temper_2m_error()
     else:
         print("该配色方案名称不识别")
         return None,None
@@ -521,7 +588,7 @@ class cmaps:
     rain_24h = "rain_24h"
     rain_24h_error = "rain_24h_error"
     temp_2m = "temp_2m"
-    temp_2m_error = "temp_2m_error"
+    temper_2m_error = "temper_2m_error"
     rh = "rh"
     rh_error = "rh_error"
     vis = "vis"
@@ -536,6 +603,8 @@ class cmaps:
     far = "far"
     mr = "mr"
     mode = "mode"
+    me = "me"
+
 
 
 def coordinate_cmap_to_clevs(cmap,clevs):
