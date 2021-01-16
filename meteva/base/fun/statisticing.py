@@ -155,9 +155,16 @@ def var_of_sta(sta,used_coords = ["member"]):
     sta_var['var'] = var
     return sta_var
 
-def max_of_sta(sta,used_coords = ["member"],span = None,keep_all = True):
+def max_of_sta(sta,used_coords = ["member"],span = None,keep_all = True,ignore_missing = False):
     if not isinstance(used_coords,list):
         used_coords = [used_coords]
+
+    default = np.min(sta.iloc[:,6:].values)
+
+    if ignore_missing:
+        how = "outer"
+    else:
+        how = "inner"
     if used_coords  == ["member"]:
         sta_max = sta.loc[:,meteva.base.get_coord_names()]
         sta_data = sta[meteva.base.get_stadata_names(sta)]
@@ -175,7 +182,7 @@ def max_of_sta(sta,used_coords = ["member"],span = None,keep_all = True):
             for i in range(1,len(times)):
                 rain01 = meteva.base.in_time_list(sta,times[i])
                 meteva.base.set_stadata_coords(rain01,time=times[-1])
-                rain_ac = meteva.base.max_on_level_time_dtime_id(rain_ac, rain01, how="inner")
+                rain_ac = meteva.base.max_on_level_time_dtime_id(rain_ac, rain01, how=how,default= default)
             return rain_ac
         else:
             times = sta.loc[:, 'time'].values
@@ -190,7 +197,7 @@ def max_of_sta(sta,used_coords = ["member"],span = None,keep_all = True):
             for i in range(step):
                 rain1 = sta.copy()
                 rain1["time"] = rain1["time"] + min_dtime * i
-                rain_ac = meteva.base.max_on_level_time_dtime_id(rain_ac, rain1, how="inner")
+                rain_ac = meteva.base.max_on_level_time_dtime_id(rain_ac, rain1, how=how,default=default)
             time0_add_span = times[0] + np.timedelta64(int(min_dhour * (step - 1)),'h')
             rain_ac = meteva.base.sele_by_para(rain_ac,time_range=[time0_add_span,times[-1]])
             if not keep_all:
@@ -209,7 +216,7 @@ def max_of_sta(sta,used_coords = ["member"],span = None,keep_all = True):
             for i in range(1, len(dtimes)):
                 rain01 = meteva.base.in_dtime_list(sta, dtimes[i])
                 meteva.base.set_stadata_coords(rain01, dtime=dtimes[-1])
-                rain_ac = meteva.base.max_on_level_time_dtime_id(rain_ac, rain01, how="inner")
+                rain_ac = meteva.base.max_on_level_time_dtime_id(rain_ac, rain01, how=how,default= default)
             return rain_ac
         else:
             dtimes = sta.loc[:, 'dtime'].values
@@ -230,7 +237,7 @@ def max_of_sta(sta,used_coords = ["member"],span = None,keep_all = True):
                 rain1 = sta.copy()
                 rain1["dtime"] = rain1["dtime"] + dhour_unit * i
                 # print(dhour_unit * i)
-                rain_ac = meteva.base.max_on_level_time_dtime_id(rain_ac, rain1, default=0)
+                rain_ac = meteva.base.max_on_level_time_dtime_id(rain_ac, rain1, default=default)
 
             begin_dtime = dtimes[0]+dhour_unit * (step - 1)
             rain_ac = meteva.base.between_dtime_range(rain_ac,begin_dtime,dtimes[-1])  # 删除时效小于range的部分
@@ -242,9 +249,15 @@ def max_of_sta(sta,used_coords = ["member"],span = None,keep_all = True):
             return rain_ac
 
 
-def min_of_sta(sta,used_coords = ["member"],span = None,keep_all = True):
+def min_of_sta(sta,used_coords = ["member"],span = None,keep_all = True,ignore_missing = False):
     if not isinstance(used_coords,list):
         used_coords = [used_coords]
+
+    default = np.max(sta.iloc[:,6:].values)
+    if ignore_missing:
+        how = "outer"
+    else:
+        how = "inner"
     if used_coords  == ["member"]:
         sta_min = sta.loc[:,meteva.base.get_coord_names()]
         sta_data = sta[meteva.base.get_stadata_names(sta)]
@@ -262,7 +275,7 @@ def min_of_sta(sta,used_coords = ["member"],span = None,keep_all = True):
             for i in range(1,len(times)):
                 rain01 = meteva.base.in_time_list(sta,times[i])
                 meteva.base.set_stadata_coords(rain01,time=times[-1])
-                rain_ac = meteva.base.min_on_level_time_dtime_id(rain_ac, rain01, how="inner")
+                rain_ac = meteva.base.min_on_level_time_dtime_id(rain_ac, rain01, how=how,default= default)
             return rain_ac
         else:
             times = sta.loc[:, 'time'].values
@@ -277,7 +290,7 @@ def min_of_sta(sta,used_coords = ["member"],span = None,keep_all = True):
             for i in range(step):
                 rain1 = sta.copy()
                 rain1["time"] = rain1["time"] + min_dtime * i
-                rain_ac = meteva.base.min_on_level_time_dtime_id(rain_ac, rain1, how="inner")
+                rain_ac = meteva.base.min_on_level_time_dtime_id(rain_ac, rain1, how=how,default= default)
             time0_add_span = times[0] + np.timedelta64(int(min_dhour * (step - 1)),'h')
             rain_ac = meteva.base.sele_by_para(rain_ac,time_range=[time0_add_span,times[-1]])
             if not keep_all:
@@ -296,7 +309,7 @@ def min_of_sta(sta,used_coords = ["member"],span = None,keep_all = True):
             for i in range(1, len(dtimes)):
                 rain01 = meteva.base.in_dtime_list(sta, dtimes[i])
                 meteva.base.set_stadata_coords(rain01, dtime=dtimes[-1])
-                rain_ac = meteva.base.min_on_level_time_dtime_id(rain_ac, rain01, how="inner")
+                rain_ac = meteva.base.min_on_level_time_dtime_id(rain_ac, rain01, how=how,default= default)
             return rain_ac
         else:
             dtimes = sta.loc[:, 'dtime'].values
@@ -317,7 +330,7 @@ def min_of_sta(sta,used_coords = ["member"],span = None,keep_all = True):
                 rain1 = sta.copy()
                 rain1["dtime"] = rain1["dtime"] + dhour_unit * i
                 # print(dhour_unit * i)
-                rain_ac = meteva.base.min_on_level_time_dtime_id(rain_ac, rain1, default=0)
+                rain_ac = meteva.base.min_on_level_time_dtime_id(rain_ac, rain1, default=default)
 
             begin_dtime = dtimes[0]+dhour_unit * (step - 1)
             rain_ac = meteva.base.between_dtime_range(rain_ac,begin_dtime,dtimes[-1])  # 删除时效小于range的部分
