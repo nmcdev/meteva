@@ -307,12 +307,15 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
     if save_path is not None:
         if isinstance(save_path, str):
             save_path = [save_path]
-        if fo_num * g_num * grade_num != len(save_path):
-            print("手动设置的save_path数目和要绘制的图形数目不一致")
-            return
-
-
-
+        if "subplot" in kwargs.keys():
+            if kwargs["subplot"] == "member":
+                if g_num * grade_num != len(save_path):
+                    print("手动设置的save_path数目和要绘制的图形数目不一致")
+                    return
+        else:
+            if fo_num * g_num * grade_num != len(save_path):
+                print("手动设置的save_path数目和要绘制的图形数目不一致")
+                return
 
     # get method_args and plot_args
     method_args = {}
@@ -346,6 +349,9 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
         g_id = "id"
         result,id_list= score(sta_ob_and_fos_list[k],method,g = g_id,**method_args)
         station = sta_ob_and_fos1.drop_duplicates(['id'],inplace=False)
+        station.iloc[:, 1] = station.iloc[0, 1]
+        station.iloc[:, 2] = station.iloc[0, 2]
+        station.iloc[:, 0] = station.iloc[0, 0]
         station1 = meteva.base.in_id_list(station,id_list)
         id_s = pd.Series(id_list)
         id_s.name = "id"
@@ -417,6 +423,7 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
                             save_path1.append(save_dir + "/" + fileName + ".png")
                 else:
                     save_path1 = save_path[k * fo_num: (k + 1) * fo_num]
+
 
                 meteva.base.tool.plot_tools.scatter_sta(sta_result1, save_path=save_path1, show=show,
                                                         title=title1_list, print_max=print_max,

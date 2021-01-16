@@ -19,7 +19,7 @@ def edition_2020_1(sta_ob,sta_fo_list,pcapital_fo_list, id_province_dict):
     # 业务标准相关的参数
     west_province_list = ["内蒙古","西藏","青海","宁夏","新疆"]
     west_threshold = 10  #西部省份短时强降水阈值
-    other_threshold = 2 #其它省份短时强降水阈值
+    other_threshold = 20 #其它省份短时强降水阈值
     R = 40               #邻域半径
 
     # 设定每个站点对应的阈值

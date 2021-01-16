@@ -185,7 +185,7 @@ def time_list_line_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
             if save_dir is None:
                 show = True
             else:
-                save_path1 = save_dir+"\\" + str(id) + ".png"
+                save_path1 = save_dir+"/" + str(id) + ".png"
         else:
             save_path1 = save_path[n]
 
@@ -203,7 +203,7 @@ def time_list_line_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
             if json_dir is None:
                 pass
             else:
-                json_path1 = json_dir+"\\" + str(id) + ".json"
+                json_path1 = json_dir+"/" + str(id) + ".json"
         else:
             json_path1 = json_path[n]
 
@@ -369,7 +369,7 @@ def time_list_line(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,sho
             if json_dir is None:
                 pass
             else:
-                json_path1 = json_dir+"\\" + str(id) + ".json"
+                json_path1 = json_dir+"/" + str(id) + ".json"
         else:
             json_path1 = json_path[n]
 
@@ -600,7 +600,7 @@ def time_list_mesh_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
                 if json_dir is None:
                     pass
                 else:
-                    json_path1 = json_dir + "\\" + data_name + "_" + str(id) + ".json"
+                    json_path1 = json_dir + "/" + data_name + "_" + str(id) + ".json"
             else:
                 json_path1 = json_path[kk]
 
@@ -916,7 +916,7 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
                 if json_dir is None:
                     pass
                 else:
-                    json_path1 = json_dir + "\\" + data_name + "_" + str(id) + ".json"
+                    json_path1 = json_dir + "/" + data_name + "_" + str(id) + ".json"
             else:
                 json_path1 = json_path[kk1]
 
@@ -1289,7 +1289,7 @@ def time_list_mesh_wind(sta_ob_and_fos0,s = None,save_dir = None,save_path = Non
                 if json_dir is None:
                     pass
                 else:
-                    json_path1 = json_dir + "\\" + str(id) + ".png"
+                    json_path1 = json_dir + "/" + str(id) + ".png"
             else:
                 json_path1 = json_path[kk1]
 

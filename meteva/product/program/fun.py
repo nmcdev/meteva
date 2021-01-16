@@ -136,7 +136,9 @@ def get_time_str_list(time_list,row = 1):
     str1 = get_time_str_one_by_one(time_list[0],None,row)
     time_str_list = [str1]
     for i in range(1,len(time_list)):
-        time_str_list.append(get_time_str_one_by_one(time_list[i],time_list[i-1],row))
+        time0 = meteva.base.time_tools.all_type_time_to_datetime(time_list[i])
+        time_1 =  meteva.base.time_tools.all_type_time_to_datetime(time_list[i-1])
+        time_str_list.append(get_time_str_one_by_one(time0,time_1,row))
     return time_str_list
 
 def get_save_path(save_dir,method,group_by,group_list,model_name = "",type = "",discription = ""):

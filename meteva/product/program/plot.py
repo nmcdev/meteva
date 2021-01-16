@@ -79,7 +79,7 @@ def plot(sta_ob_and_fos0,method,s = None,g = None,gll = None,save_dir = None,sav
                 v_ob = sta[data_name[1]].values
                 u_fo = sta[data_name[2::2]].values.T
                 v_fo = sta[data_name[3::2]].values.T
-                method(u_ob,u_fo,v_ob,v_fo,**kwargs)
+                method(u_ob,u_fo,v_ob,v_fo,save_path = save_path1,**kwargs)
             else:
                 if "member_list" in method_para:
                     kwargs["member_list"] = data_name[1:]
