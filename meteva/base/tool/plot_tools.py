@@ -287,7 +287,7 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap ="rainbo
 
 
 def plot_2d_grid_list(grd_list,type = "contour",save_path = None,title = None,clevs= None,cmap ="rainbow",add_county_line = False,add_worldmap =False,show = False,dpi = 300,
-                     sup_fontsize = 10,height = None,width = None,ncol = None,vmax = None,vmin = 0):
+                     sup_fontsize = 10,height = None,width = None,ncol = None,vmax = None,vmin = None):
 
 
     if save_path is None:
@@ -347,6 +347,7 @@ def plot_2d_grid_list(grd_list,type = "contour",save_path = None,title = None,cl
 
 
     cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap, clevs=clevs, vmin=vmin, vmax=vmax)
+    #print(clevs1)
     norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
 
     vmax = elon
@@ -915,6 +916,7 @@ def scatter_sta(sta0,value_column=None,
             else:
                 title1= title
 
+
             if isinstance(save_path,list):
                 save_path1 = save_path[n]
             else:
@@ -1021,12 +1023,13 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
 
     cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap, clevs=clevs, vmin=vmin, vmax=vmax)
 
+
     norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
     #print(sta0_list[0])
     pointsize = int(100 * map_area / len(sta0_list[0].index))
     if (pointsize > 30): pointsize = 30
     if (pointsize < 1): pointsize = 1
-    pointsize *=3
+    pointsize *=1.5
 
 
     vmax = elon
