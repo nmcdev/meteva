@@ -160,7 +160,6 @@ def combine_on_level_time_dtime_id(sta, sta1,how = 'inner'):
         return df
 
 
-
 def combine_on_level_time_dtime(sta, sta1,how = 'inner'):
     '''
     merge_on_all_dim 合并两个sta_dataframe并且使要素名不重复
@@ -211,8 +210,21 @@ def combine_on_obTime_id(sta_ob,sta_fo_list,need_match_ob = False):
     '''
     if not isinstance(sta_fo_list, list):
         sta_fo_list = [sta_fo_list]
+    #预报时效的时间处理
+    dtime_units = "hour"
+    for sta_fo1 in sta_fo_list:
+        if len(sta_fo1.attrs) >0:
+            if(sta_fo1.attrs["dtime_units"] != "hour"):
+                dtime_units = "minute"
+    if dtime_units != "hour":
+        for sta_fo1 in sta_fo_list:
+            if len(sta_fo1.attrs)  == 0 or sta_fo1.attrs["dtime_units"] == "hour" :
+                sta_fo1["dtime"] *= 60
+                sta_fo1.attrs["dtime_units"] = "minute"
+
     dtime_list = list(set(sta_fo_list[0]['dtime'].values.tolist()))
     nsta_ob = len(sta_ob.index)
+
     if(nsta_ob * len(dtime_list) >= 10000000):
         if nsta_ob >= 10000000:
             print("请注意，在大规模数据匹配合并时，need_match_ob 参数将自动切换为True")
@@ -227,7 +239,10 @@ def combine_on_obTime_id(sta_ob,sta_fo_list,need_match_ob = False):
             sta_combine = []
             for dtime in dtime_list:
                 sta = copy.deepcopy(sta_ob)
-                sta["time"] = sta["time"] - datetime.timedelta(hours= dtime)
+                if dtime_units == "hour":
+                    sta["time"] = sta["time"] - datetime.timedelta(hours= dtime)
+                else:
+                    sta["time"] = sta["time"] - datetime.timedelta(minutes=dtime)
                 sta["dtime"] = dtime
                 sta_combine.append(sta)
             sta_combine = pd.concat(sta_combine, axis=0)
@@ -243,9 +258,8 @@ def combine_on_obTime_id(sta_ob,sta_fo_list,need_match_ob = False):
             sta_combine = combine_on_level_time_dtime_id(sta_combine,sta_combine_fo,how="right")
             if sta_combine is not None:
                 sta_combine = sta_combine.fillna(meteva.base.IV)
-
+        meteva.base.set_stadata_attrs(sta_combine,dtime_units=dtime_units)
         return sta_combine
-
 
 
 def combine_on_obTime_one_id(sta_ob,sta_fo_list,how = "inner"):
@@ -258,6 +272,9 @@ def combine_on_obTime_one_id(sta_ob,sta_fo_list,how = "inner"):
     if not isinstance(sta_fo_list, list):
         sta_fo_list = [sta_fo_list]
 
+    dtime_units ="hour"
+    if len(sta_fo_list[0].attrs) >0 and sta_fo_list[0].attrs["dtime_units"] != "hour":
+        dtime_units = "minute"
 
     if sta_ob is None:
         sta_combine = None
@@ -267,20 +284,20 @@ def combine_on_obTime_one_id(sta_ob,sta_fo_list,how = "inner"):
         sta_combine = []
         for dtime in dtime_list:
             sta = copy.deepcopy(sta_ob)
-            sta["time"] = sta["time"] - datetime.timedelta(hours= dtime)
+            if dtime_units == "hour":
+                sta["time"] = sta["time"] - datetime.timedelta(hours= dtime)
+            else:
+                sta["time"] = sta["time"] - datetime.timedelta(minutes=dtime)
             sta["dtime"] = dtime
             sta_combine.append(sta)
         sta_combine = pd.concat(sta_combine, axis=0)
-
     sta_combine_fo = None
     for sta_fo in sta_fo_list:
         sta_combine_fo = combine_on_level_time_dtime(sta_combine_fo, sta_fo,how= how)
-
     sta_combine = combine_on_level_time_dtime(sta_combine, sta_combine_fo)
 
 
     return sta_combine
-
 
 
 def combine_on_obTime_id_bigData(sta_ob,sta_fo_list,need_match_ob = True,g = "id"):
@@ -291,6 +308,8 @@ def combine_on_obTime_id_bigData(sta_ob,sta_fo_list,need_match_ob = True,g = "id
     :param sta_fo_list:
     :return:
     '''
+
+
     if not isinstance(sta_fo_list, list):
         print("the second args shold be a list")
         return
@@ -359,7 +378,6 @@ def combine_on_obTime_id_bigData(sta_ob,sta_fo_list,need_match_ob = True,g = "id
     if sta_all is not None:
         sta_all = sta_all.fillna(meteva.base.IV)
     return sta_all
-
 
 
 def combine_on_obTime(sta_ob,sta_fo_list,need_match_ob = False):
@@ -475,4 +493,8 @@ def expand_to_contain_another_grid(grd0,grid1,used_coords = "xy",outer_value = 0
         sj = int(round((grid0.slat - grid1.slat) / grid0.dlat))
     grd1.values[:,:,:,:,sj:(sj + grid0.nlat), si:(si + grid0.nlon)] = grd0.values[...]
     return grd1
+
+
+def combine_griddata(griddata_list):
+    pass
 
