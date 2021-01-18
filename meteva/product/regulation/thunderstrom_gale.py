@@ -10,7 +10,7 @@ meteva.base.set_io_config(r"H:\test_data\ip_port.txt")
 '''
 
 
-def edition_2020_1_lightning_ob_to_cound(lightning_ob, station, dlon_dlat = 0.25):
+def edition_2020_1_lightning_ob_to_count(lightning_ob, station, dlon_dlat = 0.25):
     '''
     该模块实现的功能是先将不规则时间、空间发生的闪电，通过最近距离法记录到规则网格的闪电次数中。
     再采用临近点插值方法将规则网格的闪电次数插值到国家站和区域站
@@ -72,7 +72,7 @@ def edition_2020_1_lightning_ob_to_cound(lightning_ob, station, dlon_dlat = 0.25
 
 
 
-def edition_2020_1_lightning_cound_to_01(sta_ob_linghtning_count,station):
+def edition_2020_1_lightning_count_to_01(sta_ob_linghtning_count,station):
     '''
     该模块实现根据站点形式的闪电次数判断雷暴大风的第一个必要条件是否满足，满足就记为1，不满足就记为0.
     不同的站点类型可以设置不同的阈值条件
@@ -91,7 +91,6 @@ def edition_2020_1_lightning_cound_to_01(sta_ob_linghtning_count,station):
 
     #不相干维度的坐标值设置为缺省值
     id_threshold_sta[["level","time","dtime"]] = meteva.base.IV
-
 
     #根据闪电判断雷暴大风的闪电观测必要条件
     sta_ob_01 = meteva.method.point_to_area.p2p_vto01(sta_ob_linghtning_count,threshold= id_threshold_sta)
@@ -171,8 +170,8 @@ def edtion_2020_1(lightning_ob,station,sta_ob_max_wind,sta_fo_list,pcapital_fo_l
      其中的站点值为0或1,0代表预报短时强降水不发生，1代表预报短时强降水发生
     :return:
     '''
-    sta_ob_linghtning_count = edition_2020_1_lightning_ob_to_cound(lightning_ob,station)
-    sta_lightning_01 = edition_2020_1_lightning_cound_to_01(sta_ob_linghtning_count, station)
+    sta_ob_linghtning_count = edition_2020_1_lightning_ob_to_count(lightning_ob,station)
+    sta_lightning_01 = edition_2020_1_lightning_count_to_01(sta_ob_linghtning_count, station)
     sta_ob01 = edition_2020_1_light01_maxwind_to_ob01(sta_lightning_01,sta_ob_max_wind)
     #meteva.base.scatter_sta(sta_ob01)
     return edition_2020_1_skill_caculation(sta_ob01,sta_fo_list,pcapital_fo_list)
@@ -206,7 +205,7 @@ if __name__ == "__main__":
         time0 += datetime.timedelta(hours = 1)
     lightning_ob = pd.concat(sta_list,axis = 0)  #数据拼接
 
-    sta1 = edition_2020_1_lightning_ob_to_cound(lightning_ob,station_all)
+    sta1 = edition_2020_1_lightning_ob_to_count(lightning_ob,station_all)
 
     ###读取收集micaps分布式服务器上逐小时最大风速观测数据
     dir_ob = r"mdfs:///SURFACE/MAX_WIND/YYYYMMDDHH0000.000"
