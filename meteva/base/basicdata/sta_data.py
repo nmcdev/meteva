@@ -5,7 +5,10 @@ import pandas as pd
 import meteva
 
 
-def sta_data(df,columns = None):
+def sta_data(df,columns = None,
+             dtime_units = "hour",data_source = "undefined stda",data_type = "",
+             data_name = "",var_name = "",var_cn_name = "",
+             var_units = "",valid_time = 0):
     '''
     sta_data() 对数据进行格式化成为固定格式
     :param df: dataframe的站点数据
@@ -51,7 +54,23 @@ def sta_data(df,columns = None):
         #    sta.iloc[:,i] = (sta.values[:,i]).astype(np.float32)
         pass
 
+    set_stadata_attrs(sta,dtime_units = dtime_units,data_source = data_source,data_type = data_type,data_name = data_name,
+                      var_name = var_name,var_cn_name = var_cn_name,var_units = var_units,valid_time = valid_time)
+
     return sta
+
+def set_stadata_attrs(sta, dtime_units = None,data_source = None,data_type =None,
+             data_name =None,var_name = None,var_cn_name = None,
+             var_units = None,valid_time = None,data_start_columns = None):
+    sta.attrs = {}
+    if dtime_units is not None:sta.attrs["dtime_units"] = dtime_units
+    if data_source is not None:sta.attrs["data_source"] = data_source
+    if data_name is not None: sta.attrs["data_type"] = data_type
+    if var_name is not None: sta.attrs["var_name"] = var_name
+    if var_cn_name is not None:sta.attrs["var_cn_name"] = var_cn_name
+    if var_units is not None:sta.attrs["var_units"] = var_units
+    if valid_time is not None:sta.attrs["valid_time"] = valid_time
+    if data_start_columns is not None:sta.attrs["data_start_columns"] = data_start_columns
 
 
 def get_undim_data_names(sta):
