@@ -1,7 +1,7 @@
 import meteva
 import numpy as np
 from meteva.base import IV
-from meteva.method.yes_or_no.score import ts_hfmc, ets_hfmc, bias_hfmc, far_hfmc, mr_hfmc
+from meteva.method.yes_or_no.score import ts_hfmc, ets_hfmc, bias_hfmc, far_hfmc, mr_hfmc,pod_hfmc,sr_hfmc,pofd_hfmc
 
 
 def tc(ob, fo, grade_list=None):
@@ -331,6 +331,21 @@ def far_grade(ob, fo, grade_list):
     far_array = far_hfmc(hfmc_array)
     return far_array
 
+def pod_grade(ob,fo,grade_list):
+    hfmc_array = hfmc_grade(ob, fo, grade_list)
+    pod_array = pod_hfmc(hfmc_array)
+    return pod_array
+
+def pofd_grade(ob,fo,grade_list):
+    hfmc_array = hfmc_grade(ob, fo, grade_list)
+    pofd_array = pofd_hfmc(hfmc_array)
+    return pofd_array
+
+def sr_grade(ob,fo,grade_list):
+    hfmc_array = hfmc_grade(ob, fo, grade_list)
+    sr_array = sr_hfmc(hfmc_array)
+    return sr_array
+
 
 def ts_multi(ob, fo, grade_list=None):
     hfmc_array = hfmc_multi(ob, fo, grade_list)
@@ -360,6 +375,22 @@ def far_multi(ob, fo, grade_list=None):
     hfmc_array = hfmc_multi(ob, fo, grade_list)
     far_array = far_hfmc(hfmc_array)
     return far_array
+
+
+def pod_multi(ob,fo,grade_list):
+    hfmc_array = hfmc_multi(ob, fo, grade_list)
+    pod_array = pod_hfmc(hfmc_array)
+    return pod_array
+
+def pofd_multi(ob,fo,grade_list):
+    hfmc_array = hfmc_multi(ob, fo, grade_list)
+    pofd_array = pofd_hfmc(hfmc_array)
+    return pofd_array
+
+def sr_multi(ob,fo,grade_list):
+    hfmc_array = hfmc_multi(ob, fo, grade_list)
+    sr_array = sr_hfmc(hfmc_array)
+    return sr_array
 
 
 def hss(ob, fo, grade_list=None):
