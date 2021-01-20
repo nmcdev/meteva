@@ -25,13 +25,14 @@ def not_IV(sta):
     data_names = meteva.base.get_stadata_names(sta)
     sta1 = sta.loc[sta[data_names[0]] != meteva.base.IV]
     for i in range(1,len(data_names),1):
-        sta1 = sta1.loc[sta[data_names[i]] != meteva.base.IV]
+        sta1 = sta1.loc[sta1[data_names[i]] != meteva.base.IV]
     return sta1
+
 def not_equal_to(sta,dele_value):
     data_names = meteva.base.get_stadata_names(sta)
     sta1 = sta.loc[sta[data_names[0]] != dele_value]
     for i in range(1,len(data_names),1):
-        sta1 = sta1.loc[sta[data_names[i]] != dele_value]
+        sta1 = sta1.loc[sta1[data_names[i]] != dele_value]
     return sta1
 
 #为拥有多元素值的站点数据，在最后依次增加要素值的列表名
@@ -613,9 +614,12 @@ def sele_by_dict(data,s):
     '''
     if s is None:return data
 
+
+
     p_set = {"member","level","time","time_range","year","month","day","dayofyear","hour", "ob_time","ob_time_range" ,"ob_year",
               "ob_month", "ob_day","ob_dayofyear","ob_hour","dtime","dtime_range","dday","dhour" ,
               "lon","lat", "id","grid","gxy", "gxyz" ,"stadata","value","drop_IV","last" , "last_range","drop_last","province_name"}
+
 
     key_set = s.keys() #set(list(s.keys()))
     if(not p_set >= key_set):
@@ -754,9 +758,6 @@ def sele_by_dict(data,s):
     drop_last = True
     if "drop_last" in s.keys():
         drop_last = s["drop_last"]
-
-
-
 
 
 
