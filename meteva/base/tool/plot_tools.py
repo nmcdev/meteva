@@ -643,7 +643,7 @@ def scatter_sta(sta0,value_column=None,
                 save_path=None,show = False,dpi = 300,title=None,
                 sup_fontsize = 10,
                 height = None,width = None,
-                min_spot_value = 0,grid = False,subplot = None,ncol = None):
+                min_spot_value = 0,grid = False,subplot = None,ncol = None,point_size = None,sup_title = None):
 
     sta = sta0
     if save_path is None:
@@ -720,11 +720,23 @@ def scatter_sta(sta0,value_column=None,
     #meteva.base.tool.color_tools.show_cmap_clev(cmap1,clevs1)
 
     norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
-    pointsize = 100 * map_area / len(sta.index)
-    if (pointsize > 30): pointsize = 30
-    if (pointsize < 0.1): pointsize = 0.1
-    pointsize *=3
-    left_low = (width + 0.1 - right_plots_width) / width
+
+    if point_size is None:
+
+        sta_id1 = sta0.drop_duplicates(['id'])
+        sta_dis = meteva.base.sta_dis_ensemble_near_by_sta(sta_id1,nearNum=2)
+        dis_values = sta_dis["data1"].values
+        dis_values.sort()
+        dis1 = dis_values[int(len(dis_values) * 0.02) + 1]
+        point_size = (map_width * dis1 / rlon)**2
+        #point_size = 100 * map_area / len(sta.index)
+        #print("**************")
+        #print(point_size)
+        if (point_size > 30): point_size = 30
+        if (point_size < 0.1): point_size = 0.1
+        #point_size *=3
+        left_low = (width + 0.1 - right_plots_width) / width
+
 
     vmax = elon
     vmin = slon
@@ -841,9 +853,9 @@ def scatter_sta(sta0,value_column=None,
             colors = value
             if isinstance(fix_size,bool):
                 if fix_size:
-                    im = ax.scatter(x, y, c=colors, cmap=cmap1, norm=norm, s=pointsize)
+                    im = ax.scatter(x, y, c=colors, cmap=cmap1, norm=norm, s=point_size)
                 else:
-                    area = pointsize * np.abs(value - min_spot_value)/mean_value
+                    area = point_size * np.abs(value - min_spot_value)/mean_value
                     if(threshold is not None):
                         area[np.abs(value- min_spot_value)<threshold] *= 0.1
                     im = ax.scatter(x, y, c=colors, cmap=cmap1, norm=norm, s=area)
@@ -906,6 +918,19 @@ def scatter_sta(sta0,value_column=None,
         sta_list = meteva.base.split(sta0,used_coords=split)
         ng = len(sta_list)
 
+        if sup_title is None:
+            sup_title = []
+            for i in range(ng):
+                sup_title.append(None)
+        else:
+            if not isinstance(sup_title,list):
+                sup_title2 = []
+                for i in range(ng):
+                    sup_title2.append(sup_title)
+                sup_title = sup_title2
+            if len(sup_title) != ng:
+                print("sup_title的数目应该和最终生成的图片数目一致")
+                return
 
         for n in range(ng):
             sta1 = sta_list[n]
@@ -926,7 +951,7 @@ def scatter_sta(sta0,value_column=None,
             add_worldmap=add_worldmap,clevs = clevs,cmap = cmap,vmax=vmax_v,vmin = vmin_v,fix_size=fix_size,threshold=threshold,
                              mean_value = mean_value,save_path = save_path1,show = show,dpi = dpi,
                             title = title1,sup_fontsize = sup_fontsize,
-                             height=height,width= width,min_spot_value=min_spot_value,grid = grid,ncol = ncol)
+                             height=height,width= width,min_spot_value=min_spot_value,grid = grid,ncol = ncol,point_size=point_size,sup_title=sup_title[n])
 
 
 def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_worldmap = False,
@@ -935,7 +960,7 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
                 save_path=None,show = False,dpi = 300,title = None,
                 sup_fontsize = 10,
                 height = None,width = None,
-                min_spot_value = 0,grid = False,ncol = None):
+                min_spot_value = 0,grid = False,ncol = None,point_size = None,sup_title = None):
 
     sta0 = sta0_list[0]
     if isinstance(map_extend, list):
@@ -976,6 +1001,11 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
         rlon = elon - slon
         rlat = elat - slat
 
+    if sup_title is None:
+        sup_height_title = 0
+    else:
+        sup_height_title = sup_fontsize * 0.12
+
     height_title = sup_fontsize * 0.1
     height_bottem_xticsk = sup_fontsize * 0.05
     height_hspace = sup_fontsize * 0.03
@@ -1006,7 +1036,7 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
         width = 8
 
     if width is None:
-        height_all_plot = height - height_title - height_bottem_xticsk - (nrow-1) * height_hspace
+        height_all_plot = height - height_title - height_bottem_xticsk - (nrow-1) * height_hspace + sup_height_title
         height_map = height_all_plot / nrow
         width_map = height_map * rlon / rlat
         width_all_plot = width_map * ncol + (ncol-1) * width_wspace
@@ -1016,7 +1046,7 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
         width_map = width_all_plot / ncol
         height_map = width_map * rlat / rlon
         height_all_plot = height_map * nrow + (nrow-1) * height_hspace
-        height = height_all_plot + height_title + height_bottem_xticsk
+        height = height_all_plot + height_title + height_bottem_xticsk + sup_height_title
 
 
     map_area = height_map *width_map
@@ -1026,10 +1056,11 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
 
     norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
     #print(sta0_list[0])
-    pointsize = int(100 * map_area / len(sta0_list[0].index))
-    if (pointsize > 30): pointsize = 30
-    if (pointsize < 1): pointsize = 1
-    pointsize *=1.5
+    if point_size is None:
+        point_size = int(100 * map_area / len(sta0_list[0].index))
+        if (point_size > 30): point_size = 30
+        if (point_size < 1): point_size = 1
+        point_size *=1.5
 
 
     vmax = elon
@@ -1152,10 +1183,10 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
         colors = value
         if isinstance(fix_size, bool):
             if fix_size:
-                im = ax.scatter(x, y, c=colors, cmap=cmap1, norm=norm, s=pointsize)
+                im = ax.scatter(x, y, c=colors, cmap=cmap1, norm=norm, s=point_size)
             else:
 
-                area = pointsize * np.abs(value - min_spot_value)/mean_value
+                area = point_size * np.abs(value - min_spot_value)/mean_value
                 if(threshold is not None):
                     area[np.abs(value- min_spot_value)<threshold] *= 0.1
                 im = ax.scatter(x, y, c=colors, cmap=cmap1, norm=norm, s=area)
@@ -1181,8 +1212,14 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
 
     left_low = (width_left_yticks + ncol * (width_map  + width_wspace))/width
     colorbar_position = fig.add_axes([left_low, height_bottem_xticsk / height,0.02, height_all_plot/height])  # 位置[左,下,宽,高]
+
     cb = plt.colorbar(im, cax=colorbar_position)
     cb.ax.tick_params(labelsize=sup_fontsize *0.8)  #设置色标刻度字体大小。
+
+    y_sup_title = (height_bottem_xticsk + (nrow) * (height_map + height_hspace)) / height
+    if sup_title is not None:
+        plt.suptitle(sup_title, y = y_sup_title,fontsize=sup_fontsize * 1.2)
+
     if save_path is None:
         show = True
 
