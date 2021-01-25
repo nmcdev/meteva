@@ -218,8 +218,8 @@ def scatter_uv(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量散点�
         elif markersize > 20:
             markersize = 20
         plt.subplot(nrows, ncols, line + 1)
-        plt.plot(u1,v1,'.',color= "r", markeredgewidth = 0, markersize=markersize,alpha = 0.5,label = "ob")
-        plt.plot(u2,v2,'.',color= "b", markeredgewidth = 0,  markersize=markersize,alpha = 0.5,label = "fo")
+        plt.plot(u1,v1,'.',color= "r", markeredgewidth = 0, markersize=markersize,alpha = 0.5,label = "OBS")
+        plt.plot(u2,v2,'.',color= "b", markeredgewidth = 0,  markersize=markersize,alpha = 0.5,label = "FCT")
 
         plt.xlabel("U分量",fontsize = sup_fontsize *0.9)
         plt.ylabel("V分量",fontsize = sup_fontsize *0.9)
