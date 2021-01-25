@@ -520,3 +520,57 @@ def time_ceilling(sta,step = 1, time_unit = "h",begin_hour= 8):
     return sta1
 
 
+
+def loc_of_max(sta,used_coords = ["dtime"],ignore_missing = False):
+    '''
+    返回站点数据在某些维度上最大值的坐标
+    :param sta:
+    :param used_coords:
+    :param span:
+    :param keep_all:
+    :param ignore_missing:
+    :return:
+    '''
+    if not isinstance(used_coords,list):
+        used_coords = [used_coords]
+
+    default = np.min(sta.iloc[:,6:].values)
+    if ignore_missing:
+        how = "outer"
+    else:
+        how = "inner"
+    if used_coords  == ["dtime"]:
+        dtimes = sta.loc[:, 'dtime'].values
+        dtimes = list(set(dtimes))
+        dtimes.sort()
+        dtime_array = np.array(dtimes)
+        data_names = meteva.base.get_stadata_names(sta)
+        max_loc = None
+        for data_name in data_names:
+            sta1 = meteva.base.in_member_list(sta,[data_name])
+
+            sta1_0 = meteva.base.in_dtime_list(sta1,[dtimes[0]])
+            meteva.base.set_stadata_coords(sta1_0, dtime=0)
+            for i in range(1, len(dtimes)):
+                sta1_1 = meteva.base.in_dtime_list(sta1, dtimes[i])
+                meteva.base.set_stadata_coords(sta1_1, dtime=0)
+                meteva.base.set_stadata_names(sta1_1,data_name_list=[data_name+"_"+str(i)])
+                sta1_0 = pd.merge(sta1_0, sta1_1, on=["level", "time", "dtime", "id","lon","lat"], how=how)
+
+            sta1_0.fillna(default, inplace=True)
+
+            all_values = sta1_0.iloc[:, 6:].values
+            max_index = np.argmax(all_values,axis=1)
+            max_dtime = dtime_array[max_index]
+            sta1_dtime = meteva.base.in_member_list(sta1_0,[data_name])
+            sta1_dtime.iloc[:,-1] = max_dtime[:]
+            max_loc = meteva.base.combine_on_level_time_dtime_id(max_loc,sta1_dtime)
+
+        return max_loc
+
+
+
+def loc_of_min(sta,used_coords = ["dtime"],ignore_missing = False):
+    sta1 = sta.copy()
+    sta1.iloc[:,6:] *= -1
+    return loc_of_max(sta1,used_coords=used_coords,ignore_missing = ignore_missing)
