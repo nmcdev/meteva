@@ -2,7 +2,7 @@ import meteva
 import datetime
 import pandas as pd
 import numpy as np
-
+import copy
 
 
 def group(sta_ob_and_fos,g = None,gll = None):
@@ -492,3 +492,45 @@ def split(sta_ob_and_fos,used_coords = ["level","time","dtime"],sta_list = None)
             sta_list.append(sta)
 
     return sta_list
+
+def split_grd(grd,used_coords = ["member","level","time","dtime"],grd_list = None):
+    '''
+
+    :param sta_ob_and_fos: 包含多个层次，时间，时效，站点的观测和预报数据
+    :param used_coords: 拆分的维度
+    :param sta_list: 最终返回的结果
+    :return:
+    '''
+
+    if grd_list is None:
+        grd_list = []
+    grd_group = group_grd(grd, g=used_coords[0])
+    if len(used_coords) >1:
+        # 取出第一个coord
+        for grd in grd_group:
+            split_grd(grd,used_coords=used_coords[1:],grd_list = grd_list)
+    else:
+        for grd in grd_group:
+            grd_list.append(grd)
+
+    return grd_list
+
+
+def group_grd(grd, g = None):
+
+    if g == None:
+        return [grd]
+    else:
+        ng = len(grd[g].values)
+        grd_list = []
+        for i in range(ng):
+            if g =="level":
+                grd1 = grd.isel(level = slice(i,i+1))
+            elif g == "time":
+                grd1 = grd.isel(time=slice(i, i+1))
+            elif g == "dtime":
+                grd1 = grd.isel(dtime=slice(i, i+1))
+            elif g == "member":
+                grd1 = grd.isel(member=slice(i, i+1))
+            grd_list.append(grd1)
+        return grd_list

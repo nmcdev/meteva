@@ -9,7 +9,7 @@ def pc_skill(pc,pc_base):
     '''
     if pc_base == 1:
         if pc <1:
-            return IV
+            return -IV
         else:
             return 0
     else:
@@ -25,7 +25,7 @@ def spc(pc,pc_base):
     '''
     if pc_base == 1:
         if pc <1:
-            return IV
+            return -IV
         else:
             return 0
     else:
@@ -42,7 +42,7 @@ def ts_skill(ts,ts_base):
     '''
     if ts_base == 1:
         if ts < 1:
-            return IV
+            return -IV
         else:
             return 0
     else:
@@ -58,7 +58,7 @@ def sts(ts,ts_base):
     '''
     if ts_base == 1:
         if ts < 1:
-            return IV
+            return -IV
         else:
             return 0
     else:

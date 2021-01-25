@@ -218,8 +218,8 @@ def scatter_uv(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量散点�
         elif markersize > 20:
             markersize = 20
         plt.subplot(nrows, ncols, line + 1)
-        plt.plot(u1,v1,'.',color= "r", markeredgewidth = 0, markersize=markersize,alpha = 0.5,label = "ob")
-        plt.plot(u2,v2,'.',color= "b", markeredgewidth = 0,  markersize=markersize,alpha = 0.5,label = "fo")
+        plt.plot(u1,v1,'.',color= "r", markeredgewidth = 0, markersize=markersize,alpha = 0.5,label = "OBS")
+        plt.plot(u2,v2,'.',color= "b", markeredgewidth = 0,  markersize=markersize,alpha = 0.5,label = "FCT")
 
         plt.xlabel("U分量",fontsize = sup_fontsize *0.9)
         plt.ylabel("V分量",fontsize = sup_fontsize *0.9)
@@ -449,12 +449,15 @@ def statisitic_uv(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量分�
             y = r * np.cos(angle)
             plt.plot(x,y,"--",color = "k",linewidth = 0.5)
 
-    colorbar_position_grid = fig.add_axes([0.12, -0.05, 0.35, 0.03])  # 位置[左,下,宽,高]
-    colorbar_ob = plt.colorbar(ax_ob, cax=colorbar_position_grid, orientation='horizontal')
-    colorbar_ob.set_label('指定角度上观测风速的一致性')
-    colorbar_position_grid = fig.add_axes([0.55, -0.05, 0.35, 0.03])  # 位置[左,下,宽,高]
-    colorbar_fo = plt.colorbar(ax_fo, cax=colorbar_position_grid, orientation='horizontal')
-    colorbar_fo.set_label('指定角度上预报风速的一致性')
+    colorbar_position_grid = fig.add_axes([0.92, 0.50, 0.02, 0.32])  # 位置[左,下,宽,高]
+    colorbar_ob = plt.colorbar(ax_ob, cax=colorbar_position_grid)
+    colorbar_ob.ax.tick_params(labelsize=sup_fontsize * 0.5)  # 改变bar标签字体大小
+
+    colorbar_ob.set_label('观测风速的一致性',fontsize = sup_fontsize * 0.7)
+    colorbar_position_grid = fig.add_axes([0.92, 0.15, 0.02, 0.32])  # 位置[左,下,宽,高]
+    colorbar_fo = plt.colorbar(ax_fo, cax=colorbar_position_grid)
+    colorbar_fo.ax.tick_params(labelsize=sup_fontsize * 0.5)  # 改变bar标签字体大小
+    colorbar_fo.set_label('预报风速的一致性',fontsize = sup_fontsize * 0.7)
     titlelines = title.split("\n")
     fig.suptitle(title, fontsize=sup_fontsize, y=0.99+0.01 * len(titlelines))
     if(save_path is not None):

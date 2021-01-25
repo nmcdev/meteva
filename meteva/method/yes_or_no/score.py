@@ -242,11 +242,12 @@ def pod_hfmc(hfmc_array):
     hit = hfmc_array[...,0]
     mis = hfmc_array[...,2]
     sum = hit + mis
-    sum[sum ==0] = 1e-10
+    sum[sum ==0] = -1
     pod0 = hit / sum
-    pod0[sum<1] = IV
+    pod0[sum == -1] = IV
     if pod0.size == 1:
         pod0 = pod0[0]
+
     return pod0
 
 def sr(Ob, Fo, grade_list=[1e-30],compair = ">="):
@@ -269,9 +270,9 @@ def sr_hfmc(hfmc_array):
     hit = hfmc_array[..., 0]
     fal = hfmc_array[..., 1]
     sum = hit + fal
-    sum[sum ==0] = 1e-10
+    sum[sum ==0] = -1
     sr0 = hit / sum
-    sr0[sum < 1] = IV
+    sr0[sum == -1] = IV
     if sr0.size ==1:
         sr0 = sr0[0]
     return sr0
@@ -296,9 +297,8 @@ def far_hfmc(hfmc_array):
     hit = hfmc_array[...,0]
     fal = hfmc_array[...,1]
     sum = hit + fal
-    sum[sum == 0] = 1e-10
+    sum[sum == 0] = 0.1  # sum=0 是主动追求低空报的行为，所以应该给其空报率=0
     far0 = fal / sum
-    far0[sum < 1] = IV
     if far0.size == 1:
         far0 = far0[0]
     return far0
@@ -323,9 +323,9 @@ def pofd_hfmc(hfmc_array):
     cn = hfmc_array[...,3]
     fal = hfmc_array[...,1]
     sum = cn +fal
-    sum[sum == 0] = 1e-10
+    sum[sum == 0] = -1
     podf0 = fal / sum
-    podf0[sum < 1] = IV
+    podf0[sum ==-1] = IV
     if podf0.size ==1:
         podf0 = podf0[0]
     return podf0
@@ -351,9 +351,9 @@ def mr_hfmc(hfmc_array):
     hit = hfmc_array[...,0]
     mis = hfmc_array[...,2]
     sum = hit + mis
-    sum[sum ==0]= 1e-10
+    sum[sum ==0]= -1
     mr0 = mis / sum
-    mr0[sum < 1] = IV
+    mr0[sum == -1] = IV
     if mr0.size == 1:
         mr0 = mr0[0]
     return mr0
@@ -528,8 +528,9 @@ def ts_hfmc(hfmc_array):
     fal = hfmc_array[...,1]
     mis = hfmc_array[...,2]
     sum = hit +mis + fal
-    sum[sum ==0] = 1e-10
+    sum[sum ==0] = -1
     ts_array =hit / sum
+    ts_array[sum == -1] = IV
     if ts_array.size ==1:
         ts_array = ts_array[0]
     return ts_array
@@ -560,8 +561,9 @@ def ets_hfmc(hfmc_array):
     total = hit + mis + fal + cn
     hit_random = (hit + mis) * (hit + fal) / total
     sum = hit + mis + fal - hit_random
-    sum[sum == 0] = 1e-10
+    sum[sum == 0] = -1
     ets_array = (hit - hit_random) / sum
+    ets_array[sum == -1] = IV
     if ets_array.size ==1:
         ets_array = ets_array[0]
     return ets_array
@@ -641,10 +643,12 @@ def hk_yesorno_hfmc(hfmc_array):
     cn = hfmc_array[...,3]
 
     sum_hm = hit + mis
-    sum_hm[sum_hm == 0] = 1e-10
+    sum_hm[sum_hm == 0] = -1
     sum_fc = fal + cn
-    sum_fc[sum_fc == 0] = 1e-10
+    sum_fc[sum_fc == 0] = -1
     hk = hit/sum_hm - fal/sum_fc
+    hk[sum_hm == -1] = IV
+    hk[sum_fc == -1] = IV
     if hk.size ==1:
         hk = hk[0]
     return hk
@@ -663,8 +667,9 @@ def hss_yesorno_hfmc(hfmc_array):
     sum = hit+fal +mis + cn
     correct_random = ((hit + mis) * (hit + fal) + (cn+mis)*(cn+fal))/sum
     sum_rc = sum - correct_random
-    sum_rc[sum_rc == 0] = 1e-10
+    sum_rc[sum_rc == 0] = -1
     hss = (hit + cn - correct_random) / sum_rc
+    hss[sum_rc ==-1] = IV
     if hss.size ==1:
         hss = hss[0]
     return hss
@@ -680,11 +685,13 @@ def dts_hfmc(hfmc_array):
     cn = hfmc_array[...,3]
 
     sum1 = hit +mis + fal
-    sum1[sum1 ==0] = 1e-10
+    sum1[sum1 ==0] = -1
     sum2 = mis + fal + cn
-    sum2[sum2 ==0] = 1e-10
+    sum2[sum2 ==0] = -1
 
     dts_array =(hit / sum1 + cn/sum2)/2
+    dts_array[sum1 ==-1] = IV
+    dts_array[sum2 ==-1] = IV
     if dts_array.size ==1:
         dts_array = dts_array[0]
     return dts_array
