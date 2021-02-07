@@ -518,7 +518,7 @@ def set_io_config(filename):
         except:
             print("filename  内容的格式不符合要求")
     else:
-        print("filename not exist")
+        print("cimiss和gds配置文件不存在")
 
 def read_gds_ip_port(filename,show = False):
     if filename is None:
