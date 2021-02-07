@@ -271,6 +271,42 @@ def interp_sg_idw(sta0, grid, background=None, effectR=1000, nearNum=8,decrease 
     return grd
 
 
+def interp_sg_idw_delta(sta0, grid,  halfR=1000, nearNum=8,decrease = 2):
+    sta = meteva.base.sele_by_para(sta0,drop_IV=True)
+    data_name = meteva.base.get_stadata_names(sta)
+    index0 = sta.index[0]
+    grid2 = meteva.base.basicdata.grid(grid.glon, grid.glat, [sta.loc[index0, 'time']],
+                                                       [sta.loc[index0, 'dtime']],
+                                                       [sta.loc[index0, 'level']], data_name)
+    xyz_sta = meteva.base.tool.math_tools.lon_lat_to_cartesian(sta['lon'].values,
+                                                                                sta['lat'].values,
+                                                                                R=meteva.base.basicdata.const.ER)
+    lon = np.arange(grid2.nlon) * grid2.dlon + grid2.slon
+    lat = np.arange(grid2.nlat) * grid2.dlat + grid2.slat
+    grid_lon, grid_lat = np.meshgrid(lon, lat)
+    xyz_grid = meteva.base.tool.math_tools.lon_lat_to_cartesian(grid_lon.flatten(),
+                                                                                 grid_lat.flatten(),
+                                                                                 R=meteva.base.basicdata.const.ER)
+    tree = cKDTree(xyz_sta)
+    # d,inds 分别是站点到格点的距离和id
+    if nearNum > len(sta.index):
+        nearNum = len(sta.index)
+    d, inds = tree.query(xyz_grid, k=nearNum)
+    if nearNum >1:
+        d += 1e-6
+        w1 = 1.0 / d ** decrease
+        w2 = np.exp(-(d/halfR)**2)
+        input_dat = sta.values[:,-1]
+        dat = np.sum(w1 * w2 * input_dat[inds], axis=1) / np.sum(w1, axis=1)
+    else:
+        input_dat = sta0.iloc[:,-1].values
+        w2 = np.exp(-d/halfR)
+        dat = w2 * input_dat[inds]
+
+    grd = meteva.base.basicdata.grid_data(grid2, dat)
+    grd.name = "data0"
+    return grd
+
 def interp_sg_cressman(sta0, grid, r_list,background=None , nearNum=100):
     sta = meteva.base.sele_by_para(sta0,drop_IV=True)
     data_name = meteva.base.get_stadata_names(sta)

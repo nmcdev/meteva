@@ -167,11 +167,11 @@ def u_v_to_speed_angle(u,v):
     if isinstance(u, pd.DataFrame):
         sta = meteva.base.combine_on_all_coords(u, v)
         datanames = meteva.base.get_stadata_names(sta)
-
         nu = int(len(datanames)/2)
         #nsta = len(sta.indexs)
-        ud = sta.iloc[:,6:(6+nu)].values.astype(np.float32).flatten()
-        vd = sta.iloc[:,(6+nu):].values.astype(np.float32).flatten()
+        ud = sta.iloc[:,6:(6+nu)].values.astype(np.float32)
+        vd = sta.iloc[:,(6+nu):].values.astype(np.float32)
+
         s,a = meteva.base.tool.math_tools.u_v_to_s_d(ud,vd)
         speed = sta.iloc[:,0:(6+nu)].copy()
         angle = speed.copy()
@@ -209,6 +209,22 @@ def u_v_to_wind(u,v):
         wind.values[0, :, :, :, :, :] = u.values[0, :, :, :, :, :]
         wind.values[1, :, :, :, :, :] = v.values[0, :, :, :, :, :]
         return wind
+
+
+def wind_to_speed_angle(wind):
+    member_name = meteva.base.get_stadata_names(wind)
+    u = meteva.base.sele_by_para(wind, member=member_name[0::2])
+    v =meteva.base.sele_by_para(wind, member=member_name[1::2])
+    speed, angle = meteva.base.u_v_to_speed_angle(u, v)
+    names = meteva.base.get_stadata_names(u)
+    new_names = []
+    for name in names:
+        if name[0:2] == "u_":
+            name = name[2:]
+        new_names.append(name)
+    meteva.base.set_stadata_names(speed,new_names)
+    meteva.base.set_stadata_names(angle,new_names)
+    return speed,angle
 
 def speed_angle_to_wind(speed,angle = None):
     if isinstance(speed, pd.DataFrame):

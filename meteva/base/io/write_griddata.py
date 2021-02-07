@@ -177,3 +177,72 @@ def write_griddata_to_micaps11(wind,save_path = "a.txt",creat_dir = False,effect
         print(exstr)
         return False
 
+def tran_griddata_to_gds_flow(da):
+    grid0 = meteva.base.get_grid_of_data(da)
+    discriminator = b"mdfs"
+    if len(grid0.members)==1:
+        data_type = 4
+    elif len(grid0.members)==2:
+        data_type =11
+    else:
+        print("仅支持micap4类和micaps11类数据输出成GDS格式")
+    data_type_byte = np.ndarray.tobytes(np.array([data_type]).astype(np.int16))
+    mName = grid0.members[0]
+    mName = mName.encode(encoding='utf-8')
+    if len(mName)<20:
+        mName = mName + np.ndarray.tobytes(np.zeros(20-len(mName)).astype(np.int8))
+
+    eleName = b""
+    if "eleName" in da.attrs.keys():
+        eleName = da.attrs["eleName"]
+    if len(eleName) < 50:
+        mName = mName + np.ndarray.tobytes(np.zeros(50 - len(eleName)).astype(np.int8))
+
+    description =b""
+    if "description" in da.attrs.keys():
+        description = da.attrs["description"]
+    if len(description) < 30:
+        mName = mName + np.ndarray.tobytes(np.zeros(30 - len(description)).astype(np.int8))
+
+
+    level = np.ndarray.tobytes(np.array(grid0.levels[0]).astype(np.float32))
+    y_m_d_h_timezone_peroid = np.ndarray.tobytes(np.array([2021,1,1,8,8,0]).astype(np.int32))
+    slon_elon_dlon = np.ndarray.tobytes(np.array([grid0.slon,grid0.elon,grid0.dlon]).astype(np.float32))
+    nlon = np.ndarray.tobytes(np.array([grid0.nlon]).astype(np.int32))
+    slat_elat_dlat = np.ndarray.tobytes(np.array([grid0.slat, grid0.elat, grid0.dlat]).astype(np.float32))
+    nlat  =  np.ndarray.tobytes(np.array([grid0.nlat]).astype(np.int32))
+    vmin,vmax,inte = meteva.base.tool.plot_tools.get_isoline_set(da)
+    sValue_eValue_dValue = np.ndarray.tobytes(np.array([vmin,vmax,inte]).astype(np.float32))
+    blank = np.ndarray.tobytes(np.zeros(100).astype(np.int8))
+    value_bytes = np.ndarray.tobytes(da.values.astype(np.float32))
+    bytes1 = discriminator+data_type_byte+mName+eleName+description+level+y_m_d_h_timezone_peroid
+    bytes2 = slon_elon_dlon+nlon+slat_elat_dlat+nlat+sValue_eValue_dValue+blank+value_bytes
+    bytes = bytes1+bytes2
+
+    return bytes
+
+def write_griddata_to_gds_file(da,save_path = "a.txt",creat_dir = False,show = False):
+    try:
+        dir = os.path.split(os.path.abspath(save_path))[0]
+        if not os.path.isdir(dir):
+            if not creat_dir:
+                print("文件夹："+dir+"不存在")
+                return False
+            else:
+                meteva.base.tool.path_tools.creat_path(save_path)
+
+        bytes = tran_griddata_to_gds_flow(da)
+        br = open(save_path, 'wb')
+        br.write(bytes)
+        br.close()
+        if show:
+            print('成功输出至' + save_path)
+        return True
+    except:
+        exstr = traceback.format_exc()
+        print(exstr)
+        return False
+
+if __name__ == "__main__":
+    grd = meteva.base.read_griddata_from_micaps4(r"H:\test_data\input\meb\m4.txt")
+    write_griddata_to_gds_file(grd,save_path=r"H:\test_data\output\meb\gds_test.000")
