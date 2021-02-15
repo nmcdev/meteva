@@ -17,6 +17,33 @@ import datetime
 import copy
 
 
+def get_isoline_set(grd):
+    values = grd.values
+    grid_values = np.squeeze(values)
+    vmax = math.ceil(max(grid_values.flatten()))
+    vmin = math.ceil(min(grid_values.flatten()))
+
+    dif = (vmax - vmin) / 10.0
+    if dif == 0:
+        inte = 1
+    else:
+        inte = math.pow(10, math.floor(math.log10(dif)))
+    # 用基本间隔，将最大最小值除于间隔后小数点部分去除，最后把间隔也整数化
+    r = dif / inte
+    if r < 3 and r >= 1.5:
+        inte = inte * 2
+    elif r < 4.5 and r >= 3:
+        inte = inte * 4
+    elif r < 5.5 and r >= 4.5:
+        inte = inte * 5
+    elif r < 7 and r >= 5.5:
+        inte = inte * 6
+    elif r >= 7:
+        inte = inte * 8
+    vmin = inte * ((int)(vmin / inte) - 1)
+    vmax = inte * ((int)(vmax / inte) + 1)
+    return vmin,vmax,inte
+
 def readshapefile(shapefile, default_encoding='utf-8'):
     """
     """
@@ -759,6 +786,8 @@ def scatter_sta(sta0,value_column=None,
         value_column = 0
     else:
         plot_data_names = [data_names[value_column]]
+        data_names = plot_data_names
+        #print(plot_data_names)
 
     sta_without_iv = meteva.base.sele.not_IV(sta)
 
@@ -2498,11 +2527,12 @@ def mesh_obtime_time(sta,save_dir = None,save_path = None,
             print("手动设置的save_path数目和要绘制的图形数目不一致")
             return
     kk = 0
-
+    print(sta)
     dat = sta[data_names].values
     dat[np.isnan(dat)] = meteva.base.IV
     vmin = np.min(dat[dat != meteva.base.IV])
     vmax = np.max(dat[dat != meteva.base.IV])
+
 
     if cmap is None:
         cmap = "bwr"
@@ -2843,13 +2873,17 @@ def mesh_time_dtime(sta,save_dir = None,save_path = None,
 
     dat = sta[data_names].values
     dat[np.isnan(dat)] = meteva.base.IV
+
     vmin = np.min(dat[dat != meteva.base.IV])
     vmax = np.max(dat[dat != meteva.base.IV])
     if cmap is None:
         cmap = "bwr"
+
+
     cmap_part,clevs_part = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap,clevs=clevs,vmin=vmin,vmax = vmax)
     vmax = clevs_part[-1]
     vmin = 2 * clevs_part[0] - clevs_part[1]
+
 
     if annot is None:
         if vmax>1:
