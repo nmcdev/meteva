@@ -172,8 +172,6 @@ def prepare_dataset_without_combining(para,recover = True):
         para["fo_data"][model]["hdf_path"] = hdf_path
         creat_fo_dataset(model,para)
 
-
-
 def creat_fo_dataset(model,para):
     station = para["station"]
     interp = para["interp"]
@@ -185,6 +183,7 @@ def creat_fo_dataset(model,para):
     dir_fo  =para_model["dir_fo"]
     read_method = para_model["read_method"]
     read_para =para_model["read_para"]
+    reasonable_value = para_model["reasonable_value"]
     if read_para is None:
         read_para = {}
     data0 = None
@@ -281,6 +280,10 @@ def creat_fo_dataset(model,para):
                                 dat = interp(dat, station)
                             else:
                                 dat = meteva.base.put_stadata_on_station(dat,station)
+
+                            if reasonable_value is not None:
+                                dat = meteva.base.sele_by_para(dat, value=reasonable_value)
+
                             meteva.base.set_stadata_coords(dat,time = time1,dtime = dt)
                             data_name0 = meteva.base.get_stadata_names(dat)
                             if len(data_name0) ==2:
