@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import math
 import datetime
-meteva.base.set_io_config(r"H:\test_data\ip_port.txt")
+
 
 '''
 #该模块将逐步包含业务规范中的短时强降水的检验规则
@@ -178,6 +178,7 @@ def edtion_2020_1(lightning_ob,station,sta_ob_max_wind,sta_fo_list,pcapital_fo_l
 
 
 if __name__ == "__main__":
+    meteva.base.set_io_config(r"H:\test_data\ip_port.txt") #设置本地环境下数据服务器的账号信息
 
     #  读取自动站的站号和经纬度信息的文件,其中需包含站号，经度、纬度和站点类型，读入后分别存储在id,lon,lat,type列
     # type列中国家站取值需为1，其它站取值不为1
