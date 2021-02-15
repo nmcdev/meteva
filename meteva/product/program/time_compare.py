@@ -19,6 +19,7 @@ def time_list_line_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
     sta_ob_and_fos1 = meteva.base.sele_by_para(sta_ob_and_fos1,drop_IV=True)
 
     ids = list(set(sta_ob_and_fos1.loc[:,"id"]))
+    ids.sort()
     nids = len(ids)
 
     if isinstance(title, list):
@@ -218,6 +219,7 @@ def time_list_line(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,sho
                    sup_fontsize = 10,width = None,height = None,json_dir = None,json_path = None):
     sta_ob_and_fos1 = meteva.base.sele_by_dict(sta_ob_and_fos0, s)
     ids = list(set(sta_ob_and_fos1.loc[:,"id"]))
+    ids.sort()
     nids = len(ids)
     if isinstance(title, list):
         if nids != len(title):
@@ -413,6 +415,7 @@ def time_list_mesh_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
         print("there is no data to verify")
         return
     ids = list(set(sta_ob_and_fos1.loc[:, "id"]))
+    ids.sort()
     data_names = meteva.base.get_stadata_names(sta_ob_and_fos1)
     times_fo = sta_ob_and_fos1.loc[:, "time"].values
     times_fo = list(set(times_fo))
@@ -644,6 +647,7 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
 
     sta_ob_and_fos1 = meteva.base.sele_by_dict(sta_ob_and_fos0, s)
     ids = list(set(sta_ob_and_fos1.loc[:,"id"]))
+    ids.sort()
     data_names = meteva.base.get_stadata_names(sta_ob_and_fos1)
     sta_ob_all1 = meteva.base.sele_by_para(sta_ob_and_fos1,member=[data_names[0]])
     sta_fo_all1 = meteva.base.sele_by_para(sta_ob_and_fos1, member=data_names[1:])
@@ -686,6 +690,7 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
     col = int(np.sum(dhs_ob_not0)/dh_x)+1
     #print(row)
     t_ob = []
+
     for t in times_ob:
         t_ob.append(meteva.base.all_type_time_to_datetime(t))
 
@@ -1002,6 +1007,7 @@ def time_list_mesh_wind(sta_ob_and_fos0,s = None,save_dir = None,save_path = Non
 
     sta_ob_and_fos1 = meteva.base.sele_by_dict(sta_ob_and_fos0, s)
     ids = list(set(sta_ob_and_fos1.loc[:, "id"]))
+    ids.sort()
     data_names = meteva.base.get_stadata_names(sta_ob_and_fos1)
     ob_names = data_names[0:2]
     fo_names = data_names[2:]
@@ -1203,7 +1209,8 @@ def time_list_mesh_wind(sta_ob_and_fos0,s = None,save_dir = None,save_path = Non
                 u_1d = diff_u.flatten()[speed_1d != meteva.base.IV]
                 v_1d = diff_v.flatten()[speed_1d != meteva.base.IV]
                 ax1.barbs(xx_1d, yy_1d, u_1d, v_1d, barb_increments={'half': 2, 'full': 4, 'flag': 20},
-                          length=lenght)
+                          length=lenght,sizes = dict(emptybarb=0.01, spacing=0.23, height=0.5, width=0.25),
+                      linewidth = lenght * lenght * 0.03)
 
                 plt.rcParams['xtick.direction'] = 'in'  # 将x轴的刻度线方向设置抄向内
                 plt.rcParams['ytick.direction'] = 'in'  # 将y轴的刻度方知向设置向内
@@ -1257,7 +1264,9 @@ def time_list_mesh_wind(sta_ob_and_fos0,s = None,save_dir = None,save_path = Non
 
 
             ax2.barbs(xx_1d, yy_1d, u_1d, v_1d, barb_increments={'half': 2, 'full': 4, 'flag': 20},
-                      length=lenght)
+                      length=lenght,sizes = dict(emptybarb=0.01, spacing=0.23, height=0.5, width=0.25),
+                      linewidth = lenght * lenght * 0.03)
+
 
             for k in range(row):
                 jr = row - k - 1

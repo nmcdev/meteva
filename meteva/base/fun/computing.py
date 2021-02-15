@@ -149,6 +149,10 @@ def add_on_level_time_dtime_id(sta1,sta2,how = "left",default = None):
         return sta1
     else:
         # 删除重复行
+        dtime_type = str(sta1["dtime"].dtype)
+        if dtime_type.find("int") < 0:
+            print("站点数据的dtime坐标不是整数，请检查输入数据，将站点数据的dtime坐标设置为整数类型")
+            return None
         df = pd.merge(sta1, sta2, on=["level","time","dtime","id"], how=how)
         #print(len(sta1.index))
         #print(len(sta2.index))
@@ -201,6 +205,10 @@ def mutiply_on_level_time_dtime_id(sta1,sta2,how = "left",default = None):
         return sta1
     else:
         # 删除重复行
+        dtime_type = str(sta1["dtime"].dtype)
+        if dtime_type.find("int") < 0:
+            print("站点数据的dtime坐标不是整数，请检查输入数据，将站点数据的dtime坐标设置为整数类型")
+            return None
         df = pd.merge(sta1, sta2, on=["level","time","dtime","id"], how=how)
         #print(len(sta1.index))
         #print(len(sta2.index))
@@ -253,6 +261,10 @@ def minus_on_level_time_dtime_id(sta1,sta2,how = "left",default = None):
         return sta1
     else:
         # 删除重复行
+        dtime_type = str(sta1["dtime"].dtype)
+        if dtime_type.find("int") < 0:
+            print("站点数据的dtime坐标不是整数，请检查输入数据，将站点数据的dtime坐标设置为整数类型")
+            return None
         df = pd.merge(sta1, sta2, on=["level","time","dtime","id"], how=how)
         #print(len(sta1.index))
         #print(len(sta2.index))
@@ -303,6 +315,10 @@ def max_on_level_time_dtime_id(sta1,sta2,how = "left",default = None):
         return sta1
     else:
         # 删除重复行
+        dtime_type = str(sta1["dtime"].dtype)
+        if dtime_type.find("int") < 0:
+            print("站点数据的dtime坐标不是整数，请检查输入数据，将站点数据的dtime坐标设置为整数类型")
+            return None
         df = pd.merge(sta1, sta2, on=["level","time","dtime","id"], how=how)
         #print(len(sta1.index))
         #print(len(sta2.index))
@@ -357,6 +373,10 @@ def min_on_level_time_dtime_id(sta1,sta2,how = "left",default = None):
         return sta1
     else:
         # 删除重复行
+        dtime_type = str(sta1["dtime"].dtype)
+        if dtime_type.find("int") < 0:
+            print("站点数据的dtime坐标不是整数，请检查输入数据，将站点数据的dtime坐标设置为整数类型")
+            return None
         df = pd.merge(sta1, sta2, on=["level","time","dtime","id"], how=how)
         #print(len(sta1.index))
         #print(len(sta2.index))
@@ -411,6 +431,10 @@ def add_on_id(sta1_0, sta2_0, how="left", default=None):
         return sta1_0
     else:
         # 删除重复行
+        dtime_type = str(sta1_0["dtime"].dtype)
+        if dtime_type.find("int") < 0:
+            print("站点数据的dtime坐标不是整数，请检查输入数据，将站点数据的dtime坐标设置为整数类型")
+            return None
         sta2 = sta2_0.drop_duplicates(['id'])
         sta1 = sta1_0.drop_duplicates(['id'])
 
@@ -466,6 +490,10 @@ def max_on_id(sta1_0, sta2_0, how="left"):
         return sta1_0
     else:
         # 删除重复行
+        dtime_type = str(sta1_0["dtime"].dtype)
+        if dtime_type.find("int") < 0:
+            print("站点数据的dtime坐标不是整数，请检查输入数据，将站点数据的dtime坐标设置为整数类型")
+            return None
         sta2 = sta2_0.drop_duplicates(['id'])
         sta1 = sta1_0.drop_duplicates(['id'])
 
@@ -509,6 +537,10 @@ def min_on_id(sta1_0, sta2_0, how="left"):
         return sta1_0
     else:
         # 删除重复行
+        dtime_type = str(sta1_0["dtime"].dtype)
+        if dtime_type.find("int") < 0:
+            print("站点数据的dtime坐标不是整数，请检查输入数据，将站点数据的dtime坐标设置为整数类型")
+            return None
         sta2 = sta2_0.drop_duplicates(['id'])
         sta1 = sta1_0.drop_duplicates(['id'])
         df = pd.merge(sta1, sta2, on='id', how=how)
@@ -547,6 +579,10 @@ def min_on_id(sta1_0, sta2_0, how="left"):
 def minus_on_id(sta1_0, sta2_0, how="left", default=None):
 
     # 删除重复行
+    dtime_type = str(sta1_0["dtime"].dtype)
+    if dtime_type.find("int") < 0:
+        print("站点数据的dtime坐标不是整数，请检查输入数据，将站点数据的dtime坐标设置为整数类型")
+        return None
     sta2 = sta2_0.drop_duplicates(['id'])
     sta1 = sta1_0.drop_duplicates(['id'])
     #将两个df1 合并在一起
@@ -595,6 +631,11 @@ def minus_on_id(sta1_0, sta2_0, how="left", default=None):
 
 #两个dataframe相乘
 def multiply_on_id(sta1_0, sta2_0, how="left", default=None):
+
+    dtime_type = str(sta1_0["dtime"].dtype)
+    if dtime_type.find("int") < 0:
+        print("站点数据的dtime坐标不是整数，请检查输入数据，将站点数据的dtime坐标设置为整数类型")
+        return None
     # 删除重复行
     sta2 = sta2_0.drop_duplicates(['id'])
     sta1 = sta1_0.drop_duplicates(['id'])
