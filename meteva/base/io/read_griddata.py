@@ -12,6 +12,7 @@ import struct
 from . import DataBlock_pb2
 from .GDS_data_service import GDSDataService
 import bz2
+from .CMADaasAccess import CMADaasAccess
 import copy
 
 
@@ -159,6 +160,8 @@ def read_griddata_from_nc(filename,grid = None,
     try:
         ds0 = xr.open_dataset(filename)
 
+
+        '''
         if dtime_dim == "time":
             ds0 = ds0.rename_dims({"time":"dtime"})
             dtime_dim = "dtime"
@@ -421,7 +424,9 @@ def read_griddata_from_nc(filename,grid = None,
         attrs_name = list(da1.attrs)
         if "dtime_type" in attrs_name:
             da1.attrs["dtime_type"]= "hour"
-
+        '''
+        da1 = meteva.base.xarray_to_griddata(ds0,value_name=value_name,member_dim=member_dim,level_dim=level_dim,time_dim=time_dim,dtime_dim=dtime_dim,
+                                             lat_dim=lat_dim,lon_dim=lon_dim)
         meteva.base.reset(da1)
         if time is not None and len(da1.coords["time"])==1:
             meteva.base.set_griddata_coords(da1,gtime=[time])
@@ -450,6 +455,82 @@ def read_griddata_from_nc(filename,grid = None,
         print(exstr)
         print(e)
         return None
+
+
+def print_grib_file_info(filename,level_type = None,level = None):
+    if level_type is None:
+        try:
+            ds1 = xr.open_dataset(filename, engine="cfgrib")
+            print(filename + "中只有一种leve_type，\n请根据以下数据内容信息，确认其中的level维度名称")
+            print(ds1)
+            ds1.close()
+        except:
+            exstr = traceback.format_exc()
+            strs = exstr.split("\n")
+            level_types = []
+            for str1 in strs:
+                if str1.find("filter_by_keys=") >= 0:
+                    str2 = str1.split("={")[1].replace("}", "")
+                    str3 = str2.split(":")[1].strip()
+                    level_types.append(str3)
+            print(filename + "中包含的levelType有：")
+            for str3 in level_types:
+                print(str3)
+            print("从上述文件读取数据前，需从上述选项中指定具体level_type值,其中：")
+    else:
+        filter_by_keys = {}
+        filter_by_keys['typeOfLevel'] = level_type.strip()
+        if level is not None:
+            filter_by_keys['level'] = level
+        ds0 = xr.open_dataset(filename, engine="cfgrib", backend_kwargs={'filter_by_keys': filter_by_keys})
+        print(ds0)
+        ds0.close()
+
+
+
+def read_griddata_from_grib(filename,level_type,grid = None,
+            value_name = None,member_dim = None,time_dim = None,dtime_dim = None,lat_dim = None,lon_dim = None,
+                         level=None, time=None, dtime=None, data_name="data0",show = False):
+
+
+    try:
+        filter_by_keys = {}
+        filter_by_keys['typeOfLevel'] = level_type
+        if level is not None:
+            filter_by_keys['level'] = level
+        ds0 = xr.open_dataset(filename, engine="cfgrib", backend_kwargs={'filter_by_keys': filter_by_keys})
+        da1 = meteva.base.xarray_to_griddata(ds0,value_name=value_name,member_dim=member_dim,level_dim=level_type,time_dim=time_dim,dtime_dim=dtime_dim,
+                                             lat_dim=lat_dim,lon_dim=lon_dim)
+        ds0.close()
+        meteva.base.reset(da1)
+        if time is not None and len(da1.coords["time"])==1:
+            meteva.base.set_griddata_coords(da1,gtime=[time])
+        if dtime is not None and len(da1.coords["dtime"])==1:
+            meteva.base.set_griddata_coords(da1,dtime_list=[dtime])
+        if level is not None and len(da1.coords["level"])==1:
+            meteva.base.set_griddata_coords(da1,level_list=[level])
+        if data_name is not None and len(da1.coords["member"])==1:
+            meteva.base.set_griddata_coords(da1,member_list=[data_name])
+
+
+        if grid is None:
+            da1.name = "data0"
+            if show:
+                print("success read from " + filename)
+            return da1
+        else:
+            # 如果传入函数有grid信息，就需要进行一次双线性插值，按照grid信息进行提取网格信息。
+            da2 = meteva.base.interp_gg_linear(da1, grid)
+            da2.name = "data0"
+            if show:
+                print("success read from " + filename)
+            return da2
+    except (Exception, BaseException) as e:
+        exstr = traceback.format_exc()
+        print(exstr)
+        print(e)
+        return None
+
 
 def read_griddata_from_gds_file(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
     try:
@@ -1276,3 +1357,43 @@ def read_griddata_from_rasterData(filename,grid = None,level = None,time = None,
         print(filename + "数据读取失败")
         return None
 
+def read_griddata_from_cmadaas(dataCode,element,level_type,level,time,dtime = None,grid = None,data_name= None,show = False):
+    if dtime is None:
+        qparams = { 'interfaceId':'getNafpAnaEleGridByTimeAndLevel'
+                    ,'dataCode':dataCode
+                    ,'fcstEle':element
+                    ,'levelType':str(level_type)
+                    ,'fcstLevel':str(level)
+                    }
+    else:
+        qparams = { 'interfaceId':'getNafpEleGridByTimeAndLevelAndValidtime'
+                    ,'dataCode':dataCode
+                    ,'fcstEle':element
+                    ,'levelType':str(level_type)
+                    ,'fcstLevel':str(level)
+                    ,'validTime': dtime
+                    }
+
+    #print(qparams)
+    url = CMADaasAccess.combine_url_from_para(qparams,time=time, time_name='time',show_url = show)
+    grd = None
+    try:
+        if dtime is None:
+            grd = CMADaasAccess.read_griddata_from_cmadaas(url, time=time)
+        else:
+            grd = CMADaasAccess.read_griddata_from_cmadaas(url, time=time, dtime=int(qparams['validTime']))
+    except:
+        if show:
+            exstr = traceback.format_exc()
+            print(exstr)
+
+    if grd is not None:
+        if data_name is None:
+            meteva.base.set_griddata_coords(grd,member_list=[dataCode])
+        else:
+             meteva.base.set_griddata_coords(grd,member_list=[data_name])
+        grd.name = element
+        if grid is not None:
+            grd = meteva.base.interp_gg_linear(grd, grid)
+
+    return grd

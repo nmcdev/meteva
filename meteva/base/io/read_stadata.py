@@ -14,6 +14,7 @@ from collections import OrderedDict
 import datetime
 import math
 from io import StringIO
+from .CMADaasAccess import CMADaasAccess
 
 
 
@@ -516,9 +517,35 @@ def set_io_config(filename):
             meteva.base.gds_ip_port = ip,port
             print("配置文件设置成功")
         except:
-            print("filename  内容的格式不符合要求")
+            print(filename + "中micaps分布式数据库设置格式不符合要求")
+
+        try:
+            meteva.base.cmadaas_set = read_cmadass_set(filename)
+        except:
+            print(filename + "中未包含cmadaas数据库设置，或格式不符合要求，不读取大数据云平台则可忽略该信息")
     else:
         print("cimiss和gds配置文件不存在")
+
+def read_cmadass_set(filename,show = False):
+    if filename is None:
+        print("请使用set_config_ip_port 函数设置存储ip，port的配置文件的路径")
+    file = open(filename)
+    for i in range(100):
+        title = file.readline()
+        if title.find("CMADaaS") >=0:
+            break
+    dns = file.readline().split("=")[1]
+    dns = dns.strip()
+    port = file.readline().split("=")[1]
+    port = port.strip()
+    userId =file.readline().split("=")[1]
+    userId = userId.strip()
+    pwd = file.readline().split("=")[1]
+    pwd = pwd.strip()
+    file.close()
+    if show:
+        print("success read from " + filename)
+    return dns,port,userId,pwd
 
 def read_gds_ip_port(filename,show = False):
     if filename is None:
@@ -1636,3 +1663,35 @@ def read_stawind_from_gds_gridwind_file(filename,station,level = None,time = Non
     else:
         print(filename + " not exist")
         return None
+
+
+def read_stadata_from_cmadaas(dataCode,element,time,station = None,level=0,dtime=0,data_name= None,show = False):
+    ## stations
+    qparams = {'interfaceId': 'getSurfEleByTime',
+               'dataCode': dataCode,
+               'elements': 'Datetime,Station_Id_D,Lat,Lon,'+element,
+               }  ##字典规定接口名称，数据代码，下载要素代码。
+    # 数据部分： SURF_CHN_MUL_HOR_N 数据为全国基准站(2400多站点)逐小时地面要素
+    # 接口部分： getSurfEleByTime 接口为按时间提取地面要素
+    # 要素部分： PRE_24h 为地面降水，其他包括TEM、TEM_Max、RHU、WIN_D_Avg_10mi、WIN_S_Avg_10mi等，可自己选择
+    time_str = time.strftime("%Y%m%d%H%M")
+    userID = meteva.base.cmadaas_set[2]
+    pwd = meteva.base.cmadaas_set[3]
+    try:
+        sta = CMADaasAccess.get_obs_micaps3_from_cmadaas(qparams, userId=userID, pwd=pwd, time=time_str,show=show)
+    except:
+        if show:
+            exstr = traceback.format_exc()
+            print(exstr)
+        return None
+    if sta is not None:
+        if data_name is None:
+            data_name = dataCode
+        meteva.base.set_stadata_names(sta,data_name_list=[data_name])
+        sta['level'] = level
+        sta['dtime'] = dtime
+        if (station is not None):
+            sta = meteva.base.put_stadata_on_station(sta, station)
+    else:
+        print("数据读取失败")
+    return sta
