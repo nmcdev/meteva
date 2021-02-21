@@ -10,7 +10,7 @@ from .selecting import *
 from .computing import *
 from .diagnosing import *
 from . import grouping as grp
-from .grouping import group,split
+from .grouping import group,split,group_grd,split_grd
 from .statisticing import *
 from .nearing import *
 
