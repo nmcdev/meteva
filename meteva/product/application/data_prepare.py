@@ -271,34 +271,55 @@ def creat_fo_dataset(model,para):
                         #data_exist = True
                         continue
                 #if data_exist:continue
-                path = meteva.base.get_path(dir_fo, file_time, dt)
-                if os.path.exists(path):
-                    try:
-                        dat = read_method(path,**read_para)
-                        if dat is not None:
-                            if not isinstance(dat, pd.DataFrame):
-                                dat = interp(dat, station)
-                            else:
-                                dat = meteva.base.put_stadata_on_station(dat,station)
-
-                            if reasonable_value is not None:
-                                dat = meteva.base.sele_by_para(dat, value=reasonable_value)
-
-                            meteva.base.set_stadata_coords(dat,time = time1,dtime = dt)
-                            data_name0 = meteva.base.get_stadata_names(dat)
-                            if len(data_name0) ==2:
-                                data_name1 = [model +"_u",model+"_v"]
-                            else:
-                                data_name1 = [model]
-                            meteva.base.set_stadata_names(dat,data_name1)
-                            sta_list.append(dat)
-                            print("success read data from " + path)
+                if dir_fo is None:
+                    dat = read_method(**read_para,time = file_time,dtime = dt)
+                    if dat is not None:
+                        if not isinstance(dat, pd.DataFrame):
+                            dat = interp(dat, station)
                         else:
-                            print("fail read data from " + path)
-                    except:
-                        print("fail read data from " + path)
+                            dat = meteva.base.put_stadata_on_station(dat, station)
+
+                        if reasonable_value is not None:
+                            dat = meteva.base.sele_by_para(dat, value=reasonable_value)
+
+                        meteva.base.set_stadata_coords(dat, time=time1, dtime=dt)
+                        data_name0 = meteva.base.get_stadata_names(dat)
+                        if len(data_name0) == 2:
+                            data_name1 = [model + "_u", model + "_v"]
+                        else:
+                            data_name1 = [model]
+                        meteva.base.set_stadata_names(dat, data_name1)
+                        sta_list.append(dat)
+                        print("success read data from " + str(read_para)+ str(file_time)+"."+str(dt))
                 else:
-                    print(path +" does not exist")
+                    path = meteva.base.get_path(dir_fo, file_time, dt)
+                    if os.path.exists(path) or path is None:
+                        try:
+                            dat = read_method(path,**read_para)
+                            if dat is not None:
+                                if not isinstance(dat, pd.DataFrame):
+                                    dat = interp(dat, station)
+                                else:
+                                    dat = meteva.base.put_stadata_on_station(dat,station)
+
+                                if reasonable_value is not None:
+                                    dat = meteva.base.sele_by_para(dat, value=reasonable_value)
+
+                                meteva.base.set_stadata_coords(dat,time = time1,dtime = dt)
+                                data_name0 = meteva.base.get_stadata_names(dat)
+                                if len(data_name0) ==2:
+                                    data_name1 = [model +"_u",model+"_v"]
+                                else:
+                                    data_name1 = [model]
+                                meteva.base.set_stadata_names(dat,data_name1)
+                                sta_list.append(dat)
+                                print("success read data from " + path)
+                            else:
+                                print("fail read data from " + path)
+                        except:
+                            print("fail read data from " + path)
+                    else:
+                        print(path +" does not exist")
 
     if(len(sta_list) == 0):
         print("there is not file data in " + dir_fo)
@@ -379,36 +400,51 @@ def creat_ob_dataset(para,ele = "ob",recover = True):
             else:
                 file_time = time1 - datetime.timedelta(hours = 8)
 
-            path = meteva.base.get_path(dir_ob, file_time)
-            file_exit = False
-            if path.find("mdfs:")>=0:
-                if meteva.base.path_tools.exist_in_gds(path):
-                    file_exit = True
+            if dir_ob is None:
+                dat = read_method(**read_para, time=file_time)
+                if dat is not None:
+                    if not isinstance(dat, pd.DataFrame):
+                        interp = para["interp"]
+                        dat = interp(dat, station)
+                    if reasonable_value is not None:
+                        dat = meteva.base.sele_by_para(dat, value=reasonable_value)
+                    data_name0 = meteva.base.get_stadata_names(dat)
+                    if len(data_name0) == 1:
+                        meteva.base.set_stadata_names(dat, data_name)
+                    meteva.base.set_stadata_coords(dat, time=time1)
+                    sta_list.append(dat)
+                    print("success read data from " + str(read_para) + str(file_time))
             else:
-                if os.path.exists(path):
-                    file_exit = True
-            if file_exit:
-                try:
-                    dat = read_method(path,**read_para)
-                    if dat is not None:
-                        dat = meteva.base.fun.comp.put_stadata_on_station(dat,station)
-                        if not isinstance(dat,pd.DataFrame):
-                            interp = para["interp"]
-                            dat = interp(dat,station)
-                        if reasonable_value is not None:
-                            dat = meteva.base.sele_by_para(dat,value=reasonable_value)
-                        data_name0 = meteva.base.get_stadata_names(dat)
-                        if len(data_name0) == 1:
-                            meteva.base.set_stadata_names(dat,data_name)
-                        meteva.base.set_stadata_coords(dat,time = time1)
+                path = meteva.base.get_path(dir_ob, file_time)
+                file_exit = False
+                if path.find("mdfs:")>=0:
+                    if meteva.base.path_tools.exist_in_gds(path):
+                        file_exit = True
+                else:
+                    if os.path.exists(path):
+                        file_exit = True
+                if file_exit:
+                    try:
+                        dat = read_method(path,**read_para)
+                        if dat is not None:
+                            dat = meteva.base.fun.comp.put_stadata_on_station(dat,station)
+                            if not isinstance(dat,pd.DataFrame):
+                                interp = para["interp"]
+                                dat = interp(dat,station)
+                            if reasonable_value is not None:
+                                dat = meteva.base.sele_by_para(dat,value=reasonable_value)
+                            data_name0 = meteva.base.get_stadata_names(dat)
+                            if len(data_name0) == 1:
+                                meteva.base.set_stadata_names(dat,data_name)
+                            meteva.base.set_stadata_coords(dat,time = time1)
 
-                        sta_list.append(dat)
-                    else:
+                            sta_list.append(dat)
+                        else:
+                            print("fail read data from " + path)
+                    except:
                         print("fail read data from " + path)
-                except:
-                    print("fail read data from " + path)
-            else:
-                print(path +  "does not exist")
+                else:
+                    print(path +  "does not exist")
     if(len(sta_list)==0):return None
     sta_all = pd.concat(sta_list, axis=0)
     if "level" not in read_para.keys():
