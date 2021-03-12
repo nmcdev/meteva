@@ -318,7 +318,7 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap ="rainbo
         else:
             xticks_label[-1] ="   " +xticks_label[-1] + "°W"
         ax.set_xticks(xticks)
-        ax.set_xticklabels(xticks_label,fontsize = sup_fontsize * 0.9)
+        ax.set_xticklabels(xticks_label,fontsize = sup_fontsize * 0.9, family='Times New Roman')
 
         vmax = y[-1]
         vmin = y[0]
@@ -346,7 +346,7 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap ="rainbo
             else:
                 yticks_label.append(str(round(-yticks[y], 6)) +"°S")
         ax.set_yticks(yticks)
-        ax.set_yticklabels(yticks_label,fontsize = sup_fontsize * 0.9)
+        ax.set_yticklabels(yticks_label,fontsize = sup_fontsize * 0.9, family='Times New Roman')
 
 
         if(save_path is not None):
@@ -367,6 +367,7 @@ def plot_2d_grid_list(grd_list,type = "contour",save_path = None,title = None,cl
 
     if save_path is None:
         show = True
+
     x = grd_list[0]['lon'].values
     slon = x[0]
     elon = x[-1]
@@ -510,6 +511,8 @@ def plot_2d_grid_list(grd_list,type = "contour",save_path = None,title = None,cl
                 time_str = meteva.base.tool.time_tools.time_to_str(grd_list[p]["time"].values[0])
                 dati_str = time_str[0:4] + "年" + time_str[4:6] + "月" + time_str[6:8] + "日" + time_str[8:10] + "时"
                 title1 = grd_list[p]["member"].values[0] + " " + dati_str + str(grd_list[p]["dtime"].values[0]) + "H时效 "
+                if "var_name" in grd_list[p].attrs.keys():
+                    title1 = title1 + grd_list[p].attrs["var_name"]
             except:
                 print("time or dtime or level 格式错误，请更改相应数据格式或直接指定title")
                 title1= ""
@@ -540,17 +543,17 @@ def plot_2d_grid_list(grd_list,type = "contour",save_path = None,title = None,cl
         knext_row = pi + (pj + 1) * ncol
         if knext_row >= nplot:
             ax.set_xticks(xticks)
-            ax.set_xticklabels(xticks_label, fontsize=sup_fontsize * 0.8)
+            ax.set_xticklabels(xticks_label, fontsize=sup_fontsize * 0.8, family='Times New Roman')
         else:
             ax.set_xticks(xticks)
-            ax.set_xticklabels(xticks_label_None, fontsize=sup_fontsize * 0.8)
+            ax.set_xticklabels(xticks_label_None, fontsize=sup_fontsize * 0.8, family='Times New Roman')
 
         if pi ==0:
             ax.set_yticks(yticks)
-            ax.set_yticklabels(yticks_label, fontsize=sup_fontsize * 0.8)
+            ax.set_yticklabels(yticks_label, fontsize=sup_fontsize * 0.8, family='Times New Roman')
         else:
             ax.set_yticks(yticks)
-            ax.set_yticklabels(yticks_label_None, fontsize=sup_fontsize * 0.8)
+            ax.set_yticklabels(yticks_label_None, fontsize=sup_fontsize * 0.8, family='Times New Roman')
         if type == "contour":
             im = ax.contourf(x, y, np.squeeze(grd_list[p].values), levels=clevs1, cmap=cmap1, norm=norm)
         else:
@@ -673,7 +676,7 @@ def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = "rai
     else:
         xticks_label[-1] ="   " +xticks_label[-1] + "°W"
     ax.set_xticks(xticks)
-    ax.set_xticklabels(xticks_label,fontsize = sup_fontsize * 0.9)
+    ax.set_xticklabels(xticks_label,fontsize = sup_fontsize * 0.9, family='Times New Roman')
 
     vmax = y[-1]
     vmin = y[0]
@@ -701,7 +704,7 @@ def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = "rai
         else:
             yticks_label.append(str(round(-yticks[y], 6)) +"°S")
     ax.set_yticks(yticks)
-    ax.set_yticklabels(yticks_label,fontsize = sup_fontsize * 0.9)
+    ax.set_yticklabels(yticks_label,fontsize = sup_fontsize * 0.9, family='Times New Roman')
 
 
     if(save_path is not None):
@@ -812,9 +815,6 @@ def scatter_sta(sta0,value_column=None,
         dis_values.sort()
         dis1 = dis_values[int(len(dis_values) * 0.02) + 1]
         point_size = (map_width * dis1 / rlon)**2
-        #point_size = 100 * map_area / len(sta.index)
-        #print("**************")
-        #print(point_size)
         if (point_size > 30): point_size = 30
         if (point_size < 0.1): point_size = 0.1
         #point_size *=3
@@ -936,7 +936,7 @@ def scatter_sta(sta0,value_column=None,
             colors = value
             if isinstance(fix_size,bool):
                 if fix_size:
-                    im = ax.scatter(x, y, c=colors, cmap=cmap1, norm=norm, s=point_size)
+                    im = ax.scatter(x, y, c=colors, cmap=cmap1, norm=norm, s=point_size,edgecolors ="face")
                 else:
                     area = point_size * np.abs(value - min_spot_value)/mean_value
                     if(threshold is not None):
@@ -964,10 +964,10 @@ def scatter_sta(sta0,value_column=None,
 
 
             ax.set_xticks(xticks)
-            ax.set_xticklabels(xticks_label,fontsize = sup_fontsize * 0.8)
+            ax.set_xticklabels(xticks_label,fontsize = sup_fontsize * 0.8, family='Times New Roman')
 
             ax.set_yticks(yticks)
-            ax.set_yticklabels(yticks_label,fontsize = sup_fontsize * 0.8)
+            ax.set_yticklabels(yticks_label,fontsize = sup_fontsize * 0.8, family='Times New Roman')
 
 
             save_path1 = None
@@ -1136,7 +1136,6 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
 
     cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap, clevs=clevs, vmin=vmin, vmax=vmax)
 
-
     norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
     #print(sta0_list[0])
     if point_size is None:
@@ -1281,17 +1280,17 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
         knext_row = pi + (pj + 1) * ncol
         if knext_row >= nplot:
             ax.set_xticks(xticks)
-            ax.set_xticklabels(xticks_label, fontsize=sup_fontsize * 0.8)
+            ax.set_xticklabels(xticks_label, fontsize=sup_fontsize * 0.8, family='Times New Roman')
         else:
             ax.set_xticks(xticks)
-            ax.set_xticklabels(xticks_label_None, fontsize=sup_fontsize * 0.8)
+            ax.set_xticklabels(xticks_label_None, fontsize=sup_fontsize * 0.8, family='Times New Roman')
 
         if pi ==0:
             ax.set_yticks(yticks)
-            ax.set_yticklabels(yticks_label, fontsize=sup_fontsize * 0.8)
+            ax.set_yticklabels(yticks_label, fontsize=sup_fontsize * 0.8, family='Times New Roman')
         else:
             ax.set_yticks(yticks)
-            ax.set_yticklabels(yticks_label_None, fontsize=sup_fontsize * 0.8)
+            ax.set_yticklabels(yticks_label_None, fontsize=sup_fontsize * 0.8, family='Times New Roman')
 
     left_low = (width_left_yticks + ncol * (width_map  + width_wspace))/width
     colorbar_position = fig.add_axes([left_low, height_bottem_xticsk / height,0.02, height_all_plot/height])  # 位置[左,下,宽,高]
@@ -1953,7 +1952,11 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
             if log_y:
                 data_k[data_k == 0] = meteva.base.IV
             if vmin is None:
-                vmin1 = np.min(data_k[data_k != meteva.base.IV])
+                dat_k0 = data_k[data_k != meteva.base.IV]
+                if dat_k0.size>0:
+                    vmin1 = np.min(dat_k0)
+                else:
+                    vmin1 = 0
             else:
                 if isinstance(vmin, list):
                     if len(vmin) != subplot_num:
@@ -1965,7 +1968,11 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
                     vmin1 = vmin
 
             if vmax is None:
-                vmax1 = np.max(data_k[data_k != meteva.base.IV])
+                dat_k0 = data_k[data_k != meteva.base.IV]
+                if dat_k0.size>0:
+                    vmax1 = np.max(dat_k0)
+                else:
+                    vmax1 = vmin1 + 0.1
             else:
                 if isinstance(vmax, list):
                     if len(vmax) != subplot_num:
@@ -2184,7 +2191,9 @@ def mesh(array,name_list_dict = None,axis_x = None,axis_y = None,cmap = "rainbow
 
         else:
             array1 = array
+        shape = array1.shape
         if name_list_dict is None:
+
             name_list_dict = {}
             name_list_dict["z"] = np.arange(shape[0])
             list1 = np.arange(shape[1]).tolist()
@@ -2527,7 +2536,7 @@ def mesh_obtime_time(sta,save_dir = None,save_path = None,
             print("手动设置的save_path数目和要绘制的图形数目不一致")
             return
     kk = 0
-    print(sta)
+    #print(sta)
     dat = sta[data_names].values
     dat[np.isnan(dat)] = meteva.base.IV
     vmin = np.min(dat[dat != meteva.base.IV])
@@ -2967,3 +2976,9 @@ def mesh_time_dtime(sta,save_dir = None,save_path = None,
             plt.close()
             kk += 1
     return
+
+
+
+
+
+
