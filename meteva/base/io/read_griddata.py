@@ -14,6 +14,8 @@ from .GDS_data_service import GDSDataService
 import bz2
 from .CMADaasAccess import CMADaasAccess
 import copy
+from .httpclient import get_http_result_cimiss
+import json
 
 
 def grid_ragular(slon,dlon,elon,slat,dlat,elat):
@@ -439,14 +441,14 @@ def read_griddata_from_nc(filename,grid = None,
 
 
         if grid is None:
-            da1.name = "data0"
+            #da1.name = "data0"
             if show:
                 print("success read from " + filename)
             return da1
         else:
             # 如果传入函数有grid信息，就需要进行一次双线性插值，按照grid信息进行提取网格信息。
             da2 = meteva.base.interp_gg_linear(da1, grid)
-            da2.name = "data0"
+            #da2.name = "data0"
             if show:
                 print("success read from " + filename)
             return da2
@@ -473,10 +475,13 @@ def print_grib_file_info(filename,level_type = None,level = None):
                     str2 = str1.split("={")[1].replace("}", "")
                     str3 = str2.split(":")[1].strip()
                     level_types.append(str3)
-            print(filename + "中包含的levelType有：")
-            for str3 in level_types:
-                print(str3)
-            print("从上述文件读取数据前，需从上述选项中指定具体level_type值,其中：")
+            if len(level_types)>0:
+                print(filename + "中包含的levelType有：")
+                for str3 in level_types:
+                    print(str3)
+                print("从上述文件读取数据前，需从上述选项中指定具体level_type值,其中：")
+            else:
+                print(exstr)
     else:
         filter_by_keys = {}
         filter_by_keys['typeOfLevel'] = level_type.strip()
@@ -514,14 +519,14 @@ def read_griddata_from_grib(filename,level_type,grid = None,
 
 
         if grid is None:
-            da1.name = "data0"
+            #da1.name = "data0"
             if show:
                 print("success read from " + filename)
             return da1
         else:
             # 如果传入函数有grid信息，就需要进行一次双线性插值，按照grid信息进行提取网格信息。
             da2 = meteva.base.interp_gg_linear(da1, grid)
-            da2.name = "data0"
+            #da2.name = "data0"
             if show:
                 print("success read from " + filename)
             return da2
@@ -1396,4 +1401,50 @@ def read_griddata_from_cmadaas(dataCode,element,level_type,level,time,dtime = No
         if grid is not None:
             grd = meteva.base.interp_gg_linear(grd, grid)
 
+    return grd
+
+
+
+
+def read_griddata_from_cimiss(dataCode,element,level,time,dtime,grid = None,data_name=None, show = False):
+
+    time1 = meteva.base.all_type_time_to_datetime(time)
+    time_str = time1.strftime("%Y%m%d%H%M%S")
+    if dtime is None:
+        interface_id ="getNafpAnaEleGridByTimeAndLevel"
+        params = {'dataCode': dataCode,
+                  'time': time_str,
+                  'fcstLevel': str(level),
+                  'fcstEle': element}
+    else:
+        interface_id = "getNafpEleGridByTimeAndLevelAndValidtime"
+        params = {'dataCode': dataCode,
+                  'time': time_str,
+                  'fcstLevel': str(level),
+                  'validTime': str(dtime),
+                  'fcstEle': element}
+    contents = get_http_result_cimiss(interface_id, params,show_url=show)
+    if contents is None:
+        return None
+    contents = json.loads(contents.decode('utf-8'))
+    if contents['returnCode'] != '0':
+        return None
+
+    slat = float(contents['startLat'])
+    slon = float(contents['startLon'])
+    nlon = int(contents['lonCount'])
+    nlat = int(contents['latCount'])
+    dlon = float(contents['lonStep'])
+    dlat = float(contents['latStep'])
+    elon = slon + (nlon-1)*dlon
+    elat = slat + (nlat-1)*dlat
+    if data_name is None:
+        data_name = dataCode
+    grid1 = meteva.base.grid([slon,elon,dlon],[slat,elat,dlat],gtime=[time1],dtime_list=[dtime],level_list=[level],member_list=[data_name])
+    data = np.array(contents['DS'], dtype=np.float32)
+    grd = meteva.base.grid_data(grid1,data)
+    meteva.base.reset(grd)
+    grd.name = element
+    if grid is not None:
+        grd = meteva.base.interp_gg_linear(grd, grid)
     return grd
