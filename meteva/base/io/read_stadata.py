@@ -15,7 +15,8 @@ import datetime
 import math
 from io import StringIO
 from .CMADaasAccess import CMADaasAccess
-
+from .httpclient import get_http_result_cimiss
+import json
 
 
 def read_station(filename,keep_alt = False,show = False):
@@ -1695,3 +1696,41 @@ def read_stadata_from_cmadaas(dataCode,element,time,station = None,level=0,dtime
     else:
         print("数据读取失败")
     return sta
+
+
+def read_stadata_from_cimiss(dataCode,element,time,station = None,level = 0,dtime = 0,show = False):
+
+    time1 = meteva.base.all_type_time_to_datetime(time)
+    time_str = time1.strftime("%Y%m%d%H%M%S")
+    if dataCode.find("UPAR_")>=0:
+        interface_id = "getUparEleByTime"
+    else:
+        interface_id = "getSurfEleByTime"
+    params = {'dataCode': dataCode,
+              'times': time_str,
+              'orderby': "Station_Id_d",
+              'elements': "Station_Id_d,lat,lon,"+element}
+
+    contents = get_http_result_cimiss(interface_id,params,show_url=show)
+    if contents is None:
+        return None
+    try:
+        contents = json.loads(contents.decode('utf-8'))
+        if contents['returnCode'] != '0':
+            return None
+
+        # construct pandas DataFrame
+        df = pd.DataFrame(contents['DS'])
+        data1 =df.iloc[0,3]
+        if isinstance(data1,str):
+            df['Customer Number'].astype("float")
+        sta = meteva.base.sta_data(df,columns=["id","lon","lat",element])
+        meteva.base.set_stadata_coords(sta,time = time1,dtime=dtime,level=level)
+        if (station is not None):
+            sta = meteva.base.put_stadata_on_station(sta, station)
+        return sta
+    except:
+        if show:
+            exstr = traceback.format_exc()
+            print(exstr)
+        return None
