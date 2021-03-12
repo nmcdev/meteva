@@ -6,6 +6,12 @@ import datetime
 import time
 import math
 
+def concat(sta_list):
+    sta = pd.concat(sta_list,axis=0)
+    sta.attrs = copy.deepcopy(sta_list[0].attrs)
+    #sta[["dtime"]] = sta[['dtime']].astype(int)
+    return sta
+
 # 两个站点信息合并为一个，在原有的dataframe的基础上增加行数
 def combine_join(sta, sta1):
     if (sta is None):
@@ -16,13 +22,16 @@ def combine_join(sta, sta1):
         data_name1 = meteva.base.basicdata.get_stadata_names(sta)
         data_name2 = meteva.base.basicdata.get_stadata_names(sta1)
         if data_name1 == data_name2:
-            sta = pd.concat([sta, sta1])
+            sta = concat([sta, sta1])
         else:
             sta2 = copy.deepcopy(sta1)
             meteva.base.basicdata.set_stadata_names(sta2,data_name1)
-            sta = pd.concat([sta, sta2])
+            sta = concat([sta, sta2])
     sta = sta.reset_index(drop=True)
     return sta
+
+
+
 
 # 两个站点信息合并为一个，以站号为公共部分，在原有的dataframe的基础上增加列数
 def combine_on_id(sta, sta1):
@@ -86,6 +95,7 @@ def combine_on_all_coords(sta, sta1,how = "inner"):
                 sta_value_column = that_the_name_exists(sta1_value_columns, sta_value_column)
                 sta.rename(columns={ago_name: sta_value_column})
         df = pd.merge(sta, sta1, on=columns, how=how)
+        df.attrs = copy.deepcopy(sta.attrs)
         return df
 
 def combine_on_leve_time_id(sta,sta1):
@@ -126,6 +136,7 @@ def combine_on_level_time_dtime_id(sta, sta1,how = 'inner'):
     :param sta1: 一个站点dataframe
     :return:
     '''
+
     if (sta is None):
         return sta1
     elif sta1 is None:
@@ -157,6 +168,8 @@ def combine_on_level_time_dtime_id(sta, sta1,how = 'inner'):
                 print("no matched line")
                 return None
             df = meteva.base.sta_data(df)
+        df.attrs = copy.deepcopy(sta.attrs)
+
         return df
 
 
@@ -198,6 +211,7 @@ def combine_on_level_time_dtime(sta, sta1,how = 'inner'):
                 print("no matched line")
                 return None
             df = meteva.base.sta_data(df)
+        df.attrs = copy.deepcopy(sta.attrs)
         return df
 
 
@@ -213,9 +227,11 @@ def combine_on_obTime_id(sta_ob,sta_fo_list,need_match_ob = False):
     #预报时效的时间处理
     dtime_units = "hour"
     for sta_fo1 in sta_fo_list:
-        if len(sta_fo1.attrs) >0:
-            if(sta_fo1.attrs["dtime_units"] != "hour"):
-                dtime_units = "minute"
+        if sta_fo1.attrs is not None:
+            if "dtime_units" in sta_fo1.attrs.keys():
+            # if len(sta_fo1.attrs) >0:
+                if(sta_fo1.attrs["dtime_units"] != "hour"):
+                    dtime_units = "minute"
     if dtime_units != "hour":
         for sta_fo1 in sta_fo_list:
             if len(sta_fo1.attrs)  == 0 or sta_fo1.attrs["dtime_units"] == "hour" :
@@ -245,11 +261,13 @@ def combine_on_obTime_id(sta_ob,sta_fo_list,need_match_ob = False):
                     sta["time"] = sta["time"] - datetime.timedelta(minutes=dtime)
                 sta["dtime"] = dtime
                 sta_combine.append(sta)
-            sta_combine = pd.concat(sta_combine, axis=0)
+            sta_combine = concat(sta_combine)
+
 
         sta_combine_fo = None
         for sta_fo in sta_fo_list:
             sta_combine_fo = combine_on_level_time_dtime_id(sta_combine_fo, sta_fo)
+
 
         if need_match_ob:
             sta_combine = meteva.base.not_IV(sta_combine)
@@ -259,6 +277,7 @@ def combine_on_obTime_id(sta_ob,sta_fo_list,need_match_ob = False):
             if sta_combine is not None:
                 sta_combine = sta_combine.fillna(meteva.base.IV)
         meteva.base.set_stadata_attrs(sta_combine,dtime_units=dtime_units)
+        sta_combine.attrs = copy.deepcopy(sta_ob.attrs)
         return sta_combine
 
 
@@ -290,13 +309,13 @@ def combine_on_obTime_one_id(sta_ob,sta_fo_list,how = "inner"):
                 sta["time"] = sta["time"] - datetime.timedelta(minutes=dtime)
             sta["dtime"] = dtime
             sta_combine.append(sta)
-        sta_combine = pd.concat(sta_combine, axis=0)
+        sta_combine = concat(sta_combine)
     sta_combine_fo = None
     for sta_fo in sta_fo_list:
         sta_combine_fo = combine_on_level_time_dtime(sta_combine_fo, sta_fo,how= how)
     sta_combine = combine_on_level_time_dtime(sta_combine, sta_combine_fo)
 
-
+    sta_combine.attrs = copy.deepcopy(sta_ob.attrs)
     return sta_combine
 
 
@@ -347,7 +366,7 @@ def combine_on_obTime_id_bigData(sta_ob,sta_fo_list,need_match_ob = True,g = "id
             if all_fos_have:
                 combine_one = combine_on_obTime_one_id(sta_ob_one_id,sta_fos_one_id,how = how)
                 sta_all.append(combine_one)
-        sta_all = pd.concat(sta_all,axis=0)
+        sta_all = concat(sta_all)
     elif g == "dtime":
         nfo = len(sta_fo_list)
         grouped_fo_list = []
@@ -374,9 +393,10 @@ def combine_on_obTime_id_bigData(sta_ob,sta_fo_list,need_match_ob = True,g = "id
             if all_fos_have:
                 combine_one = combine_on_obTime_id(sta_ob, sta_fos_one_dtime, need_match_ob=need_match_ob)
                 sta_all.append(combine_one)
-        sta_all = pd.concat(sta_all, axis=0)
+        sta_all = concat(sta_all)
     if sta_all is not None:
         sta_all = sta_all.fillna(meteva.base.IV)
+    sta_all.attrs = copy.deepcopy(sta_ob.attrs)
     return sta_all
 
 
@@ -391,7 +411,7 @@ def combine_on_obTime(sta_ob,sta_fo_list,need_match_ob = False):
         sta["time"] = sta["time"] - datetime.timedelta(hours= dtime)
         sta["dtime"] = dtime
         sta_combine.append(sta)
-    sta_combine = pd.concat(sta_combine,axis=0)
+    sta_combine = concat(sta_combine)
 
     sta_combine_fo = None
     for sta_fo in sta_fo_list:
@@ -404,8 +424,7 @@ def combine_on_obTime(sta_ob,sta_fo_list,need_match_ob = False):
         sta_combine = combine_on_all_coords(sta_combine,sta_combine_fo,how="right")
         sta_combine = sta_combine.fillna(meteva.base.IV)
 
-
-
+    sta_combine.attrs = copy.deepcopy(sta_ob.attrs)
     return sta_combine
 
 def combine_on_bak_idandobTime1(sta_list):
@@ -421,6 +440,7 @@ def combine_on_bak_idandobTime1(sta_list):
         sta['dtime'] = 0
 
         intersection_of_data = combine_on_all_coords(intersection_of_data, sta)
+    intersection_of_data.attrs = copy.deepcopy(sta_list[0].attrs)
     return intersection_of_data
 
 
@@ -445,7 +465,7 @@ def combine_expand_IV(sta,sta_with_IV):
                 sta1 = copy.deepcopy(sta_with_IV1)
                 sta1.iloc[:,i] = value
                 sta_expand.append(sta1)
-            sta_with_IV1 = pd.concat(sta_expand, axis=0)
+            sta_with_IV1 = concat(sta_expand)
     #sta_with_IV1 = sta_with_IV1.dropna()
     sta_combine = combine_on_level_time_dtime_id(sta, sta_with_IV1)
     return sta_combine
