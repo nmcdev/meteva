@@ -70,6 +70,8 @@ def mean_of_sta(sta,used_coords = ["member"],span = 24,equal_weight = False,keep
             dh = (dtimes / min_dtime).astype(np.int32)
             new_times = times[dh % step == 0]
             rain_ac = meteva.base.in_time_list(rain_ac, new_times)
+
+        rain_ac.attrs["valid_time"] = span
         return rain_ac
     elif used_coords ==["dtime"]:
         if span is None:
@@ -136,6 +138,7 @@ def mean_of_sta(sta,used_coords = ["member"],span = 24,equal_weight = False,keep
             dh = ((dtimes - dtimes[-1]) / dhour_unit).astype(np.int32)
             new_dtimes = dtimes[dh % step == 0]
             rain_ac = meteva.base.in_dtime_list(rain_ac, new_dtimes)
+        rain_ac.attrs["valid_time"] = span
         return rain_ac
 
 
@@ -427,6 +430,7 @@ def sum_of_sta(sta,used_coords = ["member"],span = None,keep_all = True):
                 rain1["dtime"] = rain1["dtime"] + dhour_unit * i
                 # print(dhour_unit * i)
                 rain_ac = meteva.base.add_on_level_time_dtime_id(rain_ac, rain1, default=0)
+                #print(rain_ac)
 
             begin_dtime = dtimes[0]+dhour_unit * (step - 1)
             rain_ac = meteva.base.between_dtime_range(rain_ac,begin_dtime,dtimes[-1])  # 删除时效小于range的部分
