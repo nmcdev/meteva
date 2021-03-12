@@ -242,7 +242,7 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
 
 
 
-def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = None,plot = None,save_dir = None,save_path = None,show = False,
+def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = None,plot = "scatter",save_dir = None,save_path = None,show = False,
              add_county_line = False,map_extend= None,print_max=0,print_min=0,dpi = 300,title = None,sort_by = None,**kwargs):
 
     if s is not None:
@@ -392,8 +392,8 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
                 sta_result.append(sta_result1)
         for i in range(len(sta_result)):
             sta_result1 = sta_result[i]
+            sta_result1.attrs["data_source"] = "meteva." + method.__name__
             if plot == "scatter":
-
                 if isinstance(title, list):
                     kk = k * grade_num + i
                     title1_list = title[kk * fo_num: (kk + 1) * fo_num]
@@ -436,6 +436,7 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
             sta_result = sta_result[0]
         if sort_by is not None:
             sta_result.sort_values(by = sort_by,axis = 0,ascending = False,inplace=True)
+
         result_all.append(sta_result)
 
     if len(result_all)==1:
@@ -608,7 +609,7 @@ def score_tdt(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_lis
 
         for i in range(len(sta_all_g_list)):
             sta_result1 = sta_all_g_list[i]
-
+            sta_result1.attrs["data_source"] = "meteva." + method.__name__
             title1_list = None
             if isinstance(title, list):
                 kk = k * grade_num + i
