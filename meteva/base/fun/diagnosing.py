@@ -9,7 +9,6 @@ import datetime
 
 
 def temp_decrease_in_process(sta,used_coords = "dtime"):
-
     if used_coords == "dtime":
         change_24 = change(sta,delta=24,used_coords="dtime")
         change_48 = change(sta,delta=48,used_coords="dtime")
@@ -17,6 +16,7 @@ def temp_decrease_in_process(sta,used_coords = "dtime"):
         change_most_dtime =  meteva.base.loc_of_min(change_24_48,used_coords=["dtime"],ignore_missing=True)
         change_most_dtime.loc[:,"dtime"] = change_most_dtime.iloc[:,6]
         change_most = meteva.base.min_of_sta(change_24_48,used_coords=["dtime"],ignore_missing=True)
+        change_most.attrs = copy.deepcopy(sta.attrs)
         return change_most
 
 
@@ -86,6 +86,8 @@ def change(sta,delta = 24,used_coords = "time"):
         dvalue = sta01.iloc[:, (-fn):].values - sta01.iloc[:, (-fn * 2):(-fn)].values
         sta01.iloc[:, (-fn):] = dvalue
         sta01 = sta01.drop(names_1, axis=1)
+        sta01.attrs = copy.deepcopy(sta.attrs)
+        sta01.attrs["valid_time"] = delta
         return sta01
     else:
         names_0 = meteva.base.get_stadata_names(sta)
@@ -100,6 +102,8 @@ def change(sta,delta = 24,used_coords = "time"):
         dvalue = sta01.iloc[:,(-fn):].values - sta01.iloc[:,(-fn * 2):(-fn)].values
         sta01.iloc[:,(-fn):] = dvalue
         sta01 = sta01.drop(names_1,axis=1)
+        sta01.attrs = copy.deepcopy(sta.attrs)
+        sta01.attrs["valid_time"] = delta
         return sta01
 
 def t_rh_to_tw(temp,rh,rh_unit = "%"):
@@ -130,6 +134,10 @@ def t_rh_to_tw(temp,rh,rh_unit = "%"):
 
         sta2["tw"] = Tw
         sta = sta2.drop(["t", "rh"], axis=1)
+        sta.attrs = copy.deepcopy(sta.attrs)
+        sta.attrs["var_name"] = "tw"
+        sta.attrs["var_cn_name"] = "湿球温度"
+        sta.attrs["var_units"] = "degC"
         return sta
     else:
         grid0 = meteva.base.get_grid_of_data(temp)
@@ -184,6 +192,14 @@ def u_v_to_speed_angle(u,v):
             names2.append("angle"+str(i))
         meteva.base.set_stadata_names(speed,names1)
         meteva.base.set_stadata_names(angle,names2)
+        speed.attrs = copy.deepcopy(u.attrs)
+        speed.attrs["var_name"] = "wsp"
+        sta.attrs["var_cn_name"] = "风速"
+        sta.attrs["var_units"] = "m/s"
+        angle.attrs = copy.deepcopy(u.attrs)
+        angle.attrs["var_name"] = "wdir"
+        angle.attrs["var_cn_name"] = "风向"
+        angle.attrs["var_units"] = "degree"
         return speed,angle
     else:
         ud = u.values

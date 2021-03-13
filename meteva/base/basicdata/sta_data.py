@@ -6,9 +6,9 @@ import meteva
 
 
 def sta_data(df,columns = None,
-             dtime_units = "hour",data_source = "undefined stda",data_type = "",
-             data_name = "",var_name = "",var_cn_name = "",
-             var_units = "",valid_time = 0):
+             dtime_units="hour", data_source="", level_type="",
+             var_name="", var_cn_name="",
+             var_units="", valid_time=0, data_start_columns=6):
     '''
     sta_data() 对数据进行格式化成为固定格式
     :param df: dataframe的站点数据
@@ -54,18 +54,19 @@ def sta_data(df,columns = None,
         #    sta.iloc[:,i] = (sta.values[:,i]).astype(np.float32)
         pass
 
-    set_stadata_attrs(sta,dtime_units = dtime_units,data_source = data_source,data_type = data_type,data_name = data_name,
-                      var_name = var_name,var_cn_name = var_cn_name,var_units = var_units,valid_time = valid_time)
+    set_stadata_attrs(sta,dtime_units = dtime_units,data_source = data_source,level_type = level_type,
+                      var_name = var_name,var_cn_name = var_cn_name,var_units = var_units,valid_time = valid_time,
+                      data_start_columns=data_start_columns)
 
     return sta
 
-def set_stadata_attrs(sta, dtime_units = None,data_source = None,data_type =None,
-             data_name =None,var_name = None,var_cn_name = None,
+def set_stadata_attrs(sta, dtime_units = None,data_source = None,level_type =None,
+             var_name = None,var_cn_name = None,
              var_units = None,valid_time = None,data_start_columns = None):
     sta.attrs = {}
     if dtime_units is not None:sta.attrs["dtime_units"] = dtime_units
     if data_source is not None:sta.attrs["data_source"] = data_source
-    if data_name is not None: sta.attrs["data_type"] = data_type
+    if level_type is not None: sta.attrs["data_type"] = level_type
     if var_name is not None: sta.attrs["var_name"] = var_name
     if var_cn_name is not None:sta.attrs["var_cn_name"] = var_cn_name
     if var_units is not None:sta.attrs["var_units"] = var_units
@@ -94,13 +95,25 @@ def get_stadata_names(sta):
     :param sta: 站点数据
     :return: 要素名列表
     '''
-    coor_columns = ['level', 'time', 'dtime', 'id', 'lon', 'lat']
-    columns = sta.columns
-    data_columns = []
-    for column in columns:
-        if column not in coor_columns:
-            data_columns.append(column)
+    #coor_columns = ['level', 'time', 'dtime', 'id', 'lon', 'lat']
+    #columns = sta.columns
+    #data_columns = []
+    #for column in columns:
+    #    if column not in coor_columns:
+    #        data_columns.append(column)
+    columns = sta.columns.values
+    if "data_start_columns" not in sta.attrs.keys():
+        sta.attrs["data_start_columns"] = 6
+    data_start_column = sta.attrs["data_start_columns"]
+    data_columns = columns[data_start_column:].tolist()
     return data_columns
+
+
+def get_expanded_coord_names(sta):
+    columns = sta.columns.values
+    data_start_column = sta.attrs["data_start_columns"]
+    ecc = columns[0:data_start_column].tolist()
+    return ecc
 
 def get_coord_names():
     '''
@@ -142,6 +155,9 @@ def set_stadata_coords(sta,level = None,time = None,dtime = None,id = None,lat =
         sta.loc[:,'time'] = time1
     if dtime is not None:
         sta.loc[:,'dtime'] = dtime
+        dtime_type = str(sta["dtime"].dtype)
+        if dtime_type.find("int") < 0:
+            sta[["dtime"]] = sta[['dtime']].astype(int)
     if level is not None:
         sta.loc[:,'level'] = level
     if id is not None:
@@ -150,6 +166,7 @@ def set_stadata_coords(sta,level = None,time = None,dtime = None,id = None,lat =
         sta.loc[:,"lat"] = lat
     if lon is not None:
         sta.loc[:,"lon"] = lon
+
 
 
 def reset_id(sta):

@@ -190,13 +190,15 @@ def cmap_clevs_mode(vmax):
     :return:
     '''
     if vmax <12:
-        cmap1,clevs1 = def_cmap_clevs(cmap="Paired",clevs=np.arange(0,vmax))
+        cmap1,clevs1 = def_cmap_clevs(cmap="Paired",clevs=np.arange(1,vmax+1))
     elif vmax <20:
-        cmap1, clevs1 = def_cmap_clevs(cmap="tab20b", clevs=np.arange(0, vmax ))
+        cmap1, clevs1 = def_cmap_clevs(cmap="tab20b", clevs=np.arange(1, vmax+1))
     else:
-        cmap1, clevs1 = def_cmap_clevs(cmap="gist_rainbow", clevs=np.arange(0, vmax ))
-    cmap2,clevs2 = def_cmap_clevs(cmap = "gray",clevs = [-3,-2,-1],vmin = -1,cut_accurate=True)
+        cmap1, clevs1 = def_cmap_clevs(cmap="gist_rainbow", clevs=np.arange(1, vmax+1))
+    cmap2,clevs2 = def_cmap_clevs(cmap = "gray",clevs = [-2,-1,0],vmin =-1,vmax = 0,cut_accurate=True)
     cmap3,clevs3 = merge_cmap_clevs(cmap2,clevs2,cmap1,clevs1)
+    clevs3 = (np.array(clevs3) -0.5).tolist()
+
     return cmap3,clevs3
 
 def cmap_clevs_ts():
@@ -616,7 +618,10 @@ def coordinate_cmap_to_clevs(cmap,clevs):
         if nclev <2:
             print("clevs' size must bigger than 1")
         for i in range(nclev):
-            j = i * (ncmap-1) /(nclev-1)
+            if nclev>1:
+                j = i * (ncmap-1) /(nclev-1)
+            else:
+                j = 0
             j0 = int(j)
             j1 = min(j0 + 1,ncmap-1)
             dj = j - j0

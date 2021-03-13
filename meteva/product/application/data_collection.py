@@ -157,7 +157,7 @@ def download_from_gds(para):
             dir_list = []
             meteva.base.tool.path_tools.get_gds_all_dir(ip,port,down_set[0],dir_list)
             for dir in dir_list:
-                file_list = meteva.base.tool.path_tools.get_gds_file_list_in_one_dir(ip,port,dir)
+                file_list = meteva.base.tool.path_tools.get_gds_file_list_in_one_dir(dir)
                 file_list.sort(reverse = True)
                 for file in file_list:
                     dati = meteva.product.application.get_dati_of_path(file)
@@ -176,7 +176,7 @@ def download_from_gds(para):
                 dir_list = []
                 meteva.base.tool.path_tools.get_gds_all_dir(ip,port,down_set[0],dir_list)
                 for dir in dir_list:
-                    file_list = meteva.base.tool.path_tools.get_gds_file_list_in_one_dir(ip,port,dir)
+                    file_list = meteva.base.tool.path_tools.get_gds_file_list_in_one_dir(dir)
                     file_list.sort(reverse=True)
                     for file in file_list:
                         dati = meteva.product.application.get_dati_of_path(file)

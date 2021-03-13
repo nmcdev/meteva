@@ -1108,7 +1108,10 @@ def time_list_mesh_wind(sta_ob_and_fos0,s = None,save_dir = None,save_path = Non
             return
     kk1 = 0
     kk2 = 0
+
     lenght = 40 * (width / col)
+    lenght =2* lenght**0.5
+    print(lenght)
     for d in range(nfo):
         data_name = fo_names[d*2:d*2+2]
         sta_fo_all2 = meteva.base.in_member_list(sta_fo_all1, data_name)
@@ -1147,6 +1150,8 @@ def time_list_mesh_wind(sta_ob_and_fos0,s = None,save_dir = None,save_path = Non
                 f, (ax1, ax2) = plt.subplots(figsize=(width, height), nrows=2, edgecolor='black', dpi=dpi)
                 plt.subplots_adjust(left=0.1, bottom=0.15, right=0.98, top=0.90, hspace=0.3)
 
+                #lenght = 5*(height / row)
+                #print(lenght)
                 diff_speed = np.zeros_like(dat_speed)
                 diff_u = np.zeros_like(dat_u)
                 diff_v = np.zeros_like(dat_v)
@@ -1199,7 +1204,12 @@ def time_list_mesh_wind(sta_ob_and_fos0,s = None,save_dir = None,save_path = Non
                     title1 = title[kk2]
                     kk2 += 1
                 else:
-                    title1 = title + "(偏差)" + "(" + data_name[0][2:] + ")" + "{\'id\':" + str(id) + meteva.base.station_id_name_dict[id] + "}"
+
+                    if id in meteva.base.station_id_name_dict.keys():
+                        title1 = title + "(偏差)" + "(" + data_name[0][2:] + ")" + "{\'id\':" + str(id) + meteva.base.station_id_name_dict[id] + "}"
+                    else:
+                        title1 = title + "(偏差)" + "(" + data_name[0][2:] + ")" + "{\'id\':" + str(id) + "}"
+
                 ax1.set_title(title1, loc='left', fontweight='bold', fontsize=sup_fontsize)
                 ax1.grid(linestyle='--', linewidth=0.5)
                 xx, yy = np.meshgrid(x + 0.5, y + 0.5)
@@ -1230,6 +1240,8 @@ def time_list_mesh_wind(sta_ob_and_fos0,s = None,save_dir = None,save_path = Non
                 f, ax2 = plt.subplots(figsize=(width, height), nrows=1, edgecolor='black', dpi=dpi)
                 plt.subplots_adjust(left=0.1, bottom=0.15, right=0.98, top=0.90)
 
+                #lenght = (height / row)
+                #print(lenght)
             vmin = np.min(dat_speed[dat_speed != meteva.base.IV])
             vmax = np.max(dat_speed[dat_speed != meteva.base.IV])
             cmap,clev= meteva.base.tool.color_tools.get_cmap_and_clevs_by_element_name("wind_speed")
@@ -1251,7 +1263,14 @@ def time_list_mesh_wind(sta_ob_and_fos0,s = None,save_dir = None,save_path = Non
                 title1 = title[kk2]
                 kk2+= 1
             else:
-                title1 = title + "(要素值)" + "(" + data_name[0][2:] + ")" + "{\'id\':" + str(id) +meteva.base.station_id_name_dict[id] +"}"
+
+                if id in meteva.base.station_id_name_dict.keys():
+                    title1 = title + "(要素值)" + "(" + data_name[0][2:] + ")" + "{\'id\':" + str(id) + \
+                             meteva.base.station_id_name_dict[id] + "}"
+                else:
+                    title1 = title + "(要素值)" + "(" + data_name[0][2:] + ")" + "{\'id\':" + str(id)  +"}"
+
+
             ax2.set_title(title1, loc='left', fontweight='bold', fontsize=sup_fontsize)
             ax2.grid(linestyle='--', linewidth=0.5)
             xx, yy = np.meshgrid(x + 0.5, y + 0.5)
@@ -1260,7 +1279,6 @@ def time_list_mesh_wind(sta_ob_and_fos0,s = None,save_dir = None,save_path = Non
             yy_1d = yy.flatten()[speed_1d != meteva.base.IV]
             u_1d = dat_u.flatten()[speed_1d != meteva.base.IV]
             v_1d = dat_v.flatten()[speed_1d != meteva.base.IV]
-
 
 
             ax2.barbs(xx_1d, yy_1d, u_1d, v_1d, barb_increments={'half': 2, 'full': 4, 'flag': 20},
@@ -1283,7 +1301,7 @@ def time_list_mesh_wind(sta_ob_and_fos0,s = None,save_dir = None,save_path = Non
                 if save_dir is None:
                     show = True
                 else:
-                    save_path1 = save_dir + "/" + data_name + "_" + str(id) + ".png"
+                    save_path1 = save_dir + "/" + data_name[0][2:] + "_" + str(id) + ".png"
             else:
                 save_path1 = save_path[kk1]
             if save_path1 is not None:

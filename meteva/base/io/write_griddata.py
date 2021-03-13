@@ -72,16 +72,16 @@ def write_griddata_to_micaps4(da,save_path = "a.txt",creat_dir = False,effective
         if title is None:
             title = ("diamond 4 " + save_path[start:end] + "\n"
                      + year + " " + month + " " + day + " " + hour + " " + hour_range + " " + str(level) + "\n"
-                     + "{:.6f}".format(grid.dlon) + " " + "{:.6f}".format(grid.dlat) + " " + str(grid.slon) + " " + str(grid.elon) + " "
-                     + str(grid.slat) + " " + str(grid.elat) + " " + str(grid.nlon) + " " + str(grid.nlat) + " "
+                     + "{:.6f}".format(grid.dlon) + " " + "{:.6f}".format(grid.dlat) + " " + "{:.6f}".format(grid.slon) + " " +"{:.6f}".format(grid.elon) + " "
+                     + "{:.6f}".format(grid.slat) + " " + "{:.6f}".format(grid.elat) + " " + str(grid.nlon) + " " + str(grid.nlat) + " "
                      + str(inte) + " " + str(vmin) + " " + str(vmax) + " 1 0")
         else:
 
             title = ("diamond 4 "+ title +"\n"
-            + year + " " + month + " " + day + " " + hour + " " + hour_range + " " + str(level) + "\n"
-            + "{:.6f}".format(grid.dlon) + " " + "{:.6f}".format(grid.dlat) + " " + "{:.6f}".format(grid.slon) + " " + "{:.6f}".format(grid.elon) + " "
-            + "{:.6f}".format(grid.slat) + " " + "{:.6f}".format(grid.elat) + " " + "{:.6f}".format(grid.nlon) + " " + "{:.6f}".format(grid.nlat) + " "
-            + str(inte) + " " + str(vmin) + " " + str(vmax) + " 1 0")
+                     + year + " " + month + " " + day + " " + hour + " " + hour_range + " " + str(level) + "\n"
+                     + "{:.6f}".format(grid.dlon) + " " + "{:.6f}".format(grid.dlat) + " " + "{:.6f}".format(grid.slon) + " " + "{:.6f}".format(grid.elon) + " "
+                     + "{:.6f}".format(grid.slat) + " " + "{:.6f}".format(grid.elat) + " " + str(grid.nlon) + " " + str(grid.nlat) + " "
+                     + str(inte) + " " + str(vmin) + " " + str(vmax) + " 1 0")
 
         # 二维数组写入micaps文件
         format_str = "%." + str(effectiveNum) + "f "
@@ -196,13 +196,13 @@ def tran_griddata_to_gds_flow(da):
     if "eleName" in da.attrs.keys():
         eleName = da.attrs["eleName"]
     if len(eleName) < 50:
-        mName = mName + np.ndarray.tobytes(np.zeros(50 - len(eleName)).astype(np.int8))
+        eleName = eleName + np.ndarray.tobytes(np.zeros(50 - len(eleName)).astype(np.int8))
 
     description =b""
     if "description" in da.attrs.keys():
         description = da.attrs["description"]
     if len(description) < 30:
-        mName = mName + np.ndarray.tobytes(np.zeros(30 - len(description)).astype(np.int8))
+        description = description + np.ndarray.tobytes(np.zeros(30 - len(description)).astype(np.int8))
 
 
     level = np.ndarray.tobytes(np.array(grid0.levels[0]).astype(np.float32))
