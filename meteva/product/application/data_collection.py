@@ -148,6 +148,7 @@ def download_from_gds(para):
     hm = now.hour * 100 + now.minute
     ip,port = meteva.base.io.read_gds_ip_port(para["ip_port_file"])
     service = meteva.base.io.GDSDataService(ip, port)
+    meteva.base.gds_ip_port = ip,port
     if (service is None):
         print("service is None")
         return
