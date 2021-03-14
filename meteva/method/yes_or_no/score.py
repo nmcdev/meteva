@@ -395,7 +395,11 @@ def bias_extend_linear(bias_array):
     :return:
     '''
     bias_extend0 = np.abs(bias_array - 1)
-    bias_extend0[bias_array == IV] = IV
+    if isinstance(bias_array,float):
+        if bias_array==IV:
+            bias_extend0 = IV
+    else:
+        bias_extend0[bias_array == IV] = IV
     return bias_extend0
 
 def bias_extend_log(bias_array):
@@ -706,7 +710,7 @@ def FSS_time(Ob,Fo,grade_list = [1e-30],compair = ">=",window_size = None):
     :param grade_list:
     :return:
     '''
-    mid_array = mid_FSS_time(Ob,Fo,grade_list,window_size,compair = compair)
+    mid_array = mid_FSS_time(Ob,Fo,grade_list,window_size=window_size,compair = compair)
     result = FSS_time_base_on_mid(mid_array)
     return result
 
