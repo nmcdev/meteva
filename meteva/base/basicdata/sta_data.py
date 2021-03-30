@@ -63,7 +63,8 @@ def sta_data(df,columns = None,
 def set_stadata_attrs(sta, dtime_units = None,data_source = None,level_type =None,
              var_name = None,var_cn_name = None,
              var_units = None,valid_time = None,data_start_columns = None):
-    sta.attrs = {}
+
+    if sta.attrs is None: sta.attrs = {}
     if dtime_units is not None:sta.attrs["dtime_units"] = dtime_units
     if data_source is not None:sta.attrs["data_source"] = data_source
     if level_type is not None: sta.attrs["data_type"] = level_type

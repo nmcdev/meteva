@@ -451,7 +451,8 @@ def mean_of_grd(grd,used_coords = ["member"]):
     grid0 = meteva.base.basicdata.get_grid_of_data(grd)
     grid1 = meteva.base.basicdata.grid(grid0.glon,grid0.glat,grid0.gtime,grid0.dtimes,grid0.levels,member_list=["mean"])
     dat = np.squeeze(grd.values)
-    dat = np.mean(dat,axis = 0)
+    if len(dat.shape) > 2:
+        dat = np.mean(dat,axis = 0)
     grd1 = meteva.base.basicdata.grid_data(grid1,dat)
     return grd1
 
@@ -460,7 +461,8 @@ def var_of_grd(grd,used_coords = ["member"]):
     grid0 = meteva.base.basicdata.get_grid_of_data(grd)
     grid1 = meteva.base.basicdata.grid(grid0.glon,grid0.glat,grid0.gtime,grid0.dtimes,grid0.levels,member_list=["var"])
     dat = np.squeeze(grd.values)
-    dat = np.var(dat,axis = 0)
+    if len(dat.shape) > 2:
+        dat = np.var(dat,axis = 0)
     grd1 = meteva.base.basicdata.grid_data(grid1,dat)
     return grd1
 
@@ -469,7 +471,8 @@ def std_of_grd(grd,used_coords = ["member"]):
     grid0 = meteva.base.basicdata.get_grid_of_data(grd)
     grid1 = meteva.base.basicdata.grid(grid0.glon,grid0.glat,grid0.gtime,grid0.dtimes,grid0.levels,member_list=["std"])
     dat = np.squeeze(grd.values)
-    dat = np.std(dat,axis = 0)
+    if len(dat.shape) > 2:
+        dat = np.std(dat,axis = 0)
     grd1 = meteva.base.basicdata.grid_data(grid1,dat)
     return grd1
 
@@ -478,7 +481,8 @@ def min_of_grd(grd,used_coords = ["member"]):
     grid0 = meteva.base.basicdata.get_grid_of_data(grd)
     grid1 = meteva.base.basicdata.grid(grid0.glon,grid0.glat,grid0.gtime,grid0.dtimes,grid0.levels,member_list=["min"])
     dat = np.squeeze(grd.values)
-    dat = np.min(dat,axis = 0)
+    if len(dat.shape)>2:
+        dat = np.min(dat,axis = 0)
     grd1 = meteva.base.basicdata.grid_data(grid1,dat)
     return grd1
 
@@ -487,7 +491,8 @@ def max_of_grd(grd,used_coords = ["member"]):
     grid0 = meteva.base.basicdata.get_grid_of_data(grd)
     grid1 = meteva.base.basicdata.grid(grid0.glon,grid0.glat,grid0.gtime,grid0.dtimes,grid0.levels,member_list=["max"])
     dat = np.squeeze(grd.values)
-    dat = np.max(dat,axis = 0)
+    if len(dat.shape)>2:
+        dat = np.max(dat,axis = 0)
     grd1 = meteva.base.basicdata.grid_data(grid1,dat)
     return grd1
 
@@ -496,7 +501,8 @@ def sum_of_grd(grd,used_coords = ["member"]):
     grid0 = meteva.base.basicdata.get_grid_of_data(grd)
     grid1 = meteva.base.basicdata.grid(grid0.glon,grid0.glat,grid0.gtime,grid0.dtimes,grid0.levels,member_list=["max"])
     dat = np.squeeze(grd.values)
-    dat = np.sum(dat,axis = 0)
+    if len(dat.shape) > 2:
+        dat = np.sum(dat,axis = 0)
     grd1 = meteva.base.basicdata.grid_data(grid1,dat)
     return grd1
 

@@ -521,11 +521,36 @@ def set_io_config(filename):
             print(filename + "中micaps分布式数据库设置格式不符合要求")
 
         try:
+            meteva.base.cimiss_set = read_cimiss_set(filename)
+        except:
+            print(filename + "中未包含cimiss数据库设置，或格式不符合要求，不读取cmiss数据库中数据则可忽略该信息")
+
+        try:
             meteva.base.cmadaas_set = read_cmadass_set(filename)
         except:
             print(filename + "中未包含cmadaas数据库设置，或格式不符合要求，不读取大数据云平台则可忽略该信息")
     else:
         print("cimiss和gds配置文件不存在")
+
+
+def read_cimiss_set(filename,show = False):
+    if filename is None:
+        print("请使用set_config_ip_port 函数设置存储ip，port的配置文件的路径")
+    file = open(filename)
+    for i in range(100):
+        title = file.readline()
+        if title.find("CIMISS") >=0:
+            break
+    dns = file.readline().split("=")[1]
+    dns = dns.strip()
+    userId =file.readline().split("=")[1]
+    userId = userId.strip()
+    pwd = file.readline().split("=")[1]
+    pwd = pwd.strip()
+    file.close()
+    if show:
+        print("success read from " + filename)
+    return dns,userId,pwd
 
 def read_cmadass_set(filename,show = False):
     if filename is None:
@@ -1383,36 +1408,39 @@ def print_gds_file_values_names(filename):
     # port 为整数形式
     # filename 为字符串形式 示例 "ECMWF_HR/TCDC/19083108.000"
     value_id_list= []
-
     if os.path.exists(filename):
-        ip,port = None,None
+        file = open(filename, "rb")
+        byteArray = file.read()
     else:
+
+    #if os.path.exists(filename):
+    #    ip,port = None,None
+    #else:
         if meteva.base.gds_ip_port is None:
+            print("在本地找不到文件"+filename+"考虑它为服务器上的路径")
             print("请先使用set_config 配置gds的ip和port")
             return
         ip,port = meteva.base.gds_ip_port
 
-    filename = filename.replace("mdfs:///", "")
-    filename = filename.replace("\\", "/")
+        filename = filename.replace("mdfs:///", "")
+        filename = filename.replace("\\", "/")
 
-    if ip is not None:
-        service = GDSDataService(ip, port)
-        try:
-            directory, fileName = os.path.split(filename)
-            status, response = service.getData(directory, fileName)
-            ByteArrayResult = DataBlock_pb2.ByteArrayResult()
-            if status == 200:
-                ByteArrayResult.ParseFromString(response)
-                if ByteArrayResult is not None:
-                    byteArray = ByteArrayResult.byteArray
-            else:
-                print("数据内容不可读")
-        except:
-            exstr = traceback.format_exc()
-            print(exstr)
-    else:
-        file = open(filename, "rb")
-        byteArray = file.read()
+        if ip is not None:
+            service = GDSDataService(ip, port)
+            try:
+                directory, fileName = os.path.split(filename)
+                status, response = service.getData(directory, fileName)
+                ByteArrayResult = DataBlock_pb2.ByteArrayResult()
+                if status == 200:
+                    ByteArrayResult.ParseFromString(response)
+                    if ByteArrayResult is not None:
+                        byteArray = ByteArrayResult.byteArray
+                else:
+                    print("数据内容不可读")
+            except:
+                exstr = traceback.format_exc()
+                print(exstr)
+
 
     ind = 288
     # read the number of stations
@@ -1723,7 +1751,7 @@ def read_stadata_from_cimiss(dataCode,element,time,station = None,level = 0,dtim
         df = pd.DataFrame(contents['DS'])
         data1 =df.iloc[0,3]
         if isinstance(data1,str):
-            df['Customer Number'].astype("float")
+            df[element] = df[element].astype("float")
         sta = meteva.base.sta_data(df,columns=["id","lon","lat",element])
         meteva.base.set_stadata_coords(sta,time = time1,dtime=dtime,level=level)
         if (station is not None):
@@ -1734,3 +1762,4 @@ def read_stadata_from_cimiss(dataCode,element,time,station = None,level = 0,dtim
             exstr = traceback.format_exc()
             print(exstr)
         return None
+
