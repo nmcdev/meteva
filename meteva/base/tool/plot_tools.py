@@ -1419,7 +1419,10 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
         else:
             xticks_labels = []
             for local in name_list_dict[axis]:
-                xticks_labels.append(str(local))
+                if isinstance(local,float):
+                    xticks_labels.append(str(round(local, 6)))
+                else:
+                    xticks_labels.append(str(local))
 
         width_axis = meteva.base.plot_tools.caculate_axis_width(xticks_labels, sup_fontsize,legend_num= 1)
 
@@ -1623,7 +1626,10 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
         else:
             xticks_labels = []
             for local in name_list_dict[axis]:
-                xticks_labels.append(str(local))
+                if isinstance(local,float):
+                    xticks_labels.append(str(round(local, 6)))
+                else:
+                    xticks_labels.append(str(local))
 
         width_axis = meteva.base.plot_tools.caculate_axis_width(xticks_labels, sup_fontsize,legend_num)
         width_axis_labels = meteva.base.plot_tools.caculate_axis_width(xticks_labels, sup_fontsize, 1)
@@ -1855,7 +1861,10 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
         else:
             xticks_labels = []
             for local in name_list_dict[axis]:
-                xticks_labels.append(str(local))
+                if isinstance(local,float):
+                    xticks_labels.append(str(round(local, 6)))
+                else:
+                    xticks_labels.append(str(local))
 
         width_axis = meteva.base.plot_tools.caculate_axis_width(xticks_labels, sup_fontsize,legend_num)
         width_axis_labels =  meteva.base.plot_tools.caculate_axis_width(xticks_labels, sup_fontsize,1)
@@ -2171,6 +2180,40 @@ def plot(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",
              dpi = dpi,sup_fontsize= sup_fontsize,title=title,width = width,height = height,log_y = log_y)
 
 
+def myheatmap(ax_one,data_k,cmap,clevs,annot=1,fontsize=10):
+
+    nx = data_k.shape[1]
+    ny = data_k.shape[0]
+    x = np.arange(nx+1)-0.5
+    y = np.arange(ny+1)-0.5
+    data_k[data_k==meteva.base.IV] = np.nan
+    norm = BoundaryNorm(clevs, ncolors=cmap.N - 1)
+    im = ax_one.pcolormesh(x, y, data_k, cmap=cmap, norm=norm)
+    im.update_scalarmappable()
+
+
+    if annot is not None and annot>=0:
+        facecolors = im.get_facecolors()
+        facecolors = facecolors.reshape(ny, nx, 4)
+        fmt_tag = "%." + str(annot) + "f"
+        for i in range(nx):
+            for j in range(ny):
+                data_ijk = data_k[j, i]
+                if not np.isnan(data_ijk):
+                    # 获取网格的颜色
+                    color = facecolors[j, i, :]
+                    # 计算亮度
+                    rgb = mpl.colors.colorConverter.to_rgba_array(color)[:, :3]
+                    rgb = np.where(rgb <= .03928, rgb / 12.92, ((rgb + .055) / 1.055) ** 2.4)
+                    lum = rgb.dot([.2126, .7152, .0722])
+
+                    text_color = ".15" if lum > .408 else "w"
+                    plt.text(i, j, fmt_tag % data_ijk, ha="center", va="center",
+                             fontsize=fontsize, c=text_color)
+
+    fig = plt.gcf()
+    fig.colorbar(im, ax=ax_one)
+
 def mesh(array,name_list_dict = None,axis_x = None,axis_y = None,cmap = "rainbow",clevs = None,ncol = None,annot =None,save_path = None,show = False,dpi = 300,
          spasify_xticks = None,sup_fontsize = 10,title ="",width = None,height = None):
 
@@ -2358,9 +2401,11 @@ def mesh(array,name_list_dict = None,axis_x = None,axis_y = None,cmap = "rainbow
                 clevs0 = clevs
             cmap1,clevs1= meteva.base.color_tools.def_cmap_clevs(cmap = cmap0,clevs=clevs0,vmin=vmin,vmax = vmax)
             ax_one = plt.subplot(nrow, ncol, k + 1)
-            norm = BoundaryNorm(clevs1, ncolors=cmap1.N - 1)
-            im = ax_one.pcolormesh(x, y, data_k,cmap = cmap1,norm=norm)
 
+
+            myheatmap(ax_one,data_k,cmap1,clevs1,annot,sup_fontsize)
+            '''
+            im = ax_one.pcolormesh(x, y, data_k,cmap = cmap1,norm=norm)
             im.update_scalarmappable()
             if annot is not None:
                 facecolors = im.get_facecolors()
@@ -2383,6 +2428,7 @@ def mesh(array,name_list_dict = None,axis_x = None,axis_y = None,cmap = "rainbow
 
 
             fig.colorbar(im, ax=ax_one)
+            '''
             ki = k % ncol
             kj = int(k / ncol)
             knext_row = ki + (kj + 1) * ncol
@@ -2515,11 +2561,11 @@ def mesh_obtime_time(sta,save_dir = None,save_path = None,
     x_plot /= dh_x
     #y_plot, y_ticks = meteva.product.get_y_ticks(times_fo, height)
     if xtimetype == "right":
-        x_plot  = x_plot+1
+        x_plot  = x_plot+0.5
     elif xtimetype == "left":
-        x_plot = x_plot +0
+        x_plot = x_plot -0.5
     else:
-        x_plot = x_plot +0.5
+        x_plot = x_plot
 
 
     nids = len(ids)
@@ -2562,6 +2608,7 @@ def mesh_obtime_time(sta,save_dir = None,save_path = None,
             annot = 1
     if col >= 120:
         annot = -1
+    annot_f = annot
     fmt = "." + str(annot) + "f"
     annot_size = width * 50 / col
     if annot_size > height * 50 / row:
@@ -2594,8 +2641,9 @@ def mesh_obtime_time(sta,save_dir = None,save_path = None,
             f, ax2 = plt.subplots(figsize=(width, height), nrows=1, edgecolor='black',dpi = dpi)
             plt.subplots_adjust(left=0.1, bottom=0.15, right=0.98, top=0.90)
 
-            sns.heatmap(dat.T, ax=ax2, mask=mask, cmap=cmap_part, vmin=vmin, vmax=vmax, center=None, robust=False, annot=annot,fmt=fmt
-            , annot_kws = {'size': annot_size})
+            #sns.heatmap(dat.T, ax=ax2, mask=mask, cmap=cmap_part, vmin=vmin, vmax=vmax, center=None, robust=False, annot=annot,fmt=fmt
+            #, annot_kws = {'size': annot_size})
+            myheatmap(ax2,dat.T,cmap_part,clevs_part,annot_f,annot_size)
             ax2.set_xlabel('实况时间',fontsize = sup_fontsize*0.9)
             ax2.set_ylabel('起报时间',fontsize = sup_fontsize*0.9)
             ax2.set_xticks(x_plot)
@@ -2604,10 +2652,10 @@ def mesh_obtime_time(sta,save_dir = None,save_path = None,
             ax2.set_yticklabels(y_ticks, rotation=360,fontsize = sup_fontsize * 0.8)
 
             ax2.grid(linestyle='--', linewidth=0.5)
-            ax2.set_ylim(row, 0)
+            ax2.set_ylim(row-0.5, -0.5)
             ax2.set_title(title[kk], loc='left', fontweight='bold', fontsize= sup_fontsize)
-            rect = patches.Rectangle((0,0 ), col, row, linewidth=0.8, edgecolor='k', facecolor='none')
-            ax2.add_patch(rect)
+            #rect = patches.Rectangle((0,0 ), col, row, linewidth=0.8, edgecolor='k', facecolor='none')
+            #ax2.add_patch(rect)
             #plt.tick_params(top='on', right='on', which='both')  # 显示上侧和右侧的刻度
             plt.rcParams['xtick.direction'] = 'in'  # 将x轴的刻度线方向设置抄向内
             plt.rcParams['ytick.direction'] = 'in'  # 将y轴的刻度方知向设置向内
@@ -2686,11 +2734,11 @@ def mesh_obtime_dtime(sta,save_dir = None,save_path = None,
     x_plot /= dh_x
     #y_plot, y_ticks = meteva.product.get_y_ticks(times_fo, height)
     if xtimetype == "right":
-        x_plot  = x_plot+1
+        x_plot  = x_plot+0.5
     elif xtimetype == "left":
-        x_plot = x_plot +0
+        x_plot = x_plot -0.5
     else:
-        x_plot = x_plot +0.5
+        x_plot = x_plot
 
 
 
@@ -2733,6 +2781,7 @@ def mesh_obtime_dtime(sta,save_dir = None,save_path = None,
     if col >= 120:
         annot = -1
     fmt = "." + str(annot) + "f"
+    annot_f = annot
     annot_size = width * 50 / col
     if annot_size > height * 50 / row:
         annot_size = height * 50 / row
@@ -2761,21 +2810,23 @@ def mesh_obtime_dtime(sta,save_dir = None,save_path = None,
 
             f, ax2 = plt.subplots(figsize=(width, height), nrows=1, edgecolor='black',dpi = dpi)
             plt.subplots_adjust(left=0.1, bottom=0.15, right=0.98, top=0.90)
-            sns.heatmap(dat.T, ax=ax2, mask=mask, cmap=cmap_part, vmin=vmin, vmax=vmax, center=None, robust=False, annot=annot,fmt=fmt
-            , annot_kws = {'size': annot_size})
 
+            #sns.heatmap(dat.T, ax=ax2, mask=mask, cmap=cmap_part, vmin=vmin, vmax=vmax, center=None, robust=False, annot=annot,fmt=fmt
+            #, annot_kws = {'size': annot_size})
+
+            myheatmap(ax2,dat.T,cmap_part,clevs_part,annot_f,annot_size)
             ax2.set_xlabel('实况时间',fontsize = sup_fontsize*0.9)
             ax2.set_ylabel('预报时效',fontsize = sup_fontsize*0.9)
             ax2.set_xticks(x_plot)
             ax2.set_xticklabels(x_ticks,rotation=360, fontsize=sup_fontsize * 0.8)
-            ax2.set_yticks(np.arange(len(y_ticks))+0.5)
+            ax2.set_yticks(np.arange(len(y_ticks)))
             ax2.set_yticklabels(y_ticks, rotation=360, fontsize=sup_fontsize * 0.8)
 
             ax2.grid(linestyle='--', linewidth=0.5)
-            ax2.set_ylim(row, 0)
+            ax2.set_ylim(row-0.5, -0.5)
             ax2.set_title(title[kk], loc='left', fontweight='bold', fontsize=sup_fontsize)
-            rect = patches.Rectangle((0,0 ), col, row, linewidth=0.8, edgecolor='k', facecolor='none')
-            ax2.add_patch(rect)
+            #rect = patches.Rectangle((0,0 ), col, row, linewidth=0.8, edgecolor='k', facecolor='none')
+            #ax2.add_patch(rect)
             #plt.tick_params(top='on', right='on', which='both')  # 显示上侧和右侧的刻度
             plt.rcParams['xtick.direction'] = 'in'  # 将x轴的刻度线方向设置抄向内
             plt.rcParams['ytick.direction'] = 'in'  # 将y轴的刻度方知向设置向内
@@ -2859,11 +2910,11 @@ def mesh_time_dtime(sta,save_dir = None,save_path = None,
     x_plot /= dh_x
     #y_plot, y_ticks = meteva.product.get_y_ticks(times_fo, height)
     if xtimetype == "right":
-        x_plot  = x_plot+1
+        x_plot  = x_plot+0.5
     elif xtimetype == "left":
-        x_plot = x_plot +0
+        x_plot = x_plot -0.5
     else:
-        x_plot = x_plot +0.5
+        x_plot = x_plot
 
     nids = len(ids)
     nfo = len(data_names)
@@ -2901,13 +2952,18 @@ def mesh_time_dtime(sta,save_dir = None,save_path = None,
             annot = 1
     if col >= 120:
         annot = -1
+
+    annot_f = annot
     fmt = "." + str(annot) + "f"
+
     annot_size = width * 50 / col
+
     if annot_size > height * 50 / row:
         annot_size = height * 50 / row
     if annot_size > 16:
         annot_size = 16
     annot = annot >= 0
+
 
     #print(times_ob[0])
     for d in range(nfo):
@@ -2934,23 +2990,26 @@ def mesh_time_dtime(sta,save_dir = None,save_path = None,
             #print(height)
             f, ax2 = plt.subplots(figsize=(width, height), nrows=1, edgecolor='black',dpi = dpi)
             plt.subplots_adjust(left=0.1, bottom=0.15, right=0.98, top=0.90)
+            #norm = BoundaryNorm(clevs_part, ncolors=cmap_part.N - 1)
 
-            sns.heatmap(dat.T, ax=ax2, mask=mask, cmap=cmap_part, vmin=vmin, vmax=vmax, center=None, robust=False, annot=annot,fmt=fmt
-            , annot_kws = {'size': annot_size})
+#            sns.heatmap(dat.T, ax=ax2, mask=mask, cmap=cmap_part, vmin=vmin, vmax=vmax, center=None, robust=False, annot=annot,fmt=fmt
+#           , annot_kws = {'size': annot_size})
+            myheatmap(ax2,dat.T,cmap_part,clevs_part,annot_f,annot_size)
+
 
             ax2.set_xlabel('起报时间',fontsize = sup_fontsize * 0.9)
             ax2.set_ylabel('预报时效',fontsize = sup_fontsize * 0.9)
             ax2.set_xticks(x_plot)
             ax2.set_xticklabels(x_ticks,rotation=360, fontsize=sup_fontsize * 0.8)
-            ax2.set_yticks(np.arange(len(y_ticks))+0.5)
+            ax2.set_yticks(np.arange(len(y_ticks)))
             ax2.set_yticklabels(y_ticks, rotation=360, fontsize=sup_fontsize * 0.8)
 
 
             ax2.grid(linestyle='--', linewidth=min(0.5,2*width/col))
-            ax2.set_ylim(row, 0)
+            ax2.set_ylim(row-0.5, -0.5)
             ax2.set_title(title[kk], loc='left', fontweight='bold', fontsize=sup_fontsize)
-            rect = patches.Rectangle((0,0 ), col, row, linewidth=0.8, edgecolor='k', facecolor='none')
-            ax2.add_patch(rect)
+            #rect = patches.Rectangle((-0.5,-0.5), col, row+, linewidth=0.8, edgecolor='k', facecolor='none')
+            #ax2.add_patch(rect)
             #plt.tick_params(top='on', right='on', which='both')  # 显示上侧和右侧的刻度
             plt.rcParams['xtick.direction'] = 'in'  # 将x轴的刻度线方向设置抄向内
             plt.rcParams['ytick.direction'] = 'in'  # 将y轴的刻度方知向设置向内
