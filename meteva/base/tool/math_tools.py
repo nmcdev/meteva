@@ -69,11 +69,14 @@ def ss_iteration(count_old,mean_old,ss_old,count_new,mean_new,ss_new):
     rate1 = count_old/count_total
     rate2 = count_new/count_total
     mean_total = rate1 * mean_old + rate2 * mean_new
-    ss_total = ss_old * count_old
-    ss_total += count_old * math.pow((1- rate1) * mean_old - rate2 * mean_new,2)
-    ss_total += ss_new * count_new
-    ss_total += count_new * math.pow((1- rate2) * mean_new - rate1 * mean_old,2)
-    ss_total /= count_total
+    #ss_total = ss_old * count_old
+    #ss_total += count_old * math.pow((1- rate1) * mean_old - rate2 * mean_new,2)
+    #ss_total += ss_new * count_new
+    #ss_total += count_new * math.pow((1- rate2) * mean_new - rate1 * mean_old,2)
+    #ss_total /= count_total
+    ss_total= rate1*(ss_old + math.pow(rate2 *(mean_old - mean_new),2))
+    ss_total += rate2 * (ss_new + math.pow(rate1 * (mean_old - mean_new), 2))
+
     return count_total,mean_total,ss_total
 
 def sxy_iteration(count_old,meanx_old,meany_old,sxy_old,count_new,meanx_new,meany_new,sxy_new):
