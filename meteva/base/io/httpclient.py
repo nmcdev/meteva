@@ -2,6 +2,7 @@
 # coding=utf8
 import urllib3
 import httplib2
+import meteva
 
 def get_http_result (host, port, url):
     http_client = None
@@ -32,10 +33,10 @@ def get_http_result_cimiss(interface_id, params, data_format='json',show_url = F
     :return:
     """
 
-    # set  MUSIC server dns and user information
-    dns = "10.20.76.55"
-    user_id = "NMC_YBS_liucouhua"
-    pwd = "20130913"
+
+    dns = meteva.base.cimiss_set[0]
+    user_id = meteva.base.cimiss_set[1]
+    pwd = meteva.base.cimiss_set[2]
 
     # construct url
     url = 'http://' + dns + '/cimiss-web/api?userId=' + user_id + \
