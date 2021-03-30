@@ -341,6 +341,9 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
             print(key + " is not args of " + method.__name__ + " or " + plot_mehod.__name__)
             return
 
+    if "cmap" not in plot_args.keys() and "clevs" not in plot_args:
+        if method == meteva.method.me:
+            plot_args["cmap"] = meteva.base.cmaps.me
     if "fix_size" not in plot_args.keys():
         plot_args["fix_size"] = False
 
@@ -527,6 +530,7 @@ def score_tdt(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_lis
     elif x_y == "time_dtime":
         plot_mehod = meteva.base.plot_tools.mesh_time_dtime
 
+
     plot_para_list = []
     if plot_mehod is not None:
         plot_para_list = plot_mehod.__code__.co_varnames
@@ -542,6 +546,11 @@ def score_tdt(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_lis
         else:
             print(key + " is not args of " + method.__name__ + " or " + plot_mehod.__name__)
             return
+
+
+    if "cmap" not in plot_args.keys() and "clevs" not in plot_args:
+        if method == meteva.method.me:
+            plot_args["cmap"] = meteva.base.cmaps.me
 
     result_all = []
     for k in range(g_num):
