@@ -91,6 +91,35 @@ def sta_index_ensemble_near_by_grid(sta, grid,nearNum = 1):
     grd_en.values = inds.reshape((nearNum,1,1,1,grid1.nlat,grid1.nlon))
     return grd_en
 
+def sta_values_ensemble_near_by_grid(sta, grid,nearNum = 1):
+    ER = meteva.base.ER
+    members = np.arange(nearNum).tolist()
+    grid1 = meteva.base.grid(grid.glon,grid.glat,member_list=members)
+    grd_en = meteva.base.grid_data(grid1)
+    xyz_sta =  meteva.base.tool.math_tools.lon_lat_to_cartesian(sta.loc[:,"lon"], sta.loc[:,"lat"],R = ER)
+    lon = np.arange(grid1.nlon) * grid1.dlon + grid1.slon
+    lat = np.arange(grid1.nlat) * grid1.dlat + grid1.slat
+    grid_lon,grid_lat = np.meshgrid(lon,lat)
+    xyz_grid = meteva.base.tool.math_tools.lon_lat_to_cartesian(grid_lon.flatten(), grid_lat.flatten(),R = ER)
+    tree = cKDTree(xyz_sta)
+    value, inds = tree.query(xyz_grid, k=nearNum)
+
+    data_name = meteva.base.get_stadata_names(sta)[0]
+    input_dat = sta[data_name].values
+
+    if nearNum ==1:
+        values = input_dat[inds].reshape((grid1.nlat,grid1.nlon))
+        grd_en.values[0, 0, 0, 0, :, :] = values[:,:]
+    else:
+        for i in range(nearNum):
+            values = input_dat[inds[:,i]].reshape((grid1.nlat, grid1.nlon))
+            grd_en.values[0, 0, 0, 0, :, :] = values[:, :]
+            grd_en.values[i,0,0,0,:,:] = input_dat[inds[:,i]].reshape((grid1.nlat,grid1.nlon))
+
+    return grd_en
+
+
+
 def values_list_list_in_r_of_sta(sta_to, r = 40, sta_from = None,drop_first = False):
     '''
 
