@@ -734,6 +734,7 @@ def decode_gridwind_from_gds_byteArray(byteArray,grid = None,level = None,time =
     nmem = np.frombuffer(byteArray[180:182], dtype="i2")[0]
     #description = mName.rstrip('\x00') + '_' + eleName.rstrip('\x00') + "_" + str(
     #    level) + '(' + description.rstrip('\x00') + ')' + ":" + str(period)
+    data_len =0
     if data_type == 4:
         data_dtype1 = [('data', 'f4', (nlat, nlon))]
         data_len = nlat * nlon * 4
@@ -780,7 +781,7 @@ def decode_gridwind_from_gds_byteArray(byteArray,grid = None,level = None,time =
             if (grid is None):
                 return wind
             else:
-                return meteva.base.diag.interp_gg_linear(wind, grid)
+                return meteva.base.interp_gg_linear(wind, grid)
     else:
         member_list = []
         for im in range(nmem):
@@ -817,7 +818,7 @@ def decode_gridwind_from_gds_byteArray(byteArray,grid = None,level = None,time =
         if (grid is None):
             return wind_en
         else:
-            return meteva.base.diag.interp_gg_linear(wind_en, grid)
+            return meteva.base.interp_gg_linear(wind_en, grid)
 
 
 def read_gridwind_from_gds_file(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
@@ -1151,6 +1152,9 @@ def read_griddata_from_binary(filename,grid = None,level = None,time = None,dtim
         return None
 
 
+
+
+
 def decode_griddata_from_radar_byteArray(byteArray,grid = None,level = None,time = None,dtime = None,data_name = "data0"):
     CODE1 = 'B'
     CODE2 = 'H'
@@ -1323,6 +1327,8 @@ def read_radar_latlon_from_gds(filename,grid = None,level = None,time = None,dti
         print(filename + "数据读取失败")
         return None
 
+
+
 def read_griddata_from_rasterData(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
     if not os.path.exists(filename):
         print(filename + " not exists")
@@ -1448,3 +1454,107 @@ def read_griddata_from_cimiss(dataCode,element,level,time,dtime,grid = None,data
     if grid is not None:
         grd = meteva.base.interp_gg_linear(grd, grid)
     return grd
+
+
+def decode_griddata_from_radar_mosaic_v3_byteArray(byteArray, grid=None, level=None, time=None, dtime=None,
+                                             data_name="data0"):
+    if time is None:
+        ts = np.frombuffer(byteArray[100:112], dtype='short')
+        time = datetime.datetime(ts[0], ts[1], ts[2], ts[3], ts[4])
+        timezone = np.frombuffer(byteArray[96:100], dtype='int32')[0]
+        if timezone == 0:
+            time = time + datetime.timedelta(hours=8)
+
+    if dtime is None:
+        dtime = 0
+    if level is None:
+        level = 0
+
+    g = np.frombuffer(byteArray[124:164], dtype='int32')
+    slon = g[1] / 1000
+    slat = g[0] / 1000
+    dlon = g[9] / 10000
+    dlat = g[8] / 10000
+    elon = slon + dlon * (g[6] - 1)
+    elat = slat + dlat * (g[7] - 1)
+    grid0 = meteva.base.grid([slon, elon, dlon], [elat, slat, -dlat])
+    compress = np.frombuffer(byteArray[166:168], dtype='int16')[0]
+    if compress == 1:
+        blockpos = np.frombuffer(byteArray[88:92], dtype='int32')[0]
+        scale = np.frombuffer(byteArray[176:178], dtype='short')[0] + 0.0
+        data_bytes = bz2.decompress(byteArray[blockpos:])
+        data = np.frombuffer(data_bytes, dtype='short')
+
+        index = np.where(data < 0)
+        data = data / scale
+        data[index] = np.nan
+        grd = meteva.base.grid_data(grid0, data)
+        meteva.base.reset(grd)
+        meteva.base.set_griddata_coords(grd, gtime=[time], dtime_list=[dtime], level_list=[level])
+        return grd
+    else:
+        return None
+
+
+def read_griddata_from_radar_mosaic_v3_file(filename, grid=None, level=None, time=None, dtime=None, data_name="data0",
+                                      show=False):
+    try:
+        if not os.path.exists(filename):
+            print(filename + " does not exist")
+            return None
+        file = open(filename, 'rb')
+        byteArray = file.read()
+        grd = decode_griddata_from_radar_mosaic_v3_byteArray(byteArray, grid, level=level, time=time, dtime=dtime,
+                                                       data_name=data_name)
+        if show:
+            print("success read from " + filename)
+        return grd
+    except:
+        if show:
+            exstr = traceback.format_exc()
+            print(exstr)
+        print(filename + "数据读取失败")
+        return None
+
+def read_griddata_from_radar_mosaic_v3_gds(filename, grid=None, level=None, time=None, dtime=None, data_name="data0",
+                                      show=False):
+    # ip 为字符串形式，示例 “10.20.30.40”
+    # port 为整数形式
+    # filename 为字符串形式 示例 "ECMWF_HR/TCDC/19083108.000"
+    if meteva.base.gds_ip_port is None:
+        print("请先使用set_config 配置gds的ip和port")
+        return
+    ip, port = meteva.base.gds_ip_port
+    service = GDSDataService(ip, port)
+    try:
+        if(service is None):
+            print("service is None")
+            return
+        filename = filename.replace("mdfs:///", "")
+        filename = filename.replace("\\","/")
+        directory,fileName = os.path.split(filename)
+        status, response = service.getData(directory, fileName)
+        ByteArrayResult = DataBlock_pb2.ByteArrayResult()
+
+        if status == 200:
+            ByteArrayResult.ParseFromString(response)
+            if ByteArrayResult is not None:
+                byteArray = ByteArrayResult.byteArray
+
+                grd = decode_griddata_from_radar_mosaic_v3_byteArray(byteArray,grid,level,time,dtime,data_name)
+                if show:
+                    print("success read from " + filename)
+                return grd
+            else:
+                print(filename + " not exist")
+                return None
+        else:
+            print("连接服务的状态异常，不能读取相应的文件,可能原因相应的文件不在允许读取的时段范围")
+            return None
+    except:
+        if show:
+            exstr = traceback.format_exc()
+            print(exstr)
+
+        print(filename + "数据读取错误")
+        return None
