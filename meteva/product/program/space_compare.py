@@ -10,7 +10,13 @@ from meteva.base import IV
 import math
 import copy
 
+
 def rain_24h_sg(sta_ob,grd_fo,save_path=None,show  = False,dpi = 200,add_county_line = False):
+    grade_list = [0.1, 10, 25, 50, 100, 250, 1000]
+    rain_sg(sta_ob, grd_fo, grade_list, save_path=save_path, show=show, dpi=dpi, add_county_line=add_county_line)
+
+def rain_sg(sta_ob,grd_fo,grade_list,save_path=None,show  = False,dpi = 200,add_county_line = False):
+
     '''
     #绘制24小时降水实况与预报对比图
     :param grd_fo: 输入的网格数据，包含一个平面的网格场
@@ -18,6 +24,9 @@ def rain_24h_sg(sta_ob,grd_fo,save_path=None,show  = False,dpi = 200,add_county_
     :param filename: 图片输出路径，缺省时会以调试窗口形式弹出
     :return: 无返回值
     '''
+    if len(grade_list)!=7:
+        print("grade_list 暂时仅支持长度为7的列表，包含小雨、中雨、大雨、暴雨、大暴雨、特大暴雨以及一个降水上限值")
+        return
     grid_fo = meteva.base.get_grid_of_data(grd_fo)
     # 通过经纬度范围设置画幅
     hight = 5.6
@@ -62,7 +71,7 @@ def rain_24h_sg(sta_ob,grd_fo,save_path=None,show  = False,dpi = 200,add_county_
     # 绘制格点预报场
     x = np.arange(grid_fo.nlon) * grid_fo.dlon + grid_fo.slon
     y = np.arange(grid_fo.nlat) * grid_fo.dlat + grid_fo.slat
-    clevs = [0.1, 10, 25, 50, 100, 250, 1000]
+    clevs = grade_list
     colors_grid = ["#D0DEEA", "#B4D3E9", "#6FB0D7", "#3787C0", "#105BA4", "#07306B", "#07306B"]
     dat = grd_fo.values.squeeze()
     # print(x)
@@ -78,14 +87,22 @@ def rain_24h_sg(sta_ob,grd_fo,save_path=None,show  = False,dpi = 200,add_county_
     else:
         model_name = str(grid_fo.members[0])
 
+    var_name = ""
+    if sta_ob.attrs is not None:
+        if "var_cn_name" in sta_ob.attrs.keys():
+            var_name = sta_ob.attrs["var_cn_name"]
+            if var_name=="":
+                var_name = sta_ob.attrs["var_name"]
+    title = model_name + " " + dati_str + "起报" + str(grid_fo.dtimes[0]) + "H时效"+var_name+"预报和观测"
+
     if map_width < 3:
-        title = model_name + " " + dati_str + "起报" + str(grid_fo.dtimes[0]) + "H时效预报和观测"
+        #title = model_name + " " + dati_str + "起报" + str(grid_fo.dtimes[0]) + "H时效预报和观测"
         ax.set_title(title, fontsize=7)
     elif map_width < 4:
-        title = model_name + " " + dati_str + "起报" + str(grid_fo.dtimes[0]) + "H时效预报和观测"
+        #title = model_name + " " + dati_str + "起报" + str(grid_fo.dtimes[0]) + "H时效预报和观测"
         ax.set_title(title, fontsize=10)
     else:
-        title = model_name + " " + dati_str + "起报" + str(grid_fo.dtimes[0]) + "H时效预报和观测"
+        #title = model_name + " " + dati_str + "起报" + str(grid_fo.dtimes[0]) + "H时效预报和观测"
         ax.set_title(title, fontsize=11)
 
     colorbar_position_grid = fig.add_axes(rect6)  # 位置[左,下,宽,高]
@@ -98,8 +115,22 @@ def rain_24h_sg(sta_ob,grd_fo,save_path=None,show  = False,dpi = 200,add_county_
     colors_sta = ['#FFFFFF', '#0055FF', '#00FFB4', '#F4FF00', '#FE1B00', '#910000', '#B800BA']
     dat = sta_ob_in.values[:, -1]
     dat[dat > 1000] = 0
-    clevs = [0, 0.1, 10, 25, 50, 100, 250, 1000]
-    cleves_name = ["0", "0.1-10", "10-25", "25-50", "50-100", "100-250", ">=250"]
+    clevs = grade_list
+    clevs_name = ["0"]
+    for g0 in range(len(grade_list)-2):
+        if grade_list[g0] == math.floor(grade_list[g0]):
+            gs0 = str(int(grade_list[g0]))
+        else:
+            gs0 = '%.1f' % (grade_list[g0])
+
+        if grade_list[g0+1] == math.floor(grade_list[g0+1]):
+            gs1 = str(int(grade_list[g0+1]))
+        else:
+            gs1 = '%.0f' % (grade_list[g0+1])
+        clevs_name.append(gs0+"-"+gs1)
+    clevs_name.append(">="+ str(int(grade_list[len(grade_list)-2])))
+
+    #cleves_name = ["0", "0.1-10", "10-25", "25-50", "50-100", "100-250", ">=250"]
     for i in range(len(clevs) - 1):
         index0 = np.where((dat >= clevs[i]) & (dat < clevs[i + 1]))
         if (len(index0[0]) > 0):
@@ -109,14 +140,14 @@ def rain_24h_sg(sta_ob,grd_fo,save_path=None,show  = False,dpi = 200,add_county_
                 x = np.array([x])
                 y = np.array([y])
                 if (i > 0):
-                    ax.scatter(x, y, c=colors_sta[i],  s=3, label=cleves_name[i],
+                    ax.scatter(x, y, c=colors_sta[i],  s=3, label=clevs_name[i],
                                linewidths=0.3, edgecolor='k')
                 else:
-                    ax.scatter(x, y, c=colors_sta[i], s=1, label=cleves_name[i],
+                    ax.scatter(x, y, c=colors_sta[i], s=1, label=clevs_name[i],
                                linewidths=0.1, edgecolor="k")
     ax.legend(facecolor='whitesmoke', loc="lower center", ncol=4, edgecolor='whitesmoke',
               prop={'size': sta_legend_size},
-              bbox_to_anchor=(0.5 + 0.5 * width_ob_fo_str / map_width, -0.08))
+              bbox_to_anchor=(0.5 + 0.5 * width_ob_fo_str / map_width, -0.12))
     ax7 = plt.axes(rect7)
     ax7.axes.set_axis_off()
     plt.text(0, 0.00, "观测\n\n预报", fontsize=7)
@@ -132,6 +163,11 @@ def rain_24h_sg(sta_ob,grd_fo,save_path=None,show  = False,dpi = 200,add_county_
     return
 
 def rain_24h_comprehensive_sg(sta_ob,grd_fo, save_path=None,show = False,dpi = 200,add_county_line = False):
+    grade_list = [0.1, 10, 25, 50, 100, 250, 1000]
+    rain_comprehensive_sg(sta_ob,grd_fo,grade_list,save_path=save_path,show=show,dpi=dpi,add_county_line=add_county_line)
+
+
+def rain_comprehensive_sg(sta_ob,grd_fo,grade_list, save_path=None,show = False,dpi = 200,add_county_line = False):
     '''
     #绘制24小时降水实况与预报综合对比检验图，画幅中央为预报实况的对比，左右两侧为各类检验指标
     :param grd_fo: 输入的网格数据，包含一个平面的网格场
@@ -139,6 +175,9 @@ def rain_24h_comprehensive_sg(sta_ob,grd_fo, save_path=None,show = False,dpi = 2
     :param filename: 图片输出路径，缺省时会以调试窗口形式弹出
     :return:无返回值
     '''
+    if len(grade_list)!=7:
+        print("grade_list 暂时仅支持长度为7的列表，包含小雨、中雨、大雨、暴雨、大暴雨、特大暴雨以及一个降水上限值")
+        return
     grid_fo = meteva.base.get_grid_of_data(grd_fo)
     #通过经纬度范围设置画幅
     hight = 5.6
@@ -182,7 +221,7 @@ def rain_24h_comprehensive_sg(sta_ob,grd_fo, save_path=None,show = False,dpi = 2
     # 绘制格点预报场
     x = np.arange(grid_fo.nlon) * grid_fo.dlon + grid_fo.slon
     y = np.arange(grid_fo.nlat) * grid_fo.dlat + grid_fo.slat
-    clevs = [0.1, 10, 25, 50, 100, 250, 1000]
+    clevs =grade_list
     colors_grid = ["#D0DEEA", "#B4D3E9", "#6FB0D7", "#3787C0", "#105BA4", "#07306B", "#07306B"]
     dat = grd_fo.values.squeeze()
     #print(x)
@@ -198,14 +237,23 @@ def rain_24h_comprehensive_sg(sta_ob,grd_fo, save_path=None,show = False,dpi = 2
     else:
         model_name = str(grid_fo.members[0])
 
+
+    var_name = ""
+    if sta_ob.attrs is not None:
+        if "var_cn_name" in sta_ob.attrs.keys():
+            var_name = sta_ob.attrs["var_cn_name"]
+            if var_name=="":
+                var_name = sta_ob.attrs["var_name"]
+    title = model_name + " " + dati_str + "起报" + str(grid_fo.dtimes[0]) + "H时效"+var_name+"预报和观测"
+
     if map_width <3:
-        title = model_name + " " + dati_str + "起报" + str(grid_fo.dtimes[0]) + "H时效预报和观测"
+        #title = model_name + " " + dati_str + "起报" + str(grid_fo.dtimes[0]) + "H时效预报和观测"
         ax.set_title(title,fontsize=7)
     elif map_width <4:
-        title = model_name + " " + dati_str + "起报" + str(grid_fo.dtimes[0]) + "H时效预报和观测"
+        #title = model_name + " " + dati_str + "起报" + str(grid_fo.dtimes[0]) + "H时效预报和观测"
         ax.set_title(title, fontsize=10)
     else:
-        title = model_name + " " + dati_str + "起报" + str(grid_fo.dtimes[0]) + "H时效预报和观测"
+        #title = model_name + " " + dati_str + "起报" + str(grid_fo.dtimes[0]) + "H时效预报和观测"
         ax.set_title(title, fontsize=11)
 
     colorbar_position_grid = fig.add_axes(rect6)  # 位置[左,下,宽,高]
@@ -218,8 +266,20 @@ def rain_24h_comprehensive_sg(sta_ob,grd_fo, save_path=None,show = False,dpi = 2
     colors_sta = ['#FFFFFF', '#0055FF', '#00FFB4', '#F4FF00', '#FE1B00', '#910000', '#B800BA']
     dat = sta_ob_in.values[:, -1]
     dat[dat > 1000] = 0
-    clevs = [0, 0.1, 10, 25, 50, 100, 250, 1000]
-    cleves_name = ["0", "0.1-10", "10-25", "25-50", "50-100", "100-250", ">=250"]
+    clevs =grade_list
+    clevs_name = ["0"]
+    for g0 in range(len(grade_list)-2):
+        if grade_list[g0] == math.floor(grade_list[g0]):
+            gs0 = str(int(grade_list[g0]))
+        else:
+            gs0 = '%.1f' % (grade_list[g0])
+
+        if grade_list[g0+1] == math.floor(grade_list[g0+1]):
+            gs1 = str(int(grade_list[g0+1]))
+        else:
+            gs1 = '%.0f' % (grade_list[g0+1])
+        clevs_name.append(gs0+"-"+gs1)
+    clevs_name.append(">="+ str(int(grade_list[len(grade_list)-2])))
     pointsize = int(100*map_area / len(dat))
     if(pointsize >30):pointsize = 30
     if(pointsize<1):pointsize = 1
@@ -232,10 +292,10 @@ def rain_24h_comprehensive_sg(sta_ob,grd_fo, save_path=None,show = False,dpi = 2
                 x = np.array([x])
                 y = np.array([y])
                 if (i > 0):
-                    ax.scatter(x, y, c=colors_sta[i], s=3*pointsize, label=cleves_name[i],
+                    ax.scatter(x, y, c=colors_sta[i], s=3*pointsize, label=clevs_name[i],
                                linewidths=0.3, edgecolor='k')
                 else:
-                    ax.scatter(x, y, c=colors_sta[i], s=3*pointsize, label=cleves_name[i],linewidths=0.0,edgecolor = "k")
+                    ax.scatter(x, y, c=colors_sta[i], s=3*pointsize, label=clevs_name[i],linewidths=0.0,edgecolor = "k")
     ax.legend(facecolor='gainsboro', loc="lower center",ncol=4, edgecolor='whitesmoke',prop={'size':sta_legend_size},
               bbox_to_anchor=(0.5 + 0.5 *width_ob_fo_str/map_width, -0.08))
     ax7 = plt.axes(rect7)
@@ -344,7 +404,7 @@ def rain_24h_comprehensive_sg(sta_ob,grd_fo, save_path=None,show = False,dpi = 2
     ax3.legend(loc="upper right")
     ax3.set_xlabel("precipitation threshold", fontsize=10)
     ax3.set_xticks(x)
-    ax3.set_xticklabels(["0.1-10", "10-25", "25-50", "50-100", "100-250", ">=250"], fontsize=9)
+    ax3.set_xticklabels(clevs_name[1:], fontsize=9)
     ax3.set_ylabel("point number", fontsize=10)
     ax3.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(100))
 
@@ -405,9 +465,16 @@ def rain_24h_comprehensive_sg(sta_ob,grd_fo, save_path=None,show = False,dpi = 2
     text += "Bias:" + "%6.2f" % bias_c + "\n"
     text += "Correctlation coefficiant:" + "%6.2f" % cor + "\n"
     text += "晴雨准确率:" + "%6.2f" % pc_sun_rain + "\n\n"
-    leves_name = ["0.1-10-", "10-25--", "25-50--", "50-100-", "100-250", ">=250-"]
+
+    leves_name = []
+    for name in clevs_name[1:]:
+        for nn in range(10-len(name)):
+            name = name+"-"
+        leves_name.append(name)
+
+    #leves_name = ["0.1-10-", "10-25--", "25-50--", "50-100-", "100-250", ">=250-"]
     for i in range(len(leves_name)):
-        text += ":" + leves_name[i] + "---------------------------\n"
+        text += ":" + leves_name[i] + "------------------------\n"
         text += "正确:" + "%-4d" % hfmc[i,0] + " 空报:" + "%-4d" % hfmc[i,1] + " 漏报:" + "%-4d" % hfmc[i,2] + "\n"
         if ts[i] == IV:
             ts_str = " NULL"
@@ -451,6 +518,10 @@ def rain_24h_comprehensive_sg(sta_ob,grd_fo, save_path=None,show = False,dpi = 2
     return
 
 def rain_24h_comprehensive_chinaland_sg(sta_ob,grd_fo,  save_path=None,show = False,dpi = 200,add_county_line = False):
+    grade_list = [0.1, 10, 25, 50, 100, 250, 1000]
+    rain_comprehensive_chinaland_sg(sta_ob,grd_fo,grade_list,save_path=save_path,show=show,dpi=dpi,add_county_line=add_county_line)
+
+def rain_comprehensive_chinaland_sg(sta_ob,grd_fo,grade_list, save_path=None,show = False,dpi = 200,add_county_line = False):
     '''
     #绘制24小时降水实况与预报综合对比检验图，专为为全国区域设置的画面布局，画面更加紧凑
     :param grd_fo: 输入的网格数据，包含一个平面的网格场
@@ -458,7 +529,9 @@ def rain_24h_comprehensive_chinaland_sg(sta_ob,grd_fo,  save_path=None,show = Fa
     :param filename: 图片输出路径，缺省时会以调试窗口形式弹出
     :return:无返回值
     '''
-
+    if len(grade_list)!=7:
+        print("grade_list 暂时仅支持长度为7的列表，包含小雨、中雨、大雨、暴雨、大暴雨、特大暴雨以及一个降水上限值")
+        return
     grid_fo = meteva.base.get_grid_of_data(grd_fo)
     fig = plt.figure(figsize=(10, 7))
     # 平面对比图
@@ -476,7 +549,7 @@ def rain_24h_comprehensive_chinaland_sg(sta_ob,grd_fo,  save_path=None,show = Fa
     # 绘制格点预报场
     x = np.arange(grid_fo.nlon) * grid_fo.dlon + grid_fo.slon
     y = np.arange(grid_fo.nlat) * grid_fo.dlat + grid_fo.slat
-    clevs = [0.1, 10, 25, 50, 100, 250, 1000]
+    clevs =grade_list
     colors_grid = ["#E0EEFA", "#B4D3E9", "#6FB0D7", "#3787C0", "#105BA4", "#07306B", "#07306B"]
     dat = grd_fo.values.squeeze()
     plt.rcParams['xtick.direction'] = 'in'
@@ -491,8 +564,25 @@ def rain_24h_comprehensive_chinaland_sg(sta_ob,grd_fo,  save_path=None,show = Fa
     colors_sta = ['#FFFFFF', '#0055FF', '#00FFB4', '#F4FF00', '#FE1B00', '#910000', '#B800BA']
     dat = sta_ob_in.values[:, -1]
     dat[dat > 1000] = 0
-    clevs = [0, 0.1, 10, 25, 50, 100, 250, 1000]
-    cleves_name = ["0", "0.1-10", "10-25", "25-50", "50-100", "100-250", ">=250"]
+    clevs = grade_list
+
+    clevs =grade_list
+    clevs_name = ["0"]
+    for g0 in range(len(grade_list)-2):
+        if grade_list[g0] == math.floor(grade_list[g0]):
+            gs0 = str(int(grade_list[g0]))
+        else:
+            gs0 = '%.1f' % (grade_list[g0])
+
+        if grade_list[g0+1] == math.floor(grade_list[g0+1]):
+            gs1 = str(int(grade_list[g0+1]))
+        else:
+            gs1 = '%.0f' % (grade_list[g0+1])
+        clevs_name.append(gs0+"-"+gs1)
+    clevs_name.append(">="+ str(int(grade_list[len(grade_list)-2])))
+
+
+    #cleves_name = ["0", "0.1-10", "10-25", "25-50", "50-100", "100-250", ">=250"]
 
     pointsize = int(100 * map_area / len(dat))
     if (pointsize > 30): pointsize = 30
@@ -507,10 +597,10 @@ def rain_24h_comprehensive_chinaland_sg(sta_ob,grd_fo,  save_path=None,show = Fa
                 x = np.array([x])
                 y = np.array([y])
                 if (i > 0):
-                    ax.scatter(x, y, c=colors_sta[i], s=3*pointsize, label=cleves_name[i],
+                    ax.scatter(x, y, c=colors_sta[i], s=3*pointsize, label=clevs_name[i],
                                linewidths=0.3, edgecolor='k')
                 else:
-                    ax.scatter(x, y, c=colors_sta[i],  s=pointsize, label=cleves_name[i],
+                    ax.scatter(x, y, c=colors_sta[i],  s=pointsize, label=clevs_name[i],
                                linewidths=0.1, edgecolor="k")
     ax.legend(loc="lower left", facecolor='whitesmoke', title="观测",  edgecolor='whitesmoke',fontsize=9)
 
@@ -521,7 +611,14 @@ def rain_24h_comprehensive_chinaland_sg(sta_ob,grd_fo,  save_path=None,show = Fa
         model_name = grid_fo.members[0]
     else:
         model_name = str(grid_fo.members[0])
-    title = model_name + " " + dati_str + "起报" + str(grid_fo.dtimes[0]) + "H时效预报和观测"
+
+    var_name = ""
+    if sta_ob.attrs is not None:
+        if "var_cn_name" in sta_ob.attrs.keys():
+            var_name = sta_ob.attrs["var_cn_name"]
+            if var_name=="":
+                var_name = sta_ob.attrs["var_name"]
+    title = model_name + " " + dati_str + "起报" + str(grid_fo.dtimes[0]) + "H时效"+var_name+"预报和观测"
     ax.set_title(title)
 
     # 散点回归图
@@ -625,7 +722,7 @@ def rain_24h_comprehensive_chinaland_sg(sta_ob,grd_fo,  save_path=None,show = Fa
     ax3.legend(loc="upper right")
     ax3.set_xlabel("precipitation threshold", fontsize=10)
     ax3.set_xticks(x)
-    ax3.set_xticklabels(["0.1-10", "10-25", "25-50", "50-100", "100-250", ">=250"], fontsize=9)
+    ax3.set_xticklabels(clevs_name[1:], fontsize=9)
     ax3.set_ylabel("point number", fontsize=10)
     ax3.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(100))
 
@@ -686,9 +783,17 @@ def rain_24h_comprehensive_chinaland_sg(sta_ob,grd_fo,  save_path=None,show = Fa
     text += "Bias:" + "%6.2f" % bias_c + "\n"
     text += "Correctlation coefficiant:" + "%6.2f" % cor + "\n"
     text += "晴雨准确率:" + "%6.2f" % pc_sun_rain + "\n\n"
-    leves_name = ["0.1-10-", "10-25--", "25-50--", "50-100-", "100-250", ">=250-"]
+
+
+    #leves_name = ["0.1-10-", "10-25--", "25-50--", "50-100-", "100-250", ">=250-"]
+    leves_name = []
+    for name in clevs_name[1:]:
+        for nn in range(10-len(name)):
+            name = name+"-"
+        leves_name.append(name)
+
     for i in range(len(leves_name)):
-        text += ":" + leves_name[i] + "---------------------------\n"
+        text += ":" + leves_name[i] + "------------------------\n"
         text += "正确:" + "%-4d" % hfmc[i, 0] + " 空报:" + "%-4d" % hfmc[i, 1] + " 漏报:" + "%-4d" % hfmc[i, 2] + "\n"
         if ts[i] == IV:
             ts_str = " NULL"

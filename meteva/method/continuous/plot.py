@@ -109,7 +109,7 @@ def scatter_regress(ob, fo,member_list = None, rtype="linear",vmax = None,vmin =
             fo_rg = ob_line * np.mean(ob) / np.mean(fo)
             plt.plot(ob_line, fo_rg, color="k")
             rg_text2 = "Y = " + '%.2f' % rate + "* X"
-            plt.text(num_min + 0.05 * dmm, num_min + 0.90 * dmm, rg_text2, fontsize=0.8 * sup_fontsize, color="r")
+            plt.text(num_min + 0.05 * dmm, num_min + 0.92 * dmm, rg_text2, fontsize=0.8 * sup_fontsize, color="r")
         elif rtype == "linear":
             X = np.zeros((len(fo), 1))
             X[:, 0] = fo
@@ -120,7 +120,11 @@ def scatter_regress(ob, fo,member_list = None, rtype="linear",vmax = None,vmin =
             fo_rg = clf.predict(X)
             plt.plot(ob_line, fo_rg, color="k")
             rg_text2 = "Y = " + '%.2f' % (clf.coef_[0]) + "* X + " + '%.2f' % (clf.intercept_)
-            plt.text(num_min + 0.05 * dmm, num_min + 0.90 * dmm, rg_text2, fontsize=0.8 * sup_fontsize, color="r")
+            plt.text(num_min + 0.05 * dmm, num_min + 0.92 * dmm, rg_text2, fontsize=0.8 * sup_fontsize, color="r")
+        corr1 = meteva.method.corr(ob,fo)
+        re_text1 = "corr = "+ '%.2f' % (corr1)
+        plt.text(num_min + 0.05 * dmm, num_min + 0.85 * dmm, re_text1, fontsize=0.8 * sup_fontsize, color="r")
+
 
         plt.plot(ob_line, ob_line, '--', color="k",linewidth = 0.5)
         plt.xlim(num_min, num_max)
