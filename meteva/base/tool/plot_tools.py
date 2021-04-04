@@ -1391,7 +1391,7 @@ def caculate_axis_width(xticks,fontsize,legend_num = 1):
 
 def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",vmin = None,vmax = None,ncol = None,grid = None,tag = -1,save_path = None,show = False
         ,dpi = 300,bar_width = None,spasify_xticks = None,sup_fontsize = 10,title = ""
-             ,height = None,width = None,log_y = False):
+             ,height = None,width = None,log_y = False,sup_title = None):
     shape = array.shape
 
     if len(array[array!=meteva.base.IV]) ==0:
@@ -1651,14 +1651,7 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
         else:
             xticks_font = sup_fontsize * 0.8
 
-        #if width_one_subplot > 10:
-        #    if not isinstance(x_one, datetime.datetime):
-        #        for i in range(len(xticks_labels)):
-        #            if i % 2 == 1:
-        #                xticks_labels[i] = "|\n" + xticks_labels[i]
-        #    width_one_subplot = 10
-        #elif width_one_subplot < 5:
-        #    width_one_subplot = 5
+
 
         if height is None:
             height = width / 2
@@ -1886,7 +1879,6 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
                 width_one_subplot = 8
 
 
-
         if spasify_xticks is not None:
             xticks_font = sup_fontsize * 0.8 * spasify_xticks * (width_one_subplot - width_wspace) / width_axis_labels
             spasify = spasify_xticks
@@ -2012,6 +2004,8 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
 
 
             ax_one = plt.subplot(nrow, ncol, k + 1)
+
+
             legend0 = str(name_list_dict[legend][0])
             if legend0.lower().find("ob")<0 and legend0.find("观测")<0 and legend0.find("实况")<0 and legend0.find("零场")<0:
                 plt.bar(0,0)
@@ -2130,18 +2124,42 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
                     else:
                         plt.grid()
 
-        if legend_num>1:
-            legend_col = int(width_fig *8 / sup_fontsize)
-            if legend_col <1:legend_col = 1
-            legend_row = int(math.ceil(legend_num / legend_col))
-            legend_col = int(math.ceil(legend_num / legend_row))
-            by = 1  -  (height_suplegend - legend_row * sup_fontsize *0.9 * 0.03)/height_fig + 0.02
-            #print(by)
-            if subplot_num >1:
-                fig.legend(fontsize = sup_fontsize *0.9,ncol = legend_col,loc = "upper center",
-                       bbox_to_anchor=(0.52,by))
+
+        if sup_title is not None:
+            if legend_num ==1:
+                strss = sup_title.split("\n")
+                by = 1 - (height_suplegend - len(strss) * sup_fontsize * 0.01) / height_fig + 0.025
+                plt.suptitle(sup_title, y = by,fontsize=sup_fontsize )
             else:
-                plt.legend(fontsize = sup_fontsize *0.9,ncol = legend_col,loc = "upper center")
+                legend_col = int(width_fig *8 / sup_fontsize)
+                if legend_col <1:legend_col = 1
+                legend_row = int(math.ceil(legend_num / legend_col))
+                legend_col = int(math.ceil(legend_num / legend_row))
+                strss = sup_title.split("\n")
+                by = 1 - (height_suplegend - len(strss) * sup_fontsize * 0.01) / height_fig + 0.025
+                plt.suptitle(sup_title, x = 0,y = by, fontsize=sup_fontsize ,horizontalalignment='left')
+
+                by = 1 - (height_suplegend - legend_row * sup_fontsize * 0.9 * 0.02) / height_fig + 0.025
+                if subplot_num >1:
+                    fig.legend(fontsize = sup_fontsize *0.9,ncol = legend_col,loc = "upper right",
+                           bbox_to_anchor=(1,by))
+                else:
+                    plt.legend(fontsize = sup_fontsize *0.9,ncol = legend_col,loc = "upper right")
+        else:
+            if legend_num > 1:
+                legend_col = int(width_fig * 8 / sup_fontsize)
+                if legend_col < 1: legend_col = 1
+                legend_row = int(math.ceil(legend_num / legend_col))
+                legend_col = int(math.ceil(legend_num / legend_row))
+                by = 1 - (height_suplegend - legend_row * sup_fontsize * 0.9 * 0.02) / height_fig + 0.02
+                # print(by)
+
+                if subplot_num > 1:
+                    fig.legend(fontsize=sup_fontsize * 0.9, ncol=legend_col, loc="upper center",
+                               bbox_to_anchor=(0.52, by))
+                else:
+                    plt.legend(fontsize=sup_fontsize * 0.9, ncol=legend_col, loc="upper center")
+
 
     else:
         print("array不能超过3维")
@@ -2164,20 +2182,20 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
 
 
 def bar(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",vmin = None,vmax = None,ncol = None,grid = None,tag = -1,save_path = None,show = False
-        ,dpi = 300,bar_width = None,title = "",spasify_xticks = None,sup_fontsize = 10,width = None,height = None,log_y = False):
+        ,dpi = 300,bar_width = None,title = "",spasify_xticks = None,sup_fontsize = 10,width = None,height = None,log_y = False,sup_title = None):
 
     plot_bar("bar",array = array,name_list_dict=name_list_dict,legend = legend,axis = axis,ylabel = ylabel,vmin= vmin,vmax = vmax,ncol =ncol,grid = grid,tag = tag,
              spasify_xticks = spasify_xticks,save_path = save_path,show = show,
-             dpi = dpi,bar_width=bar_width,sup_fontsize= sup_fontsize,title=title,width = width,height = height,log_y = log_y)
+             dpi = dpi,bar_width=bar_width,sup_fontsize= sup_fontsize,title=title,width = width,height = height,log_y = log_y,sup_title= sup_title)
 
 
 
 def plot(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",vmin = None,vmax = None,ncol = None,grid = None,tag = -1,save_path = None,show = False,dpi = 300
-         ,title ="",spasify_xticks = None,sup_fontsize = 10,width = None,height = None,log_y = False):
+         ,title ="",spasify_xticks = None,sup_fontsize = 10,width = None,height = None,log_y = False,sup_title = None):
 
     plot_bar("line",array,name_list_dict=name_list_dict,legend = legend,axis = axis,ylabel = ylabel,vmin= vmin,vmax = vmax,ncol =ncol,grid = grid,tag=tag ,
              spasify_xticks = spasify_xticks,save_path = save_path,show = show,
-             dpi = dpi,sup_fontsize= sup_fontsize,title=title,width = width,height = height,log_y = log_y)
+             dpi = dpi,sup_fontsize= sup_fontsize,title=title,width = width,height = height,log_y = log_y,sup_title = sup_title)
 
 
 def myheatmap(ax_one,data_k,cmap,clevs,annot=1,fontsize=10):
