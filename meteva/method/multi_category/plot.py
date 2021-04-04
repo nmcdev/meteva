@@ -178,7 +178,7 @@ def performance_grade(ob, fo, grade_list=None, member_list=None, x_y="sr_pod", s
     grade_legend_strs = ["<" + str(grade_list[0])]
     for i in range(len(grade_list)-1):
         grade_legend_strs.append("[" + str(grade_list[i])+"," + str(grade_list[i+1])+")")
-    grade_legend_strs.append(">=" + str(grade_list[legend_num - 2]))
+    grade_legend_strs.append(">=" + str(grade_list[-1]))
 
 
     if legend_num > 1 and grade_num > 1:
@@ -338,7 +338,8 @@ def performance_multi(ob, fo, grade_list=None, member_list=None, x_y="sr_pod", s
     grade_legend_strs = ["<" + str(grade_list[0])]
     for i in range(len(grade_list)-1):
         grade_legend_strs.append("[" + str(grade_list[i])+"," + str(grade_list[i+1])+")")
-    grade_legend_strs.append(">=" + str(grade_list[legend_num - 2]))
+
+    grade_legend_strs.append(">=" + str(grade_list[-1]))
 
 
     if legend_num > 1 and grade_num > 1:
