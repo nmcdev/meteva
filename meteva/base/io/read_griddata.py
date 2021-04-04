@@ -69,6 +69,7 @@ def read_griddata_from_micaps4(filename,grid=None,level = None,time = None,dtime
         #file = open(filename,'r',encoding=encoding)
         #str1 = file.read()
         #file.close()
+        str1 = str1.replace(",","")
         strs = str1.split()
         year1 = int(strs[3])
         month = int(strs[4])
