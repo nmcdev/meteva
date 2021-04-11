@@ -292,8 +292,12 @@ def combine_on_obTime_one_id(sta_ob,sta_fo_list,how = "inner"):
         sta_fo_list = [sta_fo_list]
 
     dtime_units ="hour"
-    if len(sta_fo_list[0].attrs) >0 and sta_fo_list[0].attrs["dtime_units"] != "hour":
-        dtime_units = "minute"
+
+
+    if len(sta_fo_list[0].attrs) >0:
+        if "dtime_units" in sta_fo_list[0].attrs:
+            if sta_fo_list[0].attrs["dtime_units"] != "hour":
+                dtime_units = "minute"
 
     if sta_ob is None:
         sta_combine = None
