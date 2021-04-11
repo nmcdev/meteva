@@ -3055,6 +3055,84 @@ def mesh_time_dtime(sta,save_dir = None,save_path = None,
     return
 
 
+def add_scatter(ax,map_extend,sta0,cmap = None,clevs = None,point_size = None,fix_size = True,title = None,threshold = 2,min_spot_value = 0,mean_value = 2,
+                grid = False,add_colorbar = True,alpha = None):
+    sta = sta0
+    if isinstance(map_extend, list):
+        slon = map_extend[0]
+        elon = map_extend[1]
+        slat = map_extend[2]
+        elat = map_extend[3]
+        rlon = elon - slon
+        rlat = elat - slat
+    else:
+        slon = map_extend.slon
+        slat = map_extend.slat
+        elon = map_extend.elon
+        elat = map_extend.elat
+        rlon = map_extend.elon - map_extend.slon
+        rlat = map_extend.elat - map_extend.slat
+
+    sta_without_iv = meteva.base.sele.not_IV(sta)
+
+    values = sta_without_iv.iloc[:, -1].values
+
+    vmax_v = np.max(sta_without_iv.iloc[:,-1].values)
+    vmin_v = np.min(sta_without_iv.iloc[:,-1].values)
+
+    cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap, clevs=clevs, vmin=vmin_v, vmax=vmax_v)
+
+    norm = BoundaryNorm(clevs1, ncolors=cmap1.N - 1)
+    fig = plt.gcf()
+    map_width = ax.bbox.width/fig.dpi
+
+    if point_size is None:
+        sta_id1 = sta0.drop_duplicates(['id'])
+        sta_dis = meteva.base.sta_dis_ensemble_near_by_sta(sta_id1, nearNum=2)
+        dis_values = sta_dis["data1"].values
+        dis_values.sort()
+        dis1 = dis_values[int(len(dis_values) * 0.02) + 1]/1.2
+        point_size = (map_width * dis1 / rlon) ** 2
+        # point_size = 100 * map_area / len(sta.index)
+        # print("**************")
+        # print(point_size)
+        if (point_size > 30): point_size = 30
+        if (point_size < 0.5):
+            point_size = 0.5
+            if alpha is None:
+                alpha = 0.5
+        # point_size *=3
+        #left_low = (width + 0.1 - right_plots_width) / width
+
+
+    x = sta_without_iv.loc[:, "lon"].values
+    y = sta_without_iv.loc[:, "lat"].values
+    colors = values
+    if isinstance(fix_size, bool):
+        if fix_size:
+            im = ax.scatter(x, y, c=colors, cmap=cmap1, norm=norm, s=point_size,edgecolors = "face",alpha = alpha)
+        else:
+            area = point_size * np.abs(values - min_spot_value) / mean_value
+            if (threshold is not None):
+                area[np.abs(values - min_spot_value) < threshold] *= 0.1
+            im = ax.scatter(x, y, c=colors, cmap=cmap1, norm=norm, s=area,edgecolors  = 'face',alpha = alpha)
+            if grid: plt.grid()
+    else:
+        im = ax.scatter(x, y, c=colors, cmap=cmap1, norm=norm, s=fix_size,edgecolors  = 'face',alpha = alpha)
+
+
+    if add_colorbar:
+        width = fig.bbox.width / fig.dpi
+        height = fig.bbox.height / fig.dpi
+        location = [ax.bbox.x1 / fig.dpi / width + 0.005, ax.bbox.y0 / fig.dpi / height, 0.01,
+                    ax.bbox.height / fig.dpi / height]
+
+        if (add_colorbar):
+            colorbar_position = fig.add_axes(location)  # 位置[左,下,宽,高]
+            plt.colorbar(im, cax=colorbar_position)
+    return im
+
+
 
 
 

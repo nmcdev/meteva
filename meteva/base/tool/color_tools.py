@@ -89,6 +89,7 @@ def clev_cmap_cloud_total_error():
     print("不再推荐使用该函数，推荐使用meb.def_cmap_clevs相应功能,请参考color工具中相关说明")
     return clevs, cmap
 
+
 def cmap_clevs_temper_2m_error():
     clevs1 = [-20,-12,-8,-6,-4,-2,-1]
     nclev = len(clevs1)
@@ -103,9 +104,7 @@ def cmap_clevs_temper_2m_error():
     for i in range(nclev):
         colors_list.append(colors0(nclev - 1 - i))
     clevs1.extend(clevs2)
-
     cmap = colors.ListedColormap(colors_list, 'indexed')
-
     return cmap, clevs1
 
 
@@ -138,6 +137,38 @@ def cmap_clevs_bias(vmax):
         cmap_list.append((red * (vmax - value) + black * (value - 2)) / (vmax - 2))
     cmap = colors.ListedColormap(cmap_list, 'indexed')
     return cmap,clev_list
+
+
+def cmap_clevs_temper_error_br(vmax):
+    blue = np.array([0, 0, 255]) / 255
+    white = np.array([255, 255, 255]) / 255
+    red = np.array([255, 0, 0]) / 255
+    black = np.array([0, 0, 0]) / 255
+    clev_list = []
+    cmap_list = []
+
+    vmax = int(math.ceil(vmax))
+
+    if vmax > 5:
+        for value in range(-vmax, -5):
+            clev_list.append(value)
+            cmap_list.append((blue * (value + vmax) + black * (-5 - value)) / (vmax -5))
+
+    for v in range(-5,0):
+        clev_list.append(v)
+        cmap_list.append((blue * (-v) + white * (5+v))/5)
+    for v in range(0,6):
+        clev_list.append(v)
+        cmap_list.append((white * (5 - v) + red*v)/5)
+
+    if vmax>5:
+        for value in range(6, vmax):
+            clev_list.append(value)
+            cmap_list.append((red * (vmax - value) + black * (value-5)) / (vmax - 5))
+
+    cmap = colors.ListedColormap(cmap_list, 'indexed')
+    return cmap,clev_list
+
 
 def cmap_clevs_me(vmin,vmax):
 
@@ -576,6 +607,10 @@ def get_cmap_and_clevs_by_name(cmap_name,vmin,vmax):
         cmap, clevs = cmap_clevs_mode(vmax)
     elif cmap_name == "temper_2m_error":
         cmap, clevs = cmap_clevs_temper_2m_error()
+
+    elif cmap_name == "temper_error_br":
+        cmap, clevs = cmap_clevs_temper_error_br(vmax)
+
     else:
         print("该配色方案名称不识别")
         return None,None
@@ -606,6 +641,8 @@ class cmaps:
     mr = "mr"
     mode = "mode"
     me = "me"
+    temper_error_br ="temper_error_br"
+
 
 
 
