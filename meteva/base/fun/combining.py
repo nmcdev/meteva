@@ -34,13 +34,13 @@ def combine_join(sta, sta1):
 
 
 # 两个站点信息合并为一个，以站号为公共部分，在原有的dataframe的基础上增加列数
-def combine_on_id(sta, sta1):
+def combine_on_id(sta, sta1,how = "inner"):
     if sta is None:
         return sta1
     elif sta1 is None:
         return sta
     else:
-        df = pd.merge(sta, sta1, on='id', how='inner')
+        df = pd.merge(sta, sta1, on='id', how=how)
         columns = list(sta.columns)
         len_sta = len(columns)
         # 删除合并后第二组时空坐标信息

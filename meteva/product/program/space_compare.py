@@ -8,6 +8,7 @@ from sklearn.linear_model import LinearRegression
 import meteva
 from meteva.base import IV
 import math
+from matplotlib.colors import BoundaryNorm
 import copy
 
 
@@ -859,7 +860,8 @@ def rain_comprehensive_chinaland_sg(sta_ob,grd_fo,grade_list, save_path=None,sho
     plt.close()
     return
 
-def temper_gg(grd_ob,grd_fo,save_path = None,show = False,dpi = 200,add_county_line = False,grd_ob_name = "实况",grd_fo_name = "预报"):
+def temper_gg(grd_ob,grd_fo,save_path = None,show = False,dpi = 200,add_county_line = False,ob_name = "实况",fo_name = "预报",grd_ob_name = None,grd_fo_name = None):
+
 
     ob_min = np.min(grd_ob.values)
     fo_min = np.min(grd_fo.values)
@@ -868,6 +870,7 @@ def temper_gg(grd_ob,grd_fo,save_path = None,show = False,dpi = 200,add_county_l
 
     ob_fo_max = max(ob_max,fo_max)
     ob_fo_min = min(ob_min,fo_min)
+
     if ob_fo_max > 120:
         cmap_temp,clevs_temp = meteva.base.tool.color_tools.clev_cmap_temper_2m_k()
     else:
@@ -879,12 +882,22 @@ def temper_gg(grd_ob,grd_fo,save_path = None,show = False,dpi = 200,add_county_l
     width_colorbar = 0.6
     height_title = 0.3
     height_veri_plot = 0.5
-
+    #meteva.base.reset(grd_fo)
     grid0 = meteva.base.get_grid_of_data(grd_fo)
-    if(grid0.nlon <= grid0.nlat * 0.5):
+    rlat = grid0.elat - grid0.slat
+    rlon = grid0.elon - grid0.slon
+
+    if grd_ob_name is not None:
+        print("warming: 参数 grd_ob_name将废弃，请用参数ob_name替代")
+        ob_name = grd_ob_name
+    if grd_fo_name is not None:
+        print("warming: 参数 grd_fo_name将废弃， 请用参数fo_name替代")
+        fo_name = grd_fo_name
+
+    if(rlon <= rlat * 0.5):
         #采用3*1布局
         width_map = (width - 2 * width_colorbar) / 3
-        height_map = (grid0.nlat/ grid0.nlon) * width_map
+        height_map = (rlat/ rlon) * width_map
         height = height_map + height_title + height_veri_plot
         rect1 = [width_colorbar/width, height_veri_plot/ height, width_map/width , height_map/height]  # 实况
         rect2 = [(1 * width_map +width_colorbar)/width, height_veri_plot / height, width_map/width ,  height_map/height] # 预报
@@ -895,7 +908,7 @@ def temper_gg(grd_ob,grd_fo,save_path = None,show = False,dpi = 200,add_county_l
     else:
         #采用1*2 + 1 布局
         width_map = (width - 2 * width_colorbar) / 1.5
-        height_map = (grid0.nlat / grid0.nlon) * width_map
+        height_map = (rlat/ rlon) * width_map
         height = height_map + height_title + height_veri_plot
         rect1 = [(width_colorbar -0.03)/width, (height_veri_plot + 0.5 * height_map) / height, 0.5 * width_map/width , 0.5* height_map/height]  # 实况
         rect2 = [(width_colorbar -0.03)/width, height_veri_plot / height, 0.5 * width_map/width , 0.5* height_map/height] # 预报
@@ -933,7 +946,7 @@ def temper_gg(grd_ob,grd_fo,save_path = None,show = False,dpi = 200,add_county_l
     plt.xticks([])
     plt.yticks([])
     plot_grid = ax1.contourf(x, y, grd_ob.values.squeeze(), levels=clevs, cmap=cmap)  # 填色图
-    ax1.set_title(grd_ob_name,fontsize=18,loc="left",y = 0.0)
+    ax1.set_title(ob_name,fontsize=18,loc="left",y = 0.0)
     colorbar_position_grid = fig.add_axes(ob_fo_colorbar_box)  # 位置[左,下,宽,高]
     plt.colorbar(plot_grid, cax=colorbar_position_grid, orientation='vertical')
     #plt.title("温度(℃)", fontsize=8,verticalalignment='bottom')
@@ -947,10 +960,9 @@ def temper_gg(grd_ob,grd_fo,save_path = None,show = False,dpi = 200,add_county_l
     plt.xticks([])
     plt.yticks([])
     ax2.contourf(x, y, grd_fo.values.squeeze(), levels = clevs,cmap=cmap)  # 填色图
-    ax2.set_title(grd_fo_name, fontsize=18, loc="left",y = 0.0)
+    ax2.set_title(fo_name, fontsize=18, loc="left",y = 0.0)
 
-    clevs1 = [-5,-4,-3,-2,-1.5,-1,-0.5,0,0.5,1,1.5,2,3,4,5]
-
+    #clevs1 = [-5,-4,-3,-2,-1.5,-1,-0.5,0,0.5,1,1.5,2,3,4,5]
 
     ax3 = plt.axes(rect3)
     add_china_map_2basemap(ax3, name='province', edgecolor='k', lw=0.3,encoding = 'gbk')  #"省界"
@@ -960,9 +972,12 @@ def temper_gg(grd_ob,grd_fo,save_path = None,show = False,dpi = 200,add_county_l
     ax3.set_ylim((grid0.slat, grid0.elat))
     plt.rcParams['xtick.direction'] = 'in'
     plt.rcParams['ytick.direction'] = 'in'
-    plot_grid1 = ax3.contourf(x, y,error , clevs1,cmap = "bwr")  # 填色图
+    #plot_grid1 = ax3.contourf(x, y,error , clevs1,cmap = "bwr")  # 填色图
+    cmap1, clevs1 = meteva.base.color_tools.def_cmap_clevs(cmap=meteva.base.cmaps.temper_2m_error)
+    norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
+    plot_grid1 = ax3.contourf(x, y, error,    levels = clevs1, cmap = cmap1, norm = norm)  # 填色图
     colorbar_position_grid1 = fig.add_axes(error_colorbar_box)  # 位置[左,下,宽,高]
-    title_error = grd_fo_name + ' - ' + grd_ob_name
+    title_error = fo_name + ' - ' + ob_name
     ax3.set_title(title_error,fontsize=18, loc="left",y = 0.0)
     plt.colorbar(plot_grid1, cax=colorbar_position_grid1, orientation='vertical')
     plt.title("误差(℃)", fontsize=8, verticalalignment='bottom')
@@ -989,7 +1004,7 @@ def temper_gg(grd_ob,grd_fo,save_path = None,show = False,dpi = 200,add_county_l
         plt.show()
     plt.close()
 
-def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None,show = False,dpi = 200,add_county_line = False,grd_ob_name = "实况",grd_fo_name = "预报"):
+def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None,show = False,dpi = 200,add_county_line = False,ob_name = "实况",fo_name = "预报",grd_ob_name = None,grd_fo_name = None):
 
     ob_min = np.min(grd_ob.values)
     fo_min = np.min(grd_fo.values)
@@ -1012,11 +1027,14 @@ def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None,show = False,dpi = 20
     height_title = 0.3
     height_veri_plot = 3
 
+    #meteva.base.reset(grd_fo)
     grid0 = meteva.base.get_grid_of_data(grd_fo)
-    if(grid0.nlon <= grid0.nlat * 0.5):
+    rlat = grid0.elat - grid0.slat
+    rlon = grid0.elon - grid0.slon
+    if(rlon <= rlat * 0.5):
         #采用3*1布局
         width_map = (width - 2 * width_colorbar) / 3
-        height_map = (grid0.nlat/ grid0.nlon) * width_map
+        height_map = (rlat/ rlon) * width_map
         height = height_map + height_title + height_veri_plot
         rect1 = [width_colorbar/width, height_veri_plot/ height, width_map/width , height_map/height]  # 实况
         rect2 = [(1 * width_map +width_colorbar)/width, height_veri_plot / height, width_map/width ,  height_map/height] # 预报
@@ -1027,7 +1045,7 @@ def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None,show = False,dpi = 20
     else:
         #采用1*2 + 1 布局
         width_map = (width - 2 * width_colorbar) / 1.5
-        height_map = (grid0.nlat / grid0.nlon) * width_map
+        height_map = (rlat/ rlon) * width_map
         height = height_map + height_title + height_veri_plot
         rect1 = [(width_colorbar -0.03)/width, (height_veri_plot + 0.5 * height_map) / height, 0.5 * width_map/width , 0.5* height_map/height]  # 实况
         rect2 = [(width_colorbar -0.03)/width, height_veri_plot / height, 0.5 * width_map/width , 0.5* height_map/height] # 预报
@@ -1044,6 +1062,12 @@ def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None,show = False,dpi = 20
     # 平面对比图1
 
 
+    if grd_ob_name is not None:
+        print("warming: 参数 grd_ob_name将废弃，请用参数ob_name替代")
+        ob_name = grd_ob_name
+    if grd_fo_name is not None:
+        print("warming: 参数 grd_fo_name将废弃， 请用参数fo_name替代")
+        fo_name = grd_fo_name
 
     # 设置地图背景
 
@@ -1063,7 +1087,7 @@ def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None,show = False,dpi = 20
     plt.xticks([])
     plt.yticks([])
     plot_grid = ax1.contourf(x, y, grd_ob.values.squeeze(), levels = clevs,cmap=cmap)  # 填色图
-    ax1.set_title(grd_ob_name,fontsize=18,loc="left",y = 0.0)
+    ax1.set_title(ob_name,fontsize=18,loc="left",y = 0.0)
     colorbar_position_grid = fig.add_axes(ob_fo_colorbar_box)  # 位置[左,下,宽,高]
     plt.colorbar(plot_grid, cax=colorbar_position_grid, orientation='vertical')
     plt.title("温度(℃)", fontsize=8,verticalalignment='bottom')
@@ -1077,7 +1101,7 @@ def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None,show = False,dpi = 20
     ax2.set_xlim((grid0.slon, grid0.elon))
     ax2.set_ylim((grid0.slat, grid0.elat))
     ax2.contourf(x, y, grd_fo.values.squeeze(), levels = clevs,cmap=cmap)  # 填色图
-    ax2.set_title(grd_fo_name, fontsize=18, loc="left",y = 0.0)
+    ax2.set_title(fo_name, fontsize=18, loc="left",y = 0.0)
 
     clevs1 = [-5,-4,-3,-2,-1.5,-1,-0.5,0,0.5,1,1.5,2,3,4,5]
     error = grd_fo.values.squeeze() - grd_ob.values.squeeze()
@@ -1089,9 +1113,13 @@ def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None,show = False,dpi = 20
     ax3.set_xlim((grid0.slon, grid0.elon))
     ax3.set_ylim((grid0.slat, grid0.elat))
 
-    plot_grid1 = ax3.contourf(x, y,error , clevs1,cmap = "bwr")  # 填色图
+    #plot_grid1 = ax3.contourf(x, y,error , clevs1,cmap = "bwr")  # 填色图
+    #cmap1,clevs1 = meteva.base.color_tools.def_cmap_clevs(cmap=meteva.base.cmaps.temper_error_br,vmax= np.max(np.abs(error)))
+    cmap1, clevs1 = meteva.base.color_tools.def_cmap_clevs(cmap=meteva.base.cmaps.temper_2m_error)
+    norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
+    plot_grid1 = ax3.contourf(x, y, error,    levels = clevs1, cmap = cmap1, norm = norm)  # 填色图
     colorbar_position_grid1 = fig.add_axes(error_colorbar_box)  # 位置[左,下,宽,高]
-    title_error = grd_fo_name + ' - ' + grd_ob_name
+    title_error = fo_name + ' - ' + ob_name
     ax3.set_title(title_error,fontsize=18, loc="left",y = 0.0,color = "k")
     plt.colorbar(plot_grid1, cax=colorbar_position_grid1, orientation='vertical')
     plt.title("误差(℃)", fontsize=8, verticalalignment='bottom')
@@ -1132,8 +1160,8 @@ def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None,show = False,dpi = 20
     ax2.plot(ob_line, ob_line, '--', color="k")
     ax2.set_xlim(num_min, num_max)
     ax2.set_ylim(num_min, num_max)
-    ax2.set_xlabel("预报",fontsize=10)
-    ax2.set_ylabel("观测",fontsize=10)
+    ax2.set_xlabel(fo_name,fontsize=10)
+    ax2.set_ylabel(ob_name,fontsize=10)
     rg_text2 = "Y = " + '%.2f' % (clf.coef_[0]) + "* X + " + '%.2f' % (clf.intercept_)
     ax2.text(num_min + 0.05 * dmm, num_min + 0.90 * dmm, rg_text2, fontsize=15, color="r")
 
@@ -1165,8 +1193,8 @@ def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None,show = False,dpi = 20
     ax5 = plt.axes(rect5)
     # ax5.plot(p_ob, color='r',label="Obs")
     # ax5.plot(p_fo, color='b',label="Pred")
-    ax5.bar(x + 0.5, p_ob, width=0.4,color='r', label="实况")
-    ax5.bar(x + 1.1, p_fo, width=0.4,color="b", label="预报")
+    ax5.bar(x + 0.5, p_ob, width=0.4,color='r', label=ob_name)
+    ax5.bar(x + 1.1, p_fo, width=0.4,color="b", label=fo_name)
     ax5.legend(loc="upper right")
     ax5.set_xlabel("等级", fontsize=10)
     ax5.set_ylabel("站点数", fontsize=10)
@@ -1214,6 +1242,859 @@ def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None,show = False,dpi = 20
     if show:
         plt.show()
     plt.close()
+
+def temper_comprehensive_sg(sta_ob,grd_fo,save_path = None,show = False,dpi = 200,add_county_line = False,ob_name = "观测",fo_name = "预报"):
+
+    #meteva.base.reset(grd_fo)
+    grid0 = meteva.base.get_grid_of_data(grd_fo)
+    rlat = grid0.elat - grid0.slat
+    rlon = grid0.elon - grid0.slon
+    sta_ob1 = meteva.base.sele_by_para(sta_ob,grid=grid0)
+    sta_fo1 = meteva.base.interp_gs_linear(grd_fo,sta_ob1)
+
+    ob_min = np.min(sta_ob1.iloc[:,-1].values)
+    fo_min = np.min(grd_fo.values)
+    ob_max = np.max(sta_ob1.iloc[:,-1].values)
+    fo_max = np.max(grd_fo.values)
+
+    ob_fo_max = max(ob_max,fo_max)
+    ob_fo_min = min(ob_min,fo_min)
+    #clevs_temp, cmap_temp = meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("temp")
+
+    if ob_fo_max > 120:
+        cmap_temp,clevs_temp= meteva.base.tool.color_tools.clev_cmap_temper_2m_k()
+    else:
+        cmap_temp,clevs_temp = meteva.base.tool.color_tools.get_cmap_and_clevs_by_element_name("temp")
+
+    cmap, clevs = meteva.base.tool.color_tools.get_part_cmap_and_clevs(cmap_temp,clevs_temp,ob_fo_max,ob_fo_min)
+
+    width = 9  #整个画面的宽度
+    width_colorbar = 0.6
+    height_title = 0.3
+    height_veri_plot = 3
+
+    if(rlon <= rlat * 0.5):
+        #采用3*1布局
+        width_map = (width - 2 * width_colorbar) / 3
+        height_map = (rlat/ rlon) * width_map
+        height = height_map + height_title + height_veri_plot
+        rect1 = [width_colorbar/width, height_veri_plot/ height, width_map/width , height_map/height]  # 实况
+        rect2 = [(1 * width_map +width_colorbar)/width, height_veri_plot / height, width_map/width ,  height_map/height] # 预报
+        rect3 = [(2 * width_map +width_colorbar+0.05)/width, height_veri_plot / height, width_map/width , height_map/height]  # 误差
+        ob_fo_colorbar_box = [0.02,height_veri_plot / height,0.015,height_map/height]
+        error_colorbar_box = [(3 * width_map +width_colorbar+0.05)/width,height_veri_plot / height,0.015,height_map/height]
+
+    else:
+        #采用1*2 + 1 布局
+        width_map = (width - 2 * width_colorbar) / 1.5
+        height_map = (rlat/ rlon) * width_map
+        height = height_map + height_title + height_veri_plot
+        rect1 = [(width_colorbar -0.03)/width, (height_veri_plot + 0.5 * height_map) / height, 0.5 * width_map/width , 0.5* height_map/height]  # 实况
+        rect2 = [(width_colorbar -0.03)/width, height_veri_plot / height, 0.5 * width_map/width , 0.5* height_map/height] # 预报
+        rect3 = [(0.5 * width_map +width_colorbar)/width, height_veri_plot / height, width_map/width , height_map/height]  # 误差
+        ob_fo_colorbar_box = [0.02,height_veri_plot / height,0.01,height_map/height]
+        error_colorbar_box = [(1.5 * width_map +width_colorbar+0.05)/width,height_veri_plot / height,0.01,height_map/height]
+
+    rect4 = [0.05, 0.06, 0.26, height_veri_plot / height-0.1]  # 散点回归图，左下宽高
+    rect5 = [0.38, 0.06, 0.28, height_veri_plot / height-0.1]  # 频率柱状图， 左下宽高
+    rect6 = [0.67, 0.01, 0.3, height_veri_plot / height-0.03]  # 左下宽高
+    rect_title = [ width_colorbar/width,(height_veri_plot+ height_map)/height,1-2*width_colorbar/width, 0.001]
+
+    fig = plt.figure(figsize=(width, height))
+    # 平面对比图1
+
+
+
+    # 设置地图背景
+    ax1 = plt.axes(rect1)
+    add_china_map_2basemap(ax1, name='province', edgecolor='k', lw=0.3,encoding = 'gbk')  #"省界"
+    if add_county_line:
+        add_china_map_2basemap(ax1, name="county", edgecolor='k', lw=0.2, encoding='gbk')  # "县界"
+    ax1.set_xlim((grid0.slon, grid0.elon))
+    ax1.set_ylim((grid0.slat, grid0.elat))
+
+
+
+    #clevs = [-10,0,15,20,22,24,26,28,30,32,34,35]
+    #colors_grid = ["#00AAAA","#009500","#808000", "#BFBF00","#FFFF00","#FFD400","#FFAA00","#FF7F00","#FF0000","#FF002A","#FF0055","#FF0055"]
+    plt.xticks([])
+    plt.yticks([])
+
+    #plot_ob = ax1.contourf(x, y, grd_ob.values.squeeze(), levels = clevs,cmap=cmap)  # 填色图
+    plot_ob = meteva.base.plot_tools.add_scatter(ax1,grid0,sta_ob1,cmap=meteva.base.cmaps.temp_2m,alpha=1)
+
+    ax1.set_title(ob_name,fontsize=18,loc="left",y = 0.0)
+    colorbar_position_grid = fig.add_axes(ob_fo_colorbar_box)  # 位置[左,下,宽,高]
+    plt.colorbar(plot_ob, cax=colorbar_position_grid, orientation='vertical')
+    plt.title("温度(℃)", fontsize=8,verticalalignment='bottom')
+
+    ax2 = plt.axes(rect2)
+    plt.xticks([])
+    plt.yticks([])
+    add_china_map_2basemap(ax2, name='province', edgecolor='k', lw=0.3,encoding = 'gbk')  #"省界"
+    if add_county_line:
+        add_china_map_2basemap(ax2, name="county", edgecolor='k', lw=0.2, encoding='gbk')  # "县界"
+    ax2.set_xlim((grid0.slon, grid0.elon))
+    ax2.set_ylim((grid0.slat, grid0.elat))
+    # 绘制格点预报场
+    x = np.arange(grid0.nlon) * grid0.dlon + grid0.slon
+    y = np.arange(grid0.nlat) * grid0.dlat + grid0.slat
+    ax2.contourf(x, y, grd_fo.values.squeeze(), levels = clevs,cmap=cmap)  # 填色图
+    ax2.set_title(fo_name, fontsize=18, loc="left",y = 0.0)
+
+
+    error_sta = meteva.base.minus_on_id(sta_fo1,sta_ob1)
+    #error_grd = meteva.base.interp_sg_idw_delta(error_sta,grid0,halfR=300)
+
+    ax3 = plt.axes(rect3)
+    add_china_map_2basemap(ax3, name='province', edgecolor='k', lw=0.3,encoding = 'gbk')  #"省界"
+    if add_county_line:
+        add_china_map_2basemap(ax3, name="county", edgecolor='k', lw=0.2, encoding='gbk')  # "县界"
+    ax3.set_xlim((grid0.slon, grid0.elon))
+    ax3.set_ylim((grid0.slat, grid0.elat))
+
+    #plot_grid1 = ax3.contourf(x, y,error , clevs1,cmap = "bwr")  # 填色图
+    #cmap1,clevs1 = meteva.base.color_tools.def_cmap_clevs(cmap=meteva.base.cmaps.temper_error_br,vmax= np.max(np.abs(error)))
+    #cmap1, clevs1 = meteva.base.color_tools.def_cmap_clevs(cmap=meteva.base.cmaps.temper_2m_error)
+    #norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
+    #plot_grid1 = ax3.contourf(x, y, error,    levels = clevs1, cmap = cmap1, norm = norm)  # 填色图
+    plot_error = meteva.base.plot_tools.add_scatter(ax3,grid0,error_sta,cmap=meteva.base.cmaps.temper_2m_error,alpha=1)
+    colorbar_position_grid1 = fig.add_axes(error_colorbar_box)  # 位置[左,下,宽,高]
+    title_error = fo_name + ' - ' + ob_name
+    ax3.set_title(title_error,fontsize=18, loc="left",y = 0.0,color = "k")
+    plt.colorbar(plot_error, cax=colorbar_position_grid1, orientation='vertical')
+    plt.title("误差(℃)", fontsize=8, verticalalignment='bottom')
+
+    time_str = meteva.base.tool.time_tools.time_to_str(grid0.gtime[0])
+    dati_str = time_str[0:4] + "年" + time_str[4:6] + "月" + time_str[6:8] + "日" + time_str[8:10] + "时"
+    if type(grid0.members[0]) == str:
+        model_name = grid0.members[0]
+    else:
+        model_name = str(grid0.members[0])
+
+    title = model_name + " " + dati_str + "起报" + str(grid0.dtimes[0]) + "H时效预报和实况对比及误差"
+    ax_title = plt.axes(rect_title)
+    ax_title.axes.set_axis_off()
+    ax_title.set_title(title)
+
+    # 散点回归图
+    ax2 = plt.axes(rect4)
+    # 保证这两个值的正确性
+    ob = sta_ob1.iloc[:,-1].values
+    fo = sta_fo1.iloc[:,-1].values
+    X = np.zeros((len(fo), 1))
+    X[:, 0] = fo
+    clf = LinearRegression().fit(X, ob)
+    num_max = max(np.max(ob), np.max(fo))
+    num_min = min(np.min(ob), np.min(fo))
+    dmm = num_max - num_min
+    if (num_min != 0):
+        num_min -= 0.1 * dmm
+    num_max += dmm * 0.1
+    dmm = num_max - num_min
+    ob_line = np.arange(num_min, num_max, dmm / 30)
+    X = np.zeros((len(ob_line), 1))
+    X[:, 0] = ob_line
+    fo_rg = clf.predict(X)
+    ax2.plot(fo, ob, '.', color='b',markersize=1)
+    ax2.plot(ob_line, fo_rg, color="r")
+    ax2.plot(ob_line, ob_line, '--', color="k")
+    ax2.set_xlim(num_min, num_max)
+    ax2.set_ylim(num_min, num_max)
+    ax2.set_xlabel(fo_name,fontsize=10)
+    ax2.set_ylabel(ob_name,fontsize=10)
+    rg_text2 = "Y = " + '%.2f' % (clf.coef_[0]) + "* X + " + '%.2f' % (clf.intercept_)
+    ax2.text(num_min + 0.05 * dmm, num_min + 0.90 * dmm, rg_text2, fontsize=15, color="r")
+
+    # 设置次刻度间隔
+    xmi = 1
+    if (np.max(ob) > 100): xmi = 2
+    ymi = 1
+    if (np.max(fo) > 100): ymi = 2
+    xmajorLocator = mpl.ticker.MultipleLocator(10 * xmi)  # 将x主刻度标签设置为次刻度10倍
+    ymajorLocator = mpl.ticker.MultipleLocator(10 * ymi)  # 将y主刻度标签设置为次刻度10倍
+    ax2.xaxis.set_major_locator(xmajorLocator)
+    ax2.yaxis.set_major_locator(ymajorLocator)
+    xminorLocator = mpl.ticker.MultipleLocator(xmi)  # 将x轴次刻度标签设置xmi
+    yminorLocator = mpl.ticker.MultipleLocator(ymi)  # 将y轴次刻度标签设置ymi
+    ax2.xaxis.set_minor_locator(xminorLocator)
+    ax2.yaxis.set_minor_locator(yminorLocator)
+
+    #折线图
+    # 绘制频率柱状图
+    p_ob = np.zeros(len(clevs)-1)
+    p_fo = np.zeros(len(clevs)-1)
+    x = clevs[0:-1]
+    for i in range(len(clevs) - 1):
+        index0 = np.where((ob >= clevs[i]) & (ob < clevs[i + 1]))
+        p_ob[i] = len(index0[0])
+        index0 = np.where((fo >= clevs[i]) & (fo < clevs[i + 1]))
+        p_fo[i] = len(index0[0])
+
+    ax5 = plt.axes(rect5)
+    # ax5.plot(p_ob, color='r',label="Obs")
+    # ax5.plot(p_fo, color='b',label="Pred")
+    ax5.bar(x + 0.5, p_ob, width=0.4,color='r', label=ob_name)
+    ax5.bar(x + 1.1, p_fo, width=0.4,color="b", label=fo_name)
+    ax5.legend(loc="upper right")
+    ax5.set_xlabel("等级", fontsize=10)
+    ax5.set_ylabel("站点数", fontsize=10)
+    #ax5.set_title("频率统计图", fontsize=10)
+    ax5.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(1000))
+    maxy = max(np.max(p_fo),np.max(p_ob)) * 1.4
+    ax5.set_ylim(0,maxy)
+
+    #检验效果图
+    # 绘制降水站点实况预报统计表
+    ax6 = plt.axes(rect6)
+    ax6.axes.set_axis_off()
+    ob_mean = np.mean(ob)
+    fo_mean = np.mean(fo)
+
+
+    maee = meteva.method.continuous.score.mae(ob, fo)
+    mee = meteva.method.continuous.score.me(ob, fo)
+    msee = meteva.method.continuous.score.mse(ob, fo)
+    rmsee = meteva.method.continuous.score.rmse(ob, fo)
+    bias_ce = meteva.method.continuous.score.bias_m(ob, fo)
+    cor = meteva.method.continuous.score.corr(ob,fo)
+
+
+    text = "格点检验统计量 n=" + str(len(ob)) + "\n"
+    text += "==============================================\n"
+    text += "                     实况               预报   \n"
+    text += "----------------------------------------------\n"
+    text += "平均温度         " + "%8.2f" % (ob_mean) + "%20.2f" % (fo_mean) + "\n\n"
+    text += "温度范围    " + "%8.2f" % (ob_min)+ "~%6.2f" % (ob_max) +"%12.2f" % (fo_min)+ "~%6.2f" % (fo_max) + "\n\n"
+    text += "==============================================\n\n"
+    text += "Mean absolute error:" + "%6.2f" % maee + "\n\n"
+    text += "Mean error:" + "%6.2f" % mee + "\n\n"
+    text += "Mean-squared error:" + "%6.2f" % msee + "\n\n"
+    text += "Root mean-squared error:" + "%6.2f" % rmsee + "\n\n"
+    text += "Bias:" + "%6.2f" % bias_ce + "\n\n"
+    text += "Correctlation coefficiant:" + "%6.2f" % cor + "\n"
+    plt.text(0, 0, text, fontsize=9)
+
+    # 图片显示或保存
+    if(save_path is not None):
+        plt.savefig(save_path, dpi=dpi,bbox_inches='tight')
+    else:
+        show = True
+    if show:
+        plt.show()
+    plt.close()
+
+
+
+def temper_sg(sta_ob,grd_fo,save_path = None,show = False,dpi = 200,add_county_line = False,ob_name = "观测",fo_name = "预报"):
+
+    #meteva.base.reset(grd_fo)
+    grid0 = meteva.base.get_grid_of_data(grd_fo)
+    rlat = grid0.elat - grid0.slat
+    rlon = grid0.elon - grid0.slon
+    sta_ob1 = meteva.base.sele_by_para(sta_ob,grid=grid0)
+    sta_fo1 = meteva.base.interp_gs_linear(grd_fo,sta_ob1)
+
+    ob_min = np.min(sta_ob1.iloc[:,-1].values)
+    fo_min = np.min(grd_fo.values)
+    ob_max = np.max(sta_ob1.iloc[:,-1].values)
+    fo_max = np.max(grd_fo.values)
+
+    ob_fo_max = max(ob_max,fo_max)
+    ob_fo_min = min(ob_min,fo_min)
+    #clevs_temp, cmap_temp = meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("temp")
+
+    if ob_fo_max > 120:
+        cmap_temp,clevs_temp= meteva.base.tool.color_tools.clev_cmap_temper_2m_k()
+    else:
+        cmap_temp,clevs_temp = meteva.base.tool.color_tools.get_cmap_and_clevs_by_element_name("temp")
+
+    cmap, clevs = meteva.base.tool.color_tools.get_part_cmap_and_clevs(cmap_temp,clevs_temp,ob_fo_max,ob_fo_min)
+
+    width = 9  #整个画面的宽度
+    width_colorbar = 0.6
+    height_title = 0.3
+    height_veri_plot = 3
+
+    if(rlon <= rlat * 0.5):
+        #采用3*1布局
+        width_map = (width - 2 * width_colorbar) / 3
+        height_map = (rlat/ rlon) * width_map
+        height = height_map + height_title + height_veri_plot
+        rect1 = [width_colorbar/width, height_veri_plot/ height, width_map/width , height_map/height]  # 实况
+        rect2 = [(1 * width_map +width_colorbar)/width, height_veri_plot / height, width_map/width ,  height_map/height] # 预报
+        rect3 = [(2 * width_map +width_colorbar+0.05)/width, height_veri_plot / height, width_map/width , height_map/height]  # 误差
+        ob_fo_colorbar_box = [0.02,height_veri_plot / height,0.015,height_map/height]
+        error_colorbar_box = [(3 * width_map +width_colorbar+0.05)/width,height_veri_plot / height,0.015,height_map/height]
+
+    else:
+        #采用1*2 + 1 布局
+        width_map = (width - 2 * width_colorbar) / 1.5
+        height_map = (rlat/ rlon) * width_map
+        height = height_map + height_title + height_veri_plot
+        rect1 = [(width_colorbar -0.03)/width, (height_veri_plot + 0.5 * height_map) / height, 0.5 * width_map/width , 0.5* height_map/height]  # 实况
+        rect2 = [(width_colorbar -0.03)/width, height_veri_plot / height, 0.5 * width_map/width , 0.5* height_map/height] # 预报
+        rect3 = [(0.5 * width_map +width_colorbar)/width, height_veri_plot / height, width_map/width , height_map/height]  # 误差
+        ob_fo_colorbar_box = [0.02,height_veri_plot / height,0.01,height_map/height]
+        error_colorbar_box = [(1.5 * width_map +width_colorbar+0.05)/width,height_veri_plot / height,0.01,height_map/height]
+
+    rect4 = [0.05, 0.06, 0.26, height_veri_plot / height-0.1]  # 散点回归图，左下宽高
+    rect5 = [0.38, 0.06, 0.28, height_veri_plot / height-0.1]  # 频率柱状图， 左下宽高
+    rect6 = [0.67, 0.01, 0.3, height_veri_plot / height-0.03]  # 左下宽高
+    rect_title = [ width_colorbar/width,(height_veri_plot+ height_map)/height,1-2*width_colorbar/width, 0.001]
+
+    fig = plt.figure(figsize=(width, height))
+    # 平面对比图1
+
+
+
+    # 设置地图背景
+    ax1 = plt.axes(rect1)
+    add_china_map_2basemap(ax1, name='province', edgecolor='k', lw=0.3,encoding = 'gbk')  #"省界"
+    if add_county_line:
+        add_china_map_2basemap(ax1, name="county", edgecolor='k', lw=0.2, encoding='gbk')  # "县界"
+    ax1.set_xlim((grid0.slon, grid0.elon))
+    ax1.set_ylim((grid0.slat, grid0.elat))
+
+
+
+    #clevs = [-10,0,15,20,22,24,26,28,30,32,34,35]
+    #colors_grid = ["#00AAAA","#009500","#808000", "#BFBF00","#FFFF00","#FFD400","#FFAA00","#FF7F00","#FF0000","#FF002A","#FF0055","#FF0055"]
+    plt.xticks([])
+    plt.yticks([])
+
+    #plot_ob = ax1.contourf(x, y, grd_ob.values.squeeze(), levels = clevs,cmap=cmap)  # 填色图
+    plot_ob = meteva.base.plot_tools.add_scatter(ax1,grid0,sta_ob1,cmap=meteva.base.cmaps.temp_2m,alpha=1)
+
+    ax1.set_title(ob_name,fontsize=18,loc="left",y = 0.0)
+    colorbar_position_grid = fig.add_axes(ob_fo_colorbar_box)  # 位置[左,下,宽,高]
+    plt.colorbar(plot_ob, cax=colorbar_position_grid, orientation='vertical')
+    plt.title("温度(℃)", fontsize=8,verticalalignment='bottom')
+
+    ax2 = plt.axes(rect2)
+    plt.xticks([])
+    plt.yticks([])
+    add_china_map_2basemap(ax2, name='province', edgecolor='k', lw=0.3,encoding = 'gbk')  #"省界"
+    if add_county_line:
+        add_china_map_2basemap(ax2, name="county", edgecolor='k', lw=0.2, encoding='gbk')  # "县界"
+    ax2.set_xlim((grid0.slon, grid0.elon))
+    ax2.set_ylim((grid0.slat, grid0.elat))
+    # 绘制格点预报场
+    x = np.arange(grid0.nlon) * grid0.dlon + grid0.slon
+    y = np.arange(grid0.nlat) * grid0.dlat + grid0.slat
+    ax2.contourf(x, y, grd_fo.values.squeeze(), levels = clevs,cmap=cmap)  # 填色图
+    ax2.set_title(fo_name, fontsize=18, loc="left",y = 0.0)
+
+
+    error_sta = meteva.base.minus_on_id(sta_fo1,sta_ob1)
+    #error_grd = meteva.base.interp_sg_idw_delta(error_sta,grid0,halfR=300)
+
+    ax3 = plt.axes(rect3)
+    add_china_map_2basemap(ax3, name='province', edgecolor='k', lw=0.3,encoding = 'gbk')  #"省界"
+    if add_county_line:
+        add_china_map_2basemap(ax3, name="county", edgecolor='k', lw=0.2, encoding='gbk')  # "县界"
+    ax3.set_xlim((grid0.slon, grid0.elon))
+    ax3.set_ylim((grid0.slat, grid0.elat))
+
+    #plot_grid1 = ax3.contourf(x, y,error , clevs1,cmap = "bwr")  # 填色图
+    #cmap1,clevs1 = meteva.base.color_tools.def_cmap_clevs(cmap=meteva.base.cmaps.temper_error_br,vmax= np.max(np.abs(error)))
+    #cmap1, clevs1 = meteva.base.color_tools.def_cmap_clevs(cmap=meteva.base.cmaps.temper_2m_error)
+    #norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
+    #plot_grid1 = ax3.contourf(x, y, error,    levels = clevs1, cmap = cmap1, norm = norm)  # 填色图
+    plot_error = meteva.base.plot_tools.add_scatter(ax3,grid0,error_sta,cmap=meteva.base.cmaps.temper_2m_error,alpha=1)
+    colorbar_position_grid1 = fig.add_axes(error_colorbar_box)  # 位置[左,下,宽,高]
+    title_error = fo_name + ' - ' + ob_name
+    ax3.set_title(title_error,fontsize=18, loc="left",y = 0.0,color = "k")
+    plt.colorbar(plot_error, cax=colorbar_position_grid1, orientation='vertical')
+    plt.title("误差(℃)", fontsize=8, verticalalignment='bottom')
+
+    time_str = meteva.base.tool.time_tools.time_to_str(grid0.gtime[0])
+    dati_str = time_str[0:4] + "年" + time_str[4:6] + "月" + time_str[6:8] + "日" + time_str[8:10] + "时"
+    if type(grid0.members[0]) == str:
+        model_name = grid0.members[0]
+    else:
+        model_name = str(grid0.members[0])
+
+    title = model_name + " " + dati_str + "起报" + str(grid0.dtimes[0]) + "H时效预报和实况对比及误差"
+    ax_title = plt.axes(rect_title)
+    ax_title.axes.set_axis_off()
+    ax_title.set_title(title)
+
+
+    # 图片显示或保存
+    if(save_path is not None):
+        plt.savefig(save_path, dpi=dpi,bbox_inches='tight')
+    else:
+        show = True
+    if show:
+        plt.show()
+    plt.close()
+
+
+def temper_comprehensive_ss(sta_ob,sta_fo,map_extend = None,save_path = None,show = False,dpi = 200,add_county_line = False,ob_name = "观测",fo_name = "预报"):
+
+    sta0 = meteva.base.combine_on_id(sta_ob, sta_fo)
+    grid0 = None
+    if isinstance(map_extend, list):
+        slon = map_extend[0]
+        elon = map_extend[1]
+        slat = map_extend[2]
+        elat = map_extend[3]
+        rlon = elon - slon
+        rlat = elat - slat
+
+
+    elif isinstance(map_extend, meteva.base.grid):
+        slon = map_extend.slon
+        slat = map_extend.slat
+        elon = map_extend.elon
+        elat = map_extend.elat
+        rlon = map_extend.elon - map_extend.slon
+        rlat = map_extend.elat - map_extend.slat
+        grid0 = map_extend
+    else:
+
+        slon0 = np.min(sta0.loc[:, "lon"].values)
+        slat0 = np.min(sta0.loc[:, "lat"].values)
+        elon0 = np.max(sta0.loc[:, "lon"].values)
+        elat0 = np.max(sta0.loc[:, "lat"].values)
+        if elon0 > 180:
+            sta = sta0.copy()
+            sta.loc[sta0["lon"] > 180, "lon"] = sta0.loc[sta0["lon"] > 180, "lon"] - 360
+            slon0 = np.min(sta.loc[:, "lon"].values)
+            elon0 = np.max(sta.loc[:, "lon"].values)
+
+        dlon0 = (elon0 - slon0) * 0.03
+        if dlon0 > 1:
+            dlon0 = 1
+        dlat0 = (elon0 - slon0) * 0.03
+        if dlat0 > 1:
+            dlat0 = 1
+        slon = slon0 - dlon0
+        elon = elon0 + dlon0
+        slat = slat0 - dlat0
+        elat = elat0 + dlat0
+        rlon = elon - slon
+        rlat = elat - slat
+        map_extend = [slon,elon,slat,elat]
+
+
+    sta_ob1 = meteva.base.put_stadata_on_station(sta_ob,sta0)
+    sta_fo1 = meteva.base.put_stadata_on_station(sta_fo,sta0)
+
+    ob_min = np.min(sta_ob1.iloc[:,-1].values)
+    fo_min = np.min(sta_fo1.iloc[:,-1].values)
+    ob_max = np.max(sta_ob1.iloc[:,-1].values)
+    fo_max = np.max(sta_fo1.iloc[:,-1].values)
+
+    ob_fo_max = max(ob_max,fo_max)
+    ob_fo_min = min(ob_min,fo_min)
+    #clevs_temp, cmap_temp = meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("temp")
+
+    if ob_fo_max > 120:
+        cmap_temp,clevs_temp= meteva.base.tool.color_tools.clev_cmap_temper_2m_k()
+    else:
+        cmap_temp,clevs_temp = meteva.base.tool.color_tools.get_cmap_and_clevs_by_element_name("temp")
+
+    cmap, clevs = meteva.base.tool.color_tools.get_part_cmap_and_clevs(cmap_temp,clevs_temp,ob_fo_max,ob_fo_min)
+
+    width = 9  #整个画面的宽度
+    width_colorbar = 0.6
+    height_title = 0.3
+    height_veri_plot = 3
+
+    if(rlon <= rlat * 0.5):
+        #采用3*1布局
+        width_map = (width - 2 * width_colorbar) / 3
+        height_map = (rlat/ rlon) * width_map
+        height = height_map + height_title + height_veri_plot
+        rect1 = [width_colorbar/width, height_veri_plot/ height, width_map/width , height_map/height]  # 实况
+        rect2 = [(1 * width_map +width_colorbar)/width, height_veri_plot / height, width_map/width ,  height_map/height] # 预报
+        rect3 = [(2 * width_map +width_colorbar+0.05)/width, height_veri_plot / height, width_map/width , height_map/height]  # 误差
+        ob_fo_colorbar_box = [0.02,height_veri_plot / height,0.015,height_map/height]
+        error_colorbar_box = [(3 * width_map +width_colorbar+0.05)/width,height_veri_plot / height,0.015,height_map/height]
+
+    else:
+        #采用1*2 + 1 布局
+        width_map = (width - 2 * width_colorbar) / 1.5
+        height_map = (rlat / rlon) * width_map
+        height = height_map + height_title + height_veri_plot
+        rect1 = [(width_colorbar -0.03)/width, (height_veri_plot + 0.5 * height_map) / height, 0.5 * width_map/width , 0.5* height_map/height]  # 实况
+        rect2 = [(width_colorbar -0.03)/width, height_veri_plot / height, 0.5 * width_map/width , 0.5* height_map/height] # 预报
+        rect3 = [(0.5 * width_map +width_colorbar)/width, height_veri_plot / height, width_map/width , height_map/height]  # 误差
+        ob_fo_colorbar_box = [0.02,height_veri_plot / height,0.01,height_map/height]
+        error_colorbar_box = [(1.5 * width_map +width_colorbar+0.05)/width,height_veri_plot / height,0.01,height_map/height]
+
+    rect4 = [0.05, 0.06, 0.26, height_veri_plot / height-0.1]  # 散点回归图，左下宽高
+    rect5 = [0.38, 0.06, 0.28, height_veri_plot / height-0.1]  # 频率柱状图， 左下宽高
+    rect6 = [0.67, 0.01, 0.3, height_veri_plot / height-0.03]  # 左下宽高
+    rect_title = [ width_colorbar/width,(height_veri_plot+ height_map)/height,1-2*width_colorbar/width, 0.001]
+
+    fig = plt.figure(figsize=(width, height))
+    # 平面对比图1
+
+    # 设置地图背景
+    ax1 = plt.axes(rect1)
+    add_china_map_2basemap(ax1, name='province', edgecolor='k', lw=0.3,encoding = 'gbk')  #"省界"
+    if add_county_line:
+        add_china_map_2basemap(ax1, name="county", edgecolor='k', lw=0.2, encoding='gbk')  # "县界"
+    ax1.set_xlim((slon, elon))
+    ax1.set_ylim((slat, elat))
+
+
+
+    #clevs = [-10,0,15,20,22,24,26,28,30,32,34,35]
+    #colors_grid = ["#00AAAA","#009500","#808000", "#BFBF00","#FFFF00","#FFD400","#FFAA00","#FF7F00","#FF0000","#FF002A","#FF0055","#FF0055"]
+    plt.xticks([])
+    plt.yticks([])
+
+    #plot_ob = ax1.contourf(x, y, grd_ob.values.squeeze(), levels = clevs,cmap=cmap)  # 填色图
+    plot_ob = meteva.base.plot_tools.add_scatter(ax1,map_extend,sta_ob1,cmap=meteva.base.cmaps.temp_2m,alpha=1)
+
+    ax1.set_title(ob_name,fontsize=18,loc="left",y = 0.0)
+    colorbar_position_grid = fig.add_axes(ob_fo_colorbar_box)  # 位置[左,下,宽,高]
+    plt.colorbar(plot_ob, cax=colorbar_position_grid, orientation='vertical')
+    plt.title("温度(℃)", fontsize=8,verticalalignment='bottom')
+
+    ax2 = plt.axes(rect2)
+    plt.xticks([])
+    plt.yticks([])
+    add_china_map_2basemap(ax2, name='province', edgecolor='k', lw=0.3,encoding = 'gbk')  #"省界"
+    if add_county_line:
+        add_china_map_2basemap(ax2, name="county", edgecolor='k', lw=0.2, encoding='gbk')  # "县界"
+    #ax2.set_xlim((grid0.slon, grid0.elon))
+    #ax2.set_ylim((grid0.slat, grid0.elat))
+    # 绘制格点预报场
+    #x = np.arange(grid0.nlon) * grid0.dlon + grid0.slon
+    #y = np.arange(grid0.nlat) * grid0.dlat + grid0.slat
+    #ax2.contourf(x, y, grd_fo.values.squeeze(), levels = clevs,cmap=cmap)  # 填色图
+    plot_fo = meteva.base.plot_tools.add_scatter(ax2, map_extend, sta_fo1, cmap=meteva.base.cmaps.temp_2m,alpha=1)
+    ax2.set_title(fo_name, fontsize=18, loc="left",y = 0.0)
+
+
+    error_sta = meteva.base.minus_on_id(sta_fo1,sta_ob1)
+    #error_grd = meteva.base.interp_sg_idw_delta(error_sta,grid0,halfR=300)
+
+    ax3 = plt.axes(rect3)
+    add_china_map_2basemap(ax3, name='province', edgecolor='k', lw=0.3,encoding = 'gbk')  #"省界"
+    if add_county_line:
+        add_china_map_2basemap(ax3, name="county", edgecolor='k', lw=0.2, encoding='gbk')  # "县界"
+    ax1.set_xlim((slon, elon))
+    ax1.set_ylim((slat, elat))
+
+    #plot_grid1 = ax3.contourf(x, y,error , clevs1,cmap = "bwr")  # 填色图
+    #cmap1,clevs1 = meteva.base.color_tools.def_cmap_clevs(cmap=meteva.base.cmaps.temper_error_br,vmax= np.max(np.abs(error)))
+    #cmap1, clevs1 = meteva.base.color_tools.def_cmap_clevs(cmap=meteva.base.cmaps.temper_2m_error)
+    #norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
+    #plot_grid1 = ax3.contourf(x, y, error,    levels = clevs1, cmap = cmap1, norm = norm)  # 填色图
+    plot_error = meteva.base.plot_tools.add_scatter(ax3,map_extend,error_sta,cmap=meteva.base.cmaps.temper_2m_error,alpha=1)
+    colorbar_position_grid1 = fig.add_axes(error_colorbar_box)  # 位置[左,下,宽,高]
+    title_error = fo_name + ' - ' + ob_name
+    ax3.set_title(title_error,fontsize=18, loc="left",y = 0.0,color = "k")
+    plt.colorbar(plot_error, cax=colorbar_position_grid1, orientation='vertical')
+    plt.title("误差(℃)", fontsize=8, verticalalignment='bottom')
+
+    time_str = meteva.base.tool.time_tools.time_to_str(sta_fo["time"].values[0])
+    dati_str = time_str[0:4] + "年" + time_str[4:6] + "月" + time_str[6:8] + "日" + time_str[8:10] + "时"
+    model_name = meteva.base.get_stadata_names(sta_fo)[0]
+    title = model_name + " " + dati_str + "起报" + str(sta_fo["dtime"].values[0]) + "H时效预报和实况对比及误差"
+    ax_title = plt.axes(rect_title)
+    ax_title.axes.set_axis_off()
+    ax_title.set_title(title)
+
+    # 散点回归图
+    ax2 = plt.axes(rect4)
+    # 保证这两个值的正确性
+    ob = sta_ob1.iloc[:,-1].values
+    fo = sta_fo1.iloc[:,-1].values
+    X = np.zeros((len(fo), 1))
+    X[:, 0] = fo
+    clf = LinearRegression().fit(X, ob)
+    num_max = max(np.max(ob), np.max(fo))
+    num_min = min(np.min(ob), np.min(fo))
+    dmm = num_max - num_min
+    if (num_min != 0):
+        num_min -= 0.1 * dmm
+    num_max += dmm * 0.1
+    dmm = num_max - num_min
+    ob_line = np.arange(num_min, num_max, dmm / 30)
+    X = np.zeros((len(ob_line), 1))
+    X[:, 0] = ob_line
+    fo_rg = clf.predict(X)
+    ax2.plot(fo, ob, '.', color='b',markersize=1)
+    ax2.plot(ob_line, fo_rg, color="r")
+    ax2.plot(ob_line, ob_line, '--', color="k")
+    ax2.set_xlim(num_min, num_max)
+    ax2.set_ylim(num_min, num_max)
+    ax2.set_xlabel(fo_name,fontsize=10)
+    ax2.set_ylabel(ob_name,fontsize=10)
+    rg_text2 = "Y = " + '%.2f' % (clf.coef_[0]) + "* X + " + '%.2f' % (clf.intercept_)
+    ax2.text(num_min + 0.05 * dmm, num_min + 0.90 * dmm, rg_text2, fontsize=15, color="r")
+
+    # 设置次刻度间隔
+    xmi = 1
+    if (np.max(ob) > 100): xmi = 2
+    ymi = 1
+    if (np.max(fo) > 100): ymi = 2
+    xmajorLocator = mpl.ticker.MultipleLocator(10 * xmi)  # 将x主刻度标签设置为次刻度10倍
+    ymajorLocator = mpl.ticker.MultipleLocator(10 * ymi)  # 将y主刻度标签设置为次刻度10倍
+    ax2.xaxis.set_major_locator(xmajorLocator)
+    ax2.yaxis.set_major_locator(ymajorLocator)
+    xminorLocator = mpl.ticker.MultipleLocator(xmi)  # 将x轴次刻度标签设置xmi
+    yminorLocator = mpl.ticker.MultipleLocator(ymi)  # 将y轴次刻度标签设置ymi
+    ax2.xaxis.set_minor_locator(xminorLocator)
+    ax2.yaxis.set_minor_locator(yminorLocator)
+
+    #折线图
+    # 绘制频率柱状图
+    p_ob = np.zeros(len(clevs)-1)
+    p_fo = np.zeros(len(clevs)-1)
+    x = clevs[0:-1]
+    for i in range(len(clevs) - 1):
+        index0 = np.where((ob >= clevs[i]) & (ob < clevs[i + 1]))
+        p_ob[i] = len(index0[0])
+        index0 = np.where((fo >= clevs[i]) & (fo < clevs[i + 1]))
+        p_fo[i] = len(index0[0])
+
+    ax5 = plt.axes(rect5)
+    # ax5.plot(p_ob, color='r',label="Obs")
+    # ax5.plot(p_fo, color='b',label="Pred")
+    ax5.bar(x + 0.5, p_ob, width=0.4,color='r', label=ob_name)
+    ax5.bar(x + 1.1, p_fo, width=0.4,color="b", label=fo_name)
+    ax5.legend(loc="upper right")
+    ax5.set_xlabel("等级", fontsize=10)
+    ax5.set_ylabel("站点数", fontsize=10)
+    #ax5.set_title("频率统计图", fontsize=10)
+    ax5.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(1000))
+    maxy = max(np.max(p_fo),np.max(p_ob)) * 1.4
+    ax5.set_ylim(0,maxy)
+
+    #检验效果图
+    # 绘制降水站点实况预报统计表
+    ax6 = plt.axes(rect6)
+    ax6.axes.set_axis_off()
+    ob_mean = np.mean(ob)
+    fo_mean = np.mean(fo)
+
+
+    maee = meteva.method.continuous.score.mae(ob, fo)
+    mee = meteva.method.continuous.score.me(ob, fo)
+    msee = meteva.method.continuous.score.mse(ob, fo)
+    rmsee = meteva.method.continuous.score.rmse(ob, fo)
+    bias_ce = meteva.method.continuous.score.bias_m(ob, fo)
+    cor = meteva.method.continuous.score.corr(ob,fo)
+
+
+    text = "格点检验统计量 n=" + str(len(ob)) + "\n"
+    text += "==============================================\n"
+    text += "                     实况               预报   \n"
+    text += "----------------------------------------------\n"
+    text += "平均温度         " + "%8.2f" % (ob_mean) + "%20.2f" % (fo_mean) + "\n\n"
+    text += "温度范围    " + "%8.2f" % (ob_min)+ "~%6.2f" % (ob_max) +"%12.2f" % (fo_min)+ "~%6.2f" % (fo_max) + "\n\n"
+    text += "==============================================\n\n"
+    text += "Mean absolute error:" + "%6.2f" % maee + "\n\n"
+    text += "Mean error:" + "%6.2f" % mee + "\n\n"
+    text += "Mean-squared error:" + "%6.2f" % msee + "\n\n"
+    text += "Root mean-squared error:" + "%6.2f" % rmsee + "\n\n"
+    text += "Bias:" + "%6.2f" % bias_ce + "\n\n"
+    text += "Correctlation coefficiant:" + "%6.2f" % cor + "\n"
+    plt.text(0, 0, text, fontsize=9)
+
+    # 图片显示或保存
+    if(save_path is not None):
+        plt.savefig(save_path, dpi=dpi,bbox_inches='tight')
+    else:
+        show = True
+    if show:
+        plt.show()
+    plt.close()
+
+def temper_ss(sta_ob, sta_fo, map_extend=None, save_path=None, show=False, dpi=200,
+                            add_county_line=False, ob_name="观测", fo_name="预报"):
+
+    sta0 = meteva.base.combine_on_id(sta_ob, sta_fo)
+    if isinstance(map_extend, list):
+        slon = map_extend[0]
+        elon = map_extend[1]
+        slat = map_extend[2]
+        elat = map_extend[3]
+        rlon = elon - slon
+        rlat = elat - slat
+
+
+    elif isinstance(map_extend, meteva.base.grid):
+        slon = map_extend.slon
+        slat = map_extend.slat
+        elon = map_extend.elon
+        elat = map_extend.elat
+        rlon = map_extend.elon - map_extend.slon
+        rlat = map_extend.elat - map_extend.slat
+        grid0 = map_extend
+    else:
+
+        slon0 = np.min(sta0.loc[:, "lon"].values)
+        slat0 = np.min(sta0.loc[:, "lat"].values)
+        elon0 = np.max(sta0.loc[:, "lon"].values)
+        elat0 = np.max(sta0.loc[:, "lat"].values)
+        if elon0 > 180:
+            sta = sta0.copy()
+            sta.loc[sta0["lon"] > 180, "lon"] = sta0.loc[sta0["lon"] > 180, "lon"] - 360
+            slon0 = np.min(sta.loc[:, "lon"].values)
+            elon0 = np.max(sta.loc[:, "lon"].values)
+
+        dlon0 = (elon0 - slon0) * 0.03
+        if dlon0 > 1:
+            dlon0 = 1
+        dlat0 = (elon0 - slon0) * 0.03
+        if dlat0 > 1:
+            dlat0 = 1
+        slon = slon0 - dlon0
+        elon = elon0 + dlon0
+        slat = slat0 - dlat0
+        elat = elat0 + dlat0
+        rlon = elon - slon
+        rlat = elat - slat
+        map_extend = [slon, elon, slat, elat]
+
+    sta_ob1 = meteva.base.put_stadata_on_station(sta_ob, sta0)
+    sta_fo1 = meteva.base.put_stadata_on_station(sta_fo, sta0)
+
+    ob_min = np.min(sta_ob1.iloc[:, -1].values)
+    fo_min = np.min(sta_fo1.iloc[:, -1].values)
+    ob_max = np.max(sta_ob1.iloc[:, -1].values)
+    fo_max = np.max(sta_fo1.iloc[:, -1].values)
+
+    ob_fo_max = max(ob_max, fo_max)
+    ob_fo_min = min(ob_min, fo_min)
+    # clevs_temp, cmap_temp = meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("temp")
+
+    if ob_fo_max > 120:
+        cmap_temp, clevs_temp = meteva.base.tool.color_tools.clev_cmap_temper_2m_k()
+    else:
+        cmap_temp, clevs_temp = meteva.base.tool.color_tools.get_cmap_and_clevs_by_element_name("temp")
+
+    cmap, clevs = meteva.base.tool.color_tools.get_part_cmap_and_clevs(cmap_temp, clevs_temp, ob_fo_max, ob_fo_min)
+
+    width = 9  # 整个画面的宽度
+    width_colorbar = 0.6
+    height_title = 0.3
+    height_veri_plot = 3
+
+    if (rlon <= rlat * 0.5):
+        # 采用3*1布局
+        width_map = (width - 2 * width_colorbar) / 3
+        height_map = (rlat / rlon) * width_map
+        height = height_map + height_title + height_veri_plot
+        rect1 = [width_colorbar / width, height_veri_plot / height, width_map / width, height_map / height]  # 实况
+        rect2 = [(1 * width_map + width_colorbar) / width, height_veri_plot / height, width_map / width,
+                 height_map / height]  # 预报
+        rect3 = [(2 * width_map + width_colorbar + 0.05) / width, height_veri_plot / height, width_map / width,
+                 height_map / height]  # 误差
+        ob_fo_colorbar_box = [0.02, height_veri_plot / height, 0.015, height_map / height]
+        error_colorbar_box = [(3 * width_map + width_colorbar + 0.05) / width, height_veri_plot / height, 0.015,
+                              height_map / height]
+
+    else:
+        # 采用1*2 + 1 布局
+        width_map = (width - 2 * width_colorbar) / 1.5
+        height_map = (rlat / rlon) * width_map
+        height = height_map + height_title + height_veri_plot
+        rect1 = [(width_colorbar - 0.03) / width, (height_veri_plot + 0.5 * height_map) / height,
+                 0.5 * width_map / width, 0.5 * height_map / height]  # 实况
+        rect2 = [(width_colorbar - 0.03) / width, height_veri_plot / height, 0.5 * width_map / width,
+                 0.5 * height_map / height]  # 预报
+        rect3 = [(0.5 * width_map + width_colorbar) / width, height_veri_plot / height, width_map / width,
+                 height_map / height]  # 误差
+        ob_fo_colorbar_box = [0.02, height_veri_plot / height, 0.01, height_map / height]
+        error_colorbar_box = [(1.5 * width_map + width_colorbar + 0.05) / width, height_veri_plot / height, 0.01,
+                              height_map / height]
+
+    rect4 = [0.05, 0.06, 0.26, height_veri_plot / height - 0.1]  # 散点回归图，左下宽高
+    rect5 = [0.38, 0.06, 0.28, height_veri_plot / height - 0.1]  # 频率柱状图， 左下宽高
+    rect6 = [0.67, 0.01, 0.3, height_veri_plot / height - 0.03]  # 左下宽高
+    rect_title = [width_colorbar / width, (height_veri_plot + height_map) / height, 1 - 2 * width_colorbar / width,
+                  0.001]
+
+    fig = plt.figure(figsize=(width, height))
+    # 平面对比图1
+
+    # 设置地图背景
+    ax1 = plt.axes(rect1)
+    add_china_map_2basemap(ax1, name='province', edgecolor='k', lw=0.3, encoding='gbk')  # "省界"
+    if add_county_line:
+        add_china_map_2basemap(ax1, name="county", edgecolor='k', lw=0.2, encoding='gbk')  # "县界"
+    ax1.set_xlim((slon, elon))
+    ax1.set_ylim((slat, elat))
+
+    # clevs = [-10,0,15,20,22,24,26,28,30,32,34,35]
+    # colors_grid = ["#00AAAA","#009500","#808000", "#BFBF00","#FFFF00","#FFD400","#FFAA00","#FF7F00","#FF0000","#FF002A","#FF0055","#FF0055"]
+    plt.xticks([])
+    plt.yticks([])
+
+    # plot_ob = ax1.contourf(x, y, grd_ob.values.squeeze(), levels = clevs,cmap=cmap)  # 填色图
+    plot_ob = meteva.base.plot_tools.add_scatter(ax1, map_extend, sta_ob1, cmap=meteva.base.cmaps.temp_2m, alpha=1)
+
+    ax1.set_title(ob_name, fontsize=18, loc="left", y=0.0)
+    colorbar_position_grid = fig.add_axes(ob_fo_colorbar_box)  # 位置[左,下,宽,高]
+    plt.colorbar(plot_ob, cax=colorbar_position_grid, orientation='vertical')
+    plt.title("温度(℃)", fontsize=8, verticalalignment='bottom')
+
+    ax2 = plt.axes(rect2)
+    plt.xticks([])
+    plt.yticks([])
+    add_china_map_2basemap(ax2, name='province', edgecolor='k', lw=0.3, encoding='gbk')  # "省界"
+    if add_county_line:
+        add_china_map_2basemap(ax2, name="county", edgecolor='k', lw=0.2, encoding='gbk')  # "县界"
+    # ax2.set_xlim((grid0.slon, grid0.elon))
+    # ax2.set_ylim((grid0.slat, grid0.elat))
+    # 绘制格点预报场
+    # x = np.arange(grid0.nlon) * grid0.dlon + grid0.slon
+    # y = np.arange(grid0.nlat) * grid0.dlat + grid0.slat
+    # ax2.contourf(x, y, grd_fo.values.squeeze(), levels = clevs,cmap=cmap)  # 填色图
+    plot_fo = meteva.base.plot_tools.add_scatter(ax2, map_extend, sta_fo1, cmap=meteva.base.cmaps.temp_2m, alpha=1)
+    ax2.set_title(fo_name, fontsize=18, loc="left", y=0.0)
+
+    error_sta = meteva.base.minus_on_id(sta_fo1, sta_ob1)
+    # error_grd = meteva.base.interp_sg_idw_delta(error_sta,grid0,halfR=300)
+
+    ax3 = plt.axes(rect3)
+    add_china_map_2basemap(ax3, name='province', edgecolor='k', lw=0.3, encoding='gbk')  # "省界"
+    if add_county_line:
+        add_china_map_2basemap(ax3, name="county", edgecolor='k', lw=0.2, encoding='gbk')  # "县界"
+    ax1.set_xlim((slon, elon))
+    ax1.set_ylim((slat, elat))
+
+    # plot_grid1 = ax3.contourf(x, y,error , clevs1,cmap = "bwr")  # 填色图
+    # cmap1,clevs1 = meteva.base.color_tools.def_cmap_clevs(cmap=meteva.base.cmaps.temper_error_br,vmax= np.max(np.abs(error)))
+    # cmap1, clevs1 = meteva.base.color_tools.def_cmap_clevs(cmap=meteva.base.cmaps.temper_2m_error)
+    # norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
+    # plot_grid1 = ax3.contourf(x, y, error,    levels = clevs1, cmap = cmap1, norm = norm)  # 填色图
+    plot_error = meteva.base.plot_tools.add_scatter(ax3, map_extend, error_sta,
+                                                    cmap=meteva.base.cmaps.temper_2m_error, alpha=1)
+    colorbar_position_grid1 = fig.add_axes(error_colorbar_box)  # 位置[左,下,宽,高]
+    title_error = fo_name + ' - ' + ob_name
+    ax3.set_title(title_error, fontsize=18, loc="left", y=0.0, color="k")
+    plt.colorbar(plot_error, cax=colorbar_position_grid1, orientation='vertical')
+    plt.title("误差(℃)", fontsize=8, verticalalignment='bottom')
+
+    time_str = meteva.base.tool.time_tools.time_to_str(sta_fo["time"].values[0])
+    dati_str = time_str[0:4] + "年" + time_str[4:6] + "月" + time_str[6:8] + "日" + time_str[8:10] + "时"
+    model_name = meteva.base.get_stadata_names(sta_fo)[0]
+    title = model_name + " " + dati_str + "起报" + str(sta_fo["dtime"].values[0]) + "H时效预报和实况对比及误差"
+    ax_title = plt.axes(rect_title)
+    ax_title.axes.set_axis_off()
+    ax_title.set_title(title)
+
+
+    # 图片显示或保存
+    if (save_path is not None):
+        plt.savefig(save_path, dpi=dpi, bbox_inches='tight')
+    else:
+        show = True
+    if show:
+        plt.show()
+    plt.close()
+
 
 
 
