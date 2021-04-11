@@ -6,6 +6,7 @@ import  math
 from sklearn.linear_model import LinearRegression
 from  matplotlib import  cm
 from matplotlib.ticker import NullFormatter, FixedLocator
+import copy
 
 
 def scatter_regress(ob, fo,member_list = None, rtype="linear",vmax = None,vmin = None, ncol = None,save_path=None,show = False,dpi = 300, title="散点回归图",
@@ -338,12 +339,12 @@ def box_plot_continue(ob, fo,  member_list=None,vmax = None,vmin = None, save_pa
 
     #print(width)
     new_list_fo = []
-    for fo_piece in list_fo:
-        new_list_fo.append(fo_piece.flatten())
     ob = ob.flatten()
     new_list_fo.append(ob)
-    tuple_of_ob = tuple(new_list_fo)
+    for fo_piece in list_fo:
+        new_list_fo.append(fo_piece.flatten())
 
+    tuple_of_ob = tuple(new_list_fo)
     if width is None:
         width = meteva.base.plot_tools.caculate_axis_width(xticks, sup_fontsize) +0.5
         if width >10:
@@ -358,7 +359,6 @@ def box_plot_continue(ob, fo,  member_list=None,vmax = None,vmin = None, save_pa
         height = width/2
 
     fig = plt.figure(figsize=(width, height), dpi=dpi)
-
     markersize = 5 * width * height / np.sqrt(ob.size)
     if markersize < 1:
         markersize = 1
@@ -368,10 +368,116 @@ def box_plot_continue(ob, fo,  member_list=None,vmax = None,vmin = None, save_pa
     colors = cm.get_cmap('rainbow', 128)
     for i in range(len(xticks)):
         color_grade = i / len(xticks)
-
         colors_list.append(colors(color_grade))
 
     bplot = plt.boxplot(tuple_of_ob, showfliers=True, patch_artist=True, labels=xticks)
+
+
+    plt.xticks(fontsize = 0.9 * sup_fontsize)
+    plt.yticks(fontsize = 0.9 * sup_fontsize)
+
+    plt.title(title,fontsize = sup_fontsize)
+    for i, item in enumerate(bplot["boxes"]):
+        item.set_facecolor(colors_list[i])
+    #plt.title(title, fontsize=sup_fontsize)
+
+    if vmin is not None or vmax is not None:
+        if vmin is not None:
+            if vmax is None:
+                vmax = max(np.max(ob), np.max(fo))
+                dmax = vmax - vmin
+                plt.ylim(vmin,vmax+ dmax * 0.05)
+            else:
+                plt.ylim(vmin, vmax)
+        else:
+            vmin =  min(np.min(ob), np.min(fo))
+            dmax = vmax - vmin
+            plt.ylim(vmin- dmax * 0.05,vmax)
+
+
+    if save_path is None:
+        show = True
+    else:
+        plt.savefig(save_path,bbox_inches='tight')
+        print("检验结果已以图片形式保存至" + save_path)
+    if show:
+        plt.show()
+    plt.close()
+
+
+
+
+def box_plot_continue(ob, fo,  member_list=None,vmax = None,vmin = None, save_path=None, show = False,dpi = 300,title="频率对比箱须图",
+                      sup_fontsize = 10,width = None,height = None,):
+    '''
+    box_plot 画一两组数据的箱型图
+    ---------------
+    :param Ob: 实况数据  任意维numpy数组
+    :param Fo: 预测数据 任意维numpy数组,Fo.shape 和Ob.shape一致
+    :param save_path: 图片保存路径，缺省时不输出图片，而是以默认绘图窗口形式展示
+    :return:图片，包含箱须图，等级包括,横坐标为"观测"、"预报"，纵坐标为数据值
+    '''
+    Fo_shape = fo.shape
+    Ob_shape = ob.shape
+    Ob_shpe_list = list(Ob_shape)
+    size = len(Ob_shpe_list)
+    ind = -size
+    Fo_Ob_index = list(Fo_shape[ind:])
+
+    if Fo_Ob_index != Ob_shpe_list:
+        print('实况数据和观测数据维度不匹配')
+        return
+    Ob_shpe_list.insert(0, -1)
+    new_Fo_shape = tuple(Ob_shpe_list)
+    new_Fo = fo.reshape(new_Fo_shape)
+    new_Fo_shape = new_Fo.shape
+    list_fo = list(new_Fo)
+
+    xticks = ['观测']
+    if member_list is None:
+        if new_Fo_shape[0] == 1:
+            xticks.append('预报')
+        else:
+            for i in range(new_Fo_shape[0]):
+                xticks.append('预报' + str(i + 1))
+    else:
+        xticks.extend(member_list)
+
+    #print(width)
+    new_list_fo = []
+    ob = ob.flatten()
+    new_list_fo.append(ob)
+    for fo_piece in list_fo:
+        new_list_fo.append(fo_piece.flatten())
+
+    tuple_of_ob = tuple(new_list_fo)
+    if width is None:
+        width = meteva.base.plot_tools.caculate_axis_width(xticks, sup_fontsize) +0.5
+        if width >10:
+            for i in range(len(xticks)):
+                if i % 2 ==1:
+                    xticks[i] ="|\n" + xticks[i]
+            width = 10
+        elif width < 5:
+            width = 5
+
+    if height is None:
+        height = width/2
+
+    fig = plt.figure(figsize=(width, height), dpi=dpi)
+    markersize = 5 * width * height / np.sqrt(ob.size)
+    if markersize < 1:
+        markersize = 1
+    elif markersize > 20:
+        markersize = 20
+    colors_list= []
+    colors = cm.get_cmap('rainbow', 128)
+    for i in range(len(xticks)):
+        color_grade = i / len(xticks)
+        colors_list.append(colors(color_grade))
+
+    bplot = plt.boxplot(tuple_of_ob, showfliers=True, patch_artist=True, labels=xticks)
+
 
     plt.xticks(fontsize = 0.9 * sup_fontsize)
     plt.yticks(fontsize = 0.9 * sup_fontsize)
@@ -564,3 +670,81 @@ def taylor_diagram(ob, fo,member_list=None, save_path=None,show = False,dpi = 30
 
 
 
+def frequency_histogram_error(ob, fo,grade_list=None, member_list=None,  vmax = None,save_path=None,show = False,dpi = 300,plot = "bar", title="误差频率统计图",
+                        sup_fontsize = 10,width = None,height = None,log_y = False):
+    '''
+    frequency_histogram 对比测试数据和实况数据的发生的频率
+    :param ob: 实况数据 任意维numpy数组
+    :param fo: 预测数据 任意维numpy数组,Fo.shape 和Ob.shape一致
+    :param grade_list: 如果该参数为None，观测或预报值出现过的值都作为分类标记.
+    如果该参数不为None，它必须是一个从小到大排列的实数，以其中列出的数值划分出的多个区间作为分类标签。
+    对于预报和观测值不为整数的情况，grade_list 不能设置为None。
+    :param save_path: 保存地址
+    :return: 无
+    '''
+    Fo_shape = fo.shape
+    Ob_shape = ob.shape
+    Ob_shpe_list = list(Ob_shape)
+    size = len(Ob_shpe_list)
+    ind = -size
+    Fo_Ob_index = list(Fo_shape[ind:])
+    if Fo_Ob_index != Ob_shpe_list:
+        print('实况数据和观测数据维度不匹配')
+        return
+    Ob_shpe_list.insert(0, -1)
+    new_Fo_shape = tuple(Ob_shpe_list)
+    new_Fo = fo.reshape(new_Fo_shape)
+    new_Fo_shape = new_Fo.shape
+
+
+    legend = []
+    if member_list is None:
+        if new_Fo_shape[0] <= 1:
+            legend.append('预报')
+        else:
+            for i in range(new_Fo_shape[0]):
+                legend.append('预报' + str(i + 1))
+    else:
+        legend.extend(member_list)
+
+    error = new_Fo - ob
+
+    result_array = meteva.method.frequency_table(ob, error, grade_list=grade_list)
+    result_array = result_array[1:,:]
+
+    total_count = np.sum(result_array[0,:])
+    result_array /= total_count
+    if grade_list is not None:
+        if len(grade_list) >10:
+            axis = ["<\n" + str(round(grade_list[0],6))]
+            for index in range(len(grade_list)):
+                axis.append(str(round(grade_list[index],6)))
+            axis.append(">=\n" + str(round(grade_list[-1],6)))
+        else:
+            axis = ["<" + str(round(grade_list[0],6))]
+            for index in range(len(grade_list) - 1):
+                axis.append("[" + str(round(grade_list[index],6)) + "," + str(round(grade_list[index + 1],6)) + ")")
+            axis.append(">=" + str(round(grade_list[-1],6)))
+
+
+    else:
+        new_fo = copy.deepcopy(fo).flatten()
+        new_ob = copy.deepcopy(ob).flatten()
+        fo_list = list(set(new_fo.tolist()))
+        fo_list.extend(list(set(new_ob.tolist())))
+        axis = list(set(fo_list))
+
+    name_list_dict = {}
+    name_list_dict["legend"] = legend
+    name_list_dict["类别"] = axis
+    if log_y:
+        vmin = None
+    else:
+        vmin = 0
+    if plot == "bar":
+        meteva.base.plot_tools.bar(result_array,name_list_dict,ylabel= "样本占比",vmin = vmin,vmax = vmax,save_path = save_path,show = show,dpi = dpi,title=title,
+                                   width = width,height = height,sup_fontsize= sup_fontsize,log_y = log_y)
+    else:
+        meteva.base.plot_tools.plot(result_array, name_list_dict, ylabel="样本占比", vmin=vmin, vmax=vmax, save_path=save_path,
+                                   show=show, dpi=dpi, title=title,
+                                    width = width,height = height,sup_fontsize= sup_fontsize,log_y = log_y)

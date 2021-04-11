@@ -1,5 +1,5 @@
 __author__ = "The R & D Center for Weather Forecasting Technology in NMC, CMA"
-__version__ = '1.5'
+__version__ = '1.5.2'
 
 from . import base
 from . import method
