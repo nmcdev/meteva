@@ -115,7 +115,8 @@ def rain_sg(sta_ob,grd_fo,grade_list,save_path=None,show  = False,dpi = 200,add_
     colors_sta = ['#FFFFFF', '#0055FF', '#00FFB4', '#F4FF00', '#FE1B00', '#910000', '#B800BA']
     dat = sta_ob_in.values[:, -1]
     dat[dat > 1000] = 0
-    clevs = grade_list
+    clevs = [0]
+    clevs.extend(grade_list)
     clevs_name = ["0"]
     for g0 in range(len(grade_list)-2):
         if grade_list[g0] == math.floor(grade_list[g0]):
@@ -266,7 +267,9 @@ def rain_comprehensive_sg(sta_ob,grd_fo,grade_list, save_path=None,show = False,
     colors_sta = ['#FFFFFF', '#0055FF', '#00FFB4', '#F4FF00', '#FE1B00', '#910000', '#B800BA']
     dat = sta_ob_in.values[:, -1]
     dat[dat > 1000] = 0
-    clevs =grade_list
+    clevs = [0]
+    clevs.extend(grade_list)
+    #clevs =grade_list
     clevs_name = ["0"]
     for g0 in range(len(grade_list)-2):
         if grade_list[g0] == math.floor(grade_list[g0]):
@@ -280,9 +283,12 @@ def rain_comprehensive_sg(sta_ob,grd_fo,grade_list, save_path=None,show = False,
             gs1 = '%.0f' % (grade_list[g0+1])
         clevs_name.append(gs0+"-"+gs1)
     clevs_name.append(">="+ str(int(grade_list[len(grade_list)-2])))
+
+
     pointsize = int(100*map_area / len(dat))
     if(pointsize >30):pointsize = 30
     if(pointsize<1):pointsize = 1
+
     for i in range(len(clevs) - 1):
         index0 = np.where((dat >= clevs[i]) & (dat < clevs[i + 1]))
         if (len(index0[0]) > 0):
@@ -466,6 +472,16 @@ def rain_comprehensive_sg(sta_ob,grd_fo,grade_list, save_path=None,show = False,
     text += "Correctlation coefficiant:" + "%6.2f" % cor + "\n"
     text += "晴雨准确率:" + "%6.2f" % pc_sun_rain + "\n\n"
 
+
+    clevs_name = ["0"]
+    for g0 in range(len(grade_list)-1):
+        if grade_list[g0] == math.floor(grade_list[g0]):
+            gs0 = str(int(grade_list[g0]))
+        else:
+            gs0 = '%.1f' % (grade_list[g0])
+
+        clevs_name.append(">="+ gs0)
+
     leves_name = []
     for name in clevs_name[1:]:
         for nn in range(10-len(name)):
@@ -564,9 +580,8 @@ def rain_comprehensive_chinaland_sg(sta_ob,grd_fo,grade_list, save_path=None,sho
     colors_sta = ['#FFFFFF', '#0055FF', '#00FFB4', '#F4FF00', '#FE1B00', '#910000', '#B800BA']
     dat = sta_ob_in.values[:, -1]
     dat[dat > 1000] = 0
-    clevs = grade_list
-
-    clevs =grade_list
+    clevs = [0]
+    clevs.extend(grade_list)
     clevs_name = ["0"]
     for g0 in range(len(grade_list)-2):
         if grade_list[g0] == math.floor(grade_list[g0]):
@@ -786,6 +801,15 @@ def rain_comprehensive_chinaland_sg(sta_ob,grd_fo,grade_list, save_path=None,sho
 
 
     #leves_name = ["0.1-10-", "10-25--", "25-50--", "50-100-", "100-250", ">=250-"]
+
+    clevs_name = ["0"]
+    for g0 in range(len(grade_list)-1):
+        if grade_list[g0] == math.floor(grade_list[g0]):
+            gs0 = str(int(grade_list[g0]))
+        else:
+            gs0 = '%.1f' % (grade_list[g0])
+
+        clevs_name.append(">="+ gs0)
     leves_name = []
     for name in clevs_name[1:]:
         for nn in range(10-len(name)):
