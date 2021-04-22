@@ -345,7 +345,7 @@ def in_dtime_list(data,dtime_list):
                 print(dtime +" not exist in griddata's dtime_list")
             else:
                 for i in range(len(grid0.dtimes)):
-                    if dtime == grid0.levels[i]:
+                    if dtime == grid0.dtimes[i]:
                         num_list.append(i)
                         dtime_list1.append(dtime)
                         break
@@ -454,6 +454,17 @@ def between_last_range(sta,last_min,last_max,drop_last = True):
     if drop_last:
         sta1 = sta1.loc[:, columns[0:-1]]
     return  sta1
+
+
+def between_one_column_value_range(sta,column_name,vmin,vmax):
+    sta1 = sta.loc[(sta[column_name] >= vmin) & (sta[column_name] <= vmax)]
+    return  sta1
+
+def in_one_column_value_list(sta,column_name,value_list):
+    sta1 = sta.loc[sta[column_name].isin(value_list)]
+    return sta1
+
+
 def by_stadata(sta,loc_sta):
     '''
 
@@ -769,7 +780,7 @@ def sele_by_dict(data,s):
 def sele_by_para(data,member = None,level = None,time = None,time_range = None,year = None,month = None,day = None,dayofyear = None,hour = None,
            ob_time=None, ob_time_range=None, ob_year=None, ob_month=None, ob_day=None, ob_dayofyear=None, ob_hour=None,
            dtime = None,dtime_range = None,dday = None, dhour = None,lon = None,lat = None,id = None,grid = None,gxy = None,gxyz = None,stadata = None,
-                 value = None,drop_IV = False,last = None,last_range = None,province_name = None,drop_last = True):
+                 value = None,drop_IV = False,last = None,last_range = None,province_name = None,drop_last = True,**kwargs):
     '''
     :param data: [站点数据](https://www.showdoc.cc/nmc?page_id=3744334022014027)
     :param member:成员的名称，同时提取多个时采用列表形式
@@ -806,6 +817,25 @@ def sele_by_para(data,member = None,level = None,time = None,time_range = None,y
     :return:  [站点数据](https://www.showdoc.cc/nmc?page_id=3744334022014027)
     '''
     sta1 = data
+
+    data_names = meteva.base.get_stadata_names(data)
+    data_names_range = []
+    for data_name in data_names:
+        data_names_range.append(data_name+"_range")
+    for key in kwargs.keys():
+        if key in data_names:
+            value_one = kwargs[key]
+            if not isinstance(value_one,list):
+                value_one = [value_one]
+            sta1 = in_one_column_value_list(sta1,key, value_one)
+        elif key in data_names_range:
+            value_one = kwargs[key]
+            data_name = key.split("_")[0]
+            sta1 = between_one_column_value_range(sta1,data_name,value_one[0],value_one[1])
+        else:
+            print("输入的参数"+key+"不是数据选取函数可接受的参数")
+
+
     if member is not None:
         sta1 = in_member_list(sta1,member)
     if level is not None:
@@ -860,6 +890,8 @@ def sele_by_para(data,member = None,level = None,time = None,time_range = None,y
         if not isinstance(lat,list):
             print("lat参数需为列表形式的包含起始纬度（浮点数）和结束纬度（浮点）的参数")
         sta1 = between_lat_range(sta1,lat[0],lat[1])
+
+
     if id is not None:
         sta1 = in_id_list(sta1,id)
     if grid is not None:
@@ -870,19 +902,21 @@ def sele_by_para(data,member = None,level = None,time = None,time_range = None,y
         sta1 = in_grid_xyz(sta1,gxyz)
     if stadata is not None:
         sta1 = by_stadata(sta1,stadata)
+
     if value is not None:
         if not isinstance(value, list):
             print("value参数需为列表形式的包含起始值和结束值的参数")
         sta1 = between_value_range(sta1,value[0],value[1])
+
     if drop_IV is True:
         sta1 = not_IV(sta1)
     if last_range is not None:
         sta1 = between_last_range(sta1,last_range[0],last_range[1],drop_last)
     if last is not None:
         sta1 = in_last_list(sta1,last,drop_last)
-
     if province_name is not None:
         sta1 = in_province_list(sta1,province_name)
+
 
     return sta1
 
