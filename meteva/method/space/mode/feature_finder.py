@@ -13,7 +13,7 @@ from numpy.fft import ifftshift
 from skimage import measure,color
 import numpy as np
 import pandas as pd
-import cv2 as cv
+#import cv2 as cv
 import xarray as xr
 import sys
 import copy
@@ -21,6 +21,7 @@ from . import data_pre
 import meteva
 import time
 import math
+from scipy.ndimage import convolve
 #sys.path.append(r'F:\Work\MODE\Submit')    #导入的函数路径
 #from MODE import make_spatialVx   #导入makeSpatialVx函数
 
@@ -251,8 +252,10 @@ def feature_finder_bak(grd_ob, grd_fo, smooth, threshold, minsize, maxsize=float
         # 调用disk2dsmooth中的kernel2dsmooth卷积平滑，python里面目前用2D卷积平滑替代
         kernel_X = np.ones((smoothpar[0], smoothpar[0]), np.float32) / 5  # X的卷积核
         kernel_Y = np.ones((smoothpar[1], smoothpar[1]), np.float32) / 5  # Y的卷积核
-        Xsm = cv.filter2D(np.rot90(X, 4), -1, kernel_X)  # 对X做2D卷积平滑,旋转4次=没有旋转，不做旋转会报错（opencv版本问题）
-        Ysm = cv.filter2D(np.rot90(Y, 4), -1, kernel_Y)  # 对Y做2D卷积平滑,旋转4次=没有旋转，不做旋转会报错（opencv版本问题）
+        #Xsm = cv.filter2D(np.rot90(X, 4), -1, kernel_X)  # 对X做2D卷积平滑,旋转4次=没有旋转，不做旋转会报错（opencv版本问题）
+        Xsm = convolve(X, kernel_X)
+        #Ysm = cv.filter2D(np.rot90(Y, 4), -1, kernel_Y)  # 对Y做2D卷积平滑,旋转4次=没有旋转，不做旋转会报错（opencv版本问题）
+        Ysm = convolve(Y, kernel_Y)
         if (zerodown):
             Xsm = np.where(Xsm > 0, Xsm, 0)  # Xsm中大于0的值被0代替
             Ysm = np.where(Ysm > 0, Ysm, 0)  # Ysm中大于0的值被0代替
@@ -362,8 +365,8 @@ def feature_finder(grd_ob0, grd_fo0, smooth, threshold, minsize, maxsize = float
     grd_fo = grd_fo0.copy()
     grd_fo.attrs["var_name"] = "原始场"
 
-    X = np.squeeze(np.array(grd_ob))
-    Xhat = np.squeeze(np.array(grd_fo))
+    X = np.squeeze(np.array(grd_ob)).astype(np.float32)
+    Xhat = np.squeeze(np.array(grd_fo)).astype(np.float32)
     
     #读经纬度，并形成R里面的格式
     lon = grd_ob['lon']
@@ -439,7 +442,10 @@ def feature_finder(grd_ob0, grd_fo0, smooth, threshold, minsize, maxsize = float
     if smooth[0]>0:
 
         kernel_X = get_disk_kernel(smooth[0])
-        Xsm = cv.filter2D(np.rot90(X, 4), -1, kernel_X)    #对X做2D卷积平滑,旋转4次=没有旋转，不做旋转会报错（opencv版本问题）
+        #Xsm = cv.filter2D(np.rot90(X, 4), -1, kernel_X)    #对X做2D卷积平滑,旋转4次=没有旋转，不做旋转会报错（opencv版本问题）
+        #Xsm = cv.filter2D(X, -1, kernel_X)  # 对X做2D卷积平滑,旋转4次=没有旋转，不做旋转会报错（opencv版本问题）
+
+        Xsm = convolve(X, kernel_X)
         if (zerodown):
              Xsm = np.where(Xsm > 0, Xsm, 0)    #Xsm中大于0的值被0代替
     else:
@@ -452,7 +458,8 @@ def feature_finder(grd_ob0, grd_fo0, smooth, threshold, minsize, maxsize = float
 
     if smooth[1] >0:
         kernel_Y = get_disk_kernel(smooth[1])
-        Ysm = cv.filter2D(np.rot90(Y, 4), -1, kernel_Y)  # 对Y做2D卷积平滑,旋转4次=没有旋转，不做旋转会报错（opencv版本问题）
+        #Ysm = cv.filter2D(np.rot90(Y, 4), -1, kernel_Y)  # 对Y做2D卷积平滑,旋转4次=没有旋转，不做旋转会报错（opencv版本问题）
+        Ysm = convolve(Y, kernel_Y)
         if (zerodown):
             Ysm = np.where(Ysm > 0, Ysm, 0)  # Ysm中大于0的值被0代替
     else:
