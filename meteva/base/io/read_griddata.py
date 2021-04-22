@@ -1559,3 +1559,105 @@ def read_griddata_from_radar_mosaic_v3_gds(filename, grid=None, level=None, time
 
         print(filename + "数据读取错误")
         return None
+
+
+def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim = None,time = None,level = None, grid = None,endian = "<",
+                           data_name=None,
+                           show=False
+                           ):
+
+    try:
+        ctl = meteva.base.read_ctl(ctl_path)
+        #print(ctl["pdef"])
+        #print(ctl_path)
+        if data_path is None:
+            data_path = ctl["data_path"]
+        value_index =0
+        if value_name is None:
+            if len(ctl["vars"]) != 1:
+                print("请指定要读取的要素名称 value_name")
+                return None
+        else:
+            for i in range(len(ctl["vars"])):
+                if ctl["vars"][i]["name"] == value_name:
+                    value_index = i
+                    break
+
+        file = open(data_path, "rb")
+
+        if "pdef" in ctl.keys():
+
+            if grid is None:
+                lons = ctl["xdef"]
+                lons.sort()
+                lats = ctl["ydef"]
+                lats.sort()
+                grid = meteva.base.grid([lons[0],lons[-1],lons[1] - lons[0]],[lats[0],lats[-1],lats[1] - lats[0]])
+
+            nx = ctl["pdef"]["nx"]
+            ny = ctl["pdef"]["ny"]
+            blocksize_xy =  nx * ny * 4 + 8   #+8是否因为数据有问题
+            if time is None and level is None:
+                #整体读取
+                blocksize = blocksize_xy * len(ctl["tdef"])
+                start_index = ctl["vars"][value_index]["start_bolck_index"] * blocksize
+                position = file.seek(start_index)
+                content = file.read(blocksize)
+                data = np.frombuffer(content, dtype='float32')
+            elif level is None:
+                time_index = 0
+            else:
+                level_index = 0
+                for L in range(len(ctl["zdef"])):
+                    if ctl["zdef"][L] == level:
+                        level_index = L
+                        break
+                nt = len(ctl["tdef"])
+                blocksize = blocksize_xy  * len(ctl["tdef"])
+                start_index = ctl["vars"][value_index]["start_bolck_index"] * blocksize
+                for t in range(nt):
+                    blocksize_xyz = blocksize_xy * len(ctl["zdef"])
+                    start_index += blocksize_xyz * t
+                    start_index += blocksize_xy * level_index
+                    position = file.seek(start_index)
+                    content = file.read(blocksize_xy)
+                    data = np.frombuffer(content, dtype='>f')
+                    data = data[1:-1]  #数据是否有问题？
+                    data = data.reshape((ny,nx))
+                    grd = meteva.base.tool.math_tools.ctl_proj(grid,ctl["pdef"],data)
+                    if data_name is not None:
+                        meteva.base.set_griddata_coords(grd,member_list=[data_name])
+                    file.close()
+                    return grd
+
+
+        else:
+            grid0 = meteva.base.grid(ctl["glon"],ctl["glat"])
+            blocksize_xy = grid0.nlon * grid0.nlat * 4
+            blocksize_time_ensemble = blocksize_xy *  ctl["ntime"] * ctl["nensemble"]
+            start_index = ctl["vars"][value_index]["start_bolck_index"] * blocksize_time_ensemble
+            position = file.seek(start_index)
+            blocksize_one_value = blocksize_time_ensemble * ctl["nlevel"]
+            content = file.read(blocksize_one_value)
+            data = np.frombuffer(content, dtype=endian +"f")
+            data = data.reshape(ctl["nensemble"], ctl["ntime"], ctl["nlevel"], ctl["nlat"], ctl["nlon"])
+            if dtime_dim is None:
+                grid1 = meteva.base.grid(ctl["glon"],ctl["glat"],gtime=ctl["gtime"],dtime_list=[0],level_list=ctl["zdef"],member_list=ctl["edef"])
+            else:
+
+                grid1 = meteva.base.grid(ctl["glon"], ctl["glat"], gtime=[ctl["gtime"][0]], dtime_list=ctl["dtime_list"] ,
+                                         level_list=ctl["zdef"], member_list=ctl["edef"])
+            grd_one_var = meteva.base.grid_data(grid1,data)
+            if grid is not None:
+                grd_one_var = meteva.base.interp_gg_linear(grd_one_var,grid=grid)
+            if data_name is not None:
+                meteva.base.set_griddata_coords(grd_one_var, member_list=[data_name])
+            file.close()
+            return grd_one_var
+    except:
+        if show:
+            exstr = traceback.format_exc()
+            print(exstr)
+
+        print(ctl_path + "数据读取错误")
+        return None
