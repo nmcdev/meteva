@@ -488,7 +488,12 @@ def in_province_list(sta,province_name_list):
 
     return sta1
 
-
+def not_nan(sta):
+    danames = meteva.base.get_stadata_names(sta)
+    sta1 = sta.copy()
+    for name in danames:
+        sta1 = sta[pd.notnull(sta1[name])]
+    return sta1
 
 #返回站点参数字典列表
 def by_loc_dict(data,s):
@@ -910,6 +915,7 @@ def sele_by_para(data,member = None,level = None,time = None,time_range = None,y
 
     if drop_IV is True:
         sta1 = not_IV(sta1)
+        sta1 = not_nan(sta1)
     if last_range is not None:
         sta1 = between_last_range(sta1,last_range[0],last_range[1],drop_last)
     if last is not None:
