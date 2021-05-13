@@ -524,6 +524,60 @@ def interp_gg_cubic(grd, grid,used_coords = "xy",outer_value = None):
     return grd_new
 
 
+def interp_xg_linear(dataArray,grid,used_coords = "xy"):
+    meteva.base.reset(dataArray)
+    levels = dataArray["level"].values
+    times = dataArray["time"].values
+    dtimes = dataArray["dtime"].values
+    members = dataArray["member"].values
+    grid0 = meteva.base.basicdata.get_grid_of_data(dataArray)
+    grid_new = meteva.base.grid(grid.glon, grid.glat, grid0.gtime, grid0.dtimes, grid0.levels, grid0.members)
+    grd_new = meteva.base.grid_data(grid_new)
+
+
+    if used_coords == "xy":
+
+        # 插值处理
+        x = ((np.arange(grid_new.nlon) * grid_new.dlon + grid_new.slon - grid0.slon) / grid0.dlon)
+        ig = x[:].astype(dtype='int16')
+        dx = x - ig
+        y = np.arange(grid_new.nlat) * grid_new.dlat + grid_new.slat
+        nlat = len(y)
+        jg = np.zeros(nlat).astype(dtype='int16')
+        dy = np.zeros(nlat)
+        lats_old = dataArray.lat.values
+        for ny in range(nlat):
+            js = 0
+            for j in range(js,nlat-1):
+                if y[ny] >= lats_old[j] and y[ny] <= lats_old[j+1]:
+                    jg[ny] = j
+                    dy[ny] = (y[ny] -  lats_old[j])/(lats_old[j+1] - lats_old[j])
+                    js = j
+                    break
+
+
+        #print(jg)
+        ii, jj = np.meshgrid(ig, jg)
+        ii1 = np.minimum(ii + 1, grid0.nlon - 1)
+        jj1 = np.minimum(jj + 1, grid0.nlat - 1)
+        ddx, ddy = np.meshgrid(dx, dy)
+        c00 = (1 - ddx) * (1 - ddy)
+        c01 = ddx * (1 - ddy)
+        c10 = (1 - ddx) * ddy
+        c11 = ddx * ddy
+
+
+        for i in range(len(levels)):
+            for j in range(len(times)):
+                for k in range(len(dtimes)):
+                    for m in range(len(members)):
+                        # 六维转换为二维的值
+                        dat = dataArray.values[m, i, j, k, :, :]
+                        dat2 = (c00 * dat[jj, ii] + c10 * dat[jj1, ii] + c01 * dat[jj, ii1] + c11 * dat[jj1, ii1])
+                        grd_new.values[m, i, j, k, :, :] = dat2
+
+    return grd_new
+
 
 def cubic_f(n, dx):
     if (n == -1):
