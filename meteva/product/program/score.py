@@ -199,9 +199,12 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
         keys = list(name_list_dict.keys())
         if fo_num ==1:
             if grade_num > 1:
-                print(keys)
-                legend = keys[2]
-                axis = keys[0]
+                if group_num>1:
+                    legend = keys[2]
+                    axis = keys[0]
+                else:
+                    axis = keys[2]
+                    legend = keys[1]
             else:
                 axis = keys[0]
                 legend = keys[1]
@@ -230,6 +233,7 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
             if method in bigthan0_method:
                 vmin = 0
 
+
         if plot is not None:
             if plot =="bar":
                 meteva.base.plot_tools.bar(result_plot,name_list_dict,legend=legend,axis = axis,vmin =vmin,vmax = vmax,bar_width=bar_width,save_path=save_path,show=show,dpi =dpi,title = title,**plot_args)
@@ -243,7 +247,8 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
 
 
 def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = None,plot = "scatter",save_dir = None,save_path = None,show = False,
-             add_county_line = False,map_extend= None,print_max=0,print_min=0,dpi = 300,title = None,sort_by = None,**kwargs):
+             add_county_line = False,map_extend= None,print_max=0,print_min=0,dpi = 300,title = None,sort_by = None,
+             **kwargs):
 
     if s is not None:
         if g is not None:
@@ -395,8 +400,12 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
                 sta_result.append(sta_result1)
         for i in range(len(sta_result)):
             sta_result1 = sta_result[i]
+            if "var_name" in sta_ob_and_fos0.attrs.keys():
+                sta_result1.attrs["var_name"] =sta_ob_and_fos0.attrs["var_name"]
+            else:
+                sta_result1.attrs["var_name"] = ""
             sta_result1.attrs["data_source"] = "meteva." + method.__name__
-            if plot == "scatter":
+            if plot == "scatter" or plot == "micaps":
                 if isinstance(title, list):
                     kk = k * grade_num + i
                     title1_list = title[kk * fo_num: (kk + 1) * fo_num]
@@ -413,33 +422,33 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
                             title1 += "(grade_" + str(grade_names[i])+")"
                         title1_list.append(title1)
 
-
-
-                save_path1 = None
-                if save_path is None:
-                    if save_dir is None:
-                        show = True
+                if plot == "scatter":
+                    save_path1 = None
+                    if save_path is None:
+                        if save_dir is None:
+                            show = True
+                        else:
+                            save_path1 = []
+                            for i in range(len(title1_list)):
+                                fileName = title1_list[i].replace("\n", "").replace(":", "")
+                                save_path1.append(save_dir + "/" + fileName + ".png")
                     else:
-                        save_path1 = []
-                        for i in range(len(title1_list)):
-                            fileName = title1_list[i].replace("\n", "").replace(":", "")
-                            save_path1.append(save_dir + "/" + fileName + ".png")
-                else:
-                    save_path1 = save_path[k * fo_num: (k + 1) * fo_num]
+                        save_path1 = save_path[k * fo_num: (k + 1) * fo_num]
 
 
-                meteva.base.tool.plot_tools.scatter_sta(sta_result1, save_path=save_path1, show=show,
-                                                        title=title1_list, print_max=print_max,
-                                                        print_min=print_min
-                                                        , add_county_line=add_county_line,
-                                                         map_extend=map_extend, dpi=dpi,**plot_args)
+                    meteva.base.tool.plot_tools.scatter_sta(sta_result1, save_path=save_path1, show=show,
+                                                            title=title1_list, print_max=print_max,
+                                                            print_min=print_min
+                                                            , add_county_line=add_county_line,
+                                                             map_extend=map_extend, dpi=dpi,**plot_args)
+                if plot == "micaps":
+                    meteva.base.put_stadata_to_micaps(sta_result1,layer_description=title1_list)
 
 
         if len(sta_result) == 1:
             sta_result = sta_result[0]
         if sort_by is not None:
             sta_result.sort_values(by = sort_by,axis = 0,ascending = False,inplace=True)
-
         result_all.append(sta_result)
 
     if len(result_all)==1:
