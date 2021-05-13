@@ -5,7 +5,8 @@ import traceback
 import pandas as pd
 import datetime
 import meteva
-
+import json
+import gzip
 
 def write_stadata_to_micaps3(sta0,save_path = "a.txt",creat_dir = False, type = -1,effectiveNum = 4,show = False,title = None):
     """
@@ -75,8 +76,6 @@ def write_stadata_to_micaps3(sta0,save_path = "a.txt",creat_dir = False, type = 
         exstr = traceback.format_exc()
         print(exstr)
         return False
-
-
 
 def tran_stadata_to_gds_flow(sta):
     discriminator = b"mdfs"
@@ -155,6 +154,96 @@ def write_stadata_to_gds_file(da,save_path = "a.txt",creat_dir = False,show = Fa
         exstr = traceback.format_exc()
         print(exstr)
         return False
+
+def pretty_floats(obj,effective_num):
+    if isinstance(obj, float):
+        return round(obj, effective_num)
+    elif isinstance(obj, dict):
+        return dict((k, pretty_floats(v,effective_num)) for k, v in obj.items())
+    elif isinstance(obj, (list, tuple)):
+        return map(pretty_floats, obj)
+    return obj
+
+def stadata_to_json(sta,effective_num):
+    data_names = meteva.base.get_stadata_names(sta)
+    sta1 = sta.round(effective_num)
+    #print(effective_num)
+    #print(sta1)
+    meteva.base.set_stadata_names(sta1,["data0"])
+    dict_attrs = copy.deepcopy(sta.attrs)
+    dict_attrs["time"] = meteva.base.all_type_time_to_str(sta1['time'].values[0])
+    dict_attrs["dtime"] = str(sta1['dtime'].values[0])
+    dict_attrs["level"] = str(sta1['level'].values[0])
+    dict_attrs["model"] = data_names[0]
+    sta1 = sta1.drop(["level","time","dtime"],axis = 1)
+    if  "data_start_columns" not in dict_attrs.keys():
+        dict_attrs["data_start_columns"] = 6
+    dict1 = {}
+    dict1["attrs"] =dict_attrs
+    #print(dict_attrs)
+    dict1["data"] = sta1.to_dict(orient='index')
+    json_str = json.dumps(pretty_floats(dict1,effective_num))
+    return json_str
+
+
+def stadata_to_json_bytes(sta,effective_num):
+    json_str = stadata_to_json(sta,effective_num)
+    json_bytes = gzip.compress(json_str.encode("GBK"))
+    return json_bytes
+
+def write_stadata_to_json_file(sta,filename,effective_num = 3):
+    br = open(filename, 'w')
+    json_str = stadata_to_json(sta,effective_num)
+    br.write(json_str)
+    br.close()
+
+def write_stadata_to_json_byte_file(sta,filename,effective_num = 3):
+    br = open(filename, 'wb')
+    json_bytes = stadata_to_json_bytes(sta,effective_num)
+    br.write(json_bytes)
+    br.close()
+
+def put_stadata_to_micaps(sta,effective_num = 3,layer_description = None):
+
+    import MPython
+    pyclient = MPython.MICAPSPython()
+    if (pyclient.GetConnectStatus()):
+        print("MICAPS4客户端已连接")
+    else:
+        pyclient.ReConnect()
+
+    data_names = meteva.base.get_stadata_names(sta)
+    nrow = len(data_names)
+
+    if nrow ==1:
+        if layer_description is not None:
+            if isinstance(layer_description,list):
+                sta.attrs["data_source"] = layer_description[0]
+                #sta.attrs["layer_description"] = layer_description[0]
+            else:
+                #sta.attrs["layer_description"] = layer_description
+                sta.attrs["data_source"] = layer_description
+        else:
+            #sta.attrs["layer_description"] = ""
+            pass
+        if "model" not in sta.attrs.keys():
+            sta.attrs["model"] = data_names[0]
+        json_bytes = stadata_to_json_bytes(sta, effective_num)
+        pyclient.CreateDiscreteLayer(json_bytes)
+    else:
+        for i in range(nrow):
+            sta1 = meteva.base.in_member_list(sta,[data_names[i]])
+            if layer_description is not None:
+                sta1.attrs["data_source"] = layer_description[i]
+                #sta1.attrs["layer_description"] = layer_description[i]
+            else:
+                #sta1.attrs["layer_description"] = ""
+                pass
+            if "model" not in sta1.attrs.keys():
+                sta1.attrs["model"] = data_names[i]
+
+            json_bytes = stadata_to_json_bytes(sta1,effective_num)
+            pyclient.CreateDiscreteLayer(json_bytes)
 
 '''def sta_to_json(sta,effective_num):
     sta1 = sta.round(effective_num)
