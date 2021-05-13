@@ -171,7 +171,6 @@ def cmap_clevs_temper_error_br(vmax):
 
 
 def cmap_clevs_me(vmin,vmax):
-
     max_abs = max(abs(vmax),abs(vmin))
     vmax = max_abs
     vmin = -max_abs
@@ -195,7 +194,7 @@ def cmap_clevs_me(vmin,vmax):
     vmin = inte * ((int)(vmin / inte) - 1)
 
     vmax = inte * ((int)(vmax / inte) + 2)
-    clevs1 = np.arange(vmin, 0, inte)
+    clevs1 = np.arange(vmin, -1e-6, inte)
     nclev = len(clevs1)
     colors0 = cm.get_cmap("winter", nclev)
     colors_list = []
@@ -208,9 +207,7 @@ def cmap_clevs_me(vmin,vmax):
     for i in range(nclev):
         colors_list.append(colors0(nclev -1 - i))
     clevs = np.arange(vmin, vmax, inte)
-
     cmap = colors.ListedColormap(colors_list, 'indexed')
-
     return cmap,clevs
 
 
