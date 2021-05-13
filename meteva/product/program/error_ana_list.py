@@ -12,7 +12,8 @@ import json
 
 def error_boxplot(sta_ob_and_fos0,s = None, g = None, gll=None,
                   group_name_list=None,threshold = 2,save_dir=None,save_path = None,show = False,dpi = 200,title="误差综合分析图",
-                  vmin  = None,vmax = None,spasify_xticks = None,sup_fontsize =10,width = None,height = None,json_dir = None,json_path = None):
+                  vmin  = None,vmax = None,spasify_xticks = None,sup_fontsize =10,width = None,height = None,json_dir = None,json_path = None,
+                  **kwargs):
     '''
 
     :param sta_ob_and_fos0:
@@ -69,10 +70,6 @@ def error_boxplot(sta_ob_and_fos0,s = None, g = None, gll=None,
         group_name_list = meteva.product.program.get_group_name(gll1)
 
     for v in range(len(data_names)-1):
-
-
-
-
         combineData = []
         boxgroup = []
         right_rate = []
@@ -181,9 +178,11 @@ def error_boxplot(sta_ob_and_fos0,s = None, g = None, gll=None,
         fig = plt.figure(figsize=(width, height),dpi = dpi)
 
         grid_plt = plt.GridSpec(6, 1, hspace=0)
-
+        plt.rcParams['xtick.direction'] = 'in'
+        plt.rcParams['ytick.direction'] = 'in'
         ax1 = plt.subplot(grid_plt[0:5, 0])
-        bplot = ax1.boxplot(combineData, boxgroup, showfliers=True, patch_artist=True, sym='.')
+
+        bplot = ax1.boxplot(combineData, boxgroup, patch_artist=True, sym='.',**kwargs)
         for i, item in enumerate(bplot["boxes"]):
             item.set_facecolor("lightblue")
         plt.subplots_adjust(left=0.5 / width, right=1 - 0.1 / width)
@@ -208,7 +207,8 @@ def error_boxplot(sta_ob_and_fos0,s = None, g = None, gll=None,
         plt.title(title1, fontsize=14)
 
         ax2 = plt.subplot(grid_plt[5, 0])
-
+        plt.rcParams['xtick.direction'] = 'in'
+        plt.rcParams['ytick.direction'] = 'in'
         plt.bar(x, tcount,width=0.5,label = "样本数")
         plt.legend(fontsize=sup_fontsize * 0.5, loc="upper left")
         xlabel_1 = meteva.product.program.get_x_label(g)
@@ -264,7 +264,7 @@ def error_boxplot(sta_ob_and_fos0,s = None, g = None, gll=None,
 def error_boxplot_abs(sta_ob_and_fos0,s = None, g = None, gll=None,
                   group_name_list=None,threshold = 2,save_dir=None,save_path = None,show = False,dpi = 200,title="绝对误差综合分析图",
                     vmin = None, vmax = None, spasify_xticks = None, sup_fontsize = 10, width = None, height = None
-                      ,json_dir = None,json_path = None):
+                      ,json_dir = None,json_path = None,**kwargs):
 
     if s is not None:
         if g is not None:
@@ -398,12 +398,15 @@ def error_boxplot_abs(sta_ob_and_fos0,s = None, g = None, gll=None,
         fig = plt.figure(figsize=(width, height),dpi = dpi)
         grid_plt = plt.GridSpec(5, 1, hspace=0)
         x = np.arange(1, len(tcount) + 1)
+        plt.rcParams['xtick.direction'] = 'in'
+        plt.rcParams['ytick.direction'] = 'in'
         ax1 = plt.subplot(grid_plt[0:4, 0])
-        bplot = ax1.boxplot(combineData, boxgroup, showfliers=True, patch_artist=True, sym='.')
+        bplot = ax1.boxplot(combineData, boxgroup,  patch_artist=True, sym='.',**kwargs)
         for i, item in enumerate(bplot["boxes"]):
             item.set_facecolor("lightblue")
         plt.subplots_adjust(left=0.5 / width, right=1 - 0.1 / width)
         plt.ylabel("误差绝对值", fontsize=sup_fontsize *0.9)
+
         plt.yticks(fontsize=sup_fontsize * 0.8)
         plt.ylim(vmin1,vmax1)
         plt.plot(x,me_list,'g',label = '平均误差',zorder = 3)
@@ -423,6 +426,8 @@ def error_boxplot_abs(sta_ob_and_fos0,s = None, g = None, gll=None,
         plt.hlines(threshold, 1, len(group_name_list), linewidth=1, color="k", linestyles="dashed")
         plt.hlines(0, 1, len(group_name_list), linewidth=1, color="k", linestyles="dashed")
         ax2 = plt.subplot(grid_plt[4, 0])
+        plt.rcParams['xtick.direction'] = 'in'
+        plt.rcParams['ytick.direction'] = 'in'
         plt.bar(x, tcount,width=0.5,label = "样本数")
         plt.legend(fontsize=sup_fontsize * 0.5, loc="upper left")
         xlabel_1 = meteva.product.program.get_x_label(g)
