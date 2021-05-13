@@ -313,7 +313,7 @@ def rain_comprehensive_sg(sta_ob,grd_fo,grade_list, save_path=None,show = False,
     #          bbox_to_anchor=(0, -0.32))
     # 散点回归图
     ax2 = plt.axes(rect2)
-    sta_fo = meteva.base.interp_gs_linear(grd_fo, sta_ob_in)
+    sta_fo = meteva.base.interp_gs_nearest(grd_fo, sta_ob_in)
     #print(sta_fo)
     data_name = meteva.base.get_stadata_names(sta_ob_in)
     ob = sta_ob_in[data_name[0]].values
