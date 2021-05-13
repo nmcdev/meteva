@@ -140,6 +140,99 @@ def moving_avarage(grd, half_window_size):
     return grd1
 
 
+def moving_max(grd, half_window_size):
+    # 该函数计算网格点附近矩形方框内的最大值
+    # 使用同规格的场，确保网格范围和分辨率一致
+    # window_size 窗口尺度
+    levels = copy.deepcopy(grd["level"].values)
+    times = copy.deepcopy(grd["time"].values)
+    dtimes = copy.deepcopy(grd["dtime"].values)
+    members = copy.deepcopy(grd["member"].values)
+    grd1 = copy.deepcopy(grd)
+    nlon = len(grd["lon"])
+    nlat = len(grd["lat"])
+
+
+    size = half_window_size * 2 + 1
+    for i in range(len(levels)):
+        for j in range(len(times)):
+            for k in range(len(dtimes)):
+                for m in range(len(members)):
+
+                    dat = grd1.values[m,i,j,k,:,:]
+                    vmin = np.min(dat)
+                    dat_3d_lon = np.ones((size,nlat,nlon))*vmin
+                    for p in range(-half_window_size,half_window_size+1):
+                        ps0 = max(0,p)
+                        pe0 = min(nlon,nlon + p)
+                        dat_3d_lon[p,:,ps0 : pe0] = dat[:,(ps0 - p):(pe0-p)]
+                    dat_max_lon = np.max(dat_3d_lon,axis=0)
+
+                    dat_3d_lat = np.ones((size,nlat,nlon))*vmin
+                    for p in range(-half_window_size,half_window_size+1):
+                        ps0 = max(0,p)
+                        pe0 = min(nlat,nlat + p)
+                        dat_3d_lat[p,ps0 : pe0,:] = dat_max_lon[(ps0 - p):(pe0-p),:]
+                    dat_max_lat = np.max(dat_3d_lat,axis=0)
+
+                    grd1.values[m, i, j, k, :, :] = dat_max_lat[:, :]
+                    # 首先在x方向做求最大
+    return grd1
+
+
+
+def moving_min(grd, half_window_size):
+    # 该函数计算网格点附近矩形方框内的最小值
+    # 使用同规格的场，确保网格范围和分辨率一致
+    # window_size 窗口尺度
+    levels = copy.deepcopy(grd["level"].values)
+    times = copy.deepcopy(grd["time"].values)
+    dtimes = copy.deepcopy(grd["dtime"].values)
+    members = copy.deepcopy(grd["member"].values)
+    grd1 = copy.deepcopy(grd)
+    nlon = len(grd["lon"])
+    nlat = len(grd["lat"])
+
+
+    size = half_window_size * 2 + 1
+    for i in range(len(levels)):
+        for j in range(len(times)):
+            for k in range(len(dtimes)):
+                for m in range(len(members)):
+
+                    dat = grd1.values[m,i,j,k,:,:]
+                    vmax = np.max(dat)
+                    dat_3d_lon = np.ones((size,nlat,nlon))*vmax
+                    for p in range(-half_window_size,half_window_size+1):
+                        ps0 = max(0,p)
+                        pe0 = min(nlon,nlon + p)
+                        dat_3d_lon[p,:,ps0 : pe0] = dat[:,(ps0 - p):(pe0-p)]
+                    dat_max_lon = np.min(dat_3d_lon,axis=0)
+
+                    dat_3d_lat = np.ones((size,nlat,nlon))*vmax
+                    for p in range(-half_window_size,half_window_size+1):
+                        ps0 = max(0,p)
+                        pe0 = min(nlat,nlat + p)
+                        dat_3d_lat[p,ps0 : pe0,:] = dat_max_lon[(ps0 - p):(pe0-p),:]
+                    dat_max_lat = np.min(dat_3d_lat,axis=0)
+
+                    grd1.values[m, i, j, k, :, :] = dat_max_lat[:, :]
+                    # 首先在x方向做求最大
+    return grd1
+
+
+def moving_std(grd,half_window_size):
+    # 该函数计算网格点附近矩形方框内的标准差
+    # 使用同规格的场，确保网格范围和分辨率一致
+    # window_size 窗口尺度
+    grd_move_mean = moving_avarage(grd,half_window_size)
+    delta = copy.deepcopy(grd)
+    delta.values[:] = np.power(grd.values[:] - grd_move_mean.values[:],2)
+    delta =moving_avarage(delta,half_window_size)
+    delta.values = np.sqrt(delta.values)
+
+    return delta
+
 
 
 #将两个站点dataframe相加在一起
