@@ -93,7 +93,7 @@ def change(sta,delta = 24,used_coords = "time"):
         names_0 = meteva.base.get_stadata_names(sta)
         names_1 = []
         for name in names_0:
-            names_1.append(name+"_new")
+            names_1.append(str(name)+"_new")
         sta1 = sta.copy()
         meteva.base.set_stadata_names(sta1,names_1)
         sta1.loc[:,"dtime"] = sta1.loc[:,"dtime"] + delta
