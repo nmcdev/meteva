@@ -463,7 +463,7 @@ def read_griddata_from_nc(filename,grid = None,
 def print_grib_file_info(filename,level_type = None,level = None):
     if level_type is None:
         try:
-            ds1 = xr.open_dataset(filename, engine="cfgrib")
+            ds1 = xr.open_dataset(filename, engine="cfgrib", backend_kwargs={"indexpath": ""})
             print(filename + "中只有一种leve_type，\n请根据以下数据内容信息，确认其中的level维度名称")
             print(ds1)
             ds1.close()
@@ -488,7 +488,7 @@ def print_grib_file_info(filename,level_type = None,level = None):
         filter_by_keys['typeOfLevel'] = level_type.strip()
         if level is not None:
             filter_by_keys['level'] = level
-        ds0 = xr.open_dataset(filename, engine="cfgrib", backend_kwargs={'filter_by_keys': filter_by_keys})
+        ds0 = xr.open_dataset(filename, engine="cfgrib", backend_kwargs={'filter_by_keys': filter_by_keys,"indexpath": ""})
         print(ds0)
         ds0.close()
 
@@ -504,7 +504,7 @@ def read_griddata_from_grib(filename,level_type,grid = None,
         filter_by_keys['typeOfLevel'] = level_type
         if level is not None:
             filter_by_keys['level'] = level
-        ds0 = xr.open_dataset(filename, engine="cfgrib", backend_kwargs={'filter_by_keys': filter_by_keys})
+        ds0 = xr.open_dataset(filename, engine="cfgrib", backend_kwargs={'filter_by_keys': filter_by_keys,"indexpath": ""},)
         da1 = meteva.base.xarray_to_griddata(ds0,value_name=value_name,member_dim=member_dim,level_dim=level_type,time_dim=time_dim,dtime_dim=dtime_dim,
                                              lat_dim=lat_dim,lon_dim=lon_dim)
         ds0.close()
