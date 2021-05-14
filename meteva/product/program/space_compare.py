@@ -313,7 +313,7 @@ def rain_comprehensive_sg(sta_ob,grd_fo,grade_list, save_path=None,show = False,
     #          bbox_to_anchor=(0, -0.32))
     # 散点回归图
     ax2 = plt.axes(rect2)
-    sta_fo = meteva.base.interp_gs_linear(grd_fo, sta_ob_in)
+    sta_fo = meteva.base.interp_gs_nearest(grd_fo, sta_ob_in)
     #print(sta_fo)
     data_name = meteva.base.get_stadata_names(sta_ob_in)
     ob = sta_ob_in[data_name[0]].values
@@ -438,7 +438,7 @@ def rain_comprehensive_sg(sta_ob,grd_fo,grade_list, save_path=None,show = False,
     text += "                         观测           预报\n"
     text += "---------------------------------------------\n"
     text += "有降水站点数(>=0.01)     " + "%4d" % len(ob_has) + "           %4d" % len(fo_has) + "\n"
-    text += "有降水站点数百分比%    " + "%6.1f" % (len(ob_has) / len(ob)) + "%15.1f" % (len(fo_has) / len(fo)) + "\n"
+    text += "有降水站点数百分比%    " + "%6.1f" % (100*len(ob_has) / len(ob)) + "%15.1f" % (100*len(fo_has) / len(fo)) + "\n"
     text += "平均降水量(排除无降水) " + "%6.1f" % (mean_ob) + "%15.1f" % (mean_fo) + "\n"
     text += "最大降水量             " + "%6.1f" % (max_ob) + "%15.1f" % (max_fo)+"\n"
     text += "---------------------------------------------"
@@ -765,7 +765,7 @@ def rain_comprehensive_chinaland_sg(sta_ob,grd_fo,grade_list, save_path=None,sho
     text += "                              观测           预报  \n"
     text += "----------------------------------------------------\n"
     text += "有降水站点数(>=0.01)     " + "%9d" % len(ob_has) + "           %4d" % len(fo_has) + "\n"
-    text += "有降水站点数百分比%    " + "%11.1f" % (len(ob_has) / len(ob)) + "%15.1f" % (len(fo_has) / len(fo)) + "\n"
+    text += "有降水站点数百分比%    " + "%11.1f" % (100*len(ob_has) / len(ob)) + "%15.1f" % (100*len(fo_has) / len(fo)) + "\n"
     text += "平均降水量(排除无降水) " + "%11.1f" % (mean_ob) + "%15.1f" % (mean_fo) + "\n"
     text += "最大降水量             " + "%11.1f" % (max_ob) + "%15.1f" % (max_fo)+"\n"
     text += "----------------------------------------------------"

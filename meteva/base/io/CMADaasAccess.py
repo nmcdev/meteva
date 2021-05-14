@@ -253,8 +253,11 @@ class CMADaasAccess():
             sta.dtime = sta.dtime.astype(np.int16)
             sta.lon = sta.lon.astype(np.float32)
             sta.lat = sta.lat.astype(np.float32)
-            sta.data0 = sta.data0.astype(np.float32)
-            sta.data0[sta.data0>=10000]=default
+            try:
+                sta.data0 = sta.data0.astype(np.float32)
+                sta.data0[sta.data0>=10000]=default
+            except:
+                pass
             return(sta)            
         except Exception as data:
             LogLib.error('CMADaasAccess Convert dataFrame from JSON_dict {0}'.format(datetime.datetime.now().strftime("%Y%m%d%H%M")))

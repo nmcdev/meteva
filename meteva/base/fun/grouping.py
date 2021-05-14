@@ -25,13 +25,70 @@ def group(sta_ob_and_fos,g = None,gll = None):
                        "dtime","dtime_range","dday","dhour","id","lon_range","lon_step","lat_range","lat_step","last_range","last_step","grid",
                        "province_name","member"]
 
-        sta_names = meteva.base.get_stadata_names(sta_ob_and_fos)
-        if not g in valid_group and not g in sta_names:
+        data_names = meteva.base.get_stadata_names(sta_ob_and_fos)
+
+        data_names_range = []
+        for data_name in data_names:
+            data_names_range.append(data_name + "_range")
+
+        data_names_step = []
+        for data_name in data_names:
+            data_names_step.append(data_name + "_step")
+
+        valid_group.extend(data_names)
+        valid_group.extend(data_names_range)
+        valid_group.extend(data_names_step)
+
+        if not g in valid_group:
             print("group_by 参数必须为如下列表中的选项：")
             print(str(valid_group))
-            print(str(sta_names))
             return None
-        if g == "level":
+        if g in data_names:
+            if group_list_list is None:
+                grouped_dict = dict(list(sta_ob_and_fos.groupby(g)))
+                keys = grouped_dict.keys()
+                for key in keys:
+                    valid_group_list_list.append([key])
+                    sta_ob_and_fos_list.append(grouped_dict[key])
+            else:
+                for group_list in group_list_list:
+                    sta = meteva.base.in_one_column_value_list(sta_ob_and_fos,g, group_list)
+                    if len(sta.index) != 0:
+                        valid_group_list_list.append(group_list)
+                        sta_ob_and_fos_list.append(sta)
+
+        elif g in data_names_range:
+            if group_list_list is None:
+                print("当group_by =" + g + "时 group_list_list 参数不能为None")
+            else:
+                name1 = g.split("_")[0]
+                for group_list in group_list_list:
+                    sta = meteva.base.between_one_column_value_range(sta_ob_and_fos, name1,group_list[0], group_list[1])
+                    if len(sta.index) != 0:
+                        valid_group_list_list.append(group_list)
+                        sta_ob_and_fos_list.append(sta)
+
+        elif g in data_names_step:
+            if group_list_list is None:
+                print("当group_by =" + g + "时 group_list_list 参数不能为None")
+            else:
+                name1 = g.split("_")[0]
+                group_list_list1 = []
+                start = group_list_list[0][0]
+                step = group_list_list[1][0]
+                min = np.min(sta_ob_and_fos.loc[:,name1])
+                max = np.max(sta_ob_and_fos.loc[:,name1])
+                min =start - (int((start - min) / step) + 1) *step
+                max = start + (int((max - start)/step) +1) * step
+                for value in range(min,max,step):
+                    group_list_list1.append([value,value+ step - 1e-6])
+                for group_list in group_list_list1:
+                    sta = meteva.base.between_one_column_value_range(sta_ob_and_fos,name1,group_list[0],group_list[1])
+                    if len(sta.index) !=0:
+                        valid_group_list_list.append(group_list)
+                        sta_ob_and_fos_list.append(sta)
+
+        elif g == "level":
             if group_list_list is None:
                 grouped_dict = dict(list(sta_ob_and_fos.groupby(g)))
                 keys = grouped_dict.keys()
@@ -358,7 +415,7 @@ def group(sta_ob_and_fos,g = None,gll = None):
 
         elif g == "lon_step":
             if group_list_list is None:
-                print("当group_by = lon_range时 group_list_list 参数不能为None")
+                print("当group_by = lon_step时 group_list_list 参数不能为None")
             else:
                 group_list_list1 = []
                 start = group_list_list[0][0]
@@ -378,7 +435,7 @@ def group(sta_ob_and_fos,g = None,gll = None):
 
         elif g == "lat_step":
             if group_list_list is None:
-                print("当group_by = lat_range时 group_list_list 参数不能为None")
+                print("当group_by = lat_step时 group_list_list 参数不能为None")
             else:
                 group_list_list1 = []
                 start = group_list_list[0][0]

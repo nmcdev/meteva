@@ -50,7 +50,7 @@ def error_scatter(sta_ob_and_fos,method,s = None,g = None,gll = None,group_name_
 
     for k in range(g_num):
         sta_ob_and_fos_g1 = sta_ob_and_fos_list[k]
-        rmse_sta = meteva.product.score_id(sta_ob_and_fos_g1,method)[0]
+        rmse_sta = meteva.product.score_id(sta_ob_and_fos_g1,method,plot = None)[0]
 
         if isinstance(title, list):
             title1 = title[k * fo_num: (k + 1) * fo_num]
@@ -70,6 +70,8 @@ def error_scatter(sta_ob_and_fos,method,s = None,g = None,gll = None,group_name_
                     save_path1.append(save_dir + "/" + fileName + ".png")
         else:
             save_path1 = save_path[k * fo_num: (k + 1) * fo_num]
+
+
         meteva.base.tool.plot_tools.scatter_sta(rmse_sta, save_path=save_path1, show=show,
                                                 fix_size=False, title=title1, print_max=print_max,print_min = print_min
                                                 , add_county_line=add_county_line,

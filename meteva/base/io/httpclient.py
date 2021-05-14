@@ -53,6 +53,8 @@ def get_http_result_cimiss(interface_id, params, data_format='json',show_url = F
     http = urllib3.PoolManager()
     req = http.request('GET', url)
     if req.status != 200:
-        print('Can not access the url: ' + url)
-        return None
+        req = http.request('GET', url)
+        if req.status != 200:
+            print('Can not access the url: ' + url)
+            return None
     return req.data

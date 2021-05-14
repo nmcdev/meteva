@@ -1737,7 +1737,7 @@ def read_stadata_from_cimiss(dataCode,element,time,station = None,level = 0,dtim
     params = {'dataCode': dataCode,
               'times': time_str,
               'orderby': "Station_Id_d",
-              'elements': "Station_Id_d,lat,lon,"+element}
+              'elements': "Station_Id_d,lon,lat,"+element}
 
     contents = get_http_result_cimiss(interface_id,params,show_url=show)
     if contents is None:
@@ -1753,6 +1753,16 @@ def read_stadata_from_cimiss(dataCode,element,time,station = None,level = 0,dtim
         if isinstance(data1,str):
             df[element] = df[element].astype("float")
         sta = meteva.base.sta_data(df,columns=["id","lon","lat",element])
+
+        #sta.time = pd.to_datetime(sta.time)
+        #sta.level = sta.level.astype(np.int16)
+        sta.id = sta.id.astype(np.int32)
+        #sta.dtime = sta.dtime.astype(np.int16)
+        sta.lon = sta.lon.astype(np.float32)
+        sta.lat = sta.lat.astype(np.float32)
+        #sta.data0 = sta.data0.astype(np.float32)
+        #sta.data0[sta.data0 >= 10000] = default
+
         meteva.base.set_stadata_coords(sta,time = time1,dtime=dtime,level=level)
         if (station is not None):
             sta = meteva.base.put_stadata_on_station(sta, station)

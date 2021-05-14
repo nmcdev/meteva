@@ -510,7 +510,9 @@ def plot_2d_grid_list(grd_list,type = "contour",save_path = None,title = None,cl
 
                 time_str = meteva.base.tool.time_tools.time_to_str(grd_list[p]["time"].values[0])
                 dati_str = time_str[0:4] + "年" + time_str[4:6] + "月" + time_str[6:8] + "日" + time_str[8:10] + "时"
-                title1 = grd_list[p]["member"].values[0] + " " + dati_str + str(grd_list[p]["dtime"].values[0]) + "H时效 "
+                #print(str(grd_list[p]["dtime"].values[0]))
+                title1 = str(grd_list[p]["member"].values[0]) + " " + dati_str + str(grd_list[p]["dtime"].values[0]) + "H时效 "
+
                 if "var_name" in grd_list[p].attrs.keys():
                     title1 = title1 + grd_list[p].attrs["var_name"]
             except:
@@ -815,7 +817,7 @@ def scatter_sta(sta0,value_column=None,
         dis_values.sort()
         dis1 = dis_values[int(len(dis_values) * 0.02) + 1]
         point_size = (map_width * dis1 / rlon)**2
-        if (point_size > 30): point_size = 30
+        if (point_size > 50): point_size = 50
         if (point_size < 0.1): point_size = 0.1
         #point_size *=3
     left_low = (width + 0.1 - right_plots_width) / width
@@ -1139,10 +1141,21 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
     norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
     #print(sta0_list[0])
     if point_size is None:
-        point_size = int(100 * map_area / len(sta0_list[0].index))
-        if (point_size > 30): point_size = 30
-        if (point_size < 1): point_size = 1
-        point_size *=1.5
+
+        sta_id1 = sta0.drop_duplicates(['id'])
+        sta_dis = meteva.base.sta_dis_ensemble_near_by_sta(sta_id1,nearNum=2)
+        dis_values = sta_dis["data1"].values
+        dis_values.sort()
+        dis1 = dis_values[int(len(dis_values) * 0.02) + 1]
+        point_size = (width_map * dis1 / rlon)**2
+        if (point_size > 50): point_size = 50
+        if (point_size < 0.1): point_size = 0.1
+
+
+        #point_size = int(100 * map_area / len(sta0_list[0].index))
+        #if (point_size > 50): point_size = 50
+        #if (point_size < 1): point_size = 1
+        #point_size *=1.5
 
 
     vmax = elon
@@ -1391,7 +1404,7 @@ def caculate_axis_width(xticks,fontsize,legend_num = 1):
 
 def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",vmin = None,vmax = None,ncol = None,grid = None,tag = -1,save_path = None,show = False
         ,dpi = 300,bar_width = None,spasify_xticks = None,sup_fontsize = 10,title = ""
-             ,height = None,width = None,log_y = False,sup_title = None):
+             ,height = None,width = None,log_y = False,sup_title = None,xlabel = None):
     shape = array.shape
 
     if len(array[array!=meteva.base.IV]) ==0:
@@ -1558,7 +1571,8 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
 
         plt.xticks(xticks,xticks_labels,fontsize = xticks_font)
         plt.yticks(fontsize=sup_fontsize * 0.8)
-        plt.xlabel(axis,fontsize=sup_fontsize * 0.9)
+        if xlabel is None:xlabel = axis
+        plt.xlabel(xlabel,fontsize=sup_fontsize * 0.9)
         plt.ylabel(ylabel,fontsize = sup_fontsize * 0.9)
 
         if isinstance(title,list):
@@ -1768,7 +1782,8 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
         plt.legend(fontsize =sup_fontsize * 0.8,ncol = legend_col,loc = "upper center")
         plt.xticks(xticks, xticks_labels, fontsize=xticks_font)
         plt.yticks(fontsize=sup_fontsize * 0.8)
-        plt.xlabel(axis, fontsize=sup_fontsize * 0.9)
+        if xlabel is None:xlabel = axis
+        plt.xlabel(xlabel, fontsize=sup_fontsize * 0.9)
         plt.ylabel(ylabel, fontsize=sup_fontsize * 0.9)
         if isinstance(title,list):
             title = title[0]
@@ -2004,8 +2019,6 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
 
 
             ax_one = plt.subplot(nrow, ncol, k + 1)
-
-
             legend0 = str(name_list_dict[legend][0])
             if legend0.lower().find("ob")<0 and legend0.find("观测")<0 and legend0.find("实况")<0 and legend0.find("零场")<0:
                 plt.bar(0,0)
@@ -2074,10 +2087,11 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
             knext_row = ki + (kj+1) * ncol
             #print(knext_row)
             #print(subplot_num)
+            if xlabel is None: xlabel = axis
             if knext_row>=subplot_num:
                 #plt.xticks(x[::spasify], name_list_dict[axis][::spasify], fontsize=sup_fontsize * 0.8)
                 plt.xticks(xticks, xticks_labels, fontsize=xticks_font)
-                plt.xlabel(axis, fontsize=sup_fontsize * 0.9)
+                plt.xlabel(xlabel, fontsize=sup_fontsize * 0.9)
             else:
                 plt.xticks(xticks,xticks_labels_None)
             xminorLocator = mpl.ticker.MultipleLocator(1)  # 将x轴次刻度标签设置xmi
@@ -2182,20 +2196,20 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
 
 
 def bar(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",vmin = None,vmax = None,ncol = None,grid = None,tag = -1,save_path = None,show = False
-        ,dpi = 300,bar_width = None,title = "",spasify_xticks = None,sup_fontsize = 10,width = None,height = None,log_y = False,sup_title = None):
+        ,dpi = 300,bar_width = None,title = "",spasify_xticks = None,sup_fontsize = 10,width = None,height = None,log_y = False,sup_title = None,xlabel = None):
 
     plot_bar("bar",array = array,name_list_dict=name_list_dict,legend = legend,axis = axis,ylabel = ylabel,vmin= vmin,vmax = vmax,ncol =ncol,grid = grid,tag = tag,
              spasify_xticks = spasify_xticks,save_path = save_path,show = show,
-             dpi = dpi,bar_width=bar_width,sup_fontsize= sup_fontsize,title=title,width = width,height = height,log_y = log_y,sup_title= sup_title)
+             dpi = dpi,bar_width=bar_width,sup_fontsize= sup_fontsize,title=title,width = width,height = height,log_y = log_y,sup_title= sup_title,xlabel = xlabel)
 
 
 
 def plot(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",vmin = None,vmax = None,ncol = None,grid = None,tag = -1,save_path = None,show = False,dpi = 300
-         ,title ="",spasify_xticks = None,sup_fontsize = 10,width = None,height = None,log_y = False,sup_title = None):
+         ,title ="",spasify_xticks = None,sup_fontsize = 10,width = None,height = None,log_y = False,sup_title = None,xlabel = None):
 
     plot_bar("line",array,name_list_dict=name_list_dict,legend = legend,axis = axis,ylabel = ylabel,vmin= vmin,vmax = vmax,ncol =ncol,grid = grid,tag=tag ,
              spasify_xticks = spasify_xticks,save_path = save_path,show = show,
-             dpi = dpi,sup_fontsize= sup_fontsize,title=title,width = width,height = height,log_y = log_y,sup_title = sup_title)
+             dpi = dpi,sup_fontsize= sup_fontsize,title=title,width = width,height = height,log_y = log_y,sup_title = sup_title,xlabel = xlabel)
 
 
 def myheatmap(ax_one,data_k,cmap,clevs,annot=1,fontsize=10):

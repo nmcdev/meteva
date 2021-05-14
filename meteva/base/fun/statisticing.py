@@ -145,7 +145,7 @@ def mean_of_sta(sta,used_coords = ["member"],span = 24,equal_weight = False,keep
 def std_of_sta(sta,used_coords = ["member"]):
     sta_std = sta.loc[:,meteva.base.get_coord_names()]
     sta_data = sta[meteva.base.get_stadata_names(sta)]
-    value = sta_data.values
+    value = sta_data.values.astype(np.float32)
     std = np.std(value, axis=1)
     sta_std['std'] = std
     return sta_std

@@ -1,6 +1,7 @@
 # coding: utf-8
 import numpy as np
 import math
+import meteva
 
 def reset_max_min(vmax,vmin):
     dif = (vmax - vmin) / 10.0
@@ -29,7 +30,7 @@ def sigmoid(inputX):
 
 #根据经纬度计算距离，然后开平方根
 def earth_surface_dis(ax,ay,bx,by):
-    sr=math.cos(ay*math.pi/180)
+    sr=math.cos(0.5*(ay+by)*math.pi/180)
     d1=(ax-bx)*sr
     d2=ay-by
     dis1=math.sqrt(d1*d1+d2*d2)
@@ -37,11 +38,13 @@ def earth_surface_dis(ax,ay,bx,by):
 
 #根据经纬度计算距离
 def earth_surface_dis2(ax,ay,bx,by):
-    sr=math.cos(ay*math.pi/180)
+    sr=math.cos(0.5*(ay+by)*math.pi/180)
     d1=(ax-bx)*sr
     d2=ay-by
     dis2=d1*d1+d2*d2
     return dis2
+
+
 
 #经度纬度信息转换为直角坐标系
 def lon_lat_to_cartesian(lon, lat, R=1):
@@ -163,3 +166,73 @@ def s_d_to_u_v(speed,direction):
     u = -speed * np.sin(direction * 3.14 / 180)
     v = -speed * np.cos(direction * 3.14 / 180)
     return u,v
+
+
+
+def ctl_proj(grid0,proj_para,dat):
+    #投影中心点
+
+    inter_i = meteva.base.ER * 1000 / proj_para["dx"]
+    inter_j = meteva.base.ER * 1000 / proj_para["dy"]
+    if proj_para["type"] == "lcc":
+        mlon = proj_para["proj_mlon"]* math.pi/180
+
+        #球面转扇形
+        lats1 = (grid0.slat + np.arange(grid0.nlat) * grid0.dlat) * math.pi / 180
+        lons1 = (grid0.slon + np.arange(grid0.nlon) * grid0.dlon) * math.pi / 180
+        lons,lats = np.meshgrid(lons1,lats1)
+        lons = lons.flatten()
+        lats = lats.flatten()
+        #根据lon 计算扇形fanR
+        slat = proj_para["proj_slat"] * math.pi/180
+        elat = proj_para["proj_elat"] * math.pi/180
+        xs = math.cos(slat)
+        ys = math.sin(slat)
+        xe = math.cos(elat)
+        ye = math.sin(elat)
+        a = (ys - ye)/(xs - xe)  #在R方向投影线性系数
+        b = (ye * xs - ys * xe)/(xs - xe)
+        r = np.tan(lats)
+        x_ar = b/(r-a)
+        ac = math.sqrt(1 + a * a)
+        fanR = x_ar * ac
+
+        #计算角度比例
+        dx_slat = math.cos(slat)
+        fanR_slat = b/(math.tan(slat) - a) * ac
+        angle_rate = dx_slat / fanR_slat
+
+
+        dlons = (lons - mlon) * angle_rate
+
+        fanX = fanR * np.sin(dlons)
+        fanY = -fanR * np.cos(dlons)
+
+        dmodel_lon = (proj_para["model_lon"] * math.pi/180 - mlon) * angle_rate
+        model_lat = proj_para["model_lat"] * math.pi / 180
+        model_fanR =b/(math.tan(model_lat)-a)* ac
+        model_fanX = model_fanR * np.sin(dmodel_lon)
+        model_fanY = -model_fanR * np.cos(dmodel_lon)
+
+        fan_i = (fanX - model_fanX) * inter_i + proj_para["model_i"]
+        fan_j = (fanY - model_fanY) * inter_j + proj_para["model_j"]
+        nx_1 = proj_para["nx"] - 1
+        ny_1 = proj_para["ny"] - 1
+        in_grid_index = np.where((fan_i >= 0) & (fan_i < nx_1) & (fan_j >= 0) & (fan_j < ny_1))[0]
+        fan_i_in = fan_i[in_grid_index]
+        fan_j_in = fan_j[in_grid_index]
+        ig = fan_i_in.astype(dtype = 'int16')
+        jg = fan_j_in.astype(dtype = 'int16')
+        dx = fan_i_in - ig
+        dy = fan_j_in - jg
+        c00 = (1 - dx) * (1 - dy)
+        c01 = dx * (1 - dy)
+        c10 = (1-dx) * dy
+        c11 = dx * dy
+        ig1 = ig + 1
+        jg1 = jg + 1
+        dat_sta = c00 * dat[jg, ig] + c01 * dat[jg, ig1] + c10 * dat[jg1, ig] + c11 * dat[jg1, ig1]
+        data_re = np.zeros(grid0.nlat * grid0.nlon)
+        data_re[in_grid_index] = dat_sta[:]
+        grd = meteva.base.grid_data(grid0,data_re)
+        return grd
