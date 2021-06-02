@@ -12,4 +12,4 @@ from .score import bias_m,bias_tmmsss,corr,corr_tmmsss,tmmsss,tmmsss_merge,toar,
 from .score import ob_fo_mean,ob_fo_std,ob_fo_max,ob_fo_min
 from .score import wrong_rate,wrong_rate_tc,residual_error,residual_error_tmmsss,residual_error_rate,residual_error_rate_tmmsss
 from .score import max_abs_error,max_error,min_error
-from .score import ob_fo_sum,rmsf,tlfo,rank_corr
+from .score import ob_fo_sum,rmsf,tlfo,corr_rank,rmsf_tlfo

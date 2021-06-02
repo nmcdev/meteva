@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 import numpy as np
 
-def read_micaps14(fname,time = None,dtime = None,data_name = None):
+def read_micaps14(filename,time = None,dtime = 0,data_name = None):
     """
     Read micaps 14 file (编辑图象的图元数据, 即交互操作结果数据).
     :param fname: micaps 14 filename.
@@ -12,7 +12,7 @@ def read_micaps14(fname,time = None,dtime = None,data_name = None):
     """
 
     # check file exist
-    if not os.path.isfile(fname):
+    if not os.path.isfile(filename):
         return None
 
     # read contents
@@ -21,12 +21,12 @@ def read_micaps14(fname,time = None,dtime = None,data_name = None):
     for encoding in encodings:
         txt = None
         try:
-            with open(fname, 'r', encoding=encoding) as f:
+            with open(filename, 'r', encoding=encoding) as f:
                 txt = f.read().replace('\n', ' ').split()
         except Exception:
             pass
     if txt is None:
-        print("Micaps 14 file error: " + fname)
+        print("Micaps 14 file error: " + filename)
         return None
 
     # head information

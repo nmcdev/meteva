@@ -551,7 +551,7 @@ def hss_tcof(tcof_array):
     return HSS
 
 
-def seeps_ctable(contingency_table_multicategory,p1, significant_rain_threshold):
+def seeps_ctable(contingency_table_multicategory,p1):
 
     s_fv = np.array([[0, 1 / (1 - p1), 4 / (1 - p1)],
                      [1 / p1, 0, 3 / (1 - p1)],
@@ -560,7 +560,7 @@ def seeps_ctable(contingency_table_multicategory,p1, significant_rain_threshold)
     if len(contingency_table_multicategory.shape) == 2:
         ctm_fv = contingency_table_multicategory
         p_fv = ctm_fv[0:-1, 0:-1] / ctm_fv[-1, -1]
-        print(p_fv)
+        #print(p_fv)
         seeps_error = np.sum(s_fv * p_fv)
         return seeps_error
     else:
@@ -576,7 +576,7 @@ def seeps_ctable(contingency_table_multicategory,p1, significant_rain_threshold)
         return seeps_error_array
 
 
-def seeps(Ob, Fo, p1=None, significant_rain_threshold=None):
+def seeps(Ob, Fo, p1=None, threshold=None):
     '''
 
     :param Ob:
@@ -592,19 +592,19 @@ def seeps(Ob, Fo, p1=None, significant_rain_threshold=None):
         p1 = len(index_p1[0]) / ob1.size
         p3 = (1 - p1) / 3
         index_p3 = int(math.ceil((1 - p3) * ob1.size)) - 1
-        significant_rain_threshold = ob1[index_p3]
-        if significant_rain_threshold < 0.3:
-            significant_rain_threshold = 0.3
+        threshold = ob1[index_p3]
+        if threshold < 0.3:
+            threshold = 0.3
     if p1 == 1: p1 -= 1e-6
     if p1 == 0: p1 = 1e-6
     ctable = meteva.method.contingency_table_multicategory(Ob, Fo,
-                                                  grade_list=[0.2000001, significant_rain_threshold])
-    seeps_error = seeps_ctable(ctable,p1,significant_rain_threshold)
+                                                  grade_list=[0.2000001, threshold])
+    seeps_error = seeps_ctable(ctable,p1)
     return seeps_error
 
 
 
-def seeps_skill(Ob, Fo, p1=None, significant_rain_threshold=None):
+def seeps_skill(Ob, Fo, p1=None, threshold=None):
     '''
 
     :param Ob:
@@ -613,6 +613,6 @@ def seeps_skill(Ob, Fo, p1=None, significant_rain_threshold=None):
     :param significant_rain_threshold:
     :return:
     '''
-    seeps_array = seeps(Ob,Fo,p1= p1,significant_rain_threshold=significant_rain_threshold)
+    seeps_array = seeps(Ob,Fo,p1= p1,threshold=threshold)
     skill = 1- seeps_array
     return skill
