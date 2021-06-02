@@ -169,7 +169,8 @@ def group(sta_ob_and_fos,g = None,gll = None):
                 for group_list in group_list_list:
                     days_list = []
                     for day0 in group_list:
-                        day = (day0 - time0).total_seconds() // seconds
+                        day1 = meteva.base.all_type_time_to_datetime(day0)
+                        day = (day1 - time0).total_seconds() // seconds
                         days_list.append(day)
                     sta = sta_ob_and_fos.loc[indexs.isin(days_list)]
                     if len(sta.index) !=0:
@@ -214,12 +215,16 @@ def group(sta_ob_and_fos,g = None,gll = None):
                     valid_group_list_list.append([key])
                     sta_ob_and_fos_list.append(grouped_dict[key])
             else:
-                for group_list in group_list_list:
-                    sta = sta_ob_and_fos.loc[obtimes.isin(group_list)]
-                    if len(sta.index) !=0:
-                        valid_group_list_list.append(group_list)
-                        sta_ob_and_fos_list.append(sta)
 
+                for group_list in group_list_list:
+                    group_list1 = []
+                    for time_g1 in group_list:
+                        group_list1.append(meteva.base.all_type_time_to_datetime(time_g1))
+                    sta = sta_ob_and_fos.loc[obtimes.isin(group_list1)]
+
+                    if len(sta.index) !=0:
+                        valid_group_list_list.append(group_list1)
+                        sta_ob_and_fos_list.append(sta)
         elif g == "ob_time_range":
             if group_list_list is None:
                 print("当group_by = ob_time_range时 group_list_list 参数不能为None")
@@ -520,11 +525,13 @@ def group(sta_ob_and_fos,g = None,gll = None):
 
     #返回分组结果，和实际分组方式
     if len(valid_group_list_list)==0:
-        valid_group_list_list = None
-    valid_group_list =  np.array(valid_group_list_list).squeeze().tolist()
-
-
-
+        valid_group_list = None
+    else:
+        if len(valid_group_list_list) > 1:
+            valid_group_list =  np.array(valid_group_list_list).squeeze().tolist()
+        else:
+            valid_group_list = valid_group_list_list
+    #print(valid_group_list)
     return sta_ob_and_fos_list,valid_group_list
 
 
