@@ -150,7 +150,8 @@ class grid:
             self.nlon = int(math.ceil(nlon))
         else:
             self.nlon = int(round(nlon))
-        self.elon = self.slon + (nlon - 1) * self.dlon
+
+        self.elon = round(self.slon + (nlon - 1) * self.dlon,5)
         self.glon = [self.slon,self.elon,self.dlon]
 
         ############################################################################
@@ -164,7 +165,7 @@ class grid:
             self.nlat = int(math.ceil(nlat))
         else:
             self.nlat = int(round(nlat))
-        self.elat = self.slat + (nlat - 1) * self.dlat
+        self.elat = round(self.slat + (nlat - 1) * self.dlat,5)
         self.glat = [self.slat,self.elat,self.dlat]
 
 
@@ -204,6 +205,8 @@ class grid:
         grid_str += "glat:" + str(self.glat) + "\n"
         return grid_str
 
+
+
 def get_grid_of_data(grid_data0):
     '''
      获取grid的数据values值
@@ -224,10 +227,11 @@ def get_grid_of_data(grid_data0):
     gdt = grid_data0['dtime'].values.tolist()
     attrs_name = list(grid_data0.attrs)
 
+
     lons = grid_data0['lon'].values
-    glon = [lons[0],round(lons[-1],6),round(lons[1]-lons[0],6)]
+    glon = [lons[0],round(lons[-1],5),round(lons[1]-lons[0],5)]
     lats = grid_data0['lat'].values
-    glat = [lats[0],round(lats[-1],6),round(lats[1]-lats[0],6)]
+    glat = [lats[0],round(lats[-1],5),round(lats[1]-lats[0],5)]
     grid01 = grid(glon, glat, gtime, gdt, level_list, member_list)
     return grid01
 

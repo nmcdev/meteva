@@ -141,6 +141,37 @@ def get_time_str_list(time_list,row = 1):
         time_str_list.append(get_time_str_one_by_one(time0,time_1,row))
     return time_str_list
 
+def get_dayofyear_str_list(dayofyear_list):
+    dati0 = datetime.datetime(2019,1,1,0)
+    time_list = []
+    for i in range(len(dayofyear_list)):
+        dati1 = dati0 + datetime.timedelta(days=int(dayofyear_list[i]) - 1)
+        time_list.append(dati1)
+
+    str_list = get_time_str_list(time_list,row=2)
+    str0 = str_list[0]
+    ind = str0.find("年")
+    str0_year = str0[ind-4:ind+1]
+    str0_new = str0.replace(str0_year,"")
+    str_list[0] = str0_new
+    return str_list
+
+
+def get_xun_str_list(xun_list):
+    xun_strs =[]
+    for i in range(12):
+        for j in range(3):
+            if j==0:
+                str1 = ""+str(j+1)+"旬\n"+str(i+1)+"月"
+            else:
+                str1 = ""+str(j+1)+"旬"
+            xun_strs.append(str1)
+    str_list = []
+    for k in xun_list:
+        str_list.append(xun_strs[k-1])
+    return str_list
+
+
 def get_save_path(save_dir,method,group_by,group_list,model_name = "",type = "",discription = ""):
 
     if discription is None:
@@ -432,7 +463,7 @@ def get_group_name(group_list_list):
         islist = False
         for group_list in group_list_list:
             if isinstance(group_list,list):
-               islist
+               islist = True
         if not islist:
             group_name = get_time_str_list(group_list_list,row=3)
         else:

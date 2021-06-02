@@ -12,6 +12,27 @@ def sample_count(Ob, Fo=None):
     return Ob.size
 
 
+def ob_fo_sum(ob,fo):
+    Fo_shape = fo.shape
+    Ob_shape = ob.shape
+
+    Ob_shpe_list = list(Ob_shape)
+    size = len(Ob_shpe_list)
+    ind = -size
+    Fo_Ob_index = list(Fo_shape[ind:])
+    if Fo_Ob_index != Ob_shpe_list:
+        print('实况数据和观测数据维度不匹配')
+        return
+
+    if len(fo.shape) == len(ob.shape):
+        result = [np.sum(ob),np.sum(fo)]
+    else:
+        result = [np.sum(ob)]
+        for i in range(Fo_shape[0]):
+            result.append(np.sum(fo[i,:]))
+    result = np.array(result)
+    return result
+
 def ob_fo_mean(ob,fo):
 
     Fo_shape = fo.shape
@@ -33,6 +54,7 @@ def ob_fo_mean(ob,fo):
             result.append(np.mean(fo[i,:]))
     result = np.array(result)
     return result
+
 
 def ob_fo_min(ob,fo,count = 1):
     if count ==1:
@@ -161,7 +183,6 @@ def ob_fo_std(ob,fo):
     return result
 
 
-
 def ob_mean(Ob, Fo=None):
     '''
     计算观测样本的平均
@@ -261,7 +282,7 @@ def correct_rate(Ob, Fo, grade_list = [2]):
     crate = correct_rate_tc(tc_array)
     return crate
 
-def wrong_rate(Ob,Fo,grade_list = [2]):
+def wrong_rate(Ob,Fo,grade_list = [2],unit = 1):
     '''
     计算错误率
     :param Ob:
@@ -271,11 +292,12 @@ def wrong_rate(Ob,Fo,grade_list = [2]):
     '''
 
     tc_array = tc_count(Ob, Fo, grade_list)
-    wrate = wrong_rate_tc(tc_array)
+    wrate = wrong_rate_tc(tc_array,unit = unit)
+
     return wrate
 
 
-def wrong_rate_tc(tc_count_array):
+def wrong_rate_tc(tc_count_array,unit = 1):
     '''
     计算错误率
     :param Ob:
@@ -284,7 +306,10 @@ def wrong_rate_tc(tc_count_array):
     :return:
     '''
     crate = correct_rate_tc(tc_count_array)
-    return 1 - crate
+    wrate = 1-crate
+    if unit =="%":
+        wrate *=100
+    return wrate
 
 def correct_rate_tc(tc_count_array):
     '''
@@ -300,6 +325,65 @@ def correct_rate_tc(tc_count_array):
 
     return cr1
 
+
+def tlfo(Ob,Fo):
+
+    '''
+    计算RMSF的中间结果
+    -----------------------------
+    :param Ob: 实况数据  任意维numpy数组
+    :param Fo: 预测数据 任意维numpy数组,Fo.shape 和Ob.shape一致
+    :return: 一维numpy数组，其内容依次为总样本数、log(fo/ob)^2 的总和
+    '''
+
+    tlfo_list = []
+    Fo_shape = Fo.shape
+    Ob_shape = Ob.shape
+
+    Ob_shpe_list = list(Ob_shape)
+    size = len(Ob_shpe_list)
+    ind = -size
+    Fo_Ob_index = list(Fo_shape[ind:])
+    if Fo_Ob_index != Ob_shpe_list:
+        print('实况数据和观测数据维度不匹配')
+        return
+    Ob_shpe_list.insert(0, -1)
+    new_Fo_shape = tuple(Ob_shpe_list)
+    new_Fo = Fo.reshape(new_Fo_shape)
+    new_Fo_shape = new_Fo.shape
+    for line in range(new_Fo_shape[0]):
+        fo_ob = np.array([new_Fo[line, :],Ob])
+        min_ob_fo = np.min(fo_ob,axis=0)
+        max_ob_fo = np.max(fo_ob,axis=0)
+        index = np.where((min_ob_fo>=0.1)|(max_ob_fo>=1.0))
+        ob_s = Ob[index]
+        fo_s = new_Fo[line, index]
+        ob_s[ob_s<0.1] = 0.1
+        fo_s[fo_s<0.1] = 0.1
+        total_count = ob_s.size
+        e_sum = np.sum(np.power(np.log(fo_s/ob_s),2))
+        tlfo_list.append(np.array([total_count, e_sum]))
+    tlfo_np = np.array(tlfo_list)
+    shape = list(Fo_shape[:ind])
+    shape.append(4)
+
+    tlfo_array = tlfo_np.reshape(shape)
+    return tlfo_array
+
+def rmsf(Ob,Fo):
+    '''
+
+    :param Ob:
+    :param Fo:
+    :return:
+    '''
+    tlfo_array = tlfo(Ob,Fo)
+    return rmsf_tlfo(tlfo_array)
+
+def rmsf_tlfo(tlfo_array):
+    mean_log2 = tlfo_array[..., 1] / tlfo_array[..., 0]
+    rmsf = np.exp(np.sqrt(mean_log2))
+    return rmsf
 
 def tase(Ob, Fo):
     '''
@@ -364,8 +448,6 @@ def max_error(Ob,Fo):
     else:
         error_array  = np.max(Fo - Ob)
     return error_array
-
-
 
 def min_error(Ob,Fo):
     me_list = []
@@ -679,6 +761,40 @@ def corr(Ob, Fo):
     tmmsss_array = tmmsss(Ob,Fo)
     corr0 = corr_tmmsss(tmmsss_array)
     return corr0
+
+def rank_corr(Ob,Fo):
+    rcc_list = []
+    Fo_shape = Fo.shape
+    Ob_shape = Ob.shape
+
+    Ob_shpe_list = list(Ob_shape)
+    size = len(Ob_shpe_list)
+    ind = -size
+    Fo_Ob_index = list(Fo_shape[ind:])
+
+    if Fo_Ob_index != Ob_shpe_list:
+        print('实况数据和观测数据维度不匹配')
+        return
+    if len(Fo_shape) == len(Ob_shape):
+        r_ob = np.argsort(np.argsort(Ob))
+        r_fo = np.argsort(np.argsort(Fo))
+        rcc = 1 - 6 * np.sum(np.power(r_fo-r_ob,2))/(size * (size*size-1))
+        return rcc
+    else:
+        Ob_shpe_list.insert(0, -1)
+        new_Fo_shape = tuple(Ob_shpe_list)
+        new_Fo = Fo.reshape(new_Fo_shape)
+        new_Fo_shape = new_Fo.shape
+        r_ob = np.argsort(np.argsort(Ob))
+        for line in range(new_Fo_shape[0]):
+            r_fo = np.argsort(np.argsort(new_Fo[line, :]))
+            rcc = 1 - 6 * np.sum(np.power(r_fo-r_ob,2))/(size * (size*size-1))
+            rcc_list.append(rcc)
+        rcc_array = np.array(rcc_list)
+        shape = list(Fo_shape[:ind])
+        rcc_array = rcc_array.reshape(shape)
+        return rcc_array
+
 
 def residual_error(Ob,Fo):
     '''

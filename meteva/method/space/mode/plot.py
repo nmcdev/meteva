@@ -354,14 +354,18 @@ def plot_value(look, cmap ="rain_24h",clevs = None,save_path = None,show = False
     vmax = np.max((np.max(grd_ob), np.max(grd_fo)))
     cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap, clevs=clevs, vmin=0, vmax=vmax)
 
+    mfg1_show = True
     if mfg1 is None:
         mfg1 = mfig(4,map_extend=grid1,ncol=2,sup_fontsize=sup_fontsize,dpi=dpi)
+    else:
+        mfg1_show = False
+
     mfg1.add_contourf(0,grd_ob,cmap = cmap1,clevs=clevs1,add_colorbar=False)
     mfg1.add_contourf(1, grd_fo, cmap=cmap1, clevs=clevs1)
     mfg1.add_contourf(2, grd_ob_smooth, cmap=cmap1, clevs=clevs1,add_colorbar=False)
     mfg1.add_contourf(3, grd_fo_smooth, cmap=cmap1, clevs=clevs1)
 
-    if mfg1 is None:
+    if mfg1_show:
         if save_path is None:
             show = True
         if save_path is not None:
@@ -436,9 +440,14 @@ def plot_label(look,save_path = None,show = False,sup_fontsize=10,dpi = 300,mfg1
 
     grid1 = look["grid"]
     start_ax = 4
+    mfg1_show = True
+
     if mfg1 is None:
         mfg1 = mfig(2,map_extend=grid1,ncol=2,sup_fontsize=sup_fontsize,dpi=dpi)
         start_ax = 0
+    else:
+        mfg1_show = False
+
     nmatch = 1000
     matched = False
     if "match_count" in look.keys():
@@ -474,11 +483,9 @@ def plot_label(look,save_path = None,show = False,sup_fontsize=10,dpi = 300,mfg1
         pts = feature["pts"]
         pts_dict[i+1] = pts
     add_pts(mfg1.ax_list[start_ax+1],look["grid"],pts_dict,nmatch)
-
-    if mfg1 is None:
+    if mfg1_show:
         if save_path is None:
             show = True
-
         if save_path is not None:
             meteva.base.tool.path_tools.creat_path(save_path)
             file1, extension = os.path.splitext(save_path)
@@ -491,6 +498,7 @@ def plot_label(look,save_path = None,show = False,sup_fontsize=10,dpi = 300,mfg1
         if show:
             plt.show()
         plt.close()
+
 
 
 

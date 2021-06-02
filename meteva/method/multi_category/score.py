@@ -2,6 +2,7 @@ import meteva
 import numpy as np
 from meteva.base import IV
 from meteva.method.yes_or_no.score import ts_hfmc, ets_hfmc, bias_hfmc, far_hfmc, mr_hfmc,pod_hfmc,sr_hfmc,pofd_hfmc
+import math
 
 
 def tc(ob, fo, grade_list=None):
@@ -548,3 +549,70 @@ def hss_tcof(tcof_array):
         HSS[random_score == -1] = IV
 
     return HSS
+
+
+def seeps_ctable(contingency_table_multicategory,p1, significant_rain_threshold):
+
+    s_fv = np.array([[0, 1 / (1 - p1), 4 / (1 - p1)],
+                     [1 / p1, 0, 3 / (1 - p1)],
+                     [1 / p1 + 3 / (2 + p1), 3 / (2 + p1), 0]]) * 0.5
+
+    if len(contingency_table_multicategory.shape) == 2:
+        ctm_fv = contingency_table_multicategory
+        p_fv = ctm_fv[0:-1, 0:-1] / ctm_fv[-1, -1]
+        print(p_fv)
+        seeps_error = np.sum(s_fv * p_fv)
+        return seeps_error
+    else:
+        seeps_error_list=[]
+        for line in range(contingency_table_multicategory[0]):
+            ctm_fv = contingency_table_multicategory[line,:,:]
+            p_fv = ctm_fv[0:-1, 0:-1] / ctm_fv[-1, -1]
+            seeps_error = np.sum(s_fv * p_fv)
+            seeps_error_list.append(seeps_error)
+        seeps_error_array = np.array(seeps_error_list)
+        #shape = list(Fo_shape[:ind])
+        #seeps_error_array = seeps_error_array.reshape(shape)
+        return seeps_error_array
+
+
+def seeps(Ob, Fo, p1=None, significant_rain_threshold=None):
+    '''
+
+    :param Ob:
+    :param Fo:
+    :param p1:
+    :param significant_rain_threshold:
+    :return:
+    '''
+
+    if p1 is None:
+        ob1 = np.sort(Ob.flatten())
+        index_p1 = np.where(ob1 <= 0.2)
+        p1 = len(index_p1[0]) / ob1.size
+        p3 = (1 - p1) / 3
+        index_p3 = int(math.ceil((1 - p3) * ob1.size)) - 1
+        significant_rain_threshold = ob1[index_p3]
+        if significant_rain_threshold < 0.3:
+            significant_rain_threshold = 0.3
+    if p1 == 1: p1 -= 1e-6
+    if p1 == 0: p1 = 1e-6
+    ctable = meteva.method.contingency_table_multicategory(Ob, Fo,
+                                                  grade_list=[0.2000001, significant_rain_threshold])
+    seeps_error = seeps_ctable(ctable,p1,significant_rain_threshold)
+    return seeps_error
+
+
+
+def seeps_skill(Ob, Fo, p1=None, significant_rain_threshold=None):
+    '''
+
+    :param Ob:
+    :param Fo:
+    :param p1:
+    :param significant_rain_threshold:
+    :return:
+    '''
+    seeps_array = seeps(Ob,Fo,p1= p1,significant_rain_threshold=significant_rain_threshold)
+    skill = 1- seeps_array
+    return skill

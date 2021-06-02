@@ -48,6 +48,11 @@ setup(
                       "seaborn>=0.9.0",
                       "ipywidgets>=7.5.1",
                       "pyshp>=2.1.0",
-                      "tables>=3.4.4"
+                      "tables>=3.4.4",
+                      "urllib3>=1.21.1",
+                      "opencv-python>=4.5.1.48",
+                      "scikit-image== 0.16.2",
+                      "statsmodels>=0.11.0",
+
                       ]
 )

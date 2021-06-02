@@ -2,6 +2,7 @@ import numpy as np
 import copy
 from meteva.base import IV
 
+
 def ob_fo_hr_hfmc(hfmc_array):
     hit = hfmc_array[...,0]
     fal = hfmc_array[...,1]
@@ -20,6 +21,25 @@ def ob_fo_hr_hfmc(hfmc_array):
     return result
 
 
+def ob_fo_hc_hfmc(hfmc_array):
+    hit = hfmc_array[...,0]
+    fal = hfmc_array[...,1]
+    mis = hfmc_array[...,2]
+    cn = hfmc_array[...,3]
+    total = hit+fal+mis+cn
+    shape1 = list(hfmc_array.shape)
+    if len(hfmc_array.shape) == 2:
+        result = np.zeros((2,shape1[0]))
+        result[0, :] = (hit + mis)
+        result[1, :] = (hit + fal)
+    else:
+        result = np.zeros((1+shape1[0],shape1[1]))
+        result[0, :] = (hit[0,:] + mis[0,:])
+        result[1:, :] = (hit + fal)
+    return result
+
+
+
 def ob_fo_hr(Ob,Fo,grade_list = [1e-30],compair = ">="):
     '''
 
@@ -29,9 +49,18 @@ def ob_fo_hr(Ob,Fo,grade_list = [1e-30],compair = ">="):
     :return:
     '''
     hfmc_array = hfmc(Ob, Fo, grade_list,compair = compair)
-
     return ob_fo_hr_hfmc(hfmc_array)
 
+def ob_fo_hc(Ob,Fo,grade_list = [1e-30],compair = ">="):
+    '''
+
+    :param Ob:
+    :param Fo:
+    :param grade_list:
+    :return:
+    '''
+    hfmc_array = hfmc(Ob, Fo, grade_list,compair = compair)
+    return ob_fo_hc_hfmc(hfmc_array)
 
 def hap_count(Ob,Fo, grade_list=[1e-30],compair = ">="):
     '''
@@ -634,8 +663,6 @@ def hfmc(Ob, Fo, grade_list=[1e-30],compair = ">="):
     return hfmc_array
 
 
-
-
 def hk_yesorno(Ob,Fo,grade_list=[1e-30],compair = ">="):
     hfmc_array = hfmc(Ob, Fo, grade_list,compair = compair)
     return hk_yesorno_hfmc(hfmc_array)
@@ -677,6 +704,65 @@ def hss_yesorno_hfmc(hfmc_array):
     if hss.size ==1:
         hss = hss[0]
     return hss
+
+
+def odds_ratio_hfmc(hfmc_array):
+    '''
+    The odds ratio (or评分) gives the ratio of the odds of making a hit to the odds of making a false alarm,
+    and takes prior probability into account.
+    :param hfmc_array:包含命中空报和漏报的多维数组，其中最后一维长度为4，分别记录了（命中数，空报数，漏报数，正确否定数）
+    倒数第2维或为等级维度
+    :return: 0 到无穷大的实数，完美值为无穷大, 0代表没有技巧
+    '''
+    hit = hfmc_array[...,0]
+    fal = hfmc_array[...,1]
+    mis = hfmc_array[...,2]
+    cn = hfmc_array[...,3]
+    ors = hit*cn/(mis * fal + 1e-8)
+    return ors
+
+def odds_ratio(Ob,Fo,grade_list= [1e-30],compair = ">="):
+    '''
+
+    :param Ob:
+    :param Fo:
+    :param grade_list:
+    :param compair:
+    :return: 0 到无穷大的实数，完美值为无穷大, 0代表没有技巧
+    '''
+    hfmc_array = hfmc(Ob, Fo, grade_list,compair = compair)
+    return ob_fo_hc_hfmc(hfmc_array)
+
+
+def orss_hfmc(hfmc_array):
+    '''
+    The odds ratio (or评分) gives the ratio of the odds of making a hit to the odds of making a false alarm,
+    and takes prior probability into account.
+    :param hfmc_array:包含命中空报和漏报的多维数组，其中最后一维长度为4，分别记录了（命中数，空报数，漏报数，正确否定数）
+    倒数第2维或为等级维度
+    :return: 0 到无穷大的实数，完美值为无穷大, 0代表没有技巧
+    '''
+    hit = hfmc_array[...,0]
+    fal = hfmc_array[...,1]
+    mis = hfmc_array[...,2]
+    cn = hfmc_array[...,3]
+    ors = (hit*cn -mis * fal)/ (hit*cn + mis * fal)
+    return ors
+
+def orss(Ob,Fo,grade_list= [1e-30],compair = ">="):
+    '''
+
+    :param Ob:
+    :param Fo:
+    :param grade_list:
+    :param compair:
+    :return: -1 到1， 完美值为1
+    '''
+
+    hfmc_array = hfmc(Ob, Fo, grade_list,compair = compair)
+    return orss_hfmc(hfmc_array)
+
+
 
 def dts(Ob,Fo,grade_list= [1e-30],compair = ">="):
     hfmc_array = hfmc(Ob, Fo, grade_list,compair = compair)

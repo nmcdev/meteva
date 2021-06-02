@@ -15,7 +15,7 @@ import matplotlib.patches as patches
 import seaborn as sns
 import datetime
 import copy
-
+#from meteva.base.tool.maskout import *
 
 def get_isoline_set(grd):
     values = grd.values
@@ -62,6 +62,7 @@ def readshapefile(shapefile, default_encoding='utf-8'):
         shf = Reader(shapefile, encoding=default_encoding)
     except:
         raise IOError('error reading shapefile %s.shp' % shapefile)
+
     fields = shf.fields
     coords = []; attributes = []
 
@@ -122,6 +123,7 @@ def readshapefile(shapefile, default_encoding='utf-8'):
                 attdict['SHAPENUM'] = npoly
                 attributes.append(attdict)
     # draw shape boundaries for polylines, polygons  using LineCollection.
+
     return coords
 
 
@@ -185,7 +187,7 @@ def add_china_map_2basemap(ax,name ="province", facecolor='none',
 
 
 def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap ="rainbow",add_county_line = False,add_worldmap =False,show = False,dpi = 300,
-                     sup_fontsize = 10,height = None,width = None,ncol = None,subplot = None,sup_title = None):
+                     sup_fontsize = 10,height = None,width = None,ncol = None,subplot = None,sup_title = None,clip= None):
 
     vmin = 10e30
     vmax = -10e30
@@ -230,7 +232,7 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap ="rainbo
 
         plot_2d_grid_list(grd_list1,type = "contour",save_path= save_path,title= title1,clevs=clevs,cmap=cmap,vmax = vmax,vmin = vmin,add_county_line= add_county_line,
                       add_worldmap = add_worldmap,show=show,dpi = dpi,sup_fontsize = sup_fontsize,height= height,width = width,ncol= ncol,
-                      sup_title = sup_title1)
+                      sup_title = sup_title1,clip= clip)
 
     if 1 <0:
 
@@ -362,7 +364,7 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap ="rainbo
 
 
 def plot_2d_grid_list(grd_list,type = "contour",save_path = None,title = None,clevs= None,cmap ="rainbow",add_county_line = False,add_worldmap =False,show = False,dpi = 300,
-                     sup_fontsize = 10,height = None,width = None,ncol = None,vmax = None,vmin = None, sup_title = None):
+                     sup_fontsize = 10,height = None,width = None,ncol = None,vmax = None,vmin = None, sup_title = None,clip= None):
 
 
     if save_path is None:
@@ -532,7 +534,6 @@ def plot_2d_grid_list(grd_list,type = "contour",save_path = None,title = None,cl
         if add_worldmap:
             add_china_map_2basemap(ax, name="world", edgecolor='k', lw=0.3, encoding='gbk', grid0=None)  # "国界"
 
-
         add_china_map_2basemap(ax, name="nation", edgecolor='k', lw=0.3, encoding='gbk',grid0 = None)  # "省界"
         add_china_map_2basemap(ax, edgecolor='k', lw=0.3, encoding='gbk')  # "省界"
         if add_county_line:
@@ -558,8 +559,19 @@ def plot_2d_grid_list(grd_list,type = "contour",save_path = None,title = None,cl
             ax.set_yticklabels(yticks_label_None, fontsize=sup_fontsize * 0.8, family='Times New Roman')
         if type == "contour":
             im = ax.contourf(x, y, np.squeeze(grd_list[p].values), levels=clevs1, cmap=cmap1, norm=norm)
+
+            if clip is not None:
+                if isinstance(clip,str):clip = [clip]
+                if isinstance(clip[0],str):
+                    meteva.base.tool.maskout.shp2clip_by_region_name(im, ax, clip)
+                else:
+                    meteva.base.tool.maskout.shp2clip_by_lines(im,ax,clip)
+
         else:
             im = ax.pcolormesh(x, y, np.squeeze(grd_list[p].values), cmap=cmap1, norm=norm)
+
+
+
     left_low = (width_left_yticks - 0.2 + ncol * (width_map  + width_wspace))/width
 
     colorbar_position = fig.add_axes([left_low, height_bottem_xticsk / height,0.02, height_all_plot/height])  # 位置[左,下,宽,高]
@@ -607,9 +619,13 @@ def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = "rai
     right_plots_width = 0.8
     if width is None:
         width = (height - title_hight - legend_hight) * rlon / rlat + left_plots_width + right_plots_width
+
+
+
     fig = plt.figure(figsize=(width, height),dpi = dpi)
     rect1 = [left_plots_width / width, legend_hight/height, (width - right_plots_width - left_plots_width) / width, 1-title_hight/height]
     ax = plt.axes(rect1)
+
 
 
     if title is None:
@@ -645,9 +661,13 @@ def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = "rai
 
     norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
     im = ax.pcolormesh(x, y, np.squeeze(grd.values), cmap=cmap1,norm=norm)
+    #im = ax.contourf(x,y,np.squeeze(grd.values))
     left_low = (width + 0.1 - right_plots_width) / width
     colorbar_position = fig.add_axes([left_low, legend_hight / height, 0.02, 1-title_hight/height])  # 位置[左,下,宽,高]
     plt.colorbar(im,cax= colorbar_position)
+
+
+
 
     vmax = x[-1]
     vmin = x[0]
@@ -1866,6 +1886,8 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
         x_one = name_list_dict[axis][0]
         if isinstance(x_one,datetime.datetime):
             xticks_labels = meteva.product.get_time_str_list(name_list_dict[axis],3)
+        elif axis.find("dayofyear")>=0:
+            xticks_labels = meteva.product.get_dayofyear_str_list(name_list_dict[axis])
         else:
             xticks_labels = []
             for local in name_list_dict[axis]:
@@ -1916,6 +1938,8 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
 
         if isinstance(x_one,datetime.datetime):
             xticks_labels = meteva.product.get_time_str_list(name_list_dict[axis][::spasify],3)
+        elif axis.find("dayofyear")>=0:
+            xticks_labels = meteva.product.get_dayofyear_str_list(name_list_dict[axis][::spasify])
         else:
             xticks_labels = xticks_labels[::spasify]
 
@@ -1961,9 +1985,9 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
             width = 0.7 / (legend_num + 2)
         else:
             width = bar_width
-
+        ax_top = None
         for k in range(subplot_num):
-
+            #print(data.shape)
             data_k = data[k,:,:]
             if log_y:
                 data_k[data_k == 0] = meteva.base.IV
@@ -2019,6 +2043,7 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
 
 
             ax_one = plt.subplot(nrow, ncol, k + 1)
+            if k==0:ax_top = ax_one
             legend0 = str(name_list_dict[legend][0])
             if legend0.lower().find("ob")<0 and legend0.find("观测")<0 and legend0.find("实况")<0 and legend0.find("零场")<0:
                 plt.bar(0,0)
@@ -2138,8 +2163,10 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
                     else:
                         plt.grid()
 
-
+        #print("a")
         if sup_title is not None:
+
+
             if legend_num ==1:
                 strss = sup_title.split("\n")
                 by = 1 - (height_suplegend - len(strss) * sup_fontsize * 0.01) / height_fig + 0.025
@@ -2150,10 +2177,13 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
                 legend_row = int(math.ceil(legend_num / legend_col))
                 legend_col = int(math.ceil(legend_num / legend_row))
                 strss = sup_title.split("\n")
-                by = 1 - (height_suplegend - len(strss) * sup_fontsize * 0.01) / height_fig + 0.025
+                #by = 1 - (height_suplegend - len(strss) * sup_fontsize * 0.01) / height_fig + 0.025
+
+                by = ax_top.bbox.ymax / fig.bbox.ymax + (len(strss) * sup_fontsize * 0.015 + 0.1) / height_fig
                 plt.suptitle(sup_title, x = 0,y = by, fontsize=sup_fontsize ,horizontalalignment='left')
 
-                by = 1 - (height_suplegend - legend_row * sup_fontsize * 0.9 * 0.02) / height_fig + 0.025
+                #by = 1 - (height_suplegend - legend_row * sup_fontsize * 0.9 * 0.02) / height_fig + 0.05
+                by = ax_top.bbox.ymax / fig.bbox.ymax + (legend_row * sup_fontsize * 0.9 * 0.03 + 0.1) / height_fig
                 if subplot_num >1:
                     fig.legend(fontsize = sup_fontsize *0.9,ncol = legend_col,loc = "upper right",
                            bbox_to_anchor=(1,by))
@@ -2165,8 +2195,11 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
                 if legend_col < 1: legend_col = 1
                 legend_row = int(math.ceil(legend_num / legend_col))
                 legend_col = int(math.ceil(legend_num / legend_row))
-                by = 1 - (height_suplegend - legend_row * sup_fontsize * 0.9 * 0.02) / height_fig + 0.02
-                # print(by)
+                #print(height_fig)
+                by = ax_top.bbox.ymax/fig.bbox.ymax + (legend_row * sup_fontsize * 0.9 * 0.03 + 0.1) / height_fig
+
+                #by = 1 - (height_suplegend - legend_row * sup_fontsize * 0.9 * 0.03) / height_fig + 0.025
+                #print(by)
 
                 if subplot_num > 1:
                     fig.legend(fontsize=sup_fontsize * 0.9, ncol=legend_col, loc="upper center",
@@ -2718,6 +2751,7 @@ def mesh_obtime_time(sta,save_dir = None,save_path = None,
 def mesh_obtime_dtime(sta,save_dir = None,save_path = None,
                    clevs = None,cmap = None,show = False,xtimetype = "mid",dpi = 300,annot =None,title = "预报准确性和稳定性对比图",
                       sup_fontsize = 10,width = None,height = None):
+
     ids = list(set(sta.loc[:, "id"]))
     data_names = meteva.base.get_stadata_names(sta)
 
@@ -3149,5 +3183,15 @@ def add_scatter(ax,map_extend,sta0,cmap = None,clevs = None,point_size = None,fi
 
 
 
+if __name__ == "__main__":
+    import pandas as pd
+    ob_rain01 = pd.read_hdf(r"H:\test_data\input\mpd\time_compair\ob_rain01.h5", "df")  # 读取读1小时降水观测
+    gmosrr_rain03 = pd.read_hdf(r"H:\test_data\input\mpd\time_compair\ec_rian03.h5", "df")  # 读取3小时降水预报
+    # ob_rain03 = meb.sum_of_sta(ob_rain01,used_coords=["time"],span = 3)  #将降水观测有逐小时累加成逐3小时
 
+    rain03_all = meteva.base.combine_on_obTime_id(ob_rain01, [gmosrr_rain03, gmosrr_rain03,
+                                                      gmosrr_rain03])  # 合并预报观测数据，need_match_ob为缺省参数False
+    # print(rain03_all)
+    result = meteva.product.score(rain03_all, meteva.method.ts, grade_list=[0.1, 10, 25, 50, 100], s={"dtime": [24, 48]},
+                       g="dtime", plot="bar")  # 选取部分时段绘制对比图
 

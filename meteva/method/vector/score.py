@@ -346,7 +346,7 @@ def acs_uv(u_ob, u_fo, v_ob, v_fo, min_s = 0,max_s = 300):
     return acs0
 
 
-def wind_severer_rate_nasws(nasws_array):
+def wind_severer_rate_nasws(nasws_array,unit = 1):
     '''
     基于中间结果计算风速预报偏强率，
     :param nasd_array: 输入nasd函数统计得到的样本数、风速正确样本数、风速评分（分子部分），偏弱样本数，偏强样本数
@@ -355,9 +355,11 @@ def wind_severer_rate_nasws(nasws_array):
     total = nasws_array[...,0]
     sc = nasws_array[...,4]
     rs = sc/total
+    if unit == "%":
+        rs *= 100
     return rs
 
-def wind_severer_rate(s_ob,s_fo,min_s = 0,max_s = 300):
+def wind_severer_rate(s_ob,s_fo,min_s = 0,max_s = 300,unit = 1):
     '''
     基于原始风向数组，计算风速预报偏强率，计算的第一步是将预报和观测的风向都转换成14个离散的风速等级，
     当预报风速等级大于观测风速等级时记为1，否则记为0，偏强率是偏强的样本数/总样本数
@@ -370,10 +372,10 @@ def wind_severer_rate(s_ob,s_fo,min_s = 0,max_s = 300):
     :return: 风向预报准确率，如果d_fo和d_ob的shape一致，说明只有一家预报，则返回实数，否则说明是在同时检验多家预报，返回结果为一维数组。
     '''
     nass_array = nasws_s(s_ob, s_fo,min_s = min_s,max_s =max_s)
-    rs = wind_severer_rate_nasws(nass_array)
+    rs = wind_severer_rate_nasws(nass_array,unit = unit)
     return rs
 
-def wind_severer_rate_uv(u_ob, u_fo, v_ob, v_fo, min_s = 0,max_s = 300):
+def wind_severer_rate_uv(u_ob, u_fo, v_ob, v_fo, min_s = 0,max_s = 300,unit = 1):
     '''
     基于原始u，v风（m/s)数组，计算风速预报偏强率，计算的第一步是将预报和观测的风向都转换成14个离散的风速等级，
     当预报风速等级大于观测风速等级时记为1，否则记为0，偏强率是偏强的样本数/总样本数
@@ -386,10 +388,10 @@ def wind_severer_rate_uv(u_ob, u_fo, v_ob, v_fo, min_s = 0,max_s = 300):
     s_ob, d_ob = meteva.base.math_tools.u_v_to_s_d(u_ob, v_ob)
     s_fo, d_fo = meteva.base.math_tools.u_v_to_s_d(u_fo, v_fo)
     nass_array = nasws_s(s_ob, s_fo,min_s = min_s,max_s =max_s)
-    rs = wind_severer_rate_nasws(nass_array)
+    rs = wind_severer_rate_nasws(nass_array,unit = unit)
     return rs
 
-def wind_weaker_rate_nasws(nasws_array):
+def wind_weaker_rate_nasws(nasws_array,unit = 1):
     '''
     基于中间结果计算风速预报偏弱率，
     :param nasd_array: 输入nasd函数统计得到的样本数、风速正确样本数、风速评分（分子部分），偏弱样本数，偏强样本数
@@ -398,9 +400,11 @@ def wind_weaker_rate_nasws(nasws_array):
     total = nasws_array[...,0]
     sc = nasws_array[...,3]
     rw = sc/total
+    if unit =="%":
+        rw *= 100
     return rw
 
-def wind_weaker_rate(s_ob,s_fo,min_s = 0,max_s = 300):
+def wind_weaker_rate(s_ob,s_fo,min_s = 0,max_s = 300,unit = 1):
     '''
     基于原始风向数组，计算风速预报偏弱率，计算的第一步是将预报和观测的风向都转换成14个离散的风速等级，
     当预报风速等级小于观测风速等级时记为1，否则记为0，偏强率是偏弱的样本数/总样本数
@@ -411,11 +415,11 @@ def wind_weaker_rate(s_ob,s_fo,min_s = 0,max_s = 300):
     :return: 风速预报偏弱率，如果d_fo和d_ob的shape一致，说明只有一家预报，则返回实数，否则说明是在同时检验多家预报，返回结果为一维数组。
     '''
     nass_array = nasws_s(s_ob, s_fo,min_s = min_s,max_s =max_s)
-    rw = wind_weaker_rate_nasws(nass_array)
+    rw = wind_weaker_rate_nasws(nass_array,unit=unit)
     return rw
 
 
-def wind_weaker_rate_uv(u_ob, u_fo, v_ob, v_fo, min_s = 0,max_s = 300):
+def wind_weaker_rate_uv(u_ob, u_fo, v_ob, v_fo, min_s = 0,max_s = 300,unit = 1):
     '''
     基于原始风向数组，计算风速预报偏弱率，计算的第一步是将预报和观测的风向都转换成14个离散的风速等级，
     当预报风速等级小于观测风速等级时记为1，否则记为0，偏强率是偏弱的样本数/总样本数
@@ -430,7 +434,7 @@ def wind_weaker_rate_uv(u_ob, u_fo, v_ob, v_fo, min_s = 0,max_s = 300):
     s_ob, d_ob = meteva.base.math_tools.u_v_to_s_d(u_ob, v_ob)
     s_fo, d_fo = meteva.base.math_tools.u_v_to_s_d(u_fo, v_fo)
     nass_array = nasws_s(s_ob, s_fo,min_s = min_s,max_s =max_s)
-    rw = wind_weaker_rate_nasws(nass_array)
+    rw = wind_weaker_rate_nasws(nass_array,unit = unit)
     return rw
 
 

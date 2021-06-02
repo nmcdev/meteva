@@ -911,7 +911,9 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
                 save_path1 = save_path[kk1]
             if save_path1 is not None:
                 meteva.base.tool.path_tools.creat_path(save_path1)
-                plt.savefig(save_path1, bbox_inches='tight')
+                figure = plt.gcf()
+                plt.tight_layout()
+                figure.savefig(save_path1, bbox_inches='tight')
                 print("图片已保存至" + save_path1)
             if show:
                 plt.show()
@@ -1226,7 +1228,10 @@ def time_list_mesh_wind(sta_ob_and_fos0,s = None,save_dir = None,save_path = Non
                 plt.rcParams['ytick.direction'] = 'in'  # 将y轴的刻度方知向设置向内
                 for k in range(row + 1):
                     jr = row - k - 1
-                    dhx0 = (times_fo[jr] - times_ob[0]) / np.timedelta64(1, 'h') + min_dtime
+                    #dhx0 = (times_fo[jr] - times_ob[0]) / np.timedelta64(1, 'h') + min_dtime
+                    #time_fo = times_fo[0] + np.timedelta64(1, 'h') * dh_y * jr
+                    #dhx0 = (times_fo[jr] - times_ob[0]) / np.timedelta64(1, 'h') + min_dtime
+                    dhx0 = (times_fo[0] - times_ob[0]) / np.timedelta64(1, 'h') + min_dtime + dh_y * jr
                     x1 = (dhx0 - dh_y) / dh_x
                     y1 = k
                     rect = patches.Rectangle((x1, y1), dh_y / dh_x, 1, linewidth=2, edgecolor='k', facecolor='none')

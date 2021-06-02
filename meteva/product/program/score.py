@@ -35,7 +35,7 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
     plot_mehod = None
     if plot == "bar":
         plot_mehod = meteva.base.plot_tools.bar
-    elif plot == "line":
+    elif plot == "line" or plot == "plot":
         plot_mehod = meteva.base.plot_tools.plot
 
     plot_para_list = []
@@ -187,6 +187,7 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
         else:
             if not isinstance(group_list_list1,list):
                 group_list_list1 = [group_list_list1]
+
             if (group_dict_name == "time" or group_dict_name == "ob_time")and gll is None:
                 name_list_dict[group_dict_name] = group_list_list1
             else:
@@ -296,6 +297,14 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
 
     if method.__name__.find("ob_fo")>=0:
         fo_name = data_names
+
+    elif method.__name__.find("_uv")>=0:
+        fo_name = []
+        for i in range(2,len(data_names),2):
+            strs = data_names[i]
+            strs = strs.replace("u_","")
+            fo_name.append(strs)
+
     elif method.__name__ == "sample_count":
         fo_name = [data_names[0]]
     else:
@@ -376,11 +385,19 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
         elif len(result.shape) == 2:
             if len(fo_name) >1:
                 #没有等级，但有多个预报成员
-                member_num = result.shape[1]
-                coord_names.extend(fo_name)
-                sta_result = sta_merge.loc[:, coord_names]
-                sta_result.iloc[:, -member_num:] = result[:,:]
-                sta_result = [sta_result]
+                if method.__name__.find("_uv") >= 0:
+                    #member_num = result.shape[1]
+                    #coord_names.extend(fo_name)
+                    sta_result = sta_merge.loc[:, coord_names]
+                    for ff in range(len(fo_name)):
+                        sta_result[fo_name[ff]] = result[:,ff]
+                    sta_result = [sta_result]
+                else:
+                    member_num = result.shape[1]
+                    coord_names.extend(fo_name)
+                    sta_result = sta_merge.loc[:, coord_names]
+                    sta_result.iloc[:, -member_num:] = result[:,:]
+                    sta_result = [sta_result]
             else:
                 #有多个等级，但只有一个预报成员
                 sta_result = []
@@ -505,6 +522,12 @@ def score_tdt(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_lis
 
     if method.__name__.find("ob_fo") >= 0:
         fo_name = data_names
+    elif method.__name__.find("_uv")>=0:
+        fo_name = []
+        for i in range(2,len(data_names),2):
+            strs = data_names[i]
+            strs = strs.replace("u_","")
+            fo_name.append(strs)
     elif method.__name__ == "sample_count":
         fo_name = [data_names[0]]
     else:

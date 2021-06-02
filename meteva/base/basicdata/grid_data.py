@@ -121,8 +121,12 @@ def grid_data(grid,data=None):
     # 通过起始经纬度和格距计算经纬度格点数
     lon = np.arange(nlon) * dlon + slon
     lat = np.arange(nlat) * dlat + slat
-    #print(grid.gtime[2])
-    times = pd.date_range(grid.stime, grid.etime, freq=grid.gtime[2])
+    dt_str = grid.gtime[2]
+    if dt_str.find("m")>=0:
+        dt_str = dt_str.replace("m","min")
+
+    times = pd.date_range(grid.stime, grid.etime, freq=dt_str)
+    #print(times)
     ntime = len(times)
     # 根据timedelta的格式，算出ndt次数和gds时效列表
 
@@ -154,6 +158,7 @@ def xarray_to_griddata(xr0,
 
 
     da = None
+
 
     if isinstance(xr0,xr.DataArray):
         ds0 = xr.Dataset({'data0': xr0})
@@ -367,6 +372,8 @@ def xarray_to_griddata(xr0,
             dim_order["lon"] = dim
 
     if "member" not in dim_order.keys():
+        #print(da)
+
         dim_order["member"] = "member"
         da = da.expand_dims("member")
     if "time" not in dim_order.keys():
@@ -443,8 +450,8 @@ def xarray_to_griddata(xr0,
     dlats = lats[1:] - lats[:-1]
     maxdlats = np.max(dlats)
     mindlats = np.min(dlats)
-    if (maxdlats - mindlats)/maxdlats > 0.0001:
-        #print("***")
+    if (maxdlats - mindlats)/maxdlats > 0.001:
+        print("***")
         nlat = int((lats[-1] - lats[0])/mindlats) + 2
         dlat = (lats[-1] - lats[0])/(nlat-1)
         lons = da1.lon.values

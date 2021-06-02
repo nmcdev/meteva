@@ -76,3 +76,47 @@ def cr(ob,fo,grade_list=[1e-30],compair = ">="):
     return crs
 
 
+def crps(Ob, Fo):
+    '''
+
+    :param Ob:
+    :param Fo:
+    :return:
+    '''
+    n = Ob.size
+    shape0 = Fo.shape
+    m = shape0[0]
+    ob0 = Ob.flatten()
+    fo0 = Fo.reshape((m, n))
+    fo0 = np.sort(fo0)
+    minv = min(np.min(ob0), np.min(fo0))
+    maxv = max(np.max(ob0), np.max(fo0))
+
+    fo1 = np.zeros((m + 2, n))
+    fo1[0, :] = minv
+    fo1[1:-1, :] = fo0[:, :]
+    fo1[-1, :] = maxv
+
+    crps0 = np.zeros(n)
+    for i in range(1, m + 1):
+        a = np.zeros(n)
+        index1 = np.where((fo1[i, :] < ob0) & (fo1[i + 1] >= ob0))
+        a[index1] = ob0[index1] - fo1[i, index1]
+
+        index2 = np.where(fo1[i + 1] < ob0)
+        a[index2] = fo1[i + 1, index2] - fo1[i, index2]
+
+        crps0 += a * ((i / m) * (i / m))
+
+    for i in range(0, m):
+        b = np.zeros(n)
+        index1 = np.where(ob0 <= fo1[i])
+        b[index1] = fo1[i + 1, index1] - fo1[i, index1]
+
+        index2 = np.where((fo1[i, :] < ob0) & (fo1[i + 1] >= ob0))
+        b[index2] = fo1[i + 1, index2] - ob0[index2]
+
+        crps0 += b * ((1 - i / m) * (1 - i / m))
+
+    crps_mean = np.mean(crps0)
+    return crps_mean
