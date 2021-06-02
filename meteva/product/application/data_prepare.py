@@ -211,7 +211,7 @@ def creat_fo_dataset(model,para):
         data_name0 = meteva.base.get_stadata_names(data_left)
         print(data_name0)
         if len(data_name0) == 2:
-            data_name1 = [model + "_u", model + "_v"]
+            data_name1 = ["u_"+model , "v_"+model]
         else:
             data_name1 = [model]
         meteva.base.set_stadata_names(data_left, data_name1)
@@ -285,7 +285,7 @@ def creat_fo_dataset(model,para):
                         meteva.base.set_stadata_coords(dat, time=time1, dtime=dt)
                         data_name0 = meteva.base.get_stadata_names(dat)
                         if len(data_name0) == 2:
-                            data_name1 = [model + "_u", model + "_v"]
+                            data_name1 = ["u_"+model , "v_"+model]
                         else:
                             data_name1 = [model]
                         meteva.base.set_stadata_names(dat, data_name1)
@@ -308,7 +308,7 @@ def creat_fo_dataset(model,para):
                                 meteva.base.set_stadata_coords(dat,time = time1,dtime = dt)
                                 data_name0 = meteva.base.get_stadata_names(dat)
                                 if len(data_name0) ==2:
-                                    data_name1 = [model +"_u",model+"_v"]
+                                    data_name1 = ["u_"+model , "v_"+model]
                                 else:
                                     data_name1 = [model]
                                 meteva.base.set_stadata_names(dat,data_name1)
