@@ -9,6 +9,7 @@ import meteva
 from meteva.base import IV
 import math
 from matplotlib.colors import BoundaryNorm
+from matplotlib.patches import Polygon
 import copy
 
 
@@ -538,6 +539,7 @@ def rain_24h_comprehensive_chinaland_sg(sta_ob,grd_fo,  save_path=None,show = Fa
     grade_list = [0.1, 10, 25, 50, 100, 250, 1000]
     rain_comprehensive_chinaland_sg(sta_ob,grd_fo,grade_list,save_path=save_path,show=show,dpi=dpi,add_county_line=add_county_line)
 
+
 def rain_comprehensive_chinaland_sg(sta_ob,grd_fo,grade_list, save_path=None,show = False,dpi = 200,add_county_line = False):
     '''
     #绘制24小时降水实况与预报综合对比检验图，专为为全国区域设置的画面布局，画面更加紧凑
@@ -712,6 +714,357 @@ def rain_comprehensive_chinaland_sg(sta_ob,grd_fo,grade_list, save_path=None,sho
         Xmi = 250
 
 
+
+    xmajorLocator = mpl.ticker.MultipleLocator(Xmi)  # 将x主刻度标签设置为次刻度10倍
+    ymajorLocator = mpl.ticker.MultipleLocator(Xmi)  # 将y主刻度标签设置为次刻度10倍
+    ax2.xaxis.set_major_locator(xmajorLocator)
+    ax2.yaxis.set_major_locator(ymajorLocator)
+    xminorLocator = mpl.ticker.MultipleLocator(xmi)  # 将x轴次刻度标签设置xmi
+    yminorLocator = mpl.ticker.MultipleLocator(xmi)  # 将y轴次刻度标签设置ymi
+    ax2.xaxis.set_minor_locator(xminorLocator)
+    ax2.yaxis.set_minor_locator(yminorLocator)
+
+    # 绘制频率柱状图
+    p_ob = np.zeros(6)
+    p_fo = np.zeros(6)
+    x = np.arange(6) + 1
+    for i in range(1, len(clevs) - 1, 1):
+        index0 = np.where((ob >= clevs[i]) & (ob < clevs[i + 1]))
+        p_ob[i - 1] = len(index0[0])
+        index0 = np.where((fo >= clevs[i]) & (fo < clevs[i + 1]))
+        p_fo[i - 1] = len(index0[0])
+    rect3 = [0.35, 0.07, 0.325, 0.17]  # 左下宽高
+    ax3 = plt.axes(rect3)
+    ax3.bar(x - 0.25, p_ob, width=0.2, facecolor="r", label="Obs")
+    ax3.bar(x + 0.05, p_fo, width=0.2, facecolor="b", label="Pred")
+    ax3.legend(loc="upper right")
+    ax3.set_xlabel("precipitation threshold", fontsize=10)
+    ax3.set_xticks(x)
+    ax3.set_xticklabels(clevs_name[1:], fontsize=9)
+    ax3.set_ylabel("point number", fontsize=10)
+    ax3.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(100))
+
+    # 绘制降水站点实况预报统计表
+    rect4 = [0.35, 0.235, 0.4, 0.10]  # 左下宽高
+    ax4 = plt.axes(rect4)
+    ax4.axes.set_axis_off()
+
+    ob_has = ob[ob >= 0.01]
+    fo_has = fo[fo >= 0.01]
+    mean_fo = 0
+    max_fo = 0
+    mean_ob = 0
+    max_ob = 0
+    if len(fo_has)>1:
+        mean_fo = np.mean(fo_has)
+        max_fo = np.max(fo_has)
+    if len(ob_has)>1:
+        mean_ob = np.mean(ob_has)
+        max_ob = np.max(ob_has)
+
+    text = "降水站点实况和预报 n=" + str(len(ob)) + "\n"
+    text += "====================================================\n"
+    text += "                              观测           预报  \n"
+    text += "----------------------------------------------------\n"
+    text += "有降水站点数(>=0.01)     " + "%9d" % len(ob_has) + "           %4d" % len(fo_has) + "\n"
+    text += "有降水站点数百分比%    " + "%11.1f" % (100*len(ob_has) / len(ob)) + "%15.1f" % (100*len(fo_has) / len(fo)) + "\n"
+    text += "平均降水量(排除无降水) " + "%11.1f" % (mean_ob) + "%15.1f" % (mean_fo) + "\n"
+    text += "最大降水量             " + "%11.1f" % (max_ob) + "%15.1f" % (max_fo)+"\n"
+    text += "----------------------------------------------------"
+    plt.text(0, 0, text, fontsize=9)
+
+
+    # 绘制统计检验结果
+    rect5 = [0.705, 0.08, 0.28, 0.85]  # 左下宽高
+    ax5 = plt.axes(rect5)
+    ax5.axes.set_axis_off()
+
+    mae = meteva.method.continuous.score.mae(ob, fo)
+    me = meteva.method.continuous.score.me(ob, fo)
+    mse = meteva.method.continuous.score.mse(ob, fo)
+    rmse = meteva.method.continuous.score.rmse(ob, fo)
+    bias_c = meteva.method.continuous.score.bias_m(ob, fo)
+    cor = meteva.method.continuous.score.corr(ob, fo)
+    pc_sun_rain = meteva.method.pc_of_sun_rain(ob, fo)
+    hfmc = meteva.method.yes_or_no.score.hfmc(ob, fo, clevs[1:])
+    ts = meteva.method.yes_or_no.score.ts(ob, fo, clevs[1:])
+    ets = meteva.method.yes_or_no.score.ets(ob, fo, clevs[1:])
+    bias = meteva.method.yes_or_no.score.bias(ob, fo, clevs[1:])
+    hit_rate = meteva.method.yes_or_no.score.pod(ob, fo, clevs[1:])
+    mis_rate = meteva.method.yes_or_no.score.mr(ob, fo, clevs[1:])
+    fal_rate = meteva.method.yes_or_no.score.far(ob, fo, clevs[1:])
+    text = str(len(ob)) + "评分站点预报检验统计量\n"
+    text += "Mean absolute error:" + "%6.2f" % mae + "\n"
+    text += "Mean error:" + "%6.2f" % me + "\n"
+    text += "Mean-squared error:" + "%6.2f" % mse + "\n"
+    text += "Root mean-squared error:" + "%6.2f" % rmse + "\n"
+    text += "Bias:" + "%6.2f" % bias_c + "\n"
+    text += "Correctlation coefficiant:" + "%6.2f" % cor + "\n"
+    text += "晴雨准确率:" + "%6.2f" % pc_sun_rain + "\n\n"
+
+
+    #leves_name = ["0.1-10-", "10-25--", "25-50--", "50-100-", "100-250", ">=250-"]
+
+    clevs_name = ["0"]
+    for g0 in range(len(grade_list)-1):
+        if grade_list[g0] == math.floor(grade_list[g0]):
+            gs0 = str(int(grade_list[g0]))
+        else:
+            gs0 = '%.1f' % (grade_list[g0])
+
+        clevs_name.append(">="+ gs0)
+    leves_name = []
+    for name in clevs_name[1:]:
+        for nn in range(10-len(name)):
+            name = name+"-"
+        leves_name.append(name)
+
+    for i in range(len(leves_name)):
+        text += ":" + leves_name[i] + "------------------------\n"
+        text += "正确:" + "%-4d" % hfmc[i, 0] + " 空报:" + "%-4d" % hfmc[i, 1] + " 漏报:" + "%-4d" % hfmc[i, 2] + "\n"
+        if ts[i] == IV:
+            ts_str = " NULL"
+        else:
+            ts_str = "%5.3f" % ts[i]
+        if ets[i] == IV:
+            ets_str = " NULL"
+        else:
+            ets_str = "%5.3f" % ets[i]
+        text += "TS:" + ts_str + "                  ETS:" + ets_str + "\n"
+        if hit_rate[i] == IV:
+            hit_rate_str = " NULL"
+        else:
+            hit_rate_str = "%5.3f" % hit_rate[i]
+        if mis_rate[i] == IV:
+            mis_rate_str = " NULL"
+        else:
+            mis_rate_str = "%5.3f" % mis_rate[i]
+        text += "Hit rate:" + hit_rate_str + "     Miss rate: " + mis_rate_str + "\n"
+
+        if fal_rate[i] == IV:
+            fal_rate_str = " NULL"
+        else:
+            fal_rate_str = "%5.3f" % fal_rate[i]
+        if bias[i] == IV:
+            bias_str = " NULL"
+        else:
+            bias_str = "%5.3f" % bias[i]
+        text += "False alarm ratio:" + fal_rate_str + "  Bias:" + bias_str + "\n\n"
+    plt.text(0, 0.00, text, fontsize=10)
+
+    # 图片显示或保存
+    if(save_path is not None):
+        plt.savefig(save_path, dpi=dpi,bbox_inches='tight')
+    else:
+        show = True
+    if show:
+        plt.show()
+    plt.close()
+    return
+
+
+
+def rain_comprehensive_chinaland_sl(sta_ob,m14,grade_list, save_path=None,show = False,dpi = 200,add_county_line = False):
+    '''
+    #绘制24小时降水实况与预报综合对比检验图，专为为全国区域设置的画面布局，画面更加紧凑
+    :param grd_fo: 输入的网格数据，包含一个平面的网格场
+    :param sta_ob:  输入的站点数据，包含一个时刻的站点数据列表
+    :param filename: 图片输出路径，缺省时会以调试窗口形式弹出
+    :return:无返回值
+    '''
+    if len(grade_list)!=7:
+        print("grade_list 暂时仅支持长度为7的列表，包含小雨、中雨、大雨、暴雨、大暴雨、特大暴雨以及一个降水上限值")
+        return
+
+    fig = plt.figure(figsize=(10, 7))
+    # 平面对比图
+    rect1 = [0.05, 0.43, 0.65, 0.53]  # 左下宽高
+    grid_fo = meteva.base.grid([73,135,0.05],[18,54,0.05])
+
+    map_area = 70 * 0.41 * 0.55
+    ax = plt.axes(rect1)
+    # 设置地图背景
+    map_extent = [73, 135, 18, 54]
+    add_china_map_2basemap(ax, name='province', edgecolor='k', lw=0.3,encoding = 'gbk')  #"省界"
+    if add_county_line:
+        add_china_map_2basemap(ax, name="county", edgecolor='k', lw=0.2, encoding='gbk')  # "县界"
+    ax.set_xlim((73, 135))
+    ax.set_ylim((18, 54))
+
+    # 绘制格点预报场
+    clevs =grade_list
+    colors_grid = ["#E0EEFA", "#B4D3E9", "#6FB0D7", "#3787C0", "#105BA4", "#07306B", "#07306B"]
+    plt.rcParams['xtick.direction'] = 'in'
+    plt.rcParams['ytick.direction'] = 'in'
+
+    #grade_list = [0,10,25,50,100,250]
+    contours = m14["closed_contours"]
+    ncontour = len(contours["cn_label"])
+    ploys_dict = {}
+
+    for g in range(len(grade_list)):
+        grade = grade_list[g]
+        ploys_dict[g] = []
+        for n in range(ncontour):
+            if float(contours["cn_label"][n]) == grade or (int(float(contours["cn_label"][n])) ==0 and g ==0):
+                line = contours["cn_xyz"][n][:,0:2]
+                poly = Polygon(line,facecolor = colors_grid[g],edgecolor="k",linewidth=0.5)
+                poly.set_zorder(0)
+                ax.add_patch(poly)
+                ploys_dict[g].append(line)
+
+    #colorbar_position_grid = fig.add_axes([0.085, 0.93, 0.25, 0.015])  # 位置[左,下,宽,高]
+    #plt.colorbar(plot_grid, cax=colorbar_position_grid, orientation='horizontal')
+    #plt.text(0.035, 0.955, "预报(mm)", fontsize=9)
+    # 绘制填色站点值
+    sta_ob_in = meteva.base.in_grid_xy(sta_ob, grid=grid_fo)
+    colors_sta = ['#FFFFFF', '#0055FF', '#00FFB4', '#F4FF00', '#FE1B00', '#910000', '#B800BA']
+    dat = sta_ob_in.values[:, -1]
+    dat[dat > 1000] = 0
+    clevs = [0]
+    clevs.extend(grade_list)
+    clevs_name = ["0"]
+    for g0 in range(len(grade_list)-2):
+        if grade_list[g0] == math.floor(grade_list[g0]):
+            gs0 = str(int(grade_list[g0]))
+        else:
+            gs0 = '%.1f' % (grade_list[g0])
+
+        if grade_list[g0+1] == math.floor(grade_list[g0+1]):
+            gs1 = str(int(grade_list[g0+1]))
+        else:
+            gs1 = '%.0f' % (grade_list[g0+1])
+        clevs_name.append(gs0+"-"+gs1)
+    clevs_name.append(">="+ str(int(grade_list[len(grade_list)-2])))
+
+
+    #cleves_name = ["0", "0.1-10", "10-25", "25-50", "50-100", "100-250", ">=250"]
+
+    pointsize = int(100 * map_area / len(dat))
+    if (pointsize > 30): pointsize = 30
+    if (pointsize < 1): pointsize = 1
+
+    for i in range(len(clevs) - 1):
+        index0 = np.where((dat >= clevs[i]) & (dat < clevs[i + 1]))
+        if (len(index0[0]) > 0):
+            x = np.squeeze(sta_ob_in["lon"].values[index0])
+            y = np.squeeze(sta_ob_in["lat"].values[index0])
+            if (len(index0) == 1):
+                x = np.array([x])
+                y = np.array([y])
+                if (i > 0):
+                    ax.scatter(x, y, c=colors_sta[i], s=3*pointsize, label=clevs_name[i],
+                               linewidths=0.3, edgecolor='k')
+                else:
+                    ax.scatter(x, y, c=colors_sta[i],  s=pointsize, label=clevs_name[i],
+                               linewidths=0.1, edgecolor="k")
+    ax.legend(loc="lower left", facecolor='whitesmoke', title="观测",  edgecolor='whitesmoke',fontsize=9)
+
+    #设置图片标题
+    time_str = meteva.base.tool.time_tools.time_to_str(m14["time"])
+    dati_str = time_str[0:4] + "年" + time_str[4:6] + "月" + time_str[6:8] + "日" + time_str[8:10] + "时"
+
+
+    var_name = ""
+    if sta_ob.attrs is not None:
+        if "var_cn_name" in sta_ob.attrs.keys():
+            var_name = sta_ob.attrs["var_cn_name"]
+            if var_name=="":
+                var_name = sta_ob.attrs["var_name"]
+    title = " " + dati_str + "起报" + str(m14["dtime"]) + "H时效"+var_name+str(m14["data_name"]) +"预报和观测"
+    ax.set_title(title)
+
+    # 散点回归图
+    rect2 = [0.07, 0.07, 0.21, 0.30]  # 左下宽高
+    ax2 = plt.axes(rect2)
+    sta_fo = sta_ob_in.copy()  #  meteva.base.interp_gs_nearest(grd_fo, sta_ob_in)
+
+    nsta = len(sta_fo.index)
+
+    grade_list1 = [0]
+    grade_list1.extend(grade_list)
+    for i in range(nsta):
+        point1 = [sta_fo.iloc[i,4],sta_fo.iloc[i,5]]
+        gg = 0
+        for g in range(len(grade_list)):
+            ploys = ploys_dict[g]
+            inploy = meteva.base.tool.math_tools.isPoiWithinPoly(point1,ploys)
+            if not inploy:
+                break
+            else:
+                gg = g + 1
+        sta_fo.iloc[i, -1] = grade_list1[gg]
+
+
+    # print(sta_fo)
+    data_name = meteva.base.get_stadata_names(sta_ob_in)
+    ob = sta_ob_in.loc[:,data_name[0]].values
+    data_name = meteva.base.get_stadata_names(sta_fo)
+    fo = sta_fo.loc[:,data_name[0]].values
+    ob_fo = ob + fo
+    index = np.where(~np.isnan(ob_fo))
+    ob = ob[index]
+    fo = fo[index]
+    ax2.plot(ob, fo, '.', color='k')
+    maxy = max(np.max(ob), np.max(fo)) + 5
+
+    # 绘制比例线
+    rate = np.sum(fo) / (np.sum(ob) + 1e-30)
+    ob_line = np.arange(0, (maxy + 1), (maxy + 1) / 30)
+    fo_rate = ob_line * 1
+    ax2.plot(ob_line[0:30], fo_rate[0:30], 'b', linestyle='dashed')
+
+    # 绘制回归线
+    X = np.zeros((len(ob), 1))
+    X[:, 0] = ob[:]
+    clf = LinearRegression().fit(X, fo)
+    X = np.zeros((len(ob_line), 1))
+    X[:, 0] = ob_line[:]
+    fo_rg = clf.predict(X)
+    ax2.plot(ob_line, fo_rg, color='r')
+    cor = np.corrcoef(ob, fo)
+    rg_text1 = "R = " + '%.2f' % (cor[0, 1])
+    rg_text2 = "y = " + '%.2f' % (clf.coef_[0]) + "* x + " + '%.2f' % (clf.intercept_)
+
+    plt.xlim(0, maxy)
+    plt.ylim(0, maxy)
+    plt.text(0.05 * maxy, 0.9 * maxy, rg_text1, fontsize=10)
+    plt.text(0.05 * maxy, 0.8 * maxy, rg_text2, fontsize=10)
+    maxy = max(np.max(ob), np.max(fo))
+    ax2.set_xlabel("观测", fontsize=9)
+    ax2.set_ylabel("预报", fontsize=9)
+    ax2.set_title("Obs.vs Pred. Scatter plot", fontsize=12)
+    # 设置次刻度间隔
+    if(maxy <5):
+        xmi = 0.1
+        Xmi = 1
+    elif(maxy <50):
+        xmi = 1
+        if(maxy >25):
+            Xmi = 10
+        else:
+            Xmi = 5
+    elif (maxy <100):
+        xmi = 2
+        if(maxy >50):
+            Xmi = 20
+        else:
+            Xmi = 10
+    elif (maxy <250):
+        xmi = 5
+        if(maxy >100):
+            Xmi = 50
+        else:
+            Xmi = 20
+    elif (maxy <1000):
+        xmi = 20
+        if(maxy >500):
+            Xmi = 200
+        else:
+            Xmi = 100
+    else:
+        xmi = 50
+        Xmi = 250
 
     xmajorLocator = mpl.ticker.MultipleLocator(Xmi)  # 将x主刻度标签设置为次刻度10倍
     ymajorLocator = mpl.ticker.MultipleLocator(Xmi)  # 将y主刻度标签设置为次刻度10倍
