@@ -357,7 +357,7 @@ def tlfo(Ob,Fo):
         max_ob_fo = np.max(fo_ob,axis=0)
         index = np.where((min_ob_fo>=0.1)|(max_ob_fo>=1.0))
         ob_s = Ob[index]
-        fo_s = new_Fo[line, index]
+        fo_s = new_Fo[line,:][index]
         ob_s[ob_s<0.1] = 0.1
         fo_s[fo_s<0.1] = 0.1
         total_count = ob_s.size
@@ -365,7 +365,7 @@ def tlfo(Ob,Fo):
         tlfo_list.append(np.array([total_count, e_sum]))
     tlfo_np = np.array(tlfo_list)
     shape = list(Fo_shape[:ind])
-    shape.append(4)
+    shape.append(2)
 
     tlfo_array = tlfo_np.reshape(shape)
     return tlfo_array
@@ -384,6 +384,7 @@ def rmsf_tlfo(tlfo_array):
     mean_log2 = tlfo_array[..., 1] / tlfo_array[..., 0]
     rmsf = np.exp(np.sqrt(mean_log2))
     return rmsf
+
 
 def tase(Ob, Fo):
     '''
@@ -762,7 +763,7 @@ def corr(Ob, Fo):
     corr0 = corr_tmmsss(tmmsss_array)
     return corr0
 
-def rank_corr(Ob,Fo):
+def corr_rank(Ob,Fo):
     rcc_list = []
     Fo_shape = Fo.shape
     Ob_shape = Ob.shape
@@ -776,19 +777,24 @@ def rank_corr(Ob,Fo):
         print('实况数据和观测数据维度不匹配')
         return
     if len(Fo_shape) == len(Ob_shape):
-        r_ob = np.argsort(np.argsort(Ob))
-        r_fo = np.argsort(np.argsort(Fo))
-        rcc = 1 - 6 * np.sum(np.power(r_fo-r_ob,2))/(size * (size*size-1))
+
+        r_ob = np.argsort(np.argsort(Ob.flatten()))
+        r_fo = np.argsort(np.argsort(Fo.flatten()))
+        n = r_ob.size
+        rcc = 1 - 6 * np.sum(np.power(r_fo-r_ob,2))/(n * (n*n-1))
+
+        #rcc = 12*np.sum(r_fo * r_fo)/(n * (n*n-1)) - 3*(n+1)/(n-1)
         return rcc
     else:
         Ob_shpe_list.insert(0, -1)
         new_Fo_shape = tuple(Ob_shpe_list)
         new_Fo = Fo.reshape(new_Fo_shape)
         new_Fo_shape = new_Fo.shape
-        r_ob = np.argsort(np.argsort(Ob))
+        r_ob = np.argsort(np.argsort(Ob.flatten()))
+        n = r_ob.size
         for line in range(new_Fo_shape[0]):
-            r_fo = np.argsort(np.argsort(new_Fo[line, :]))
-            rcc = 1 - 6 * np.sum(np.power(r_fo-r_ob,2))/(size * (size*size-1))
+            r_fo = np.argsort(np.argsort(new_Fo[line, :].flatten()))
+            rcc = 1 - 6 * np.sum(np.power(r_fo-r_ob,2))/(n * (n*n-1))
             rcc_list.append(rcc)
         rcc_array = np.array(rcc_list)
         shape = list(Fo_shape[:ind])

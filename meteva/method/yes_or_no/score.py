@@ -719,6 +719,8 @@ def odds_ratio_hfmc(hfmc_array):
     mis = hfmc_array[...,2]
     cn = hfmc_array[...,3]
     ors = hit*cn/(mis * fal + 1e-8)
+    if ors.size ==1:
+        ors = ors[0]
     return ors
 
 def odds_ratio(Ob,Fo,grade_list= [1e-30],compair = ">="):
@@ -731,7 +733,7 @@ def odds_ratio(Ob,Fo,grade_list= [1e-30],compair = ">="):
     :return: 0 到无穷大的实数，完美值为无穷大, 0代表没有技巧
     '''
     hfmc_array = hfmc(Ob, Fo, grade_list,compair = compair)
-    return ob_fo_hc_hfmc(hfmc_array)
+    return odds_ratio_hfmc(hfmc_array)
 
 
 def orss_hfmc(hfmc_array):
@@ -747,6 +749,8 @@ def orss_hfmc(hfmc_array):
     mis = hfmc_array[...,2]
     cn = hfmc_array[...,3]
     ors = (hit*cn -mis * fal)/ (hit*cn + mis * fal)
+    if ors.size ==1:
+        ors = ors[0]
     return ors
 
 def orss(Ob,Fo,grade_list= [1e-30],compair = ">="):

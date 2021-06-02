@@ -187,7 +187,7 @@ def add_china_map_2basemap(ax,name ="province", facecolor='none',
 
 
 def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap ="rainbow",add_county_line = False,add_worldmap =False,show = False,dpi = 300,
-                     sup_fontsize = 10,height = None,width = None,ncol = None,subplot = None,sup_title = None,clip= None):
+                     sup_fontsize = 10,height = None,width = None,subplot = None,ncol = None,sup_title = None,clip= None):
 
     vmin = 10e30
     vmax = -10e30
@@ -234,132 +234,7 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap ="rainbo
                       add_worldmap = add_worldmap,show=show,dpi = dpi,sup_fontsize = sup_fontsize,height= height,width = width,ncol= ncol,
                       sup_title = sup_title1,clip= clip)
 
-    if 1 <0:
 
-        if save_path is None:
-            show = True
-        x = grd['lon'].values
-        y = grd['lat'].values
-        rlon = x[-1] - x[0]
-        rlat = y[-1] - y[0]
-
-        if height is None:
-            height = 4
-        title_hight = 0.3
-        legend_hight = 0.1
-        left_plots_width  = 0.8
-        right_plots_width = 0.8
-        if width is None:
-            width = (height - title_hight - legend_hight) * rlon / rlat + left_plots_width + right_plots_width
-        #print(width)
-        fig = plt.figure(figsize=(width, height),dpi = dpi)
-        rect1 = [left_plots_width / width, legend_hight/height, (width - right_plots_width - left_plots_width) / width, 1-title_hight/height]
-        ax = plt.axes(rect1)
-
-        grid0 = meteva.base.get_grid_of_data(grd)
-
-
-        if grid0.slon < 70 or grid0.elon > 140 or grid0.slat < 10 or grid0.elat > 60:
-            add_worldmap = True
-        if add_worldmap:
-            add_china_map_2basemap(ax, name="world", edgecolor='k', lw=0.3, encoding='gbk', grid0=None)  # "国界"
-
-        add_china_map_2basemap(ax, name="nation", edgecolor='k', lw=0.3,encoding = 'gbk')  #"国界"
-        add_china_map_2basemap(ax, edgecolor='k', lw=0.3,encoding = 'gbk')  #"省界"
-        if add_county_line:
-            add_china_map_2basemap(ax, name="county", edgecolor='k', lw=0.2, encoding='gbk')  # "省界"
-        ax.set_xlim((grid0.slon, grid0.elon))
-        ax.set_ylim((grid0.slat, grid0.elat))
-
-        if title is None:
-            time_str = meteva.base.tool.time_tools.time_to_str(grid0.gtime[0])
-            dati_str = time_str[0:4] + "年" + time_str[4:6] + "月" + time_str[6:8] + "日" + time_str[8:10] + "时"
-            if type(grid0.members[0]) == str:
-                model_name = grid0.members[0]
-            else:
-                model_name = str(grid0.members[0])
-            title = model_name + " "+dati_str  + str(grid0.dtimes[0]) + "H时效 " + grd.name
-        plt.title(title,fontsize = sup_fontsize)
-
-        vmax = np.max(grd.values)
-        vmin = np.min(grd.values)
-
-        cmap1,clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap,clevs=clevs,vmin=vmin,vmax = vmax)
-        norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
-        im = ax.contourf(x, y, np.squeeze(grd.values), levels=clevs1, cmap=cmap1,norm = norm)
-        left_low = (width +0.1 - right_plots_width) / width
-        colorbar_position = fig.add_axes([left_low, legend_hight / height, 0.02, 1 - title_hight / height])  # 位置[左,下,宽,高]
-        plt.colorbar(im,cax= colorbar_position)
-
-        vmax = x[-1]
-        vmin = x[0]
-        r = rlon
-        if r <= 1:
-            inte = 0.1
-        elif r <= 5 and r > 1:
-            inte = 1
-        elif r <= 10 and r > 5:
-            inte = 2
-        elif r < 20 and r >= 10:
-            inte = 4
-        elif r <= 30 and r >= 20:
-            inte = 5
-        elif r <180:
-            inte = 10
-        else:
-            inte = 20
-
-        vmin = inte * (math.ceil(vmin / inte))
-        vmax = inte * ((int)(vmax / inte)+1)
-        xticks = np.arange(vmin,vmax,inte)
-        xticks_label = []
-        for x in range(len(xticks)):
-            xticks_label.append(str(round(xticks[x],6)))
-        if xticks[-1] >0:
-            xticks_label[-1] ="   " +xticks_label[-1] + "°E"
-        else:
-            xticks_label[-1] ="   " +xticks_label[-1] + "°W"
-        ax.set_xticks(xticks)
-        ax.set_xticklabels(xticks_label,fontsize = sup_fontsize * 0.9, family='Times New Roman')
-
-        vmax = y[-1]
-        vmin = y[0]
-        r = rlat
-        if r <= 1:
-            inte = 0.1
-        elif r <= 5 and r > 1:
-            inte = 1
-        elif r <= 10 and r > 5:
-            inte = 2
-        elif r < 20 and r >= 10:
-            inte = 4
-        elif r <= 30 and r >= 20:
-            inte = 5
-        else:
-            inte = 10
-
-        vmin = inte * (math.ceil(vmin / inte))
-        vmax = inte * ((int)(vmax / inte)+1)
-        yticks = np.arange(vmin,vmax,inte)
-        yticks_label = []
-        for y in range(len(yticks)):
-            if yticks[y] >= 0:
-                yticks_label.append(str(round(yticks[y],6))+"°N")
-            else:
-                yticks_label.append(str(round(-yticks[y], 6)) +"°S")
-        ax.set_yticks(yticks)
-        ax.set_yticklabels(yticks_label,fontsize = sup_fontsize * 0.9, family='Times New Roman')
-
-
-        if(save_path is not None):
-            file1,extension = os.path.splitext(save_path)
-            extension = extension[1:]
-            plt.savefig(save_path,format = extension,bbox_inches='tight')
-        else:
-            show = True
-        if show:
-            plt.show()
-        plt.close()
 
 
 
