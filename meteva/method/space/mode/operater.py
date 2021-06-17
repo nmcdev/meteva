@@ -44,8 +44,8 @@ def operate(grd_ob, grd_fo, smooth, threshold,minsize,match_method = centmatch,s
         if  features["interester"] is not None:
             features_list["interester"] = features["interester"].tolist()
         for i in range(1,nmatch+1):
-            features_list[i]["feature_props"]["ob"]["intensity"] =features[i]["feature_props"]["ob"]["intensity"].tolist()
-            features_list[i]["feature_props"]["fo"]["intensity"] = features[i]["feature_props"]["fo"]["intensity"].tolist()
+            features_list[i]["feature_props"]["ob"]["intensity"] =features[i]["feature_props"]["ob"]["intensity"][0].tolist()
+            features_list[i]["feature_props"]["fo"]["intensity"] = features[i]["feature_props"]["fo"]["intensity"][0].tolist()
 
         json_str = json.dumps(features_list)
         br = open(json_save_path, 'w')
