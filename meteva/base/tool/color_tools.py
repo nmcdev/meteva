@@ -108,6 +108,13 @@ def cmap_clevs_temper_2m_error():
     return cmap, clevs1
 
 
+def cmap_clevs_environment():
+    clevs1 =[0,35,75,115,150,250,350]
+    nclev = len(clevs1)
+    colors_list = np.array([[0,228,0],[255,255,0],[255,126,0],[255,0,0],[153,0,76],[126,0,35]])/256
+    cmap = colors.ListedColormap(colors_list, 'indexed')
+    return cmap, clevs1
+
 def get_cmap_and_clevs_from_file(path):
     clev_cmap = np.loadtxt(path)
     clevs = clev_cmap[:, 0]
@@ -604,10 +611,10 @@ def get_cmap_and_clevs_by_name(cmap_name,vmin,vmax):
         cmap, clevs = cmap_clevs_mode(vmax)
     elif cmap_name == "temper_2m_error":
         cmap, clevs = cmap_clevs_temper_2m_error()
-
     elif cmap_name == "temper_error_br":
         cmap, clevs = cmap_clevs_temper_error_br(vmax)
-
+    elif cmap_name =="environment":
+        cmap,clevs = cmap_clevs_environment()
     else:
         print("该配色方案名称不识别")
         return None,None
@@ -639,7 +646,7 @@ class cmaps:
     mode = "mode"
     me = "me"
     temper_error_br ="temper_error_br"
-
+    environment = "environment"
 
 
 
