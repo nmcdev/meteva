@@ -266,6 +266,7 @@ def interp_sg_idw(sta0, grid, background=None, effectR=1000, nearNum=8,decrease 
             bg = interp_gg_linear(background, grid2)
         bg_dat = bg.values.flatten()
         dat = np.where(d[:] > effectR, bg_dat, dat)
+    dat = dat.astype(np.float32)
     grd = meteva.base.basicdata.grid_data(grid2, dat)
     grd.name = "data0"
     return grd
@@ -302,7 +303,7 @@ def interp_sg_idw_delta(sta0, grid,  halfR=1000, nearNum=8,decrease = 2):
         input_dat = sta0.iloc[:,-1].values
         w2 = np.exp(-d/halfR)
         dat = w2 * input_dat[inds]
-
+    dat = dat.astype(np.float32)
     grd = meteva.base.basicdata.grid_data(grid2, dat)
     grd.name = "data0"
     return grd
