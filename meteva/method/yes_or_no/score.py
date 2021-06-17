@@ -766,7 +766,32 @@ def orss(Ob,Fo,grade_list= [1e-30],compair = ">="):
     hfmc_array = hfmc(Ob, Fo, grade_list,compair = compair)
     return orss_hfmc(hfmc_array)
 
+def fscore(Ob,Fo,grade_list = [1e-30],compair = ">=",belta = 1):
+    '''
+    = (1+belata^2)*(pod*sr)/(belta^2 * sr + pod)
+    :param Ob:
+    :param Fo:
+    :param grade_list:
+    :param compair:
+    :param belta:
+    :return:
+    '''
+    precision = sr(Ob,Fo,grade_list=grade_list,compair=compair)
+    recall = pod(Ob,Fo,grade_list=grade_list,compair=compair)
 
+    f_score = (1 + belta * belta) * (precision * recall)/(belta * belta * precision + recall)
+
+    return f_score
+
+def fscore_hfmc(hfmc_array,belta = 1):
+    precision = sr_hfmc(hfmc_array)
+    recall = pod_hfmc(hfmc_array)
+
+    f_score = (1 + belta * belta) * (precision * recall) / (belta * belta * precision + recall)
+    if f_score.size ==1:
+        f_score = f_score[0]
+
+    return f_score
 
 def dts(Ob,Fo,grade_list= [1e-30],compair = ">="):
     hfmc_array = hfmc(Ob, Fo, grade_list,compair = compair)
