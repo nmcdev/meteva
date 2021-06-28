@@ -595,47 +595,85 @@ def score_tdt(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_lis
         for st in range(len(sta_time_list)):
             sta_time = sta_time_list[st]
             result, dtime_list = score(sta_time, method, g="dtime", **method_args)
+            #print(result.shape)
+            if len(dtime_list) == 1:
+                if len(result.shape) == 1:
+                    if len(fo_name) > 1:
+                        # 没有等级，但有多个预报成员
+                        dict_result = {}
+                        dict_result["dtime"] = dtime_list[0]
+                        for f in range(fo_num):
+                            dict_result[fo_name[f]] = result[f]
+                        sta_result = pd.DataFrame(dict_result)
+                        sta_result["time"] = time_list[st]
+                        sta_result_list_dict[0].append(sta_result)
+                    else:
+                        # 有多个等级，但只有一个预报成员
+                        for gg in range(grade_num):
+                            dict_result = {}
+                            dict_result["dtime"] = dtime_list[0]
+                            #print(fo_name)
+                            dict_result[fo_name[0]] = result[gg]
+                            sta_result = pd.DataFrame(dict_result)
+                            sta_result["time"] = time_list[st]
+                            sta_result_list_dict[gg].append(sta_result)
 
-            if len(result.shape) <=1:
-                # 没有等级，只有一个预报成员
-                if len(result.shape) ==0:
-                    result = [float(result)]
-                dict_data = {"dtime":dtime_list,fo_name[0]:result}
-                sta_result = pd.DataFrame(dict_data)
-                sta_result["time"] = time_list[st]
-                sta_result_list_dict[0].append(sta_result)
-            elif len(result.shape) ==2:
-                if len(fo_name) > 1:
-                    # 没有等级，但有多个预报成员
-                    dict_result = {}
-                    dict_result["dtime"] = dtime_list
-                    for f in range(fo_num):
-                        dict_result[fo_name[f]] = result[:,f]
-                    sta_result = pd.DataFrame(dict_result)
-                    sta_result["time"] = time_list[st]
-                    sta_result_list_dict[0].append(sta_result)
                 else:
-                    # 有多个等级，但只有一个预报成员
                     for gg in range(grade_num):
                         dict_result = {}
                         dict_result["dtime"] = dtime_list
-                        print(fo_name)
-                        dict_result[fo_name[0]] = result[:,gg]
+                        for f in range(fo_num):
+                            dict_result[fo_name[f]] = result[f, gg]
                         sta_result = pd.DataFrame(dict_result)
                         sta_result["time"] = time_list[st]
-                        sta_result_list_dict[gg].append(sta_result)
-            else:
-                for gg in range(grade_num):
-                    dict_result = {}
-                    dict_result["dtime"] = dtime_list
-                    for f in range(fo_num):
-                        dict_result[fo_name[f]] = result[:,f,gg]
-                    sta_result = pd.DataFrame(dict_result)
-                    sta_result["time"] = time_list[st]
 
-                    sta_result_list_dict[gg].append(sta_result)
+                        sta_result_list_dict[gg].append(sta_result)
+                #print(sta_result)
+            else:
+                #print(dtime_list)
+                #print(result)
+                if len(result.shape) <=1:
+                    # 没有等级，只有一个预报成员
+                    if len(result.shape) ==0:
+                        result = [float(result)]
+                    dict_data = {"dtime":dtime_list,fo_name[0]:result}
+                    #print(dict_data)
+                    sta_result = pd.DataFrame(dict_data)
+                    sta_result["time"] = time_list[st]
+                    sta_result_list_dict[0].append(sta_result)
+                elif len(result.shape) ==2:
+                    if len(fo_name) > 1:
+                        # 没有等级，但有多个预报成员
+                        dict_result = {}
+                        dict_result["dtime"] = dtime_list
+                        for f in range(fo_num):
+                            dict_result[fo_name[f]] = result[:,f]
+                        sta_result = pd.DataFrame(dict_result)
+                        sta_result["time"] = time_list[st]
+                        sta_result_list_dict[0].append(sta_result)
+                    else:
+                        # 有多个等级，但只有一个预报成员
+                        for gg in range(grade_num):
+                            dict_result = {}
+                            dict_result["dtime"] = dtime_list
+                            #print(fo_name)
+                            dict_result[fo_name[0]] = result[:,gg]
+                            sta_result = pd.DataFrame(dict_result)
+                            sta_result["time"] = time_list[st]
+                            sta_result_list_dict[gg].append(sta_result)
+                else:
+                    for gg in range(grade_num):
+                        dict_result = {}
+                        dict_result["dtime"] = dtime_list
+                        for f in range(fo_num):
+                            dict_result[fo_name[f]] = result[:,f,gg]
+                        sta_result = pd.DataFrame(dict_result)
+                        sta_result["time"] = time_list[st]
+
+                        sta_result_list_dict[gg].append(sta_result)
 
         sta_all_g_list = []
+
         for gg in range(grade_num):
             sta_all_g = pd.concat(sta_result_list_dict[gg])
             sta_all_g["level"] = meteva.base.IV
