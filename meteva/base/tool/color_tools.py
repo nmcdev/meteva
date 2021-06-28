@@ -686,6 +686,19 @@ def def_cmap_clevs(cmap = "rainbow",clevs = None,vmin = None,vmax = None,cut_acc
         if hasattr(cmap_class, cmap):
             cmap,clevs1,= get_cmap_and_clevs_by_name(cmap, vmin, vmax)
 
+    if isinstance(cmap,list):
+        if isinstance(cmap[0],list):
+            cmap_list = cmap
+        else:
+            cmap_list = []
+            for c1 in cmap:
+                r1 = int(c1[1:3].upper(), 16)/256
+                g1 = int(c1[3:5].upper(), 16)/256
+                b1 = int(c1[5:7].upper(), 16)/256
+                cmap_list.append([r1,g1,b1])
+        cmap = colors.ListedColormap(cmap_list, 'indexed')
+
+
     #设置clevs2
     if clevs is None:
         if clevs1 is None:
