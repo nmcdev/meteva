@@ -242,7 +242,9 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
                 meteva.base.plot_tools.plot(result_plot,name_list_dict,legend=legend,axis = axis,vmin =vmin,vmax = vmax,save_path=save_path,show=show,dpi = dpi,title= title,**plot_args)
         if excel_path is not None:
             meteva.base.write_array_to_excel(result_plot,excel_path,name_list_dict,index= axis,columns=legend)
-    result = result.squeeze()
+
+    if result.size != 1:
+        result = result.squeeze()
     return result,group_list_list1
 
 
