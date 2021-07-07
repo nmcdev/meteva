@@ -41,6 +41,7 @@ def intRamt(look,ob_or_fo = "ob"):
         lon_c = []
         lat_c = []
         mean_value = []
+        grid0 = look["grid"]
         for i in range(1, label_count+ 1):
             index1 = grd_feats[i]      #提取某一个目标的对应的各个点的位置
             data = grd_data[index1]    #提取某一个目标的对应的各个点的网格值
@@ -58,11 +59,14 @@ def intRamt(look,ob_or_fo = "ob"):
 
             #质心经度
             lon_c_0 = np.sum(index1[1] * data) / v_sum_0
+            lon_c_0 = grid0.slon + grid0.dlon * lon_c_0
             lon_c.append(lon_c_0)
 
             #质心纬度
             lat_c_0 = np.sum(index1[0] * data) / v_sum_0
+            lat_c_0 = grid0.slat + grid0.dlat * lat_c_0
             lat_c.append(lat_c_0)
+
 
         return np.array(mass),np.array(mean_value),np.array(max_value),np.array(lon_c),np.array(lat_c)
 
@@ -91,7 +95,6 @@ def sal(look):
     DomR_ob = np.mean(grd_ob.values)   #计算整场降水的平均值
     A = 2 * (DomR_fo - DomR_ob)/(DomR_fo + DomR_ob)  #返回内容A
 
-
     dmax = meteva.base.math_tools.earth_surface_dis(grid0.slon,grid0.slat,grid0.elon,grid0.elat)  #计算网格对角线的长度
     cen_ob_lon,cen_ob_lat = center_of_mass(tmp['grd_ob'])   #计算观测场的整场质心
     cen_fo_lon,cen_fo_lat = center_of_mass(tmp['grd_fo'])   #计算预报场的整场质心
@@ -118,6 +121,7 @@ def sal(look):
     mass_sum_fo = np.sum(mass_fo) # 预报目标的质量总和
     r_ob = np.sum(mass_ob * center_distance_label_to_grd_ob)/mass_sum_ob  #各目标距离整场质心的平均距离
     r_fo = np.sum(mass_fo * center_distance_label_to_grd_fo)/mass_sum_fo  #各目标距离整场质心的平均距离
+
     L2 = 2 * abs(r_fo - r_ob)/dmax  #返回内容L2
 
 
