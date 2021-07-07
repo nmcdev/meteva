@@ -72,12 +72,31 @@ def censqdelta(x, y, N, const, p):
 
     X = np.zeros(shape = (N, N), dtype = float)    #大小为N的0矩阵
     Y = np.zeros(shape = (N, N), dtype = float)
-    for j in np.trunc(idX).astype(int).tolist():
+    #print(idX.shape)
+    idx1 = idX[:,0].astype(np.int16)
+    idx1[idx1<0] = 0
+    idx1[idx1 >= N-1] = N-1
+    idx2 = idX[:,1].astype(np.int16)
+    idx2[idx2<0] = 0
+    idx2[idx2 >= N-1] = N-1
+    X[idx2,idx2] = 1
+
+    #for j in np.trunc(idX).astype(int).tolist():
         # 将计算后的索引位置重新赋值为1
-        X[j[0],j[1]] = 1
-    for k in np.trunc(idY).astype(int).tolist():
+    #    X[j[0],j[1]] = 1
+
+
+    idy1 = idY[:,0].astype(np.int16)
+    idy1[idy1<0] = 0
+    idy1[idy1 >= N-1] = N-1
+    idy2 = idY[:,1].astype(np.int16)
+    idy2[idy2<0] = 0
+    idy2[idy2 >= N-1] = N-1
+    Y[idy2,idy2] = 1
+
+    #for k in np.trunc(idY).astype(int).tolist():
         #print(k)
-        Y[k[0],k[1]] = 1
+    #    Y[k[0],k[1]] = 1
         
     #deltametric函数
     dA = ndimage.morphology.distance_transform_edt(1-X)     #distmap函数

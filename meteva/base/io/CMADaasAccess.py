@@ -13,7 +13,7 @@ import json
 from .loglib import *
 from .httpconn import HttpConn
 from .SignGenUtil import SignGenUtil
-import meteva.base as meb
+#import meteva.base as meb
 import numpy as np
 
 class CMADaasAccess():
@@ -225,11 +225,11 @@ class CMADaasAccess():
                 if not isinstance(dtime,list): 
                     dtime = [dtime]#确保dtime为列表
             # print(time,dtime)
-            grid_info = meb.grid([lonS,lonE,dlon],[latS,latE,dlat]
+            grid_info = meteva.base.grid([lonS,lonE,dlon],[latS,latE,dlat]
                                  ,gtime = time
                                  ,dtime_list=dtime)
             #print(grid_info)
-            grid = meb.grid_data(grid_info,data)
+            grid = meteva.base.grid_data(grid_info,data)
         except Exception as data:
             print(json)
             return None
@@ -244,7 +244,7 @@ class CMADaasAccess():
             LogLib.info('CMADaasAccess Convert dataFrame from JSON_dict {0}'.format(datetime.datetime.now().strftime("%Y%m%d%H%M")))
             pddata = pd.DataFrame.from_dict(j_dict)
             ## 更改dataframe
-            sta = meb.sta_data(pddata, columns=['time','id','lat','lon','data0'])
+            sta = meteva.base.sta_data(pddata, columns=['time','id','lat','lon','data0'])
             sta.level = 0
             sta.dtime=0
             sta.time = pd.to_datetime(sta.time)
@@ -412,9 +412,9 @@ class CMADaasAccess():
             try:
                 if filename is None: filename="YYYYMMDDHHFF.000.m3"
                 output_name = os.path.join(save_path, filename)
-                output_name = meb.get_path(output_name,time)
+                output_name = meteva.base.get_path(output_name,time)
                 print('OUTPUT: ', output_name)
-                meb.write_stadata_to_micaps3(sta, save_path=output_name, effectiveNum=2)
+                meteva.base.write_stadata_to_micaps3(sta, save_path=output_name, effectiveNum=2)
             except Exception as data:
                 LogLib.error('{0} CMADaasAccess OBS output ERROR!: {1}'.format(datetime.datetime.now().strftime("%Y%m%d%H%M"),data))        
         return(sta)
@@ -465,7 +465,7 @@ class CMADaasAccess():
                 # 自定义文件名格式
                 else:
                     output_name = os.path.join(save_path, filename)
-                output_name = meb.get_path(output_name,file_time)
+                output_name = meteva.base.get_path(output_name,file_time)
                 # 文件存储
                 grd,header = CMADaasAccess.read_file_from_cmadaas(url)
                 print('WriteFile : ',output_name)

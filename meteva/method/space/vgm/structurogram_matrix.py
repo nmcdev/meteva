@@ -48,6 +48,7 @@ def structurogram_matrix(grd_list, delta = 10, step = 1, q = 1):
     dis  =np.zeros((nv,len(delta_x),len(delta_y)))
     for m in range(nv):
         dat = grd_list[m].values.squeeze()
+        dat.flags.writeable = True
         dat[dat == meteva.base.IV] = np.nan
         for i in range(len(delta_x)):
             for j in range(len(delta_y)):

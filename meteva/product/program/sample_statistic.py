@@ -4,7 +4,9 @@ import meteva
 def sample_tdt(sta_all,return_result = False,**kwargs):
     if "title" not in kwargs.keys():
         kwargs["title"] =  ["样本数随时间和时效的分布"]
-    result = meteva.product.score_tdt(sta_all,meteva.method.sample_count,x_y="time_dtime",annot = -1
+    if "x_y" not in kwargs.keys():
+        kwargs["x_y"] ="time_dtime"
+    result = meteva.product.score_tdt(sta_all,meteva.method.sample_count,annot = -1
                                       ,**kwargs)
     if return_result:
         return result

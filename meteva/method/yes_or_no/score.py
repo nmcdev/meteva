@@ -766,7 +766,46 @@ def orss(Ob,Fo,grade_list= [1e-30],compair = ">="):
     hfmc_array = hfmc(Ob, Fo, grade_list,compair = compair)
     return orss_hfmc(hfmc_array)
 
+def fscore(Ob,Fo,grade_list = [1e-30],compair = ">=",belta = 1):
+    '''
+    = (1+belta^2)*(pod*sr)/(belta^2 * sr + pod)
+    :param Ob:
+    :param Fo:
+    :param grade_list:
+    :param compair:
+    :param belta:
+    :return:
+    '''
+    #precision = sr(Ob,Fo,grade_list=grade_list,compair=compair)
+    #recall = pod(Ob,Fo,grade_list=grade_list,compair=compair)
 
+    #f_score = (1 + belta * belta) * (precision * recall)/(belta * belta * precision + recall)
+    hfmc_array= hfmc(Ob,Fo,grade_list,compair)
+    f_score = fscore_hfmc(hfmc_array,belta)
+
+    return f_score
+
+def fscore_hfmc(hfmc_array,belta = 1):
+    #precision = sr_hfmc(hfmc_array)
+    #recall = pod_hfmc(hfmc_array)
+
+    #f_score = (1 + belta * belta) * (precision * recall) / (belta * belta * precision + recall)
+    #if f_score.size ==1:
+    #    f_score = f_score[0]
+
+
+    hit = hfmc_array[...,0]
+    fal = hfmc_array[...,1]
+    mis = hfmc_array[...,2]
+
+    sum = (1+belta*belta)*hit + belta * belta* mis + fal
+    sum[sum == 0] = -1
+    fscore_array =(1+belta*belta)*hit/ sum
+    fscore_array[sum == -1] = IV
+    if fscore_array.size ==1:
+        fscore_array = fscore_array[0]
+
+    return fscore_array
 
 def dts(Ob,Fo,grade_list= [1e-30],compair = ">="):
     hfmc_array = hfmc(Ob, Fo, grade_list,compair = compair)
