@@ -29,11 +29,11 @@ def group(sta_ob_and_fos,g = None,gll = None):
 
         data_names_range = []
         for data_name in data_names:
-            data_names_range.append(data_name + "_range")
+            data_names_range.append(str(data_name) + "_range")
 
         data_names_step = []
         for data_name in data_names:
-            data_names_step.append(data_name + "_step")
+            data_names_step.append(str(data_name) + "_step")
 
         valid_group.extend(data_names)
         valid_group.extend(data_names_range)
@@ -527,11 +527,16 @@ def group(sta_ob_and_fos,g = None,gll = None):
     if len(valid_group_list_list)==0:
         valid_group_list = None
     else:
+        vg =np.array(valid_group_list_list)
         if len(valid_group_list_list) > 1:
-            valid_group_list =  np.array(valid_group_list_list).squeeze().tolist()
+            valid_group_list =  vg.squeeze().tolist()
         else:
-            valid_group_list = valid_group_list_list
+            if vg.size == 1:
+                valid_group_list = valid_group_list_list[0]
+            else:
+                valid_group_list = valid_group_list_list
     #print(valid_group_list)
+
     return sta_ob_and_fos_list,valid_group_list
 
 
@@ -576,7 +581,6 @@ def split_grd(grd,used_coords = ["member","level","time","dtime"],grd_list = Non
     else:
         for grd in grd_group:
             grd_list.append(grd)
-
     return grd_list
 
 
