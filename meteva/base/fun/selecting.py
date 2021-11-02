@@ -125,16 +125,47 @@ def in_id_list(sta,id_list):
 
 
 #为拥有多time层的站点数据，依次增加time层所表示的list列表
-def in_time_list(sta,time_list):
+def in_time_list(data,time_list):
+
     if not isinstance(time_list,list) and not isinstance(time_list,np.ndarray):
         time_list = [time_list]
     time_list1 = []
-
     for time0 in time_list:
         time_list1.append(meteva.base.tool.time_tools.all_type_time_to_time64(time0))
-    sta1 = sta.loc[sta['time'].isin(time_list1)]
-    return sta1
 
+    if isinstance(data, pd.DataFrame):
+        sta1 = data.loc[data['time'].isin(time_list1)]
+        return sta1
+    else:
+        grid0 = meteva.base.basicdata.get_grid_of_data(data)
+        times_all = data["time"].values
+        index_time_dict = {}
+        for i in range(len(times_all)):
+            time_str = meteva.base.tool.time_tools.all_type_time_to_str(times_all[i])
+            index_time_dict[time_str] = i
+        index_time= []
+        for j in range(len(time_list1)):
+            time_str =  meteva.base.tool.time_tools.all_type_time_to_str(time_list1[j])
+            if time_str in index_time_dict.keys():
+                index_time.append(index_time_dict[time_str])
+        if len(index_time) == 0:return None
+        dat = data.values[:, :,index_time,  :, :, :]
+        times_fo = list(set(time_list1))
+        times_fo.sort()
+        times_fo = np.array(times_fo)
+        if times_fo.size == 1:
+            gtime = [times_fo[0]]
+        else:
+
+            dhs_fo = times_fo[-1] - times_fo[0]
+            gtime = [times_fo[0], times_fo[-1], dhs_fo]
+
+        grid1 = meteva.base.basicdata.grid(grid0.glon, grid0.glat,
+                    gtime= gtime,
+                    dtime_list=grid0.dtimes,level_list=grid0.levels,member_list=grid0.members)
+
+        grd1 = meteva.base.basicdata.grid_data(grid1, dat)
+        return grd1
 
 
 #为拥有多year的站点数据，依次增加year所表示的list列表
@@ -383,10 +414,15 @@ def in_dminute_list(sta,dminute_list):
     return sta1
 
 #返回的dtime在start_dtime和end_dtime之间
-def between_dtime_range(sta,start_dtime,end_dtime):
-    sta1 = sta.loc[(sta['dtime']>=start_dtime) & (sta['dtime']<= end_dtime)]
-    return sta1
-
+def between_dtime_range(data,start_dtime,end_dtime):
+    if isinstance(data, pd.DataFrame):
+        sta1 = data.loc[(data['dtime']>=start_dtime) & (data['dtime']<= end_dtime)]
+        return sta1
+    else:
+        dtimes = data["dtime"].values
+        index = np.where((dtimes>= start_dtime)&(dtimes<=end_dtime))[0]
+        grd1 = data.isel(dtime=index)
+        return grd1
 #返回的lon在slon和elon之间
 def between_lon_range(sta,slon,elon):
     sta1 = sta.loc[(sta['lon']>=slon) & (sta['lon']<= elon)]
@@ -826,7 +862,7 @@ def sele_by_para(data,member = None,level = None,time = None,time_range = None,y
     data_names = meteva.base.get_stadata_names(data)
     data_names_range = []
     for data_name in data_names:
-        data_names_range.append(data_name+"_range")
+        data_names_range.append(str(data_name)+"_range")
     for key in kwargs.keys():
         if key in data_names:
             value_one = kwargs[key]
