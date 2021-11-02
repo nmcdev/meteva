@@ -303,7 +303,7 @@ def get_title_from_dict(method,s,g,group_list,model_name,title = None):
                         group_name += str(loc)+"|"+ str(group_list[1])+"|...|"+str(group_list[-1])
             group_name = group_name + ")"
         if model_name is not None:
-            model_name = "(" + model_name + ")"
+            model_name = "(" + str(model_name) + ")"
         else:
             model_name = ""
         print()
@@ -515,6 +515,9 @@ def get_x_label(groupy_by):
         return "预报时效包含的天数"
     elif groupy_by == "dday":
         return "预报时效整除24小时后的余数"
+
+
+
 def get_x_ticks(ticks,width,row = 2):
     w_one_tick = 0.5
     max_tick_num = int(width / w_one_tick)
@@ -602,7 +605,7 @@ def get_x_ticks(ticks,width,row = 2):
     return xticks, xtick_labels
 
 
-def get_y_ticks(ticks,height):
+def get_y_ticks(ticks,height,fonsize):
     w_one_tick = 0.3
     max_tick_num = int(height / w_one_tick)
     tick0 = ticks[0]
@@ -645,14 +648,14 @@ def get_y_ticks(ticks,height):
             index1 = np.where(pd_times.index.hour.isin(hour_list))
             times_used = times[index1]
             yticks = (times_used - times[0]) / np.timedelta64(1, 'h') / dhs_u0
-            print(yticks)
             ytick_labels = get_time_str_list(times_used,row=1)
-            print(yticks)
-            print(ytick_labels)
+
         else:
             #无规律，需穷举
             ytick_labels = get_time_str_list(times,row=2)
             yticks = np.arange(ytick_labels)
     else:
-        pass
+        sp =int(math.ceil( fonsize * 0.006 * len(ticks) / height))
+        yticks = np.arange(0,len(ticks),sp)
+        ytick_labels = ticks[::sp]
     return yticks, ytick_labels
