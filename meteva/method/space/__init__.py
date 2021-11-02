@@ -5,3 +5,5 @@ from .mode import *
 from .saller import sal
 from . import vgm
 from . vgm import *
+from .rigider import *
+from . import rigider
