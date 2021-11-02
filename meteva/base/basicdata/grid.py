@@ -141,9 +141,9 @@ class grid:
         ############################################################################
         #提取经度信息
 
-        self.slon = glon[0]
-        self.elon = glon[1]
-        self.dlon = glon[2]
+        self.slon = get_true_value(glon[0])
+        self.elon = get_true_value(glon[1])
+        self.dlon = get_true_value(glon[2])
         nlon = 1 + (self.elon - self.slon) / self.dlon
         error = abs(round(nlon) - nlon)/nlon
         if (error > 0.01):
@@ -151,21 +151,21 @@ class grid:
         else:
             self.nlon = int(round(nlon))
 
-        self.elon = round(self.slon + (nlon - 1) * self.dlon,5)
+        self.elon = get_true_value(self.slon + (nlon - 1) * self.dlon)
         self.glon = [self.slon,self.elon,self.dlon]
 
         ############################################################################
         #提取纬度信息
-        self.slat = glat[0]
-        self.elat = glat[1]
-        self.dlat = glat[2]
+        self.slat = get_true_value(glat[0])
+        self.elat = get_true_value(glat[1])
+        self.dlat = get_true_value(glat[2])
         nlat = 1 + (self.elat - self.slat) / self.dlat
         error = abs(round(nlat) - nlat)/nlat
         if (error > 0.01):
             self.nlat = int(math.ceil(nlat))
         else:
             self.nlat = int(round(nlat))
-        self.elat = round(self.slat + (nlat - 1) * self.dlat,5)
+        self.elat = get_true_value(self.slat + (nlat - 1) * self.dlat)
         self.glat = [self.slat,self.elat,self.dlat]
 
 
@@ -205,6 +205,17 @@ class grid:
         grid_str += "glat:" + str(self.glat) + "\n"
         return grid_str
 
+def get_true_value(value):
+    dlon2 = round(value, 2)
+    dlon3 = round(value, 3)
+    dlon4 = round(value, 4)
+    dlon5 = round(value, 5)
+    if dlon2 == dlon3 and dlon3 == dlon4:
+        return dlon3
+    elif dlon3 == dlon4 and dlon5 == dlon4:
+        return dlon3
+    else:
+        return value
 
 
 def get_grid_of_data(grid_data0):
@@ -229,9 +240,30 @@ def get_grid_of_data(grid_data0):
 
 
     lons = grid_data0['lon'].values
-    glon = [lons[0],round(lons[-1],5),round(lons[1]-lons[0],5)]
+
+    #dlon5 = round(lons[1] - lons[0], 5)
+    #dlon6 = round(lons[1] - lons[0], 6)
+    #dlon7 = round(lons[1] - lons[0], 7)
+    #if dlon5 == dlon6 and dlon6 == dlon7:
+    #    dlon = dlon5
+    #else:
+    #    dlon = lons[1]-lons[0]
+    dlon = get_true_value(lons[1] - lons[0])
+
+    #glon = [lons[0],round(lons[-1],5),round(lons[1]-lons[0],5)]
+    glon = [get_true_value(lons[0]), get_true_value(lons[-1]), dlon]
     lats = grid_data0['lat'].values
-    glat = [lats[0],round(lats[-1],5),round(lats[1]-lats[0],5)]
+    #dlat5 = round(lats[1] - lats[0], 5)
+    #dlat6 = round(lats[1] - lats[0], 6)
+    #dlat7 = round(lats[1] - lats[0], 7)
+    #if dlat5 == dlat6 and dlat6 == dlat7:
+    #    dlat = dlat5
+    #else:
+    #    dlat = lats[1]-lats[0]
+    dlat = get_true_value(lats[1] - lats[0])
+
+    #glat = [lats[0],round(lats[-1],5),round(lats[1]-lats[0],5)]
+    glat = [get_true_value(lats[0]), get_true_value(lats[-1]), dlat]
     grid01 = grid(glon, glat, gtime, gdt, level_list, member_list)
     return grid01
 
