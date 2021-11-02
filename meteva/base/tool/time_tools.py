@@ -90,8 +90,8 @@ def str_to_time64(time_str):
         str1 +="0000"
     elif len(str1) == 12:
         str1 +="00"
-    elif len(str1) > 12:
-        str1 = time_str[0:12]
+    elif len(str1) == 14:
+        str1 = time_str
     else:
         print("输入日期格式不识别，请检查！")
 
