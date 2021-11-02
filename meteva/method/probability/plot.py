@@ -22,9 +22,9 @@ def reliability(Ob, Fo, grade_count=10, member_list=None, vmax = None,log_y = Fa
     '''
     hnh_array = meteva.method.hnh(Ob, Fo, grade_count)
 
-    reliability_hnh(hnh_array, member_list=member_list,vmax = vmax,log_y = log_y,dpi = dpi, save_path=save_path,show = show, title=title,
+    result_dict = reliability_hnh(hnh_array, member_list=member_list,vmax = vmax,log_y = log_y,dpi = dpi, save_path=save_path,show = show, title=title,
                     width=width, height=height, sup_fontsize=sup_fontsize)
-
+    return result_dict
 
 def reliability_hnh(hnh_array,  member_list=None,vmax = None,log_y = False, save_path=None,show = False,dpi = 300, title="可靠性图",
                     sup_fontsize= 10,width = None,height = None):
@@ -55,6 +55,8 @@ def reliability_hnh(hnh_array,  member_list=None,vmax = None,log_y = False, save
     else:
         label.extend(member_list)
 
+
+
     color_list = meteva.base.tool.color_tools.get_color_list(legend_num)
 
     if width is None:
@@ -62,11 +64,17 @@ def reliability_hnh(hnh_array,  member_list=None,vmax = None,log_y = False, save
     if height is None:
         height = 6.1
 
+    ngrade = len(hnh_array[0, :, 0])
+    grade = 1 / ngrade
+    x = np.arange(grade / 2, 1, grade)
+    return_dict = {}
+    return_dict["p_fo"] =x
+    return_dict["p_ob"] = {}
+    return_dict["sample_count"] = {}
     for line in range(new_hnh_array_shape[0]):
         total_grade_num = hnh_array[line, :, 0]
         observed_grade_num = hnh_array[line, :, 1]
-        ngrade = len(total_grade_num)
-        grade = 1 / ngrade
+
         total_num = np.sum(total_grade_num)
         under = np.zeros_like(total_grade_num)
         under[:] = total_grade_num[:]
@@ -74,12 +82,13 @@ def reliability_hnh(hnh_array,  member_list=None,vmax = None,log_y = False, save
         ob_rate = observed_grade_num / under
         ob_rate[total_grade_num == 0] = IV
         ob_rate_noIV = set_plot_IV(ob_rate)
+        return_dict["p_ob"][line] =ob_rate
         ob_rate[total_grade_num == 0] = np.nan
         index_iv = np.where(total_grade_num == 0)
         line_x = np.arange(0, 1.00, grade)
         prefect_line_y = np.arange(0, 1.00, grade)
         climate_line_y = np.ones_like(line_x) * np.sum(observed_grade_num) / total_num
-        x = np.arange(grade / 2, 1, grade)
+
 
         if line == 0:
             fig = plt.figure(figsize=(width,height),dpi = dpi)
@@ -95,7 +104,7 @@ def reliability_hnh(hnh_array,  member_list=None,vmax = None,log_y = False, save
 
         plt.setp(ax1.get_xticklabels(), visible=False)
         plt.ylim(0.0, 1)
-        plt.ylabel("正样本比例",fontsize = sup_fontsize * 0.9)
+        plt.ylabel("观测频率",fontsize = sup_fontsize * 0.9)
         plt.legend(loc=2,fontsize = sup_fontsize * 0.9)
         plt.title(title,fontsize = sup_fontsize)
     bar_width = 0.8 / (grade_count * (legend_num+2))
@@ -117,12 +126,13 @@ def reliability_hnh(hnh_array,  member_list=None,vmax = None,log_y = False, save
         #x1 = x - 0.01 + (line + 1.5) * 0.01
 
         x1 = x + (line - legend_num/2 + 0.5) * bar_width
+        return_dict["sample_count"][line] = total_grade_num
         plt.bar(x1, total_grade_num, width=bar_width*0.8,color=color_list[line])
         plt.ylabel("样本数",fontsize = sup_fontsize * 0.9)
         if log_y: plt.yscale('log')
         plt.xlim(0.0, 1.0)
         plt.xticks(np.arange(0.1, 1.01, 0.1))
-        plt.xlabel("预测的概率",fontsize = sup_fontsize * 0.9)
+        plt.xlabel("预报概率",fontsize = sup_fontsize * 0.9)
         if vmax is not None:
             plt.ylim(0,vmax)
     if save_path is None:
@@ -133,6 +143,7 @@ def reliability_hnh(hnh_array,  member_list=None,vmax = None,log_y = False, save
     if show is True:
         plt.show()
     plt.close()
+    return return_dict
 
 
 def roc(Ob, Fo, grade_count=10, member_list=None, save_path=None,show = False,dpi = 300, title="ROC图",
@@ -146,9 +157,9 @@ def roc(Ob, Fo, grade_count=10, member_list=None, save_path=None,show = False,dp
     :return:
     '''
     hnh_array = meteva.method.hnh(Ob, Fo, grade_count)
-    roc_hnh(hnh_array,  member_list=member_list, save_path=save_path,show = show,dpi = dpi, title=title,
+    return_dict = roc_hnh(hnh_array,  member_list=member_list, save_path=save_path,show = show,dpi = dpi, title=title,
             width=width, height=height, sup_fontsize=sup_fontsize)
-
+    return return_dict
 
 def roc_hfmc(hfmc_array, member_list=None, save_path=None,show = False,dpi = 300, title="ROC图",
             sup_fontsize =10,width = None,height = None):
@@ -183,23 +194,29 @@ def roc_hfmc(hfmc_array, member_list=None, save_path=None,show = False,dpi = 300
     else:
         label.extend(member_list)
 
+    return_dict = {}
+    return_dict["far"] = {}
+    return_dict["pod"] = {}
 
     for line in range(new_hfmc_array_shape[0]):
-        far = [1]
-        far.extend(pofd_hfmc(new_hfmc_array[line, :]).tolist())
-        far.append(0)
+        pofd = [1]
+        pofd.extend(pofd_hfmc(new_hfmc_array[line, :]).tolist())
+        pofd.append(0)
         pod = [1]
         pod.extend(pod_hfmc(new_hfmc_array[line, :]).tolist())
         pod.append(0)
-        far = np.array(far)
+        pofd = np.array(pofd)
         pod = np.array(pod)
-        if (far.size < 30):
-            plt.plot(far, pod,  linewidth=2, marker=".", label=label[line])
+        if (pofd.size < 30):
+            plt.plot(pofd, pod,  linewidth=2, marker=".", label=label[line])
         else:
-            plt.plot(far, pod,  linewidth=2, label=label[line])
+            plt.plot(pofd, pod,  linewidth=2, label=label[line])
+        return_dict["far"][line] = pofd
+        return_dict["pod"][line] = pod
+
     plt.plot([0, 1], [0, 1], ":", color="k", linewidth=1, label="无技巧")
-    plt.xlabel("报空率", fontsize=sup_fontsize * 0.9)
-    plt.ylabel("命中率", fontsize=sup_fontsize * 0.9)
+    plt.xlabel("空报率(pofd)", fontsize=sup_fontsize * 0.9)
+    plt.ylabel("命中率(pod)", fontsize=sup_fontsize * 0.9)
     plt.ylim(0.0, 1.0)
     plt.xlim(0.0, 1.0)
     plt.legend(loc=4, fontsize=sup_fontsize * 0.9)
@@ -215,6 +232,7 @@ def roc_hfmc(hfmc_array, member_list=None, save_path=None,show = False,dpi = 300
     if show is True:
         plt.show()
     plt.close()
+    return  return_dict
 
 def roc_hnh(hnh_array,  member_list=None, save_path=None,show  =False, dpi = 300, title="ROC图",
             sup_fontsize =10,width = None,height = None):
@@ -253,8 +271,8 @@ def roc_hnh(hnh_array,  member_list=None, save_path=None,show  =False, dpi = 300
     shape.append(len(grade_list) - 1)
     shape.append(4)
     hfmc_array.reshape(shape)
-    roc_hfmc(hfmc_array,  member_list=member_list,dpi=dpi,show=show, save_path=save_path, title=title,sup_fontsize=sup_fontsize,width= width,height= height)
-
+    return_dict = roc_hfmc(hfmc_array,  member_list=member_list,dpi=dpi,show=show, save_path=save_path, title=title,sup_fontsize=sup_fontsize,width= width,height= height)
+    return return_dict
 
 def discrimination(Ob, Fo, grade_count=10,member_list=None,  vmax = None,log_y  = False, save_path=None,show = False,dpi = 300, title="区分能力图",
                     sup_fontsize =10,width = None,height = None):
@@ -482,13 +500,13 @@ def comprehensive_hnh(hnh_array,  member_list=None,vmax = None,log_y = False, sa
             hfmc[i, 2] = total_hap - hfmc[i, 0]
             hfmc[i, 3] = total_num - (hfmc[i, 0] + hfmc[i, 1] + hfmc[i, 2])
 
-        far = [1]
-        far.extend(pofd_hfmc(hfmc).tolist())
-        far.append(0)
+        pofd = [1]
+        pofd.extend(pofd_hfmc(hfmc).tolist())
+        pofd.append(0)
         pod = [1]
         pod.extend(pod_hfmc(hfmc).tolist())
         pod.append(0)
-        far = np.array(far)
+        far = np.array(pofd)
         pod = np.array(pod)
 
         if line == 0:
@@ -497,7 +515,7 @@ def comprehensive_hnh(hnh_array,  member_list=None,vmax = None,log_y = False, sa
         #ax4.bar(x1, observed_grade_num, width=bar_width*0.8, color=color_list[line],label = label[line])
         ax4.bar(x1, (not_observed_grade_num+ observed_grade_num), width=bar_width*0.8,edgecolor=color_list[line],label =label[line])
 
-        ax4.set_xlabel("预测的概率",fontsize= sup_fontsize *0.9)
+        ax4.set_xlabel("预报概率",fontsize= sup_fontsize *0.9)
         ax4.set_ylabel("样本数",fontsize= sup_fontsize *0.9)
         ymax = max(np.max(observed_grade_num+not_observed_grade_num), ymax)
         mark_line_x.append(x1)
@@ -505,11 +523,11 @@ def comprehensive_hnh(hnh_array,  member_list=None,vmax = None,log_y = False, sa
 
     ax1.set_xlim(0.0, 1)
     ax1.set_ylim(0.0, 1)
-    ax1.set_xlabel("预测的概率",fontsize= sup_fontsize *0.9)
-    ax1.set_ylabel("实况的发生比例",fontsize= sup_fontsize *0.9)
+    ax1.set_xlabel("预报概率",fontsize= sup_fontsize *0.9)
+    ax1.set_ylabel("观测频率",fontsize= sup_fontsize *0.9)
     ax1.legend(loc=2,fontsize= sup_fontsize *0.9)
-    ax3.set_xlabel("报空率",fontsize= sup_fontsize *0.9)
-    ax3.set_ylabel("命中率",fontsize= sup_fontsize *0.9)
+    ax3.set_xlabel("空报率(pofd)",fontsize= sup_fontsize *0.9)
+    ax3.set_ylabel("命中率(pod)",fontsize= sup_fontsize *0.9)
     ax3.set_ylim(0.0, 1.0)
     ax3.set_xlim(0.0, 1.0)
     ax3.legend(loc=4,fontsize= sup_fontsize *0.9)
