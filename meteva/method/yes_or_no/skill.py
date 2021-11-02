@@ -49,7 +49,7 @@ def ts_skill(ts,ts_base):
         sts1 = (ts - ts_base) / (1 - ts_base)
         return sts1
 
-def sts(ts,ts_base):
+def sts(ts,ts_base,nb):
     '''
 
     :param ts: 省台的ts评分
@@ -61,6 +61,13 @@ def sts(ts,ts_base):
             return -IV
         else:
             return 0
+    elif ts_base == IV:
+        if ts ==IV:
+            return 0
+        else:
+            return 1- 1/nb
+    elif ts_base==0 and ts == IV:
+        return 1/nb
     else:
         skill = (ts - ts_base) / (1 - ts_base)
         return round(skill,3)
@@ -95,7 +102,7 @@ def sbi(be,be_base):
             return IV
     else:
         skill = (be_base - be) / be_base
-        round(skill,3)
+        return round(skill,3)
 
 def sfa(far,far_base):
     '''
@@ -104,18 +111,13 @@ def sfa(far,far_base):
     :param far_base: 中央台空报率
     :return: 省台相对于中央台的预报技巧
     '''
-    if far == 0:
-        if far_base ==0:
+    if far_base == 0:
+        if far ==0:
             return 0
         else:
-            return IV
-    elif far_base == IV:
-        if far == IV:
-            return 0
-        else:
-            return -1
+            return -IV
     else:
-        skill = (far_base - far)/far
+        skill = (far_base - far)/far_base
         return round(skill,3)
 
 
@@ -131,6 +133,8 @@ def spo(pod,pod_base):
             return 0
         else:
             return -IV
+    elif pod_base == IV and pod == IV:
+        return 0
     else:
         skill= (pod - pod_base) / (1 - pod_base)
         return round(skill,3)
