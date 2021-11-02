@@ -10,125 +10,138 @@ import matplotlib as mpl
 import os
 
 
+
 para_example= {
-    "begin_time":datetime.datetime.now() - datetime.timedelta(days=7),
+    "begin_time":datetime.datetime.now() - datetime.timedelta(days =7),
     "end_time":datetime.datetime.now(),
     "station_file":r"H:\task\other\202009-veri_objective_method\sta_info.m3",
     "defalut_value":0,
-    "hdf_file_name":"summer.h5",
+    "hdf_file_name":"last_week_data.h5",
     "interp": meteva.base.interp_gs_nearest,
     "ob_data":{
-        "hdf_dir":r"H:\task\other\202009-veri_objective_method\ob_rain24",
-        "dir_ob": r"Z:\data\surface\jiany_rr\r20\YYMMDDHH.000",
+        "dir_ob": r"Z:\data\surface\jiany_rr\r1\YYMMDDHH.000",
         "hour":None,
         "read_method": meteva.base.io.read_stadata_from_micaps3,
         "read_para": {},
         "reasonable_value": [0, 1000],
-        "operation":None,
-        "operation_para": {},
+        "operation":meteva.base.fun.sum_of_sta,
+        "operation_para": {"used_coords": ["time"], "span": 24},
         "time_type": "BT",
     },
     "fo_data":{
         "ECMWF": {
-            "hdf_dir": r"H:\task\other\202009-veri_objective_method\ECMWF_HR\rain24",
             "dir_fo": r"O:\data\grid\ECMWF_HR\APCP\YYYYMMDD\YYMMDDHH.TTT.nc",
             "hour":[8,20,12],
             "dtime":[0,240,12],
             "read_method": meteva.base.io.read_griddata_from_nc,
             "read_para": {},
+            "reasonable_value": [0, 1000],
             "operation": meteva.base.fun.change,
             "operation_para": {"used_coords": "dtime", "delta": 24},
-            "time_type": "UT",
+            "time_type": "BT",
             "move_fo_time": 12
         },
 
         "SCMOC": {
-            "hdf_dir": r"H:\task\other\202009-veri_objective_method\Forecaster\rain24",
             "dir_fo": r"O:\data\grid\NWFD_SCMOC\RAIN03\YYYYMMDD\YYMMDDHH.TTT.nc",
             "hour": [8, 20,12],
             "dtime":[3,240,3],
             "read_method": meteva.base.io.read_griddata_from_nc,
             "read_para": {},
+            "reasonable_value": [0, 1000],
             "operation": meteva.base.fun.sum_of_sta,
             "operation_para": {"used_coords": ["dtime"], "span": 24},
             "time_type": "BT",
             "move_fo_time": 0
         },
     },
-    "output_dir":r"H:\task\other\202009-veri_objective_method"
+    "output_dir":r"H:\test_data\output\mpd\application"
 }
 
 
-
-def prepare_dataset(para):
+def prepare_dataset(para,recover = True):
     '''
 
     :param para: 根据配置参数从站点和网格数据中读取数据插值到指定站表上，在存储成hdf格式文件，然后从hdf格式文件中读取相应的文件合并成检验要的数据集合文件
     :return:
     '''
+    if "dir_ob" in para["ob_data"].keys():
 
-    # 全局参数预处理，站点列表的读取
-    station = meteva.base.read_station(para["station_file"])
-    station.iloc[:,-1] = para["defalut_value"]
-    para["station"] = station
+        # 全局参数预处理，站点列表的读取
+        station = meteva.base.read_station(para["station_file"])
+        station.iloc[:,-1] = para["defalut_value"]
+        para["station"] = station
+        #全局参数预处理，起止日期的处理
+        #day_num = para["day_num"]
+        end_time = para["end_time"]
+        if end_time is None:
+            end_time = datetime.datetime.now()
+        #end_date = datetime.datetime(end_time.year, end_time.month, end_time.day, 0, 0) + datetime.timedelta(days=1)
+        end_date = datetime.datetime(end_time.year, end_time.month, end_time.day, end_time.hour, 0)
 
-    #全局参数预处理，起止日期的处理
-    #day_num = para["day_num"]
-    end_time = para["end_time"]
-    if end_time is None:
-        end_time = datetime.datetime.now()
-    end_date = datetime.datetime(end_time.year, end_time.month, end_time.day, 0, 0) + datetime.timedelta(days=1)
+        begin_time = para["begin_time"]
+        if begin_time is None:
+            begin_time = end_time - datetime.timedelta(days=7)
+        begin_date = datetime.datetime(begin_time.year, begin_time.month, begin_time.day, 0, 0)
 
-    begin_time = para["begin_time"]
-    if begin_time is None:
-        begin_time = end_time - datetime.timedelta(days=7)
-    begin_date = datetime.datetime(begin_time.year, begin_time.month, begin_time.day, 0, 0)
+        hdf_filename = para["hdf_file_name"]
+        filename1, type1 = os.path.splitext(hdf_filename)
 
-    para["begin_date"] = begin_date
-    para["end_date"] = end_date
-    para["day_num"] = int((end_date - begin_date).total_seconds()/3600/24)
-    hdf_path = para["ob_data"]["hdf_dir"] + "/" + para["hdf_file_name"]
-    hdf_file_list = [hdf_path]
-    para["ob_data"]["hdf_path"] = hdf_path
-    sta_ob = creat_ob_dataset(para)
-    operation = para["ob_data"]["operation"]
-    operation_para = para["ob_data"]["operation_para"]
-    if operation_para is None:
-        operation_para = {}
-    if operation is not None:
-        sta_ob = operation(sta_ob,**operation_para)
+        para["begin_date"] = begin_date
+        para["end_date"] = end_date
+        para["day_num"] = int((end_date - begin_date).total_seconds()/3600/24)
+        if "hdf_dir" in para["ob_data"].keys():
+            hdf_path = para["ob_data"]["hdf_dir"] + "/" + para["hdf_file_name"]
+        else:
+            hdf_path = para["output_dir"] +"/"+filename1+ "/ob_data/"+hdf_filename
 
-    sta_fo_list = []
-    models = para["fo_data"].keys()
-    for model in models:
-        hdf_path = para["fo_data"][model]["hdf_dir"] + "/" + para["hdf_file_name"]
-        para["fo_data"][model]["hdf_path"] = hdf_path
-        hdf_file_list.append(hdf_path)
-        sta_fo = creat_fo_dataset(model,para)
-
-        operation = para["fo_data"][model]["operation"]
-        operation_para =  para["fo_data"][model]["operation_para"]
+        hdf_file_list = [hdf_path]
+        para["ob_data"]["hdf_path"] = hdf_path
+        sta_ob = creat_ob_dataset(para)
+        operation = para["ob_data"]["operation"]
+        operation_para = para["ob_data"]["operation_para"]
         if operation_para is None:
             operation_para = {}
-        move_fo_time =  para["fo_data"][model]["move_fo_time"]
-
         if operation is not None:
-            sta_fo = operation(sta_fo, **operation_para)
-        if move_fo_time != 0:
-            sta_fo = meteva.base.move_fo_time(sta_fo, move_fo_time)
-        sta_fo_list.append(sta_fo)
-    start = time.time()
-    #print(sta_ob)
-    #print(sta_fo_list)
-    sta_all = meteva.base.combine_on_obTime_id(sta_ob,sta_fo_list)
-    print(time.time() - start)
-    output_file = para["output_dir"] + "/" + para["hdf_file_name"]
-    meteva.base.creat_path(output_file)
-    sta_all.to_hdf(output_file, "df")
-    print("success combined data to " + output_file)
+            sta_ob = operation(sta_ob,**operation_para)
 
 
+        sta_fo_list = []
+        models = para["fo_data"].keys()
+        for model in models:
+            if "hdf_dir" in para["fo_data"][model].keys():
+                hdf_path = para["fo_data"][model]["hdf_dir"] + "/" + para["hdf_file_name"]
+            else:
+                hdf_path = para["output_dir"] + "/" + filename1 + "/fo_" + model + "/" + hdf_filename
+            para["fo_data"][model]["hdf_path"] = hdf_path
+            hdf_file_list.append(hdf_path)
+            sta_fo = creat_fo_dataset(model,para)
 
+            operation = para["fo_data"][model]["operation"]
+            operation_para =  para["fo_data"][model]["operation_para"]
+            if operation_para is None:
+                operation_para = {}
+            move_fo_time =  para["fo_data"][model]["move_fo_time"]
+
+            if operation is not None:
+                sta_fo = operation(sta_fo, **operation_para)
+            if move_fo_time != 0:
+                sta_fo = meteva.base.move_fo_time(sta_fo, move_fo_time)
+            sta_fo_list.append(sta_fo)
+        start = time.time()
+        #print(sta_ob)
+        #print(sta_fo_list)
+        sta_all = meteva.base.combine_on_obTime_id(sta_ob,sta_fo_list)
+        print(time.time() - start)
+        if "hdf_dir" in para["ob_data"].keys():
+            output_file = para["output_dir"]  + "/" + para["hdf_file_name"]
+        else:
+            output_file = para["output_dir"] +"/"+filename1+ "/" + para["hdf_file_name"]
+        meteva.base.creat_path(output_file)
+        sta_all.to_hdf(output_file, "df")
+        print("success combined data to " + output_file)
+    else:
+        prepare_dataset_without_combining(para,recover = recover)
 
 def prepare_dataset_without_combining(para,recover = True):
     '''
@@ -157,18 +170,27 @@ def prepare_dataset_without_combining(para,recover = True):
     para["begin_date"] = begin_date
     para["end_date"] = end_date
     para["day_num"] = int((end_date - begin_date).total_seconds()/3600/24)
+    hdf_filename = para["hdf_file_name"]
+    filename1, type1 = os.path.splitext(hdf_filename)
 
     elements = para["ob_data"].keys()
     for ele in elements:
         para1 = copy.deepcopy(para)
-        hdf_path = para["ob_data"][ele]["hdf_dir"] + "/" + para["hdf_file_name"]
+        if "hdf_dir" in para["ob_data"][ele].keys():
+            hdf_path = para["ob_data"][ele]["hdf_dir"] + "/" + para["hdf_file_name"]
+        else:
+            hdf_path = para["output_dir"]  +"/"+filename1+ "/ob_" +ele+ "/"+hdf_filename
+
         para1["ob_data"] = para["ob_data"][ele]
         para1["ob_data"]["hdf_path"] = hdf_path
         creat_ob_dataset(para1,ele,recover = recover)
 
     models = para["fo_data"].keys()
     for model in models:
-        hdf_path = para["fo_data"][model]["hdf_dir"] + "/" + para["hdf_file_name"]
+        if "hdf_dir" in para["fo_data"][model].keys():
+            hdf_path = para["fo_data"][model]["hdf_dir"] + "/" + para["hdf_file_name"]
+        else:
+            hdf_path = para["output_dir"] + "/" + filename1 + "/fo_" + model + "/" + hdf_filename
         para["fo_data"][model]["hdf_path"] = hdf_path
         creat_fo_dataset(model,para)
 
@@ -201,6 +223,16 @@ def creat_fo_dataset(model,para):
 
     sta_list = [] #用于收集所有数据
     exist_dtimes = {}
+
+    gds_file_list = []
+    is_gds = False
+    if dir_fo is not None:
+        if dir_fo.find("mdfs:") >= 0:
+            dir1, gds_filename = os.path.split(dir_fo)
+            dir1 = dir1.replace(">", "")
+            gds_file_list = meteva.base.path_tools.get_gds_path_list_in_one_dir(dir1)
+            is_gds = True
+
     if data0 is None:
         if hours is None:
             hours = np.arange(0, 24, 1).tolist()
@@ -252,10 +284,14 @@ def creat_fo_dataset(model,para):
 
 
     #print(exist_dtimes)
+
     for dd in range(day_num):
+        dati_s = end_date  - datetime.timedelta(days=dd)
+        dati_s = datetime.datetime(dati_s.year,dati_s.month,dati_s.day,0,0)
         for hh in range(len(hours)):
             hour = hours[hh]
-            time1 = end_date - datetime.timedelta(days=dd) + datetime.timedelta(hours=hour)
+            time1 =dati_s  + datetime.timedelta(hours=hour)
+
             if time1 > end_date or time1< begin_date:continue
             if para_model["time_type"] == "BT":
                 file_time = time1
@@ -292,8 +328,18 @@ def creat_fo_dataset(model,para):
                         sta_list.append(dat)
                         print("success read data from " + str(read_para)+ str(file_time)+"."+str(dt))
                 else:
-                    path = meteva.base.get_path(dir_fo, file_time, dt)
-                    if os.path.exists(path) or path is None:
+                    file_exit = False
+                    if is_gds:
+                        path = meteva.base.get_path(dir_fo, file_time,dt)
+                        if path in gds_file_list:
+                            file_exit = True
+                    else:
+                        path = meteva.base.get_path(dir_fo, file_time,dt)
+                        if os.path.exists(path) or path is None:
+                            file_exit = True
+
+                    if file_exit:
+                    #if os.path.exists(path) or path is None:
                         try:
                             dat = read_method(path,**read_para)
                             if dat is not None:
@@ -327,12 +373,11 @@ def creat_fo_dataset(model,para):
     sta_all = pd.concat(sta_list, axis=0)
     if "level" not in read_para.keys():
         meteva.base.set_stadata_coords(sta_all, level=0)
+
     meteva.base.creat_path(hdf_path)
     sta_all.to_hdf(hdf_path, "df")
     print(hdf_path)
     return sta_all
-
-
 
 def creat_ob_dataset(para,ele = "ob",recover = True):
     station = para["station"]
@@ -353,6 +398,8 @@ def creat_ob_dataset(para,ele = "ob",recover = True):
     print(para)
     if para["ob_data"]["hour"] is not None:
         hours = np.arange(para["ob_data"]["hour"][0],para["ob_data"]["hour"][1]+1,para["ob_data"]["hour"][2]).tolist()
+
+
 
     exist_time_list = []
     sta_list = []
@@ -388,10 +435,29 @@ def creat_ob_dataset(para,ele = "ob",recover = True):
         if len(hours) == 0:
             hours = np.arange(0,24,1).tolist()
 
+
+    gds_file_list = []
+    is_gds = False
+    if dir_ob is not None:
+        if dir_ob.find("mdfs:") >= 0:
+            dir1, gds_filename = os.path.split(dir_ob)
+            gds_file_list = meteva.base.path_tools.get_gds_path_list_in_one_dir(dir1)
+            if(len(gds_file_list) == 0):
+                if dir1.find("HH")>=0:
+                    for hh in hours:
+                        dir2 = dir1.replace("HH","%02d"%hh)
+                        gds_file_list2 = meteva.base.path_tools.get_gds_path_list_in_one_dir(dir2)
+                        gds_file_list.extend(gds_file_list2)
+            is_gds = True
+
     for dd in range(day_num):
+        dati_s = end_date  - datetime.timedelta(days=dd)
+        dati_s = datetime.datetime(dati_s.year,dati_s.month,dati_s.day,0,0)
+
         for hh in range(len(hours)):
             hour = hours[hh]
-            time1 = end_date - datetime.timedelta(days=dd) + datetime.timedelta(hours=hour)
+            #time1 = end_date - datetime.timedelta(days=dd) + datetime.timedelta(hours=hour)
+            time1 = dati_s + datetime.timedelta(hours=hour)
             if time1 > end_date or time1 < begin_date: continue
             if time1 in exist_time_list:
                 continue
@@ -415,13 +481,13 @@ def creat_ob_dataset(para,ele = "ob",recover = True):
                     sta_list.append(dat)
                     print("success read data from " + str(read_para) + str(file_time))
             else:
-                path = meteva.base.get_path(dir_ob, file_time)
                 file_exit = False
-                if path.find("mdfs:")>=0:
-                    if meteva.base.path_tools.exist_in_gds(path):
+                path = meteva.base.get_path(dir_ob, file_time)
+                if is_gds:
+                    if path in gds_file_list:
                         file_exit = True
                 else:
-                    if os.path.exists(path):
+                    if os.path.exists(path) or path is None:
                         file_exit = True
                 if file_exit:
                     try:
@@ -449,6 +515,7 @@ def creat_ob_dataset(para,ele = "ob",recover = True):
     sta_all = pd.concat(sta_list, axis=0)
     if "level" not in read_para.keys():
         meteva.base.set_stadata_coords(sta_all, level=0)
+
     meteva.base.creat_path(hdf_path)
     sta_all.to_hdf(hdf_path, "df")
     #print(hdf_path)
@@ -456,4 +523,42 @@ def creat_ob_dataset(para,ele = "ob",recover = True):
     return sta_all
 
 
+def rename_hdf_file(old_para,new_para):
+    '''
+    更改数据收集参数中的hdf文件名称时，涉及到多个中间文件。当需要更改文件名称时，通过该程序自动的完成所有文件的重命名
+    :param old_hdf_filename:  更改前的文件名称
+    :param para:  包含更改后文件名的运行参数
+    :return:  不返还值
+    '''
+    import shutil
+    # 更改观测的hdf文件
+    old_hdf_filename = old_para["hdf_file_name"]
+    new_hdf_filename = new_para["hdf_file_name"]
+    filename1,type1 = os.path.splitext(new_hdf_filename)
+    if "dir_ob" in old_para["ob_data"].keys():
+        filename_old = old_para["ob_data"]["hdf_dir"] + "/"+old_hdf_filename
+        filename_new = new_para["output_dir"] +"/"+filename1+ "/ob_data/"+new_hdf_filename
+        meteva.base.creat_path(filename_new)
+        try:
+            shutil.move(filename_old,filename_new)
+        except:
+            print(filename_old+"移动失败")
+    else:
+        elements = old_para["ob_data"].keys()
+        for ele in elements:
+            filename_old = old_para["ob_data"][ele]["hdf_dir"] + "/" + old_hdf_filename
+            filename_new = new_para["output_dir"]  +"/"+filename1+ "/ob_" +ele+ "/"+new_hdf_filename
+            meteva.base.creat_path(filename_new)
+            shutil.move(filename_old, filename_new)
+    # 重命名预报的hdf文件
+    elements = old_para["fo_data"].keys()
+    for ele in elements:
+        filename_old = old_para["fo_data"][ele]["hdf_dir"] + "/" + old_hdf_filename
+        filename_new = new_para["output_dir"]  +"/"+filename1+ "/fo_" +ele+ "/"+new_hdf_filename
+        meteva.base.creat_path(filename_new)
+        shutil.move(filename_old, filename_new)
+    return
 
+if __name__ == "__main__":
+    pass
+    #prepare_dataset(para_example)
