@@ -6,6 +6,7 @@ from copy import deepcopy
 import os
 import numpy as np
 import datetime
+import re
 
 
 def read_ctl(ctl_filename):
@@ -19,7 +20,7 @@ def read_ctl(ctl_filename):
         if strs[1].__contains__('^'):
             ctl["data_path"] = os.path.dirname(ctl_filename) + "\\" + strs[1][1:]
         else:
-            ctl["data_path"] = strs[1][1:]
+            ctl["data_path"] = strs[1]
         print( ctl["data_path"])
         while line:
             strs = line.split()
@@ -57,12 +58,20 @@ def read_ctl(ctl_filename):
                     ctl["glat"] = [slat, elat, dlat]
                     ctl["nlat"] = nlat
             if strs[0].upper() == "ZDEF":
-                sstrss = strs[3:]
-                levels = []
-                for strs2 in sstrss:
-                    levels.append(float(strs2))
-                ctl["zdef"] = levels
-                ctl["nlevel"] = len(levels)
+                if strs[2].upper()=="LINEAR":
+                    ctl["nlevel"] = int(strs[1])
+                    levels = []
+                    for ii in range(ctl["nlevel"]):
+
+                        levels.append(float(strs[3]) + ii * float(strs[4]))
+                    ctl["zdef"] = levels
+                else:
+                    sstrss = strs[3:]
+                    levels = []
+                    for strs2 in sstrss:
+                        levels.append(float(strs2))
+                    ctl["zdef"] = levels
+                    ctl["nlevel"] = len(levels)
 
             if strs[0].upper() == "TDEF":
                 ntime = int(strs[1])
@@ -90,14 +99,14 @@ def read_ctl(ctl_filename):
                     time_begin = datetime.datetime(year, mm, dd, hh, 0)
                     dtime_str = strs[4]
                     dt = int(dtime_str[0:-2])
-                    dict2 = {"mn": "T", "hr": "H", "dy": "D", "mo": "M", "yr": "Y"}
-                    dt_unit = dtime_str[-2:]
+                    dict2 = {"mn": "m", "hr": "H", "dy": "D", "mo": "M", "yr": "Y"}
+                    dt_unit = dtime_str[-2:].lower()
 
                     if dt_unit == "mn":
                         time_end = time_begin + datetime.timedelta(minutes=dt * (ntime - 1))
-                    elif dt_unit == "hr":
+                    elif dt_unit== "hr":
                         time_end = time_begin + datetime.timedelta(hours=dt * (ntime - 1))
-                    elif dt_unit == "dy":
+                    elif dt_unit== "dy":
                         time_end = time_begin + datetime.timedelta(days=dt * (ntime - 1))
                     else:
                         time_end = None
@@ -106,6 +115,7 @@ def read_ctl(ctl_filename):
                     ctl["dtime_list"] = (np.arange(ntime) * dt).tolist()
                 else:
                     print("TDEF 不是线性数组的情况暂不能支持")
+
 
             if (strs[0].upper() == "EDEF"):
                 nensemble = int(strs[1])
@@ -119,6 +129,7 @@ def read_ctl(ctl_filename):
                 for v in range(nvar):
                     line = file.readline()
                     strs = line.split()
+                    strs = re.split("\s+|,",line)
                     onev = {}
                     onev["name"] = strs[0]
                     nlevel = int(strs[1])
@@ -131,6 +142,9 @@ def read_ctl(ctl_filename):
                     ctl["vars"].append(onev)
 
             line = file.readline()
+        if "edef" not in ctl.keys():
+            ctl["edef"] = [0]
+            ctl["nensemble"] = 1
         return ctl
     else:
         return None
