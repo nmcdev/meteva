@@ -59,13 +59,14 @@ def get_path(dir,time,dt = None,dt_cell = "hour"):
         patten = dir_1  +"\\"+ filename_1
         patten = patten.replace("\\","/")
         patten = patten.replace("*","\\S+")
-        files = os.listdir(dir_1)
-        for file in files:
-            path = dir_1 + "/" + file
-            path = path.replace("\\","/")
-            match = re.match(patten,path)
-            if match is not None:
-                return path
+        if os.path.exists(dir_1):
+            files = os.listdir(dir_1)
+            for file in files:
+                path = dir_1 + "/" + file
+                path = path.replace("\\","/")
+                match = re.match(patten,path)
+                if match is not None:
+                    return path
     return None
 
 
@@ -268,6 +269,13 @@ def get_gds_file_list_in_one_dir(dir):
                 if (name_size_pair[1] != 'D'):
                     file_list.append(name_size_pair[0])
     return file_list
+
+def get_gds_path_list_in_one_dir(dir):
+    file_list = get_gds_file_list_in_one_dir(dir)
+    path_list = []
+    for file in file_list:
+        path_list.append(dir + "/"+ file)
+    return path_list
 
 def exist_in_gds(path):
     dir,filename = os.path.split(path)

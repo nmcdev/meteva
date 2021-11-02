@@ -224,13 +224,16 @@ def read_stadata_from_micaps3(filename, station=None,  level=None,time=None, dti
             if len(strs[5]) == 1: strs[5] = "0" + strs[5]
             if len(strs[6]) == 1: strs[6] = "0" + strs[6]
 
-            time_str = y2 + strs[3] + strs[4] + strs[5] + strs[6]
-            time_file = meteva.base.tool.time_tools.str_to_time(time_str)
-            sta.loc[:,"time"] = time_file
+            if time is None:
+                time_str = y2 + strs[3] + strs[4] + strs[5] + strs[6]
+                time_file = meteva.base.tool.time_tools.str_to_time(time_str)
+                sta.loc[:,"time"] = time_file
+            else:
+                sta.loc[:,"time"] = time
             sta.loc[:,"dtime"] = 0
             sta.loc[:,"level"] = 0 #int(strs[7])
             #print(time_str)
-            meteva.base.set_stadata_coords(sta, level=level, time=time, dtime=dtime)
+            meteva.base.set_stadata_coords(sta, level=level, dtime=dtime)
 
             if (station is not None):
                 sta = meteva.base.put_stadata_on_station(sta, station)
@@ -352,7 +355,11 @@ def read_stadata_from_sevp(filename, element_id,level=None,time=None,data_name =
         try:
             #lines = heads.split("\n")
             file = open(filename,encoding = encoding)
-            str_lines = file.readlines()
+            str_lines0 = file.readlines()
+            str_lines = []
+            for str1 in str_lines0:
+                if str1.strip() !="":
+                    str_lines.append(str1)
             if time is None:
                 strs4 = lines[3].split()
                 time_file = meteva.base.tool.time_tools.str_to_time(strs4[1])
@@ -367,11 +374,15 @@ def read_stadata_from_sevp(filename, element_id,level=None,time=None,data_name =
             while nline< num_all:
                 str1 = str_lines[nline][:-1] +" "
                 strs = str1.split()
-                next_num = int(strs[4])
-                for i in range(1,next_num+1):
-                    e_str = str1 + str_lines[nline+i]
-                    str_lines_list.append(e_str)
-                nline += next_num+1
+                if(len(strs)>5):
+                    next_num = int(strs[4])
+                    for i in range(1,next_num+1):
+                        #print(len(str_lines[nline+i].split()))
+                        e_str = str1 + str_lines[nline+i]
+                        str_lines_list.append(e_str)
+                    nline += next_num+1
+                else:
+                    nline +=  1
             strs_all = "".join(str_lines_list)
 
             f = StringIO(strs_all)
@@ -1773,3 +1784,20 @@ def read_stadata_from_cimiss(dataCode,element,time,station = None,level = 0,dtim
             print(exstr)
         return None
 
+
+def read_cyclone_trace(filename, column, ids, data_name="data0"):
+    sta1 = pd.read_csv(filename, skiprows=2, sep="\s+", header=None,
+                       usecols=[0, 1, 2, 3, 4, 5, 6, column])
+
+    dat_dict = {"level": {}, "time": {}, "dtime": {}, "id": {}, "lon": {}, "lat": {}, data_name: {}}
+    for i in range(len(sta1.index)):
+        dat_dict["level"][i] = 0
+        dat_dict["time"][i] = datetime.datetime(sta1.iloc[i, 0], sta1.iloc[i, 1], sta1.iloc[i, 2], sta1.iloc[i, 3])
+        dat_dict["dtime"][i] = sta1.iloc[i, 4]
+        dat_dict["id"][i] = ids
+        dat_dict["lon"][i] = sta1.iloc[i, 5]
+        dat_dict["lat"][i] = sta1.iloc[i, 6]
+        dat_dict[data_name][i] = sta1.iloc[i, -1]
+    sta2 = pd.DataFrame(dat_dict)
+    # print(sta2)
+    return sta2

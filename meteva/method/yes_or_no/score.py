@@ -159,6 +159,7 @@ def pc_of_sun_rain_hfmc(hfmc_array):
     :param hfmc_array:包含命中空报和漏报的多维数组，其中最后一维长度为4，分别记录了（命中数，空报数，漏报数，正确否定数）
     :return: 0到1的实数，最优值为1
     '''
+
     hit = hfmc_array[...,0]
     fal= hfmc_array[...,1]
     mis = hfmc_array[...,2]
@@ -242,6 +243,8 @@ def pc_hfmc(hfmc_array):
     :param hfmc_array:包含命中空报和漏报的多维数组，其中最后一维长度为4，分别记录了（命中数，空报数，漏报数，正确否定数）
     :return:
     '''
+    if len(hfmc_array.shape) == 1:
+        hfmc_array = hfmc_array.reshape(1,4)
     hit = hfmc_array[...,0]
     fal = hfmc_array[...,1]
     mis = hfmc_array[...,2]
@@ -268,6 +271,8 @@ def pod_hfmc(hfmc_array):
     :param hfmc_array:包含命中空报和漏报的多维数组，其中最后一维长度为4，分别记录了（命中数，空报数，漏报数，正确否定数）
     :return: 0到1的实数，完美值为1
     '''
+    if len(hfmc_array.shape) == 1:
+        hfmc_array = hfmc_array.reshape(1,4)
     hit = hfmc_array[...,0]
     mis = hfmc_array[...,2]
     sum = hit + mis
@@ -296,6 +301,8 @@ def sr_hfmc(hfmc_array):
     :param hfmc_array:包含命中空报和漏报的多维数组，其中最后一维长度为4，分别记录了（命中数，空报数，漏报数，正确否定数）
     :return: 0-1,最优值为1
     '''
+    if len(hfmc_array.shape) == 1:
+        hfmc_array = hfmc_array.reshape(1,4)
     hit = hfmc_array[..., 0]
     fal = hfmc_array[..., 1]
     sum = hit + fal
@@ -323,6 +330,8 @@ def far_hfmc(hfmc_array):
     :param hfmc_array:包含命中空报和漏报的多维数组，其中最后一维长度为4，分别记录了（命中数，空报数，漏报数，正确否定数）
     :return: 0到1的实数，最优值为0
     '''
+    if len(hfmc_array.shape) == 1:
+        hfmc_array = hfmc_array.reshape(1,4)
     hit = hfmc_array[...,0]
     fal = hfmc_array[...,1]
     sum = hit + fal
@@ -349,6 +358,8 @@ def pofd_hfmc(hfmc_array):
     :param hfmc_array:包含命中空报和漏报的多维数组，其中最后一维长度为4，分别记录了（命中数，空报数，漏报数，正确否定数）
     :return: 0到1的实数，最优值为0
     '''
+    if len(hfmc_array.shape) == 1:
+        hfmc_array = hfmc_array.reshape(1,4)
     cn = hfmc_array[...,3]
     fal = hfmc_array[...,1]
     sum = cn +fal
@@ -376,7 +387,8 @@ def mr_hfmc(hfmc_array):
     :param hfmc_array:包含命中空报和漏报的多维数组，其中最后一维长度为4，分别记录了（命中数，空报数，漏报数，正确否定数）
     :return: 0到1的实数，最优值为0
     '''
-
+    if len(hfmc_array.shape) == 1:
+        hfmc_array = hfmc_array.reshape(1,4)
     hit = hfmc_array[...,0]
     mis = hfmc_array[...,2]
     sum = hit + mis
@@ -404,6 +416,8 @@ def bias_hfmc(hfmc_array):
     :param hfmc_array:包含命中空报和漏报的多维数组，其中最后一维长度为4，分别记录了（命中数，空报数，漏报数，正确否定数）
     :return: 0到正无穷的实数，完美值为1
     '''
+    if len(hfmc_array.shape) == 1:
+        hfmc_array = hfmc_array.reshape(1,4)
     hit = hfmc_array[...,0]
     fal = hfmc_array[...,1]
     mis = hfmc_array[...,2]
@@ -527,6 +541,8 @@ def effective_dtime_hfmdt(hfmdt_array):
     :param hfmdt_array:
     :return:
     '''
+    if len(hfmdt_array.shape) == 1:
+        hfmc_array = hfmdt_array.reshape(1,4)
     efdt = hfmdt_array[...,3]
     hit = hfmdt_array[...,0]
     fal = hfmdt_array[...,1]
@@ -557,6 +573,8 @@ def ts_hfmc(hfmc_array):
     倒数第2维或为等级维度
     :return: 0-1的实数，0代表没有技巧，完美值为1
     '''
+    if len(hfmc_array.shape) == 1:
+        hfmc_array = hfmc_array.reshape(1,4)
     hit = hfmc_array[...,0]
     fal = hfmc_array[...,1]
     mis = hfmc_array[...,2]
@@ -586,6 +604,8 @@ def ets_hfmc(hfmc_array):
     倒数第2维或为等级维度
     :return: -1/3 到1 的实数，完美值为1, 0代表没有技巧
     '''
+    if len(hfmc_array.shape) == 1:
+        hfmc_array = hfmc_array.reshape(1,4)
     hit = hfmc_array[...,0]
     fal = hfmc_array[...,1]
     mis = hfmc_array[...,2]
@@ -690,6 +710,8 @@ def hss_yesorno(Ob,Fo,grade_list= [1e-30],compair = ">="):
     return hss_yesorno_hfmc(hfmc_array)
 
 def hss_yesorno_hfmc(hfmc_array):
+    if len(hfmc_array.shape) == 1:
+        hfmc_array = hfmc_array.reshape(1,4)
     hit = hfmc_array[...,0]
     fal = hfmc_array[...,1]
     mis = hfmc_array[...,2]
@@ -812,6 +834,8 @@ def dts(Ob,Fo,grade_list= [1e-30],compair = ">="):
     return dts_hfmc(hfmc_array)
 
 def dts_hfmc(hfmc_array):
+    if len(hfmc_array.shape) == 1:
+        hfmc_array = hfmc_array.reshape(1,4)
     hit = hfmc_array[...,0]
     fal = hfmc_array[...,1]
     mis = hfmc_array[...,2]

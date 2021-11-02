@@ -1,5 +1,7 @@
+#python setup.py sdist bdist_wheel
+#twine upload dist/*
 __author__ = "The R & D Center for Weather Forecasting Technology in NMC, CMA"
-__version__ = '1.5.2'
+__version__ = '1.6'
 
 from . import base
 from . import method

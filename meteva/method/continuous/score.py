@@ -56,6 +56,27 @@ def ob_fo_mean(ob,fo):
     return result
 
 
+def ob_quantile(ob,fo,grade_list=[0.9]):
+    '''
+    统计观测数据的百分位
+    :param ob:
+    :param fo:
+    :param grade_list:
+    :return:
+    '''
+    ob1 = np.sort(ob)
+    ob1 = ob1.flatten()
+    ob1.sort()
+    n = len(ob1)
+    qu_list = []
+    for i in range(len(grade_list)):
+        m = int(n * grade_list[i])
+        qu_list.append(ob1[m])
+    if len(qu_list) ==1:
+        return qu_list[0]
+    else:
+        return np.array(qu_list)
+
 def ob_fo_min(ob,fo,count = 1):
     if count ==1:
         Fo_shape = fo.shape

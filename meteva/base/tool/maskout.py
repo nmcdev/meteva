@@ -139,7 +139,7 @@ def shp2clip_by_region_name(originfig, ax, region_name_list):
                     "zhejiang", "anhui", "fujian", "jiangxi", "shandong",
                     "henan", "hubei", "hunan", "guangdong", "guangxi",
                     "hainan", "chongqing", "sichuan", "guizhou", "yunnan",
-                    "xizang", "shanxi", "gansu", "qinghai", "ningxia",
+                    "xizang", "shaanxi", "gansu", "qinghai", "ningxia",
                     "xinjiang", "taiwan", "xianggang", "aomen"]
 
 

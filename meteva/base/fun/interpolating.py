@@ -5,6 +5,62 @@ from scipy.interpolate import LinearNDInterpolator
 import copy
 import pandas as pd
 
+def reset_global_griddata(grd):
+    '''
+    考虑全球网格展成平面时，有一条经度带不能完全覆盖，为此扩展一列，以覆盖全球
+    :param grd:
+    :return:
+    '''
+    grid = meteva.base.get_grid_of_data(grd)
+    if  grid.glon[1] + grid.glon[2] - grid.glon[0] -360 > -0.001:
+        glon1 = [grid.glon[0],grid.glon[1]+grid.glon[2],grid.glon[2]]
+        grid1 = meteva.base.grid(glon1,grid.glat,grid.gtime,grid.dtimes,grid.levels,grid.members)
+        grd1 = meteva.base.grid_data(grid1)
+        grd1.values[:,:,:,:,:,:-1] = grd.values[:,:,:,:,:,:]
+        grd1.values[:, :, :, :, :, -1] = grd.values[:, :, :, :, :, 0]
+        return  grd1
+    else:
+        return grd
+
+def reset_lon_range(grd,sta):
+    '''
+    经度的取值范围有-180 —— 180 和 0-360 两种方式， 此函数将grd 的取值范围向station 统一
+    :param grd:
+    :param station:
+    :return:
+    '''
+    grid = meteva.base.get_grid_of_data(grd)
+    slon0 = np.min(sta.loc[:, "lon"].values)
+    if slon0 < 0 and grid.glon[1] > 180:
+        lons0 = grd["lon"].values
+        nlon = lons0.size
+        index = np.argmax(lons0>180)
+        lons1 = np.zeros(nlon)
+        lons1[0:nlon - index] = lons0[index:nlon] - 360
+        lons1[nlon - index:] = lons0[0:index]
+        glon1 = [lons1[0],lons1[-1],lons1[1] - lons1[0]]
+        grid1 = meteva.base.grid(glon1,grid.glat,grid.gtime,grid.dtimes,grid.levels,grid.members)
+        grd1 = meteva.base.grid_data(grid1)
+        grd1.values[:,:,:,:,:,0:nlon - index] = grd.values[:,:,:,:,:,index:nlon]
+        grd1.values[:, :, :, :, :, nlon - index:] = grd.values[:, :, :, :, :, 0:index]
+        return grd1
+    else:
+        elon0 = np.max(sta.loc[:, "lon"].values)
+        if elon0 >180 and grid.glon[0] <0:
+            lons0 = grd["lon"].values
+            nlon = lons0.size
+            index = np.argmax(lons0 >=0)
+            lons1 = np.zeros(nlon)
+            lons1[0:nlon - index] = lons0[index:nlon]
+            lons1[nlon - index:] = lons0[0:index] + 360
+            grid1 = meteva.base.grid(lons1, grid.glat, grid.gtime, grid.dtimes, grid.levels, grid.members)
+            grd1 = meteva.base.grid_data(grid1)
+            grd1.values[:, :, :, :, :, 0:nlon - index] = grd.values[:, :, :, :, :, index:nlon]
+            grd1.values[:, :, :, :, :, nlon - index:] = grd.values[:, :, :, :, :, 0:index]
+            return grd1
+        else:
+            return grd
+
 
 #格点到站点的插值
 def interp_gs_nearest(grd,sta,used_coords = "xy"):
@@ -25,6 +81,7 @@ def interp_gs_nearest(grd,sta,used_coords = "xy"):
 
     if used_coords == "xy":
         sta1 = meteva.base.sele.in_grid_xy(sta, grid)
+        if len(sta1.index)==0:return None
         ig = np.round((sta1.loc[:,'lon'].values - grid.slon) / grid.dlon).astype(dtype = 'int16')
         jg = np.round((sta1.loc[:,'lat'].values - grid.slat) / grid.dlat).astype(dtype = 'int16')
         sta_list = []
@@ -48,6 +105,10 @@ def interp_gs_nearest(grd,sta,used_coords = "xy"):
 
 #格点到站点的插值,线性
 def interp_gs_linear(grd,sta,used_coords = "xy"):
+
+    grd = reset_lon_range(grd,sta)
+    grd = reset_global_griddata(grd)
+
     #print("**0")
     levels = copy.deepcopy(grd["level"].values)
     times = copy.deepcopy(grd["time"].values)
@@ -58,7 +119,6 @@ def interp_gs_linear(grd,sta,used_coords = "xy"):
     column_list2 = ['level','time','dtime','id', 'lon', 'lat']
     column_list2.extend(members)
     grid = meteva.base.get_grid_of_data(grd)
-    sta_all = None
     if used_coords == "xy":
         sta1 = meteva.base.sele.in_grid_xy(sta, grid)
         ig = ((sta1['lon'].values - grid.slon) // grid.dlon).astype(dtype = 'int16')
@@ -231,9 +291,11 @@ def interp_sg_idw(sta0, grid, background=None, effectR=1000, nearNum=8,decrease 
     sta = meteva.base.sele_by_para(sta0,drop_IV=True)
     data_name = meteva.base.get_stadata_names(sta)
     index0 = sta.index[0]
+    dtime = sta.loc[index0, 'dtime'].astype(int)
+    level = sta.loc[index0, 'level'].astype(int)
     grid2 = meteva.base.basicdata.grid(grid.glon, grid.glat, [sta.loc[index0, 'time']],
-                                                       [sta.loc[index0, 'dtime']],
-                                                       [sta.loc[index0, 'level']], data_name)
+                                                       [dtime],
+                                                       [level], data_name)
     xyz_sta = meteva.base.tool.math_tools.lon_lat_to_cartesian(sta['lon'].values,
                                                                                 sta['lat'].values,
                                                                                 R=meteva.base.basicdata.const.ER)
@@ -259,7 +321,7 @@ def interp_sg_idw(sta0, grid, background=None, effectR=1000, nearNum=8,decrease 
         bg_dat = bg.values.flatten()
         dat = np.where(d[:, 0] > effectR, bg_dat, dat)
     else:
-        input_dat = sta0.iloc[:,-1].values
+        input_dat = sta.iloc[:,-1].values
         dat = input_dat[inds]
         bg = meteva.base.basicdata.grid_data(grid2)
         if (background is not None):

@@ -4,7 +4,7 @@
 import pkg_resources
 PI = 3.1415926
 E = 2.7182818
-ER = 6371
+ER = 6371.229
 OMEGA = 0.00072722
 IV = 999999
 K = 273.15
@@ -20,3 +20,4 @@ customized_basemap_list = None
 beaufort_scale = [0.0,0.3,1.6,3.4,5.5,8.0,10.8,13.9,17.2,20.8,24.5,28.5,32.7,37,41.5,46.2,51,56.1]
 cmadaas_set = None
 cimiss_set = None
+plot_color_dict = None

@@ -132,6 +132,7 @@ def read_griddata_from_micaps4(filename,grid=None,level = None,time = None,dtime
                     print("success read from " + filename)
                 return da1
         else:
+            print("m4 文件式错误，文件自描述信息中网格数和实际数据大小不一致")
             return None
     except:
         if show:
@@ -496,11 +497,11 @@ def print_grib_file_info(filename,level_type = None,level = None):
 
 def read_griddata_from_grib(filename,level_type,grid = None,
             value_name = None,member_dim = None,time_dim = None,dtime_dim = None,lat_dim = None,lon_dim = None,
-                         level=None, time=None, dtime=None, data_name="data0",show = False):
+                         level=None, time=None, dtime=None, data_name="data0",show = False,filter_by_keys = {}):
 
 
     try:
-        filter_by_keys = {}
+
         filter_by_keys['typeOfLevel'] = level_type
         if level is not None:
             filter_by_keys['level'] = level
@@ -1583,57 +1584,101 @@ def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim
                     value_index = i
                     break
 
+        file_size = os.path.getsize(data_path)
+        total_level_count = 0
+        nvar = len(ctl["vars"])
+        for nv in range(nvar):
+            total_level_count += ctl["vars"][nv]["nlevel"]
+
+
         file = open(data_path, "rb")
 
         if "pdef" in ctl.keys():
-
             if grid is None:
                 lons = ctl["xdef"]
                 lons.sort()
                 lats = ctl["ydef"]
                 lats.sort()
-                grid = meteva.base.grid([lons[0],lons[-1],lons[1] - lons[0]],[lats[0],lats[-1],lats[1] - lats[0]])
+                grid_xy = meteva.base.grid([lons[0],lons[-1],lons[1] - lons[0]],[lats[0],lats[-1],lats[1] - lats[0]])
+            else:
+                grid_xy = grid
 
             nx = ctl["pdef"]["nx"]
             ny = ctl["pdef"]["ny"]
-            blocksize_xy =  nx * ny * 4 + 8   #+8是否因为数据有问题
-            if time is None and level is None:
-                #整体读取
-                blocksize = blocksize_xy * len(ctl["tdef"])
-                start_index = ctl["vars"][value_index]["start_bolck_index"] * blocksize
-                position = file.seek(start_index)
-                content = file.read(blocksize)
-                data = np.frombuffer(content, dtype='float32')
-            elif level is None:
-                time_index = 0
+            blocksize_xy =  nx * ny * 4  #+ 8   #+8是否因为数据有问题
+            block_count = int(file_size/blocksize_xy)  #获得总的平面场个数
+            nt = ctl["ntime"]
+
+            dt_str = ctl["gtime"][2]
+            if dt_str.find("m") >= 0:
+                dt_str = dt_str.replace("m", "min")
+            index_time_dict = {}
+            times_all = pd.date_range(ctl["gtime"][0], ctl["gtime"][1], freq=dt_str)
+            nt_return = nt
+
+            grd_list = []
+            index_time_list = np.arange(nt).tolist()
+            if time is not None:
+                #判断所选时间所在的索引
+                if nt >1:
+                    for index1 in range(nt):
+                        time_str = meteva.base.tool.time_tools.all_type_time_to_str(times_all[index1])
+                        index_time_dict[time_str] = index1
+                    time1 = meteva.base.tool.time_tools.all_type_time_to_str(time)
+                    if time1 not in index_time_dict.keys():
+                        print("time取值不在tdef的列表内")
+                    index_time_list= [index_time_dict[time1]]
+                times_all = [time]
+
+            nlevel =  ctl["vars"][value_index]["nlevel"]
+            index_level = np.arange(nlevel)
+            levels_all =ctl["zdef"]
+
+            if level is not None:
+                if nlevel >1:
+                    index_level_dict = {}
+                    for index1 in range(nlevel):
+                        level1 = ctl["zdef"][index1]
+                        index_level_dict[level1] = index1
+                    if level not in index_level_dict.keys():
+                        print("level取值不在zdef的列表内")
+                    index_level= [index_level_dict[level]]
+                levels_all = [level]
             else:
-                level_index = 0
-                for L in range(len(ctl["zdef"])):
-                    if ctl["zdef"][L] == level:
-                        level_index = L
-                        break
-                nt = len(ctl["tdef"])
-                blocksize = blocksize_xy  * len(ctl["tdef"])
-                start_index = ctl["vars"][value_index]["start_bolck_index"] * blocksize
-                for t in range(nt):
-                    blocksize_xyz = blocksize_xy * len(ctl["zdef"])
-                    start_index += blocksize_xyz * t
-                    start_index += blocksize_xy * level_index
-                    position = file.seek(start_index)
-                    content = file.read(blocksize_xy)
-                    data = np.frombuffer(content, dtype='>f')
-                    data = data[1:-1]  #数据是否有问题？
-                    data = data.reshape((ny,nx))
-                    grd = meteva.base.tool.math_tools.ctl_proj(grid,ctl["pdef"],data)
-                    if data_name is not None:
-                        meteva.base.set_griddata_coords(grd,member_list=[data_name])
-                    file.close()
-                    return grd
+                if nlevel ==1:
+                    levels_all = [levels_all[0]]
+
+            blocksize_xyz = blocksize_xy * nlevel
+            for nt1 in range(len(index_time_list)):
+                index1 = index_time_list[nt1]
+                time1 = times_all[nt1]
+                block_pass = index1 * total_level_count + ctl["vars"][value_index]["start_bolck_index"]
+                start_index = block_pass * blocksize_xy
+                position = file.seek(start_index)
+                content = file.read(blocksize_xyz)
+                data = np.frombuffer(content, dtype='>f')
+                # data = data[1:-1]  #数据是否有问题？
+                data = data.reshape((nlevel,ny, nx))
+
+                for nn in range(len(levels_all)):
+                    index2 = index_level[nn]
+                    grid1 = meteva.base.grid(grid_xy.glon,grid_xy.glat,gtime =[time1],level_list=[levels_all[index2]])
+                    grd1 = meteva.base.tool.math_tools.ctl_proj(grid1, ctl["pdef"], data[index2,:,:])
+                    grd_list.append(grd1)
+
+            file.close()
+            grd = meteva.base.concat(grd_list)
+            if data_name is not None:
+                meteva.base.set_griddata_coords(grd, member_list=[data_name])
+            return grd
+
 
 
         else:
             grid0 = meteva.base.grid(ctl["glon"],ctl["glat"])
             blocksize_xy = grid0.nlon * grid0.nlat * 4
+            ensembel_size = 1
+
             blocksize_time_ensemble = blocksize_xy *  ctl["ntime"] * ctl["nensemble"]
             start_index = ctl["vars"][value_index]["start_bolck_index"] * blocksize_time_ensemble
             position = file.seek(start_index)
@@ -1661,3 +1706,4 @@ def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim
 
         print(ctl_path + "数据读取错误")
         return None
+

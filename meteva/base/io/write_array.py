@@ -1,8 +1,6 @@
 import pandas as pd
 import numpy as np
 def write_array_to_excel(array,save_path,name_list_dict,columns = None,index = None):
-
-
     shape = array.shape
     keys = list(name_list_dict.keys())
     if len(shape) ==1:
@@ -20,13 +18,21 @@ def write_array_to_excel(array,save_path,name_list_dict,columns = None,index = N
                     columns = keys[0]
                 else:
                     columns = keys[1]
-                    dat = array.T
+                    #dat = array.T
+        else:
+            if columns ==keys[0]:
+                index = keys[1]
+            else:
+                index = keys[0]
         if dat is None:
             dat = array
         if columns not in keys:
             print("legend 参数的取值必须是name_list_dict的key")
         if index not in keys:
             print("axis 参数的取值必须是name_list_dict的key")
+
+        if columns == keys[0]:
+            dat = dat.T
         cols = [[columns],name_list_dict[columns]]
         rows = [[index],name_list_dict[index]]
         table_data = pd.DataFrame(dat,columns=pd.MultiIndex.from_product(cols),
@@ -94,7 +100,7 @@ def write_array_to_excel(array,save_path,name_list_dict,columns = None,index = N
             for i in range(len(sheet_list)):
                 str1 = str(name_list_dict[sheet][i])
                 str1 = str1.replace("[","【")
-                print(str1)
+                #print(str1)
                 table_data_list[i].to_excel(writer, sheet_name=sheet + '_' + str1)
     else:
         print("array不能超过3维")

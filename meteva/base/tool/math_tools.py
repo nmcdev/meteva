@@ -267,10 +267,16 @@ def isPoiWithinPoly(poi,poly):
     #但算最小外包矩形本身需要循环边，会造成开销，本处略去
     sinsc=0 #交点个数
     for epoly in poly: #循环每条边的曲线->each polygon 是二维数组[[x1,y1],…[xn,yn]]
-        for i in range(len(epoly)-1): #[0,len-1]
+        np = len(epoly)
+        for i in range(np-1): #[0,len-1]
             s_poi=epoly[i]
             e_poi=epoly[i+1]
             if isRayIntersectsSegment(poi,s_poi,e_poi):
                 sinsc+=1 #有交点就加1
+        if epoly[np-1][0] != epoly[0][0] or  epoly[np-1][0] != epoly[0][0]:
+            s_poi = epoly[np-1]
+            e_poi = epoly[0]
+            if isRayIntersectsSegment(poi, s_poi, e_poi):
+                sinsc += 1  # 有交点就加1
 
     return True if sinsc%2==1 else  False

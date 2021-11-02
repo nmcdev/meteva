@@ -1,5 +1,6 @@
 import os
 import meteva
+import numpy as np
 def get_hour_dhour_list(gds_file_list):
     hour_list = []
     dh_list = []
@@ -54,3 +55,22 @@ def get_dati_str_of_path(path):
     dati_str = filename0[0:8]
 
     return dati_str
+
+
+def get_ob_time_range_str(sta_all):
+
+    dtimes = sta_all["dtime"] * np.timedelta64(1, 'h')
+    obtimes = sta_all['time'] + dtimes
+    time_s = meteva.base.all_type_time_to_datetime(np.min(obtimes))
+    time_e = meteva.base.all_type_time_to_datetime(np.max(obtimes))
+    strs_list = meteva.product.get_time_str_list([time_s, time_e])
+    str1 = strs_list[0] + "—" + strs_list[1]
+    return str1
+
+def get_time_range_str(sta_all):
+    times = sta_all['time']
+    time_s = meteva.base.all_type_time_to_datetime(np.min(times))
+    time_e = meteva.base.all_type_time_to_datetime(np.max(times))
+    strs_list = meteva.product.get_time_str_list([time_s, time_e])
+    str1 = strs_list[0] + "—" + strs_list[1]
+    return str1

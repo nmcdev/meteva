@@ -55,7 +55,7 @@ def smooth(grd,smooth_times = 1,used_coords = "xy"):
             for k in range(len(dtimes)):
                 for m in range(len(members)):
                     dat = grd.values[m,i,j,k,:,:]
-                    print(dat.shape)
+                    #print(dat.shape)
                     kernel = np.array([[0.0625, 0.125, 0.0625],
                                        [0.125, 0.25, 0.125],
                                        [0.0625, 0.125, 0.0625]])
@@ -69,6 +69,10 @@ def smooth(grd,smooth_times = 1,used_coords = "xy"):
 
 
 def moving_avarage(grd, half_window_size):
+    return moving_ave(grd,half_window_size)
+
+
+def moving_ave(grd,half_window_size):
     # 该函数计算网格点附近矩形方框内的平均值
     # 使用同规格的场，确保网格范围和分辨率一致
     # window_size 窗口尺度
@@ -78,65 +82,15 @@ def moving_avarage(grd, half_window_size):
     dtimes = copy.deepcopy(grd["dtime"].values)
     members = copy.deepcopy(grd["member"].values)
     grd1 = copy.deepcopy(grd)
-    '''
-    nlon = len(grd["lon"])
-    nlat = len(grd["lat"])
-    
-
-    i0 = np.arange(nlon)
-    i_s = i0 - half_window_size
-    i_s[i_s < 0] = 0
-    i_e = i0 + half_window_size+1
-    i_e[i_e > nlon] = nlon
-
-    j0 = np.arange(nlat)
-    j_s = j0 - half_window_size
-    j_s[j_s < 0] = 0
-    j_e = j0 + half_window_size+1
-    j_e[j_e > nlat] = nlat
-
-
-    IS,J = np.meshgrid(i_s,j0)
-    IE,_ = np.meshgrid(i_e,j0)
-
-    I,JS = np.meshgrid(i0,j_s)
-    _,JE = np.meshgrid(i0,j_e)
-
-    #计算每个网格点上的累计格点数
-    accu_num = (IE - IS ) * (JE - JS)
-    dat_accumulate_x = np.zeros((nlat,nlon+1))
-    dat_accumulate_y = np.zeros((nlat+1, nlon))
-    '''
-    size = half_window_size* 2 + 1
+    size = half_window_size * 2 + 1
     for i in range(len(levels)):
         for j in range(len(times)):
             for k in range(len(dtimes)):
                 for m in range(len(members)):
                     dat = grd1.values[m, i, j, k, :, :]
-                    dat1 = uniform_filter(dat,size=size)
-                    grd1.values[m, i, j, k, :, :] = np.round(dat1[:,:],10)
-                    '''
-                    dat = grd1.values[m,i,j,k,:,:]
-                    # 首先在x方向做累加
-                    dat_accumulate_x[:,1:] = dat[:,:]
-                    for ii in range(nlon):
-                        dat_accumulate_x[:,ii+1] = dat_accumulate_x[:,ii] + dat[:,ii]
-
-                    #计算x方向左右累积量的差，即得到格点附近东西向滑动累加
-                    dat = dat_accumulate_x[J,IE] - dat_accumulate_x[J,IS]
-
-                    # 然后在y方向做累加
-                    dat_accumulate_y[1:,:] = dat[:,:]
-                    for jj in range(nlat):
-                        dat_accumulate_y[jj+1,:] = dat_accumulate_y[jj,:] + dat[jj,:]
-
-                    #计算y方向上下累计量的差，即得到格点附近东西向滑动累加
-                    dat = dat_accumulate_y[JE, I] - dat_accumulate_y[JS, I]
-
-                    # 计算平均
-                    grd1.values[m,i,j,k,:,:] = dat/accu_num
-
-                    '''
+                    # print(type(dat[0,0]))
+                    dat1 = uniform_filter(dat, size=size)
+                    grd1.values[m, i, j, k, :, :] = np.round(dat1[:, :], 10)
     return grd1
 
 
@@ -237,9 +191,9 @@ def moving_std(grd,half_window_size):
 
 #将两个站点dataframe相加在一起
 def add_on_level_time_dtime_id(sta1,sta2,how = "left",default = None):
-    if sta1 is None:
+    if sta1 is None or len(sta1.index)==0:
         return sta2
-    elif sta2 is None:
+    elif sta2 is None or len(sta2.index)==0:
         return sta1
     else:
         # 删除重复行
@@ -248,6 +202,10 @@ def add_on_level_time_dtime_id(sta1,sta2,how = "left",default = None):
             print("警告：站点数据的dtime坐标不是整数，可能导致数据后续数据匹配失败，请检查输入数据，将站点数据的dtime坐标设置为整数类型")
             # return None
         df = pd.merge(sta1, sta2, on=["level","time","dtime","id"], how=how)
+        # print(len(df.index))
+        # df.drop_duplicates(subset=["level","time","dtime","id"],inplace=True)
+        # print(len(df.index))
+
         #print(len(sta1.index))
         #print(len(sta2.index))
         #print(len(df.index))
@@ -278,6 +236,7 @@ def add_on_level_time_dtime_id(sta1,sta2,how = "left",default = None):
 
         #对数据列进行相加
         len_d = len_m - len_c1
+
         for i in range(6,len_c1):
             df[df.columns.values[i]] = df.iloc[:, i] + df.iloc[:, i+len_d]
 
@@ -789,8 +748,26 @@ def reset_value_as_IV(sta,iv_value):
         sta1.loc[sta1.loc[:,name] == iv_value,name] = meteva.base.IV
     return sta1
 
-def move_fo_time(sta,dtime):
-    sta1 = sta.copy()
-    sta1["time"] = sta["time"] + dtime* np.timedelta64(1, 'h')
-    sta1["dtime"] = sta["dtime"] - dtime
-    return sta1
+def move_fo_time(data,dtime,keep_minus_dtime = True):
+    if isinstance(data, pd.DataFrame):
+        sta1 = data.copy()
+        sta1["time"] = data["time"] + dtime* np.timedelta64(1, 'h')
+        sta1["dtime"] = data["dtime"] - dtime
+        if not keep_minus_dtime: sta1 = meteva.base.between_dtime_range(sta1,0,10000)
+        return sta1
+    else:
+        grd1 = data.copy()
+        grd1.coords["time"]= grd1.coords["time"].values[:] + dtime* np.timedelta64(1, 'h')
+
+        grd1.coords["dtime"] =grd1.coords["dtime"].values[:] -  dtime
+        if not keep_minus_dtime:grd1 = meteva.base.between_dtime_range(grd1,0,10000)
+        return grd1
+
+def get_ob_from_combined_data(sta_all):
+    data_names = meteva.base.get_stadata_names(sta_all)
+    sta_ob = meteva.base.sele_by_para(sta_all,member=[data_names[0]])
+    dtime = sta_ob["dtime"].values[:]
+    sta_ob["time"] = sta_ob["time"] + dtime * np.timedelta64(1, 'h')
+    sta_ob["dtime"] = 0
+    sta_ob = sta_ob.drop_duplicates(keep="first")
+    return sta_ob

@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 def cr(ob,fo,grade_list=[1e-30],compair = ">="):
     '''
@@ -120,3 +121,49 @@ def crps(Ob, Fo):
 
     crps_mean = np.mean(crps0)
     return crps_mean
+
+
+
+def variance_mse(ob,fo):
+    '''
+    :param ob:实况数据 一维的numpy
+    :param fo:预测数据 二维的numpy数组
+    :return:
+    '''
+    shape0 = fo.shape
+    m = shape0[0]
+    mean_fo = np.mean(fo,axis=0)
+    mse = np.mean(np.square(mean_fo - ob))
+    variance = 0
+    for i in range(m):
+        variance += np.mean(np.square((fo[i,...] - mean_fo)))
+
+    variance /=m
+    variance *= (m+1)/m  #膨胀因子
+
+    return variance,mse
+
+def variance_divide_by_mse(ob,fo):
+    '''
+
+    :param ob:实况数据 一维的numpy
+    :param fo:预测数据 二维的numpy数组
+    :return: 平均集合内方差/
+    '''
+    variance,mse = variance_mse(ob,fo)
+    return variance/mse
+
+
+def std_rmse(ob,fo):
+    '''
+
+    :param ob:实况数据 一维的numpy
+    :param fo:预测数据 二维的numpy数组
+    :return: 平均集合内方差/
+    '''
+    variance,mse = variance_mse(ob,fo)
+    return math.sqrt(variance),math.sqrt(mse)
+
+
+
+

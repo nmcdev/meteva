@@ -15,7 +15,7 @@ def scd_nasd(nasd_array):
     scd = sc/total
     return scd
 
-def acd_nasd(nasd_array):
+def acd_nasd(nasd_array,unit = 1):
     '''
     基于中间结果计算风向预报准确率，
     :param nasd_array: 输入nasd函数统计得到的样本数、风向正确样本数、风向评分（分子部分）
@@ -24,6 +24,8 @@ def acd_nasd(nasd_array):
     total = nasd_array[...,0]
     sc = nasd_array[...,1]
     acd = sc/total
+    if unit =="%":
+        acd *= 100
     return acd
 
 def nas_d(d_ob,d_fo,s_ob = None,s_fo = None, ignore_breeze = False):
@@ -103,7 +105,7 @@ def scd(d_ob,d_fo,s_ob = None,s_fo = None, ignore_breeze = False):
     scd0 = scd_nasd(nasd_array)
     return scd0
 
-def acd(d_ob,d_fo,s_ob = None,s_fo = None, ignore_breeze = False):
+def acd(d_ob,d_fo,s_ob = None,s_fo = None, ignore_breeze = False,unit = 1):
     '''
     计算风向预报准确率。
     基于原始风向数组，计算风向预报准确率，计算的第一步是将预报和观测的风向都转换成8个离散的方位角，
@@ -116,7 +118,7 @@ def acd(d_ob,d_fo,s_ob = None,s_fo = None, ignore_breeze = False):
     :return: 风向预报准确率，如果d_fo和d_ob的shape一致，说明只有一家预报，则返回实数，否则说明是在同时检验多家预报，返回结果为一维数组。
     '''
     nasd_array = nas_d(d_ob,d_fo,s_ob = s_ob,s_fo = s_fo,ignore_breeze= ignore_breeze)
-    acd0 = acd_nasd(nasd_array)
+    acd0 = acd_nasd(nasd_array,unit=unit)
     return acd0
 
 def nas_uv(u_ob,u_fo,v_ob,v_fo, ignore_breeze = False):
@@ -155,7 +157,7 @@ def scd_uv(u_ob,u_fo,v_ob,v_fo, ignore_breeze = False):
     scd0 = scd_nasd(nasd_array)
     return scd0
 
-def acd_uv(u_ob,u_fo,v_ob,v_fo, ignore_breeze = False):
+def acd_uv(u_ob,u_fo,v_ob,v_fo, ignore_breeze = False,unit = 1):
     '''
     计算风向预报准确率。
     基于u,v风分量，计算风向预报准确率。计算的第一步是将预报和观测的风向都转换成8个离散的方位角，
@@ -170,7 +172,7 @@ def acd_uv(u_ob,u_fo,v_ob,v_fo, ignore_breeze = False):
     s_ob,d_ob = meteva.base.math_tools.u_v_to_s_d(u_ob,v_ob)
     s_fo,d_fo = meteva.base.math_tools.u_v_to_s_d(u_fo,v_fo)
     nasd_array = nas_d(d_ob, d_fo, s_ob=s_ob, s_fo=s_fo, ignore_breeze=ignore_breeze)
-    acd0 = acd_nasd(nasd_array)
+    acd0 = acd_nasd(nasd_array,unit=unit)
     return acd0
 
 
@@ -233,6 +235,9 @@ def nasws_s(s_ob,s_fo,min_s = 0,max_s = 300):
     shape = list(Fo_shape[:ind])
     shape.append(5)
     nass_array = nass_array.reshape(shape)
+
+
+
     return nass_array
 
 
@@ -300,7 +305,7 @@ def scs_uv(u_ob, u_fo, v_ob, v_fo, min_s = 0,max_s = 300):
     return scs0
 
 
-def acs_nasws(nass_array):
+def acs_nasws(nass_array,unit = 1):
     '''
     基于中间结果计算风速预报准确率，
     :param nasd_array: 输入nasd函数统计得到的样本数、风速正确样本数、风速评分（分子部分），偏弱样本数，偏强样本数
@@ -309,9 +314,11 @@ def acs_nasws(nass_array):
     total = nass_array[...,0]
     sc = nass_array[...,1]
     acs = sc/total
+    if unit =="%":
+        acs *= 100
     return acs
 
-def acs(s_ob,s_fo,min_s = 0,max_s = 300):
+def acs(s_ob,s_fo,min_s = 0,max_s = 300,unit = 1):
     '''
     基于原始风速（m/s)数组，计算风速预报准确率。计算的第一步是将预报和观测的风向都转换成14个离散的风速等级，
     当一个样本的预报和观测风速等级正好相同时，记为正确，否则记为错误。风速评分等于所有样本得分的平均。
@@ -322,11 +329,11 @@ def acs(s_ob,s_fo,min_s = 0,max_s = 300):
     :return: 风速预报准确率，如果d_fo和d_ob的shape一致，说明只有一家预报，则返回实数，否则说明是在同时检验多家预报，返回结果为一维数组。
     '''
     nass_array = nasws_s(s_ob, s_fo,min_s = min_s,max_s =max_s)
-    acs0 = acs_nasws(nass_array)
+    acs0 = acs_nasws(nass_array,unit = unit)
     return acs0
 
 
-def acs_uv(u_ob, u_fo, v_ob, v_fo, min_s = 0,max_s = 300):
+def acs_uv(u_ob, u_fo, v_ob, v_fo, min_s = 0,max_s = 300,unit = 1):
     '''
     风速预报准确率。
     基于原始u，v风（m/s)数组，计算风速预报准确率。计算的第一步是将预报和观测的风向都转换成14个离散的风速等级，
@@ -342,7 +349,7 @@ def acs_uv(u_ob, u_fo, v_ob, v_fo, min_s = 0,max_s = 300):
     s_ob, d_ob = meteva.base.math_tools.u_v_to_s_d(u_ob, v_ob)
     s_fo, d_fo = meteva.base.math_tools.u_v_to_s_d(u_fo, v_fo)
     nass_array = nasws_s(s_ob, s_fo,min_s = min_s,max_s =max_s)
-    acs0 = acs_nasws(nass_array)
+    acs0 = acs_nasws(nass_array,unit = unit)
     return acs0
 
 

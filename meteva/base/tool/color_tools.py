@@ -8,6 +8,8 @@ import matplotlib.colors as colors
 import pkg_resources
 import math
 import os
+import colorsys
+import meteva
 
 def clev_cmap_temper_2m_k():
     path = pkg_resources.resource_filename('meteva', "resources/colormaps/color_temp_2m.txt")
@@ -230,10 +232,15 @@ def cmap_clevs_mode(vmax):
         cmap1, clevs1 = def_cmap_clevs(cmap="tab20b", clevs=np.arange(1, vmax+1))
     else:
         cmap1, clevs1 = def_cmap_clevs(cmap="gist_rainbow", clevs=np.arange(1, vmax+1))
-    cmap2,clevs2 = def_cmap_clevs(cmap = "gray",clevs = [-2,-1,0],vmin =-1,vmax = 0,cut_accurate=True)
+
+    #cmap2 = colors.ListedColormap([[80,80,80],[125,125,125],[255,255,255]], 'indexed')
+    #clevs2 = [-2,-1,0]
+    cmap2,clevs2 = def_cmap_clevs(cmap = "gray",clevs = [-2,-1,0],vmin =-1,vmax = 0,cut_colorbar=True)
+    cmap2,clevs2 = get_part_cmap_and_clevs(cmap2,clevs2,vmin= -0.5,vmax = 0,cut_accurate=True)
     cmap3,clevs3 = merge_cmap_clevs(cmap2,clevs2,cmap1,clevs1)
     clevs3 = (np.array(clevs3) -0.5).tolist()
 
+    #show_cmap_clev(cmap3,clevs3)
     return cmap3,clevs3
 
 def cmap_clevs_ts():
@@ -250,6 +257,32 @@ def cmap_clevs_ts():
         #print(colors0(i))
     cmap = colors.ListedColormap(colors_list, 'indexed')
     return cmap,clevs
+
+
+def cmap_clevs_radar():
+    clevs = np.arange(5,75,5).tolist()
+    clevs1 = [-5,0]
+    clevs1.extend(clevs)
+    colors_list = np.array([
+        [255, 255, 255],
+        [0,0,246],
+        [1,160,246],
+        [78,242,242],
+        [1,255,0],
+        [0,200,0],
+        [1,144,0],
+        [255,255,0],
+        [231,192,0],
+        [255,144,0],
+        [255,0,0],
+        [214,0,0],
+        [192,0,0],
+        [255,0,240],
+        [120,0,132],
+        [173,144,240]
+    ])/256
+    cmap = colors.ListedColormap(colors_list, 'indexed')
+    return cmap,clevs1
 
 def cmap_clevs_far():
     clevs = np.arange(0,1.01,0.1)
@@ -347,6 +380,7 @@ def get_steps_range(line):
     return step_num,i_start_list
 
 def get_cmap_from_picture(path,show = False):
+
     #im的第一维是y方向，第二维是x方向，第三维是rgb
     im = image.imread(path)
     #首先沿着x方向寻找
@@ -439,14 +473,13 @@ def get_cmap_from_picture(path,show = False):
                     start = start_list[i]
                     color_list.append(im[mid,start,:])
 
-    if show:
-        color_bar = im[j_start:j_end,i_start:i_end,:]
-        plt.imshow(color_bar)
-        plt.xticks([])
-        plt.yticks([])
-        plt.show()
     cmap = colors.ListedColormap(color_list, 'indexed')
+
+    if show:
+        show_cmap_clev(cmap)
+
     return cmap
+
 
 def get_cmap_and_clevs_by_element_name(element_name):
     path = None
@@ -615,6 +648,8 @@ def get_cmap_and_clevs_by_name(cmap_name,vmin,vmax):
         cmap, clevs = cmap_clevs_temper_error_br(vmax)
     elif cmap_name =="environment":
         cmap,clevs = cmap_clevs_environment()
+    elif cmap_name =="radar":
+        cmap,clevs = cmap_clevs_radar()
     else:
         print("该配色方案名称不识别")
         return None,None
@@ -647,7 +682,7 @@ class cmaps:
     me = "me"
     temper_error_br ="temper_error_br"
     environment = "environment"
-
+    radar = "radar"
 
 
 def coordinate_cmap_to_clevs(cmap,clevs):
@@ -676,7 +711,7 @@ def coordinate_cmap_to_clevs(cmap,clevs):
 
 
 
-def def_cmap_clevs(cmap = "rainbow",clevs = None,vmin = None,vmax = None,cut_accurate = False):
+def def_cmap_clevs(cmap = "rainbow",clevs = None,vmin = None,vmax = None,cut_colorbar = True):
     #  # 判断是meteva自定义的颜色类型，这从meteva资源文件或函数里生成cmap1 和clevs1
     clevs1 = None
     cmap1 = None
@@ -684,8 +719,11 @@ def def_cmap_clevs(cmap = "rainbow",clevs = None,vmin = None,vmax = None,cut_acc
     if isinstance(cmap,str):
         cmap_class = cmaps()
         if hasattr(cmap_class, cmap):
-            cmap,clevs1,= get_cmap_and_clevs_by_name(cmap, vmin, vmax)
-
+            if vmin is None:
+                vmin = np.min(np.array(clevs))
+            if vmax is None:
+                vmax = np.max(np.array(clevs))
+            cmap,clevs1= get_cmap_and_clevs_by_name(cmap, vmin, vmax)
     if isinstance(cmap,list):
         if isinstance(cmap[0],list):
             cmap_list = cmap
@@ -752,8 +790,8 @@ def def_cmap_clevs(cmap = "rainbow",clevs = None,vmin = None,vmax = None,cut_acc
 
     # 从cmap3 和cmap3中提取部分colorbar
 
-    if vmin is not None and vmax is not None:
-        cmap4,clevs4 = get_part_cmap_and_clevs(cmap3, clevs3, vmax, vmin,cut_accurate = cut_accurate)
+    if vmin is not None and vmax is not None and cut_colorbar:
+        cmap4,clevs4 = get_part_cmap_and_clevs(cmap3, clevs3, vmax, vmin)
     else:
         cmap4,clevs4  = cmap3,clevs3
 
@@ -775,3 +813,118 @@ def merge_cmap_clevs(cmap0,clevs0,cmap1,clevs2):
     cmap_m = colors.ListedColormap(colors0, 'indexed')
     clevs0.extend(clevs2)
     return cmap_m,clevs0
+
+
+def cart2sph(x, y, z):
+    XsqPlusYsq = x ** 2 + y ** 2
+    r = math.sqrt(XsqPlusYsq + z ** 2)  # r
+    lat = math.atan2(z, math.sqrt(XsqPlusYsq))  # theta
+    lon = math.atan2(y, x)  # phi
+    return r, lat, lon
+
+
+def get_seprated_rgb_method1(num):
+    '''
+    通过再hsl球体空间种，寻找距离最远的num个点来，获得对比度最大的num个颜色
+    :param num:  需要返回的颜色数目
+    :return:  rgb列表
+    '''
+    loc0 = np.zeros((3, num + 1))
+    loc0[:, 0] = [0, 0, 1]  # 固定第一个点是白色
+    loc0[:, 1] = [0, 1, 0]  # 固定第二个点是红色
+    loc0[0, 2:] = np.arange(1, num) / num  #初始化其他点的位置
+
+    # 将每个颜色看作hsl空间种的一个同号带电粒子，根据每个受力调整其位置，逐步迭代方法，使它们距离更远。
+    for i in range(20000):
+        # 计算受力
+        force = np.zeros((3, num))
+        for j in range(1, num):
+            other = np.zeros((3, num))
+            other[:, 0:j + 1] = loc0[:, 0:j + 1]
+            other[:, j + 1:] = loc0[:, j + 2:]
+            this = loc0[:, j + 1]
+            dxyz = this.T - other.T
+
+            dis2 = np.sum(np.power(dxyz, 2), axis=1)
+            force_j_m = dxyz.T / dis2.T
+            force_j = np.sum(force_j_m, axis=1)
+            force[:, j] = force_j[:]
+        # 根据受力方向调整每个
+        force_s = np.sqrt(np.sum(np.power(force, 2), axis=0))
+        mean_f = np.mean(force_s)
+        for j in range(1, num):
+            if force_s[j] > mean_f:
+                move = 0.009 * force[:, j] / force_s[j]
+                loc_new = loc0[:, j + 1] + move
+                dis0 = np.sqrt(np.sum(np.power(loc_new, 2)))
+                if dis0 > 1:
+                    loc_new /= dis0
+                loc0[:, j + 1] = loc_new
+    # 直角坐标转换成球坐标，再转换成hsl色彩模式
+    loc0 = loc0.T.tolist()
+    loc0.pop(0)
+    loc1 = []
+    for j in range(num):
+        r, lat, lon = cart2sph(loc0[j][0], loc0[j][1], loc0[j][2])
+        s = r
+        h = lon / (2 * math.pi)
+        l = 0.5 + lat / math.pi
+        loc1.append([h, l, s])
+    loc1 = np.array(loc1)
+    loc1[:, 0] -= loc1[0, 0]
+    loc2 = loc1[loc1[:, 0].argsort(), :]  # 按照色相排序
+    loc3 = np.zeros(loc2.shape)
+    index = np.where(loc2[:, 0] < 0)
+    nm = len(index[0])
+    loc3[num - nm:, :] = loc2[0:nm, :]
+    loc3[:num - nm, :] = loc2[nm:, :]  # 将红色调整到第一个
+
+    # 转换成rgb
+    rgb_colors = []
+    for j in range(num):
+        rgb1 = colorsys.hls_to_rgb(loc3[j, 0], loc3[j, 1], loc3[j, 2])
+        rgb_colors.append(rgb1)
+    return rgb_colors
+
+
+def get_seprated_rgb_method2(num):
+    '''
+    设置较大区分度的一组颜色
+    :param num:  需要返回的颜色数目
+    :return:  rgb列表
+    '''
+    rgb_colors = []
+    step = 360.0 / num
+    for i in range(num):
+        h = i * step / 360  # 首先均匀的取不同的色相，保持色相维度的差异最大化
+        i1 = i % 6
+        if i1 <= 2:
+            di = 0.5 - i1
+        else:
+            di = 0.5 + i1 - 4
+        s = 0.75 + 0.25 * di / 1.5  # 通过一个折线波浪 设置不同的饱和度
+        l = 0.5 + 0.25 * di / 1.5    # 通过一个折线波浪 设置不同的亮度
+        rgb1 = colorsys.hls_to_rgb(h, l, s)
+        rgb_colors.append(rgb1)
+
+    return rgb_colors
+
+
+def set_plot_color_dict_method0(model_name_list):
+    cm0 = cm.get_cmap("tab20")
+    color_list0 = []
+    for i in range(20):
+        color_list0.append(cm0(i))
+    plot_color_dict = {}
+    for i in range(len(model_name_list)):
+        plot_color_dict[model_name_list[i]] = color_list0[i]
+    meteva.base.plot_color_dict = plot_color_dict
+    return
+
+def set_plot_color_dict_method1(model_name_list):
+    color_list0 = get_seprated_rgb_method1(len(model_name_list))
+    plot_color_dict = {}
+    for i in range(len(model_name_list)):
+        plot_color_dict[model_name_list[i]] = color_list0[i]
+    meteva.base.plot_color_dict = plot_color_dict
+    return

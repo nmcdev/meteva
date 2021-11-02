@@ -222,7 +222,7 @@ def error_boxplot(sta_ob_and_fos0,s = None, g = None, gll=None,
         plt.yticks(fontsize=sup_fontsize *0.8)
         plt.ylabel("样本数", fontsize=sup_fontsize * 0.9)
         ax2 = ax2.twinx()
-        plt.plot(x, right_rate*100, "r", linewidth=2,label = "准确率")
+        plt.plot(x, right_rate*100, "r",linestyle = "--", linewidth=1.5,label = "准确率")
         plt.legend(fontsize=sup_fontsize * 0.5, loc="upper right")
         plt.ylim(0, 100)
         plt.yticks([0,25,50,75,100],fontsize=sup_fontsize *0.8)

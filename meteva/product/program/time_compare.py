@@ -671,7 +671,6 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
     sta_ob_part1 = meteva.base.between_dtime_range(sta_ob_all1,min_dtime,min_dtime+dh_y-0.1)
     sta_ob_part2 = meteva.base.move_fo_time(sta_ob_part1,dh_y)
 
-
     ob_time_s = sta_fo_all1["time"] + sta_fo_all1["dtime"] * np.timedelta64(1, 'h')
     times_ob = list(set(ob_time_s.values))
     times_ob.sort()
@@ -775,7 +774,6 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
             for j in range(row):
                 jr = row - j - 1
                 time_fo = times_fo[0] + np.timedelta64(1, 'h') * dh_y * jr
-
                 sta_on_row = meteva.base.in_time_list(sta_one_id,time_fo)
                 dhx0 = (time_fo - times_ob[0])/np.timedelta64(1, 'h')
                 dhxs = sta_on_row["dtime"].values + dhx0
@@ -1112,7 +1110,7 @@ def time_list_mesh_wind(sta_ob_and_fos0,s = None,save_dir = None,save_path = Non
     kk2 = 0
 
     lenght = 40 * (width / col)
-    lenght =2* lenght**0.5
+    lenght =1.7* lenght**0.5
     print(lenght)
     for d in range(nfo):
         data_name = fo_names[d*2:d*2+2]
@@ -1222,7 +1220,7 @@ def time_list_mesh_wind(sta_ob_and_fos0,s = None,save_dir = None,save_path = Non
                 v_1d = diff_v.flatten()[speed_1d != meteva.base.IV]
                 ax1.barbs(xx_1d, yy_1d, u_1d, v_1d, barb_increments={'half': 2, 'full': 4, 'flag': 20},
                           length=lenght,sizes = dict(emptybarb=0.01, spacing=0.23, height=0.5, width=0.25),
-                      linewidth = lenght * lenght * 0.03)
+                      linewidth = lenght * lenght * 0.025)
 
                 plt.rcParams['xtick.direction'] = 'in'  # 将x轴的刻度线方向设置抄向内
                 plt.rcParams['ytick.direction'] = 'in'  # 将y轴的刻度方知向设置向内
@@ -1288,7 +1286,7 @@ def time_list_mesh_wind(sta_ob_and_fos0,s = None,save_dir = None,save_path = Non
 
             ax2.barbs(xx_1d, yy_1d, u_1d, v_1d, barb_increments={'half': 2, 'full': 4, 'flag': 20},
                       length=lenght,sizes = dict(emptybarb=0.01, spacing=0.23, height=0.5, width=0.25),
-                      linewidth = lenght * lenght * 0.03)
+                      linewidth = lenght * lenght * 0.025)
 
 
             for k in range(row):

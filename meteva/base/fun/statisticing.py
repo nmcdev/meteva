@@ -363,6 +363,7 @@ def sum_of_sta(sta,used_coords = ["member"],span = None,keep_all = True):
         min1 = np.sum(value, axis=1)
         sta_sum['min'] = min1
         return sta_sum
+
     elif used_coords == ["time"]:
         if span is None:
             times = sta.loc[:, 'time'].values
@@ -408,7 +409,18 @@ def sum_of_sta(sta,used_coords = ["member"],span = None,keep_all = True):
             for i in range(1, len(dtimes)):
                 rain01 = meteva.base.in_dtime_list(sta, dtimes[i])
                 meteva.base.set_stadata_coords(rain01, dtime=dtimes[-1])
-                rain_ac = meteva.base.add_on_level_time_dtime_id(rain_ac, rain01, how="inner")
+                rain_ac = meteva.base.add_on_level_time_dtime_id(rain_ac, rain01, how="outer",default=0)
+
+                # rain_ac0 = rain_ac.copy()
+                # a = rain_ac0.duplicated(subset=["level","time","dtime","id"])
+                # for ii in range(len(a)):
+                #     if a[ii]:
+                #         ids = rain_ac["id"].values[ii]
+                #         sta4 = meteva.base.sele_by_para(rain_ac,id = ids)
+                #         print(sta4)
+                #         print()
+
+                #rain_ac.drop_duplicates(subset=["level","time","dtime","id"],inplace=True)
             return rain_ac
         else:
             dtimes = sta.loc[:, 'dtime'].values
@@ -430,7 +442,6 @@ def sum_of_sta(sta,used_coords = ["member"],span = None,keep_all = True):
                 rain1["dtime"] = rain1["dtime"] + dhour_unit * i
                 # print(dhour_unit * i)
                 rain_ac = meteva.base.add_on_level_time_dtime_id(rain_ac, rain1, default=0)
-                #print(rain_ac)
 
             begin_dtime = dtimes[0]+dhour_unit * (step - 1)
             rain_ac = meteva.base.between_dtime_range(rain_ac,begin_dtime,dtimes[-1])  # 删除时效小于range的部分
@@ -497,15 +508,31 @@ def max_of_grd(grd,used_coords = ["member"]):
     return grd1
 
 #获取网格数据的求和
-def sum_of_grd(grd,used_coords = ["member"]):
-    grid0 = meteva.base.basicdata.get_grid_of_data(grd)
-    grid1 = meteva.base.basicdata.grid(grid0.glon,grid0.glat,grid0.gtime,grid0.dtimes,grid0.levels,member_list=["max"])
-    dat = np.squeeze(grd.values)
-    if len(dat.shape) > 2:
-        dat = np.sum(dat,axis = 0)
-    grd1 = meteva.base.basicdata.grid_data(grid1,dat)
-    return grd1
+def sum_of_grd(grd,used_coords = ["member"],span = None):
+    if used_coords ==["member"]:
+        grid0 = meteva.base.basicdata.get_grid_of_data(grd)
+        grid1 = meteva.base.basicdata.grid(grid0.glon,grid0.glat,grid0.gtime,grid0.dtimes,grid0.levels,member_list=["max"])
+        dat = np.squeeze(grd.values)
+        if len(dat.shape) > 2:
+            dat = np.sum(dat,axis = 0)
+        grd1 = meteva.base.basicdata.grid_data(grid1,dat)
+        return grd1
+    elif used_coords == "dtime" or used_coords ==["dtime"]:
+        if span == None:
+            pass
+        else:
+            grid0 = meteva.base.get_grid_of_data(grd)
+            dtimes = np.array(grid0.dtimes)
+            dtimes_sum = dtimes[dtimes>=span]
+            grid1 = meteva.base.grid(grid0.glon,grid0.glat,grid0.gtime,dtimes_sum,grid0.levels,grid0.members)
+            grd_sum = meteva.base.grid_data(grid1)
+            for i in range(len(dtimes_sum)):
+                dtime_e = dtimes_sum[i]
+                dtime_s = dtimes_sum[i] - span
+                index = np.where((dtimes > dtime_s) & (dtimes <= dtime_e))[0]
 
+                grd_sum.values[:,:,:,i,:,:] = np.sum(grd.values[:,:,:,index,:,:],axis=3)
+            return grd_sum
 
 
 def time_ceilling(sta,step = 1, time_unit = "h",begin_hour= 8):

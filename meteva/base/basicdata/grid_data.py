@@ -158,8 +158,6 @@ def xarray_to_griddata(xr0,
 
 
     da = None
-
-
     if isinstance(xr0,xr.DataArray):
         ds0 = xr.Dataset({'data0': xr0})
     else:
@@ -169,7 +167,6 @@ def xarray_to_griddata(xr0,
             name = value_name
         else:
             ds0 = xr0
-
 
 
     if dtime_dim == "time":
@@ -195,7 +192,7 @@ def xarray_to_griddata(xr0,
             members = [members.values]
             ds.coords["member"] = ("member", members)
         else:
-            ds.coords["member"] = ("member", members)
+            ds.coords["member"] = ("member", members.values)
             attrs_name = list(members.attrs)
             for key in attrs_name:
                 ds.member.attrs[key] = members.attrs[key]
@@ -219,7 +216,7 @@ def xarray_to_griddata(xr0,
             levels = [levels.values]
             ds.coords["level"] = ("level", levels)
         else:
-            ds.coords["level"] = ("level", levels)
+            ds.coords["level"] = ("level", levels.values)
             attrs_name = list(levels.attrs)
             for key in attrs_name:
                 ds.level.attrs[key] = levels.attrs[key]
@@ -242,7 +239,10 @@ def xarray_to_griddata(xr0,
             times = [times.values]
             ds.coords["time"] = ("time", times)
         else:
-            ds.coords["time"] = ("time", times)
+
+            # datetimeindex = times.indexes['time'].to_datetimeindex() 将cftime.DatetimeJulian 转换成普通的时间
+
+            ds.coords["time"] = ("time", times.values)
             attrs_name = list(times.attrs)
             for key in attrs_name:
                 ds.time.attrs[key] = times.attrs[key]
@@ -263,11 +263,12 @@ def xarray_to_griddata(xr0,
         else:
             dts = ds0[dtime_dim]
             drop_list.append(dtime_dim)
+
         if len(dts.dims) == 0:
             dts = [dts.values]
             ds.coords["dtime"] = ("dtime", dts)
         else:
-            ds.coords["dtime"] = ("dtime", dts)
+            ds.coords["dtime"] = ("dtime", dts.values)
             attrs_name = list(dts.attrs)
             for key in attrs_name:
                 ds.dtime.attrs[key] = dts.attrs[key]
@@ -288,11 +289,11 @@ def xarray_to_griddata(xr0,
             drop_list.append(lat_dim)
         dims = lats.dims
         if len(dims) == 1:
-            ds.coords["lat"] = ("lat", lats)
+            ds.coords["lat"] = ("lat", lats.values)
         else:
             if "lon" in dims[0].lower() or "x" in dims.lower():
                 lats = lats.values.T
-            ds.coords["lat"] = (("lat", "lon"), lats)
+            ds.coords["lat"] = (("lat", "lon"), lats.values)
         attrs_name = list(lats.attrs)
         for key in attrs_name:
             ds.lat.attrs[key] = lats.attrs[key]
@@ -315,11 +316,11 @@ def xarray_to_griddata(xr0,
 
         dims = lons.dims
         if len(dims) == 1:
-            ds.coords["lon"] = ("lon", lons)
+            ds.coords["lon"] = ("lon", lons.values)
         else:
             if "lon" in dims[0].lower() or "x" in dims.lower():
                 lons = lons.values.T
-            ds.coords["lon"] = (("lat", "lon"), lons)
+            ds.coords["lon"] = (("lat", "lon"), lons.values)
         attrs_name = list(lons.attrs)
         for key in attrs_name:
             ds.lon.attrs[key] = lons.attrs[key]
@@ -395,7 +396,7 @@ def xarray_to_griddata(xr0,
     da = da.transpose(dim_order["member"], dim_order["level"], dim_order["time"],
                       dim_order["dtime"], dim_order["lat"], dim_order["lon"])
     # print(da)
-    ds[name] = (("member", "level", "time", "dtime", "lat", "lon"), da)
+    ds[name] = (("member", "level", "time", "dtime", "lat", "lon"), da.values)
     attrs_name = list(da.attrs)
     for key in attrs_name:
         ds[name].attrs[key] = da.attrs[key]

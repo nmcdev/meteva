@@ -81,7 +81,7 @@ def box_plot_ensemble(ob, fo,member_list = None, vmax = None,vmin = None,save_pa
     plt.close()
 
 
-def rank_histogram(ob,fo,vmax = None,save_path= None,show = False,dpi = 300,title = "排序柱状图",
+def rank_histogram(ob,fo,vmax = None,save_path= None,show = False,dpi = 300,title = "等级柱状图",
                    sup_fontsize=10, width=None, height=None):
     '''
     :param ob:一维numpy数组
@@ -137,16 +137,5 @@ def rank_histogram(ob,fo,vmax = None,save_path= None,show = False,dpi = 300,titl
     if show:
         plt.show()
     plt.close()
-
-
-def mse_variance(ob,fo):
-    '''
-    :param ob:实况数据 一维的numpy
-    :param fo:预测数据 二维的numpy数组
-    :return:
-    '''
-    mean_fo = np.mean(fo,axis=0)
-    pass
-
 
 
