@@ -2,6 +2,7 @@ import meteva
 import numpy as np
 import pandas as pd
 import copy
+from matplotlib.patches import Polygon
 #格点转换为站点
 def trans_grd_to_sta(grd):
     '''
@@ -108,3 +109,41 @@ def trans_sta_to_grd(sta):
                     dat[jg, ig] = sta3.loc[:, member_list[m]]
                     grd.values[m,i,j,k,:,:] = dat[:,:]
     return grd
+
+
+def contours_to_sta(m14,station,grade_list):
+
+    contours = m14["closed_contours"]
+    ncontour = len(contours["cn_label"])
+    ploys_dict = {}
+
+    for g in range(len(grade_list)):
+        grade = grade_list[g]
+        ploys_dict[g] = []
+        for n in range(ncontour):
+            if float(contours["cn_label"][n]) == grade or (int(float(contours["cn_label"][n])) ==0 and g ==0):
+                line = contours["cn_xyz"][n][:,0:2]
+                ploys_dict[g].append(line)
+
+    sta_fo = station.copy()  #  meteva.base.interp_gs_nearest(grd_fo, sta_ob_in)
+
+    nsta = len(sta_fo.index)
+
+    grade_list1 = [0]
+    grade_list1.extend(grade_list)
+    for i in range(nsta):
+        point1 = [sta_fo.iloc[i,4],sta_fo.iloc[i,5]]
+        gg = 0
+        for g in range(len(grade_list)):
+            ploys = ploys_dict[g]
+            inploy = meteva.base.tool.math_tools.isPoiWithinPoly(point1,ploys)
+            if not inploy:
+                break
+            else:
+                gg = g + 1
+        sta_fo.iloc[i, -1] = grade_list1[gg]
+
+    return sta_fo
+
+
+
