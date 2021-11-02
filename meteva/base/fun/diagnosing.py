@@ -71,40 +71,60 @@ def accumulate_dtime(sta,step,keep_all = True):
         rain_ac = meteva.base.in_dtime_list(rain_ac,new_dtimes)
     return rain_ac
 
-def change(sta,delta = 24,used_coords = "time"):
+def change(data,delta = 24,used_coords = "time"):
 
     if used_coords == "time":
-        names_0 = meteva.base.get_stadata_names(sta)
+        names_0 = meteva.base.get_stadata_names(data)
         names_1 = []
         for name in names_0:
             names_1.append(name + "_new")
-        sta1 = sta.copy()
+        sta1 = data.copy()
         meteva.base.set_stadata_names(sta1, names_1)
         sta1["time"] = sta1["time"] + datetime.timedelta(hours= delta)
-        sta01 = meteva.base.combine_on_all_coords(sta1, sta)
+        sta01 = meteva.base.combine_on_all_coords(sta1, data)
         fn = len(names_1)
         dvalue = sta01.iloc[:, (-fn):].values - sta01.iloc[:, (-fn * 2):(-fn)].values
         sta01.iloc[:, (-fn):] = dvalue
         sta01 = sta01.drop(names_1, axis=1)
-        sta01.attrs = copy.deepcopy(sta.attrs)
+        sta01.attrs = copy.deepcopy(data.attrs)
         sta01.attrs["valid_time"] = delta
         return sta01
     else:
-        names_0 = meteva.base.get_stadata_names(sta)
-        names_1 = []
-        for name in names_0:
-            names_1.append(str(name)+"_new")
-        sta1 = sta.copy()
-        meteva.base.set_stadata_names(sta1,names_1)
-        sta1.loc[:,"dtime"] = sta1.loc[:,"dtime"] + delta
-        sta01 = meteva.base.combine_on_all_coords(sta1,sta)
-        fn= len(names_1)
-        dvalue = sta01.iloc[:,(-fn):].values - sta01.iloc[:,(-fn * 2):(-fn)].values
-        sta01.iloc[:,(-fn):] = dvalue
-        sta01 = sta01.drop(names_1,axis=1)
-        sta01.attrs = copy.deepcopy(sta.attrs)
-        sta01.attrs["valid_time"] = delta
-        return sta01
+        if isinstance(data, pd.DataFrame):
+            names_0 = meteva.base.get_stadata_names(data)
+            names_1 = []
+            for name in names_0:
+                names_1.append(str(name)+"_new")
+            sta1 = data.copy()
+            meteva.base.set_stadata_names(sta1,names_1)
+            sta1.loc[:,"dtime"] = sta1.loc[:,"dtime"] + delta
+            sta01 = meteva.base.combine_on_all_coords(sta1,data)
+            fn= len(names_1)
+            dvalue = sta01.iloc[:,(-fn):].values - sta01.iloc[:,(-fn * 2):(-fn)].values
+            sta01.iloc[:,(-fn):] = dvalue
+            sta01 = sta01.drop(names_1,axis=1)
+            sta01.attrs = copy.deepcopy(data.attrs)
+            sta01.attrs["valid_time"] = delta
+            return sta01
+        else:
+            grid0 = meteva.base.get_grid_of_data(data)
+            dtimes_all = data["dtime"].values
+            index_dtime = {}
+            for i in range(len(dtimes_all)):
+                index_dtime[dtimes_all[i]] = i
+            index_s = []
+            index_e = []
+            for i in range(len(dtimes_all)):
+                dtime_e = dtimes_all[i]
+                dtime_s = dtime_e - delta
+                if dtime_s in index_dtime.keys():
+                    index_e.append(i)
+                    index_s.append(index_dtime[dtime_s])
+            dtime_list_e = dtimes_all[index_e]
+            dat_delta = data.values[:,:,:,index_e,:,:] - data.values[:,:,:,index_s,:,:]
+            grid1 = meteva.base.grid(grid0.glon,grid0.glat,grid0.gtime,dtime_list_e,grid0.levels,grid0.members)
+            grd_change = meteva.base.grid_data(grid1,dat_delta)
+            return grd_change
 
 def t_rh_to_tw(temp,rh,rh_unit = "%"):
     '''根据温度和相对湿度计算湿球温度'''
