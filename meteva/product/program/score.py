@@ -18,14 +18,16 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
                 s["drop_last"] = True
     sta_ob_and_fos = sele_by_dict(sta_ob_and_fos0, s)
     if(len(sta_ob_and_fos.index) == 0):
-        print("there is no data to verify")
-        return
+        msg = "there is no data to verify"
+        print(msg)
+        return None,msg
 
     if type(method) == str:
         method =  globals().get(method)
     if method == meteva.method.FSS_time:
         if g == "dtime":
-            print("FSS_time 检验时，参数group_by不能选择dtime")
+            msg = "FSS_time 检验时，参数group_by不能选择dtime"
+            print(msg)
             return
 
     # get method_args and plot_args
@@ -48,11 +50,16 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
         elif key not in method_para_list and key  in plot_para_list:
             plot_args[key] = kwargs[key]
         elif key  in method_para_list and key  in plot_para_list:
-            print(method.__name__ + " and " + plot_mehod.__name__ + " have same args:" + key)
-            return
+            msg = method.__name__ + " and " + plot_mehod.__name__ + " have same args:" + key
+            print(msg)
+            return None,msg
         else:
-            print(key + " is not args of " + method.__name__ + " or " + plot_mehod.__name__)
-            return
+            if plot_mehod is None:
+                msg = key + " is not args of " + method.__name__
+            else:
+                msg = key + " is not args of " + method.__name__ + " or " + plot_mehod.__name__
+            print(msg)
+            return None,msg
 
     sta_ob_and_fos_list,group_list_list1 = group(sta_ob_and_fos,g,gll)
     group_num = len(sta_ob_and_fos_list)
@@ -68,9 +75,13 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
             strs = strs.replace("u_","")
             fo_name.append(strs)
     else:
-        ensemble_score_method = [meteva.method.cr]
+        ensemble_score_method = [meteva.method.cr,variance_divide_by_mse]
         if method in ensemble_score_method:
             fo_name = [""]
+        elif method ==meteva.method.variance_mse:
+            fo_name = ["variance","MSE"]
+        elif method ==meteva.method.std_rmse:
+            fo_name = ["STD","RMSE"]
         else:
             fo_name = data_name[1:]
 
@@ -86,8 +97,9 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
             values = sta_ob_and_fos.iloc[:,6:].flatten()
             index_list = list(set(values))
             if len(index_list) > 30:
-                print("自动识别的样本类别超过30种，判断样本为连续型变量，grade_list不能缺省")
-                return
+                msg = "自动识别的样本类别超过30种，判断样本为连续型变量，grade_list不能缺省"
+                print(msg)
+                return None,msg
             index_list.sort()
             grade_list = []
             for i in range(len(index_list)-1):
@@ -172,7 +184,7 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
 
         result = np.array(result_list)
     if plot is not None or excel_path is not None:
-        result_plot = result.reshape((group_num,fo_num,grade_num))
+
         name_list_dict = {}
         if g is None:
             group_dict_name = "group_name"
@@ -194,7 +206,12 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
                 name_list_dict[group_dict_name] = get_group_name(group_list_list1)
 
         #设置成员名称
+
         name_list_dict["member"] = fo_name
+        if fo_num==0:
+            fo_num = 1
+            name_list_dict["member"] = ["OBS"]
+        result_plot = result.reshape((group_num,fo_num,grade_num))
         #设置等级名称
         name_list_dict["grade"] = grade_names
         keys = list(name_list_dict.keys())
@@ -296,7 +313,7 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
 
 
     data_names = meteva.base.get_stadata_names(sta_ob_and_fos_list[0])
-
+    ensemble_score_method = [meteva.method.cr, variance_divide_by_mse]
     if method.__name__.find("ob_fo")>=0:
         fo_name = data_names
 
@@ -309,8 +326,17 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
 
     elif method.__name__ == "sample_count":
         fo_name = [data_names[0]]
+    elif method in ensemble_score_method:
+        fo_name = [""]
+    elif method == meteva.method.variance_mse:
+        fo_name = ["variance","MSE"]
+    elif method ==meteva.method.std_rmse:
+        fo_name = ["STD","RMSE"]
     else:
         fo_name = data_names[1:]
+
+
+
     fo_num = len(fo_name)
 
 
@@ -344,6 +370,7 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
     plot_para_list = []
     if plot_mehod is not None:
         plot_para_list = plot_mehod.__code__.co_varnames
+
 
     for key in kwargs.keys():
         if key in method_para_list and key not in plot_para_list:
@@ -393,6 +420,20 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
                     sta_result = sta_merge.loc[:, coord_names]
                     for ff in range(len(fo_name)):
                         sta_result[fo_name[ff]] = result[:,ff]
+                    sta_result = [sta_result]
+                elif method == meteva.method.variance_mse:
+                    member_num = result.shape[1]
+                    #coord_names.extend(fo_name)
+                    sta_result = sta_merge.loc[:, coord_names]
+                    sta_result["variance"] = result[:, 0]
+                    sta_result["MSE"] = result[:, 1]
+                    sta_result = [sta_result]
+                elif method == meteva.method.std_rmse:
+                    member_num = result.shape[1]
+                    #coord_names.extend(fo_name)
+                    sta_result = sta_merge.loc[:, coord_names]
+                    sta_result["STD"] = result[:, 0]
+                    sta_result["RMSE"] = result[:, 1]
                     sta_result = [sta_result]
                 else:
                     member_num = result.shape[1]
@@ -532,6 +573,11 @@ def score_tdt(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_lis
             fo_name.append(strs)
     elif method.__name__ == "sample_count":
         fo_name = [data_names[0]]
+    elif method == meteva.method.variance_mse:
+        fo_name = ["variance","MSE"]
+    elif method ==meteva.method.std_rmse:
+        fo_name = ["STD","RMSE"]
+
     else:
         fo_name = data_names[1:]
     fo_num = len(fo_name)
@@ -597,25 +643,28 @@ def score_tdt(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_lis
         for st in range(len(sta_time_list)):
             sta_time = sta_time_list[st]
             result, dtime_list = score(sta_time, method, g="dtime", **method_args)
-            #print(result.shape)
+
             if len(dtime_list) == 1:
                 if len(result.shape) == 1:
                     if len(fo_name) > 1:
                         # 没有等级，但有多个预报成员
                         dict_result = {}
-                        dict_result["dtime"] = dtime_list[0]
+                        dict_result["dtime"] = dtime_list
                         for f in range(fo_num):
                             dict_result[fo_name[f]] = result[f]
                         sta_result = pd.DataFrame(dict_result)
                         sta_result["time"] = time_list[st]
                         sta_result_list_dict[0].append(sta_result)
+
+
                     else:
                         # 有多个等级，但只有一个预报成员
                         for gg in range(grade_num):
                             dict_result = {}
-                            dict_result["dtime"] = dtime_list[0]
+                            dict_result["dtime"] = dtime_list
                             #print(fo_name)
                             dict_result[fo_name[0]] = result[gg]
+                            #print(dict_result)
                             sta_result = pd.DataFrame(dict_result)
                             sta_result["time"] = time_list[st]
                             sta_result_list_dict[gg].append(sta_result)
