@@ -6,11 +6,64 @@ import datetime
 import time
 import math
 
-def concat(sta_list):
-    sta = pd.concat(sta_list,axis=0)
-    sta.attrs = copy.deepcopy(sta_list[0].attrs)
-    #sta[["dtime"]] = sta[['dtime']].astype(int)
-    return sta
+def concat(data_list):
+    data1_list = []
+    for data in data_list:
+        if data is not None:
+            data1_list.append(data)
+    if len(data1_list) == 0:
+        print("无需要拼接的数据")
+        return
+
+    if isinstance(data1_list[0], pd.DataFrame):
+        sta = pd.concat(data1_list,axis=0)
+        sta.drop_duplicates(keep="first",inplace=True)
+        sta.attrs = copy.deepcopy(data1_list[0].attrs)
+        #sta[["dtime"]] = sta[['dtime']].astype(int)
+        return sta
+    else:
+        ngrd = len(data1_list)
+        grid_combined = None
+        for i in range(ngrd):
+            grid1 = meteva.base.get_grid_of_data(data1_list[i])
+            grid_combined = meteva.base.get_outer_grid(grid_combined, grid1, used_coords="all")
+        grd_all = meteva.base.grid_data(grid_combined)
+        grid_xy = meteva.base.grid(grid_combined.glon, grid_combined.glat)
+        grd_all.values[:, :, :, :, :, :] = meteva.base.IV
+        levels_all = grd_all["level"].values
+        times_all = grd_all["time"].values
+        dtimes_all = grd_all["dtime"].values
+        members_all = grd_all["member"].values
+        index_level = {}
+        for i in range(len(levels_all)):
+            index_level[levels_all[i]] = i
+        index_time = {}
+        for i in range(len(times_all)):
+            index_time[times_all[i]] = i
+        index_dtime = {}
+        for i in range(len(dtimes_all)):
+            index_dtime[dtimes_all[i]] = i
+        index_member = {}
+        for i in range(len(members_all)):
+            index_member[members_all[i]] = i
+
+        for i in range(ngrd):
+            grd_interp = meteva.base.interp_gg_linear(data1_list[i], grid_xy)
+            levels = grd_interp["level"].values
+            times = grd_interp["time"].values
+            dtimes = grd_interp["dtime"].values
+            members = grd_interp["member"].values
+            for i in range(len(levels)):
+                i_level = index_level[levels[i]]
+                for j in range(len(times)):
+                    i_time = index_time[times[j]]
+                    for k in range(len(dtimes)):
+                        i_dtime = index_dtime[dtimes[k]]
+                        for m in range(len(members)):
+                            i_member = index_member[members[m]]
+                            grd_all.values[i_member, i_level, i_time, i_dtime, :, :] = grd_interp.values[m, i, j, k, :,
+                                                                                       :]
+        return grd_all
 
 # 两个站点信息合并为一个，在原有的dataframe的基础上增加行数
 def combine_join(sta, sta1):
@@ -278,6 +331,7 @@ def combine_on_obTime_id(sta_ob,sta_fo_list,need_match_ob = False):
                 sta_combine = sta_combine.fillna(meteva.base.IV)
         meteva.base.set_stadata_attrs(sta_combine,dtime_units=dtime_units)
         sta_combine.attrs = copy.deepcopy(sta_ob.attrs)
+        sta_combine.sort_values(by=["level", "time", "dtime", "id"], inplace=True)
         return sta_combine
 
 
@@ -379,7 +433,7 @@ def combine_on_obTime_id_bigData(sta_ob,sta_fo_list,need_match_ob = True,g = "id
         dtime_list = list(grouped_fo_list[0].keys())
         sys._clear_type_cache()
         gc.collect()
-        sta_all = []
+        sta_list = []
         n_dtime = len(dtime_list)
 
         for i in range(n_dtime):
@@ -396,11 +450,15 @@ def combine_on_obTime_id_bigData(sta_ob,sta_fo_list,need_match_ob = True,g = "id
                     all_fos_have = False
             if all_fos_have:
                 combine_one = combine_on_obTime_id(sta_ob, sta_fos_one_dtime, need_match_ob=need_match_ob)
-                sta_all.append(combine_one)
-        sta_all = concat(sta_all)
+                sta_list.append(combine_one)
+                del sta_fos_one_dtime
+
+        sta_all = concat(sta_list)
+        del sta_list
     if sta_all is not None:
         sta_all = sta_all.fillna(meteva.base.IV)
     sta_all.attrs = copy.deepcopy(sta_ob.attrs)
+    sta_all.sort_values(by=["level", "time", "dtime", "id"], inplace=True)
     return sta_all
 
 
@@ -475,34 +533,116 @@ def combine_expand_IV(sta,sta_with_IV):
     return sta_combine
 
 def get_inner_grid(grid0,grid1,used_coords = "xy"):
-    si = 0
-    sj = 0
-    ei = 0
-    ej = 0
-    if(grid1.slon > grid0.slon):
-        si = int(math.ceil((grid1.slon - grid0.slon)/grid0.dlon))
-    if(grid1.slat > grid0.slat):
-        sj = int(math.ceil((grid1.slat - grid0.slat)/grid0.dlat))
-    if(grid1.elon < grid0.elon):
-        ei = int(math.ceil((grid0.elon - grid1.elon)/grid0.dlon))
-    if(grid1.elat < grid0.elat):
-        ej = int(math.ceil((grid0.elat - grid1.elat)/grid0.dlat))
-    slon = grid0.slon + si * grid0.dlon
-    slat = grid0.slat + sj * grid0.dlat
-    elon = grid0.elon - ei * grid0.dlon
-    elat = grid0.elat - ej * grid0.dlat
-    grid_inner = meteva.base.grid([slon,elon,grid0.dlon],[slat,elat,grid0.dlat],grid0.gtime,grid0.dtimes,grid0.levels,grid0.members)
-    return grid_inner
+    if used_coords =="xy":
+        si = 0
+        sj = 0
+        ei = 0
+        ej = 0
+        if(grid1.slon > grid0.slon):
+            si = int(math.ceil((grid1.slon - grid0.slon)/grid0.dlon))
+        if(grid1.slat > grid0.slat):
+            sj = int(math.ceil((grid1.slat - grid0.slat)/grid0.dlat))
+        if(grid1.elon < grid0.elon):
+            ei = int(math.ceil((grid0.elon - grid1.elon)/grid0.dlon))
+        if(grid1.elat < grid0.elat):
+            ej = int(math.ceil((grid0.elat - grid1.elat)/grid0.dlat))
+        slon = grid0.slon + si * grid0.dlon
+        slat = grid0.slat + sj * grid0.dlat
+        elon = grid0.elon - ei * grid0.dlon
+        elat = grid0.elat - ej * grid0.dlat
+        grid_inner = meteva.base.grid([slon,elon,grid0.dlon],[slat,elat,grid0.dlat],grid0.gtime,grid0.dtimes,grid0.levels,grid0.members)
+        return grid_inner
+    elif used_coords == "all":
+        if grid0 is None:return grid1
+        if grid1 is None:return grid0
+        si = 0
+        sj = 0
+        ei = 0
+        ej = 0
+        if(grid1.slon > grid0.slon):
+            si = int(math.ceil((grid1.slon - grid0.slon)/grid0.dlon))
+        if(grid1.slat > grid0.slat):
+            sj = int(math.ceil((grid1.slat - grid0.slat)/grid0.dlat))
+        if(grid1.elon < grid0.elon):
+            ei = int(math.ceil((grid0.elon - grid1.elon)/grid0.dlon))
+        if(grid1.elat < grid0.elat):
+            ej = int(math.ceil((grid0.elat - grid1.elat)/grid0.dlat))
+
+
+        slon = grid0.slon + si * grid0.dlon
+        slat = grid0.slat + sj * grid0.dlat
+        elon = grid0.elon - ei * grid0.dlon
+        elat = grid0.elat - ej * grid0.dlat
+
+        times0 = pd.date_range(grid0.gtime[0], grid0.gtime[1], freq=grid0.gtime[2])
+        times1 = pd.date_range(grid1.gtime[0], grid1.gtime[1], freq=grid1.gtime[2])
+
+        times = list(set(times0) & set(times1))
+        times.sort()
+
+        if len(times) == 1:
+            gtime_d = "1h"
+        else:
+            gtime_d = times[1] - times[0]
+
+        dtimes = list(set(grid0.dtimes)&set(grid1.dtimes))
+        dtimes.sort()
+        levels = list(set(grid0.levels)&set(grid1.levels))
+        levels.sort()
+        members1= []
+        for member in grid0.members:
+            members1.append(member)
+        for member in grid1.members:
+            if member not in members1:
+                members1.append(member)
+
+        grid_inner = meteva.base.grid([slon, elon, grid0.dlon], [slat, elat, grid0.dlat], [times[0],times[-1],gtime_d], dtimes,
+                                      levels, members1)
+        return grid_inner
+    else:
+        pass
 
 def get_outer_grid(grid0,grid1,used_coords = "xy"):
+    if used_coords == "xy":
+        slon = min(grid0.slon,grid1.slon)
+        slat = min(grid0.slat,grid1.slat)
+        elon = max(grid0.elon,grid1.elon)
+        elat = max(grid0.elat,grid1.elat)
+        grid_outer = meteva.base.grid([slon,elon,grid0.dlon],[slat,elat,grid0.dlat],grid0.gtime,grid0.dtimes,grid0.levels,grid0.members)
+        return grid_outer
+    elif used_coords == "all":
+        if grid0 is None:return grid1
+        if grid1 is None:return grid0
+        slon = min(grid0.slon, grid1.slon)
+        slat = min(grid0.slat, grid1.slat)
+        elon = max(grid0.elon, grid1.elon)
+        elat = max(grid0.elat, grid1.elat)
 
-    slon = min(grid0.slon,grid1.slon)
-    slat = min(grid0.slat,grid1.slat)
-    elon = max(grid0.elon,grid1.elon)
-    elat = max(grid0.elat,grid1.elat)
-    grid_outer = meteva.base.grid([slon,elon,grid0.dlon],[slat,elat,grid0.dlat],grid0.gtime,grid0.dtimes,grid0.levels,grid0.members)
-    return grid_outer
+        times0 = pd.date_range(grid0.gtime[0], grid0.gtime[1], freq=grid0.gtime[2])
+        times1 = pd.date_range(grid1.gtime[0], grid1.gtime[1], freq=grid1.gtime[2])
 
+        times = list(set(times0)|set(times1))
+        times.sort()
+        if len(times) == 1:
+            gtime_d = "1h"
+        else:
+            gtime_d = times[1] - times[0]
+
+        dtimes = list(set(grid0.dtimes)|set(grid1.dtimes))
+        dtimes.sort()
+
+        levels = list(set(grid0.levels)|set(grid1.levels))
+        levels.sort()
+
+        members = copy.deepcopy(grid0.members)
+        for member in grid1.members:
+            if member not in members:
+                members.append(member)
+        grid_outer = meteva.base.grid([slon, elon, grid0.dlon], [slat, elat, grid0.dlat], [times[0],times[-1],gtime_d], dtimes,
+                                      levels, members)
+        return grid_outer
+    else:
+        pass
 def expand_to_contain_another_grid(grd0,grid1,used_coords = "xy",outer_value = 0):
     grid0 = meteva.base.get_grid_of_data(grd0)
     grid_outer = get_outer_grid(grid0,grid1,used_coords = used_coords)
@@ -519,6 +659,67 @@ def expand_to_contain_another_grid(grd0,grid1,used_coords = "xy",outer_value = 0
     return grd1
 
 
-def combine_griddata(griddata_list):
-    pass
+def combine_griddata(griddata_list,dtime_list  = None):
+    '''
+    :param griddata_list: 网格数据列表
+    :return:
+    '''
+    # 统计网格信息
+
+    ngrd = len(griddata_list)
+    grid_combined = None
+    for i in range(ngrd):
+        if griddata_list[i] is None: continue
+        grid1 = meteva.base.get_grid_of_data(griddata_list[i])
+        grid_combined = meteva.base.get_inner_grid(grid_combined,grid1,used_coords="all")
+
+    if grid_combined is None:
+        print("没有可合并的格点数据")
+    if dtime_list is not None:
+        grid_combined.dtimes = dtime_list
+
+    grd_all = meteva.base.grid_data(grid_combined)
+    grid_xy = meteva.base.grid(grid_combined.glon,grid_combined.glat)
+
+    grd_all.values[:,:,:,:,:,:] = meteva.base.IV
+    levels_all = grd_all["level"].values
+    times_all = grd_all["time"].values
+    dtimes_all = grd_all["dtime"].values
+    members_all = grd_all["member"].values
+    index_level = {}
+    for i in range(len(levels_all)):
+        index_level[levels_all[i]] = i
+    index_time = {}
+    for i in range(len(times_all)):
+        index_time[times_all[i]] = i
+    index_dtime = {}
+    for i in range(len(dtimes_all)):
+        index_dtime[dtimes_all[i]] = i
+    index_member = {}
+    for i in range(len(members_all)):
+        index_member[members_all[i]] = i
+
+    for i in range(ngrd):
+        if griddata_list[i] is None:continue
+        grd_interp = meteva.base.interp_gg_linear(griddata_list[i],grid_xy)
+        levels = grd_interp["level"].values
+        times = grd_interp["time"].values
+        dtimes = grd_interp["dtime"].values
+        members = grd_interp["member"].values
+        for i in range(len(levels)):
+            if not levels[i] in levels_all:continue
+            i_level = index_level[levels[i]]
+            for j in range(len(times)):
+                if not times[j] in times_all: continue
+                i_time = index_time[times[j]]
+                for k in range(len(dtimes)):
+                    if not dtimes[k] in dtimes_all:continue
+                    i_dtime = index_dtime[dtimes[k]]
+                    for m in range(len(members)):
+                        if not members[m] in members_all:continue
+                        i_member = index_member[members[m]]
+                        grd_all.values[i_member,i_level,i_time,i_dtime,:,:] =  grd_interp.values[m, i, j, k, :, :]
+    return grd_all
+
+
 
