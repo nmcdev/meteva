@@ -120,6 +120,65 @@ def sta_values_ensemble_near_by_grid(sta, grid,nearNum = 1):
 
 
 
+def ids_list_list_in_r_of_sta(sta_to, r = 40, sta_from = None,drop_first = False):
+    '''
+
+    :param sta_to:
+    :param r:
+    :param sta_from:
+    :param drop_first:
+    :return: 返回的站点将会和sta_to 一致
+    '''
+    if(sta_to is None):
+        return None
+    if(sta_from is None):
+        sta_from = copy.deepcopy(sta_to)
+    sta_from = meteva.base.not_IV(sta_from)
+    #print(sta_from)
+    xyz_sta0 = lon_lat_to_cartesian(sta_to['lon'].values[:], sta_to['lat'].values[:],R = meteva.base.basicdata.ER)
+    xyz_sta1 = lon_lat_to_cartesian(sta_from['lon'].values[:], sta_from['lat'].values[:],R = meteva.base.basicdata.ER)
+    tree = cKDTree(xyz_sta1)
+    input_dat = sta_from["id"].values
+    indexs_list = tree.query_ball_point(xyz_sta0,r=r)
+    ids_list = []
+    if drop_first:
+        for indexs in indexs_list:
+            if len(indexs) >1:
+                values = input_dat[indexs[1:]]
+                ids_list.append(values)
+            else:
+                ids_list.append([meteva.base.IV])
+    else:
+        for indexs in indexs_list:
+            values = input_dat[indexs]
+            ids_list.append(values)
+    return ids_list
+
+
+def get_stations_near_by_cyclone_trace(sta_cyclone_trace,station, r = 1000):
+    '''
+
+    :param sta_cyclone_trace: 台风轨迹，每一行记录了台风一个时刻的经纬度
+    :param station:  站点表
+    :param r:  查询半径
+    :return:  站点数据，所有时刻相邻站点的集合
+    '''
+    trace_point_list, time_list = meteva.base.fun.grouping.group(sta_cyclone_trace, g="time") #将台风轨迹拆分成多个站点数据
+    sta_near_list = []
+    for i in range(len(trace_point_list)):
+        sta_to = trace_point_list[i]  #每个时刻的台风位置是包含一行记录的站点数据
+        xyz_sta0 = lon_lat_to_cartesian(sta_to['lon'].values[:], sta_to['lat'].values[:], R=meteva.base.basicdata.ER)
+        xyz_sta1 = lon_lat_to_cartesian(station['lon'].values[:], station['lat'].values[:],
+                                        R=meteva.base.basicdata.ER)
+        tree = cKDTree(xyz_sta1)
+        indexs_list = tree.query_ball_point(xyz_sta0, r=r)
+        near_sta =station.iloc[indexs_list[0],:]
+        near_sta["time"] = time_list[i]
+        sta_near_list.append(near_sta)
+    near_station_all = meteva.base.concat(sta_near_list)
+    return near_station_all
+
+
 def values_list_list_in_r_of_sta(sta_to, r = 40, sta_from = None,drop_first = False):
     '''
 
