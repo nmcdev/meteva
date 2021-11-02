@@ -53,7 +53,7 @@ def feature_props(look,label,ob_or_fo = "ob",which_comps=None, q=None):
         else:
             values = look['grd_fo'].values.squeeze()
             labels = look["grd_fo_label"].values.squeeze()
-        valid = values[labels>0]
+        valid = values[labels == label]
         ivec = np.quantile(valid,q)
         out["intensity"] = ivec
     return out
