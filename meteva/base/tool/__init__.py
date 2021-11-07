@@ -18,6 +18,6 @@ from .grib_tools import grib_to_nc
 from .station_tools import get_station_id_name_dict,station_id_name_dict,station_name_id_dict,find_station_id_by_city_name,get_station_format_province_set
 from .process_tools import multi_run
 from .plot_tools import contourf_2d_grid,pcolormesh_2d_grid,scatter_sta,bar,plot,mesh,set_customized_shpfile_list,add_scatter
-from .color_tools import cmaps,def_cmap_clevs,merge_cmap_clevs
+from .color_tools import cmaps,def_cmap_clevs,merge_cmap_clevs,get_seprated_rgb_method1,get_seprated_rgb_method2,set_plot_color_dict_method0,set_plot_color_dict_method1,set_plot_color_dict_method2
 from .maskout import *
 from .plot_tools_adv import *
