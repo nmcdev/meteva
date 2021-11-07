@@ -19,6 +19,28 @@ def performance(ob, fo,grade_list=[1e-30],compair = ">=", member_list=None,x_y =
     hfmc_array = hfmc(ob, fo, grade_list,compair=compair)
     pod = pod_hfmc(hfmc_array)
     sr = sr_hfmc(hfmc_array)
+    performance_sr_pod(sr,pod,grade_list, member_list,x_y = x_y, save_path=save_path,show = show,dpi = dpi, title=title,
+                sup_fontsize =sup_fontsize,width = width,height = height)
+
+
+
+def performance_mr_far(mr,far,grade_list, member_list,x_y = "sr_pod", save_path=None,show = False,dpi = 300, title="综合表现图",
+                sup_fontsize =10,width = None,height = None):
+    sr = 1 - far
+    pod = 1 - mr
+    performance_sr_pod(sr,pod,grade_list, member_list,x_y = x_y, save_path=save_path,show = show,dpi = dpi, title=title,
+                sup_fontsize =sup_fontsize,width = width,height = height)
+
+def performance_sr_pod(sr,pod,grade_list, member_list,x_y = "sr_pod", save_path=None,show = False,dpi = 300, title="综合表现图",
+                sup_fontsize =10,width = None,height = None):
+    '''
+
+    :param ob:
+    :param fo:
+    :param grade_list:
+    :return:
+    '''
+
     leftw = 0.6
     rightw = 2
     uphight = 1.2
