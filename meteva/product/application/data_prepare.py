@@ -132,7 +132,6 @@ def prepare_dataset(para,recover = True):
         #print(sta_ob)
         #print(sta_fo_list)
         sta_all = meteva.base.combine_on_obTime_id(sta_ob,sta_fo_list)
-        print(time.time() - start)
         if "hdf_dir" in para["ob_data"].keys():
             output_file = para["output_dir"]  + "/" + para["hdf_file_name"]
         else:
@@ -241,7 +240,6 @@ def creat_fo_dataset(model,para):
     else:
         data_left = meteva.base.sele_by_para(data0, time_range=[begin_date, end_date])
         data_name0 = meteva.base.get_stadata_names(data_left)
-        print(data_name0)
         if len(data_name0) == 2:
             data_name1 = ["u_"+model , "v_"+model]
         else:
@@ -395,7 +393,6 @@ def creat_ob_dataset(para,ele = "ob",recover = True):
     reasonable_value = para["ob_data"]["reasonable_value"]
 
     hours = None
-    print(para)
     if para["ob_data"]["hour"] is not None:
         hours = np.arange(para["ob_data"]["hour"][0],para["ob_data"]["hour"][1]+1,para["ob_data"]["hour"][2]).tolist()
 

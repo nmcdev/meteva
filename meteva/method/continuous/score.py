@@ -56,7 +56,7 @@ def ob_fo_mean(ob,fo):
     return result
 
 
-def ob_quantile(ob,fo,grade_list=[0.9]):
+def ob_quantile(ob,fo,grade_list=[0.5]):
     '''
     统计观测数据的百分位
     :param ob:
@@ -76,6 +76,72 @@ def ob_quantile(ob,fo,grade_list=[0.9]):
         return qu_list[0]
     else:
         return np.array(qu_list)
+
+def ob_fo_quantile(ob,fo,grade_list=[0.5]):
+    '''
+    统计观测数据的百分位
+    :param ob:
+    :param fo:
+    :param grade_list:
+    :return:
+    '''
+
+
+    Fo_shape = fo.shape
+    Ob_shape = ob.shape
+
+    Ob_shpe_list = list(Ob_shape)
+    size = len(Ob_shpe_list)
+    ind = -size
+    Fo_Ob_index = list(Fo_shape[ind:])
+
+    if Fo_Ob_index != Ob_shpe_list:
+        print('实况数据和观测数据维度不匹配')
+        return
+    if len(fo.shape) == len(ob.shape):
+        ob1 = np.sort(ob)
+        ob1 = ob1.flatten()
+        ob1.sort()
+        n = len(ob1)
+        qu_list_ob = []
+        for i in range(len(grade_list)):
+            m = int(n * grade_list[i])
+            qu_list_ob.append([ob1[m]])
+
+        fo1 = np.sort(fo)
+        fo1 = fo1.flatten()
+        fo1.sort()
+        qu_list_fo = []
+        for i in range(len(grade_list)):
+            m = int(n * grade_list[i])
+            qu_list_fo.append([fo1[m]])
+
+        qu_list = [qu_list_ob,qu_list_fo]
+    else:
+        ob1 = np.sort(ob)
+        ob1 = ob1.flatten()
+        ob1.sort()
+        n = len(ob1)
+        qu_list_ob = []
+        for i in range(len(grade_list)):
+            m = int(n * grade_list[i])
+            qu_list_ob.append([ob1[m]])
+
+        qu_list = [qu_list_ob]
+        for k in range(Fo_shape[0]):
+            fo1 = np.sort(fo[k,:])
+            fo1 = fo1.flatten()
+            fo1.sort()
+            qu_list_fo = []
+            for i in range(len(grade_list)):
+                m = int(n * grade_list[i])
+                qu_list_fo.append([fo1[m]])
+            qu_list.append(qu_list_fo)
+
+    result = np.array(qu_list).squeeze()
+    return result
+
+
 
 def ob_fo_min(ob,fo,count = 1):
     if count ==1:

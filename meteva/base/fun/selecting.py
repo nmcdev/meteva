@@ -244,11 +244,19 @@ def in_hour_list(sta,hour_list):
     return sta1
 
 
-def between_time_range(sta,start_time,end_time):
-    start_time = meteva.base.all_type_time_to_time64(start_time)
-    end_time = meteva.base.all_type_time_to_time64(end_time)
-    sta1 = sta.loc[(sta['time'] >= start_time) & (sta['time'] <= end_time)]
-    return sta1
+def between_time_range(data,start_time,end_time):
+    if isinstance(data, pd.DataFrame):
+        start_time = meteva.base.all_type_time_to_time64(start_time)
+        end_time = meteva.base.all_type_time_to_time64(end_time)
+        sta1 = data.loc[(data['time'] >= start_time) & (data['time'] <= end_time)]
+        return sta1
+    else:
+        times = data["time"].values
+        start_time1 = meteva.base.all_type_time_to_time64(start_time)
+        end_time1 = meteva.base.all_type_time_to_time64(end_time)
+        index = np.where((times >= start_time1) & (times <= end_time1))[0]
+        grd1 = data.isel(time=index)
+        return grd1
 
 ############
 #为拥有多time层的站点数据，依次增加time层所表示的list列表
@@ -513,6 +521,22 @@ def by_stadata(sta,loc_sta):
     sta_sele = sta_combine.loc[:,columns[0:-1]]
     return sta_sele
 
+def by_ob_stadata(sta,ob_stadata):
+    '''
+
+    :param sta:
+    :param loc_sta:
+    :return:
+    '''
+    data_names = meteva.base.get_stadata_names(sta)
+    sta_combine = meteva.base.combine_on_obTime_id(ob_stadata,sta,need_match_ob=True)
+    columns = list(sta_combine.columns)
+    columns1 = columns[0:6]
+    columns1.extend(columns[7:])
+    sta_sele = sta_combine.loc[:,columns1]
+    meteva.base.set_stadata_names(sta_sele,data_name_list=data_names)
+    return sta_sele
+
 def in_province_list(sta,province_name_list):
     if not isinstance(province_name_list,list):
         province_name_list = [province_name_list]
@@ -657,6 +681,7 @@ def sele_by_dict(data,s):
                     "gxy": 提取某个平面网格范围内的数据
                     "gxyz": 提取某个三维网格范围内的数据
                     "stadata": 对于stadata中level，time，dtime，id四个坐标中非缺省的部分，从data中提取和stadata坐标一致的站点数据
+                    "ob_stadata": 将ob_stadata 和sta_all用combine_on_obtime_id匹配，保留的样本再删除ob_stadata
                     "value": 提取所有数据列都在给定取值范围的数据，列表形式第一个元素为数据最低值，第二个为数据最高值
                     "drop_IV": 该参数为True时，删除包含缺省值的行
                     "last_range":包含起始值和结束值的列表，取出最后一列取值在该取值范围的数据，并删除最后一列的数据
@@ -667,10 +692,9 @@ def sele_by_dict(data,s):
     if s is None:return data
 
 
-
     p_set = {"member","level","time","time_range","year","month","day","dayofyear","hour", "ob_time","ob_time_range" ,"ob_year",
               "ob_month", "ob_day","ob_dayofyear","ob_hour","dtime","dtime_range","dday","dhour" ,
-              "lon","lat", "id","grid","gxy", "gxyz" ,"stadata","value","drop_IV","last" , "last_range","drop_last","province_name"}
+              "lon","lat", "id","grid","gxy", "gxyz" ,"stadata","ob_stadata","value","drop_IV","last" , "last_range","drop_last","province_name"}
 
 
     key_set = s.keys() #set(list(s.keys()))
@@ -774,6 +798,9 @@ def sele_by_dict(data,s):
     if "stadata" in s.keys():
         stadata = s["stadata"]
 
+    ob_stadata = None
+    if "ob_stadata" in s.keys():
+        ob_stadata = s["ob_stadata"]
 
     grid = None
     if "grid" in s.keys():
@@ -814,14 +841,14 @@ def sele_by_dict(data,s):
 
 
     sta1 = sele_by_para(data,member,level,time,time_range,year,month,day,dayofyear,hour,ob_time,ob_time_range,ob_year,ob_month,ob_day,ob_dayofyear,
-                 ob_hour,dtime,dtime_range,dday,dhour,lon,lat,id,grid,gxy,gxyz,stadata,value,drop_IV,last,last_range,province_name,drop_last)
+                 ob_hour,dtime,dtime_range,dday,dhour,lon,lat,id,grid,gxy,gxyz,stadata,value,drop_IV,last,last_range,province_name,drop_last,ob_stadata)
     return sta1
 
 
 def sele_by_para(data,member = None,level = None,time = None,time_range = None,year = None,month = None,day = None,dayofyear = None,hour = None,
            ob_time=None, ob_time_range=None, ob_year=None, ob_month=None, ob_day=None, ob_dayofyear=None, ob_hour=None,
            dtime = None,dtime_range = None,dday = None, dhour = None,lon = None,lat = None,id = None,grid = None,gxy = None,gxyz = None,stadata = None,
-                 value = None,drop_IV = False,last = None,last_range = None,province_name = None,drop_last = True,**kwargs):
+                 value = None,drop_IV = False,last = None,last_range = None,province_name = None,drop_last = True,ob_stadata = None,**kwargs):
     '''
     :param data: [站点数据](https://www.showdoc.cc/nmc?page_id=3744334022014027)
     :param member:成员的名称，同时提取多个时采用列表形式
@@ -943,11 +970,13 @@ def sele_by_para(data,member = None,level = None,time = None,time_range = None,y
         sta1 = in_grid_xyz(sta1,gxyz)
     if stadata is not None:
         sta1 = by_stadata(sta1,stadata)
-
     if value is not None:
         if not isinstance(value, list):
             print("value参数需为列表形式的包含起始值和结束值的参数")
         sta1 = between_value_range(sta1,value[0],value[1])
+
+    if ob_stadata is not None:
+        sta1 = by_ob_stadata(sta1,ob_stadata)
 
     if drop_IV is True:
         sta1 = not_IV(sta1)

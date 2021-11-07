@@ -666,6 +666,40 @@ m41_element_column_dict_environment = {
 '陡度' : 14,
 }
 
+class m7_element_column:
+    year = 0
+    month = 1
+    day = 2
+    hour = 3
+    dtime = 4
+    lon  = 5
+    lat = 6
+    中心气压 = 7
+    最大风速 = 8
+    七级风圈半径 = 9
+    十级风圈半径 = 10
+    移向 = 11
+    移速 = 12
+
+
+
+m7_element_column_dict = {
+    "year":  0,
+    "month" : 1,
+    "day" : 2,
+    "hour" : 3,
+    "dtime" : 4,
+    "lon"  : 5,
+    "lat" : 6,
+    "中心气压" : 7,
+    "最大风速" : 8,
+    "七级风圈半径" : 9,
+    "十级风圈半径" : 10,
+    "移向" : 11,
+    "移速" : 12
+}
+
+
 
 class shpfile:
     world = "worldmap"

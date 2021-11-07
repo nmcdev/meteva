@@ -158,14 +158,17 @@ def add_china_map_2basemap(ax,name ="province", facecolor='none',
     # map name
 
     if meteva.base.customized_basemap_list is None:
-        names = {'world':"worldmap",'nation': "bou1_4p", 'province': "Province",
-                 'county': "BOUNT_poly", 'river': "hyd1_4p",
-                 'river_high': "hyd2_4p"}
-
+        # names = {'world':"worldmap",'nation': "bou1_4p", 'province': "Province",
+        #          'county': "BOUNT_poly", 'river': "hyd1_4p",
+        #          'river_high': "hyd2_4p"}
+        #
+        # names = {'world':"worldmap",'nation': "NationalBorder", 'province': "Province",
+        #          'county': "BOUNT_poly", 'river': "hyd1_4p",
+        #          'river_high': "hyd2_4p"}
+        #     # get shape file and information
         names = {'world':"worldmap",'nation': "NationalBorder", 'province': "Province",
-                 'county': "BOUNT_poly", 'river': "hyd1_4p",
+                 'county': "BOUL_X", 'river': "hyd1_4p",
                  'river_high': "hyd2_4p"}
-            # get shape file and information
         shpfile = pkg_resources.resource_filename(
             'meteva', "resources/maps/" + names[name])
         #print(shpfile)
@@ -1884,6 +1887,7 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
             height_fig = height
 
 
+
         fig = plt.figure(figsize=(width_fig, height_fig), dpi=dpi)
         x = np.arange(data.shape[2])
         hspace = height_hspace/(width_axis*0.5)
@@ -2123,10 +2127,13 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
                 plt.suptitle(sup_title, y = by,fontsize=sup_fontsize )
             else:
                 width_suptitle = caculate_str_width(sup_title,sup_fontsize)
-                legend_col = int((width_fig - width_suptitle) *12 / sup_fontsize)
-                if legend_col <1:legend_col = 1
-                legend_row = int(math.ceil(legend_num / legend_col))
-                legend_col = int(math.ceil(legend_num / legend_row))
+                if legend_col is None:
+                    legend_col = int((width_fig - width_suptitle) *12 / sup_fontsize)
+                    if legend_col <1:legend_col = 1
+                    legend_row = int(math.ceil(legend_num / legend_col))
+                    legend_col = int(math.ceil(legend_num / legend_row))
+                else:
+                    legend_row = int(math.ceil(legend_num / legend_col))
                 strss = sup_title.split("\n")
                 #by = 1 - (height_suplegend - len(strss) * sup_fontsize * 0.01) / height_fig + 0.025
 
@@ -2142,10 +2149,13 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
                     plt.legend(fontsize = sup_fontsize *0.7,ncol = legend_col,loc = "upper right")
         else:
             if legend_num > 1:
-                legend_col = int(width_fig * 8 / sup_fontsize)
-                if legend_col < 1: legend_col = 1
-                legend_row = int(math.ceil(legend_num / legend_col))
-                legend_col = int(math.ceil(legend_num / legend_row))
+                if legend_col is None:
+                    legend_col = int(width_fig * 8 / sup_fontsize)
+                    if legend_col < 1: legend_col = 1
+                    legend_row = int(math.ceil(legend_num / legend_col))
+                    legend_col = int(math.ceil(legend_num / legend_row))
+                else:
+                    legend_row = int(math.ceil(legend_num / legend_col))
                 #print(height_fig)
                 by = ax_top.bbox.ymax/fig.bbox.ymax + (legend_row * sup_fontsize * 0.9 * 0.03 + 0.1) / height_fig
 

@@ -74,21 +74,48 @@ def accumulate_dtime(sta,step,keep_all = True):
 def change(data,delta = 24,used_coords = "time"):
 
     if used_coords == "time":
-        names_0 = meteva.base.get_stadata_names(data)
-        names_1 = []
-        for name in names_0:
-            names_1.append(name + "_new")
-        sta1 = data.copy()
-        meteva.base.set_stadata_names(sta1, names_1)
-        sta1["time"] = sta1["time"] + datetime.timedelta(hours= delta)
-        sta01 = meteva.base.combine_on_all_coords(sta1, data)
-        fn = len(names_1)
-        dvalue = sta01.iloc[:, (-fn):].values - sta01.iloc[:, (-fn * 2):(-fn)].values
-        sta01.iloc[:, (-fn):] = dvalue
-        sta01 = sta01.drop(names_1, axis=1)
-        sta01.attrs = copy.deepcopy(data.attrs)
-        sta01.attrs["valid_time"] = delta
-        return sta01
+        if isinstance(data,pd.DataFrame):
+            names_0 = meteva.base.get_stadata_names(data)
+            names_1 = []
+            for name in names_0:
+                names_1.append(name + "_new")
+            sta1 = data.copy()
+            meteva.base.set_stadata_names(sta1, names_1)
+            sta1["time"] = sta1["time"] + datetime.timedelta(hours= delta)
+            sta01 = meteva.base.combine_on_all_coords(sta1, data)
+            fn = len(names_1)
+            dvalue = sta01.iloc[:, (-fn):].values - sta01.iloc[:, (-fn * 2):(-fn)].values
+            sta01.iloc[:, (-fn):] = dvalue
+            sta01 = sta01.drop(names_1, axis=1)
+            sta01.attrs = copy.deepcopy(data.attrs)
+            sta01.attrs["valid_time"] = delta
+            return sta01
+        else:
+            grid0 = meteva.base.get_grid_of_data(data)
+            times_all = data["time"].values
+            index_dtime = {}
+            time1_all = []
+            for i in range(len(times_all)):
+                time1 = meteva.base.all_type_time_to_datetime(times_all[i])
+                time1_all.append(time1)
+                index_dtime[time1] = i
+            index_s = []
+            index_e = []
+            for i in range(len(times_all)):
+                time_e = time1_all[i]
+                time_s = time_e - datetime.timedelta(hours=delta)
+                if time_s in index_dtime.keys():
+                    index_e.append(i)
+                    index_s.append(index_dtime[time_s])
+            time_list_e = times_all[index_e]
+            if len(time_list_e) ==0:
+                gtime1 = time_list_e
+            else:
+                gtime1 = [time_list_e[0],time_list_e[-1],time_list_e[1] - time_list_e[0]]
+            dat_delta = data.values[:,:,index_e,:,:,:] - data.values[:,:,index_s,:,:,:]
+            grid1 = meteva.base.grid(grid0.glon,grid0.glat,gtime1,grid0.dtimes,grid0.levels,grid0.members)
+            grd_change = meteva.base.grid_data(grid1,dat_delta)
+            return grd_change
     else:
         if isinstance(data, pd.DataFrame):
             names_0 = meteva.base.get_stadata_names(data)

@@ -910,21 +910,33 @@ def get_seprated_rgb_method2(num):
     return rgb_colors
 
 
-def set_plot_color_dict_method0(model_name_list):
+def set_plot_color_dict_method0(member_list):
+    if len(member_list) >20:
+        print("tab20颜色方案只能支持member_list长度小于等于20的情况")
+        return
+
     cm0 = cm.get_cmap("tab20")
     color_list0 = []
     for i in range(20):
         color_list0.append(cm0(i))
     plot_color_dict = {}
-    for i in range(len(model_name_list)):
-        plot_color_dict[model_name_list[i]] = color_list0[i]
+    for i in range(len(member_list)):
+        plot_color_dict[member_list[i]] = color_list0[i]
     meteva.base.plot_color_dict = plot_color_dict
     return
 
-def set_plot_color_dict_method1(model_name_list):
-    color_list0 = get_seprated_rgb_method1(len(model_name_list))
+def set_plot_color_dict_method1(member_list):
+    color_list0 = get_seprated_rgb_method1(len(member_list))
     plot_color_dict = {}
-    for i in range(len(model_name_list)):
-        plot_color_dict[model_name_list[i]] = color_list0[i]
+    for i in range(len(member_list)):
+        plot_color_dict[member_list[i]] = color_list0[i]
+    meteva.base.plot_color_dict = plot_color_dict
+    return
+
+def set_plot_color_dict_method2(member_list):
+    color_list0 = get_seprated_rgb_method2(len(member_list))
+    plot_color_dict = {}
+    for i in range(len(member_list)):
+        plot_color_dict[member_list[i]] = color_list0[i]
     meteva.base.plot_color_dict = plot_color_dict
     return

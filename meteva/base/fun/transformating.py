@@ -111,7 +111,7 @@ def trans_sta_to_grd(sta):
     return grd
 
 
-def contours_to_sta(m14,station,grade_list):
+def trans_contours_to_sta(m14,station,grade_list):
 
     contours = m14["closed_contours"]
     ncontour = len(contours["cn_label"])
