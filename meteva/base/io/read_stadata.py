@@ -1785,19 +1785,25 @@ def read_stadata_from_cimiss(dataCode,element,time,station = None,level = 0,dtim
         return None
 
 
-def read_cyclone_trace(filename, column, ids, data_name="data0"):
-    sta1 = pd.read_csv(filename, skiprows=2, sep="\s+", header=None,
-                       usecols=[0, 1, 2, 3, 4, 5, 6, column])
+def read_cyclone_trace(filename, id_cyclone,column=8,  data_name="data0",show = False):
+    try:
+        sta1 = pd.read_csv(filename, skiprows=2, sep="\s+", header=None,
+                           usecols=[0, 1, 2, 3, 4, 5, 6, column])
 
-    dat_dict = {"level": {}, "time": {}, "dtime": {}, "id": {}, "lon": {}, "lat": {}, data_name: {}}
-    for i in range(len(sta1.index)):
-        dat_dict["level"][i] = 0
-        dat_dict["time"][i] = datetime.datetime(sta1.iloc[i, 0], sta1.iloc[i, 1], sta1.iloc[i, 2], sta1.iloc[i, 3])
-        dat_dict["dtime"][i] = sta1.iloc[i, 4]
-        dat_dict["id"][i] = ids
-        dat_dict["lon"][i] = sta1.iloc[i, 5]
-        dat_dict["lat"][i] = sta1.iloc[i, 6]
-        dat_dict[data_name][i] = sta1.iloc[i, -1]
-    sta2 = pd.DataFrame(dat_dict)
-    # print(sta2)
-    return sta2
+        dat_dict = {"level": {}, "time": {}, "dtime": {}, "id": {}, "lon": {}, "lat": {}, data_name: {}}
+        for i in range(len(sta1.index)):
+            dat_dict["level"][i] = 0
+            dat_dict["time"][i] = datetime.datetime(sta1.iloc[i, 0], sta1.iloc[i, 1], sta1.iloc[i, 2], sta1.iloc[i, 3])
+            dat_dict["dtime"][i] = sta1.iloc[i, 4]
+            dat_dict["id"][i] = id_cyclone
+            dat_dict["lon"][i] = sta1.iloc[i, 5]
+            dat_dict["lat"][i] = sta1.iloc[i, 6]
+            dat_dict[data_name][i] = sta1.iloc[i, -1]
+        sta2 = pd.DataFrame(dat_dict)
+        # print(sta2)
+        return sta2
+    except:
+        if show:
+            exstr = traceback.format_exc()
+            print(exstr)
+        return None
