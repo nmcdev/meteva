@@ -229,7 +229,8 @@ def read_stadata_from_micaps3(filename, station=None,  level=None,time=None, dti
                 time_file = meteva.base.tool.time_tools.str_to_time(time_str)
                 sta.loc[:,"time"] = time_file
             else:
-                sta.loc[:,"time"] = time
+                time_file = meteva.base.tool.time_tools.all_type_time_to_datetime(time)
+                sta.loc[:,"time"] = time_file
             sta.loc[:,"dtime"] = 0
             sta.loc[:,"level"] = 0 #int(strs[7])
             #print(time_str)
