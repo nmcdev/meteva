@@ -250,7 +250,7 @@ def u_v_to_speed_angle(u,v):
         return speed,angle
     else:
         ud = u.values
-        vd = u.values
+        vd = v.values
         s, a = meteva.base.tool.math_tools.u_v_to_s_d(ud, vd)
         grid = meteva.base.get_grid_of_data(u)
         speed = meteva.base.grid_data(grid,s)
