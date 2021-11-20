@@ -520,7 +520,7 @@ def get_x_label(groupy_by):
 
 def get_x_ticks(ticks,width,row = 2):
     w_one_tick = 0.5
-    max_tick_num = int(width / w_one_tick)
+    max_tick_num = max(int(width / w_one_tick),1)
     tick0 = ticks[0]
     if isinstance(tick0,datetime.datetime) or isinstance(tick0,np.datetime64):
         ticks1 = []
@@ -655,7 +655,7 @@ def get_y_ticks(ticks,height,fonsize):
             ytick_labels = get_time_str_list(times,row=2)
             yticks = np.arange(ytick_labels)
     else:
-        sp =int(math.ceil( fonsize * 0.006 * len(ticks) / height))
+        sp =int(math.ceil( fonsize * 0.015 * len(ticks) / height))
         yticks = np.arange(0,len(ticks),sp)
         ytick_labels = ticks[::sp]
     return yticks, ytick_labels
