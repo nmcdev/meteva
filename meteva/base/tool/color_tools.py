@@ -125,7 +125,7 @@ def get_cmap_and_clevs_from_file(path):
     cmap = colors.ListedColormap(cmap, 'indexed')
     return cmap,clevs
 
-def cmap_clevs_bias(vmax):
+def cmap_clevs_bias_(vmax):
     if vmax is None:
         print("设置bias的cmap时需要指定vmax")
     blue = np.array([0, 0, 255]) / 255
@@ -144,6 +144,40 @@ def cmap_clevs_bias(vmax):
     for value in range(2, int(vmax + 1), 1):
         clev_list.append(value)
         cmap_list.append((red * (vmax - value) + black * (value - 2)) / (vmax - 2))
+    cmap = colors.ListedColormap(cmap_list, 'indexed')
+    return cmap,clev_list
+
+
+def cmap_clevs_bias(vmax):
+    if vmax is None:
+        print("设置bias的cmap时需要指定vmax")
+    blue = np.array([0, 0, 255]) / 255
+    white = np.array([255, 255, 255]) / 255
+    yellow = np.array([0.7,0.7,0])
+    red = np.array([255, 0, 0]) / 255
+    pink = np.array([0.5,0,0.5])
+    black = np.array([0, 0, 0]) / 255
+    clev_list = [0]
+    cmap_list = [blue]
+    for v in range(1,6):
+        clev_list.append(v * 0.2)
+        cmap_list.append(blue * (1 - v * 0.2) + white * v * 0.2)
+
+    for v in range(1,6):
+        clev_list.append(1 + v * 0.2)
+        cmap_list.append(white * (1 - v * 0.2) + yellow * v * 0.2)
+
+    for v in range(1,6):
+        clev_list.append(2 + v * 0.2)
+        cmap_list.append(yellow * (1 - v * 0.2) + red * v * 0.2)
+
+    for v in range(1,11):
+        clev_list.append(3 + v * 0.5)
+        cmap_list.append(red * (1 - v * 0.1) + pink * v * 0.1)
+
+    for value in range(8, int(vmax + 1), 1):
+        clev_list.append(value)
+        cmap_list.append((pink * (vmax - value) + black * (value - 2)) / (vmax - 2))
     cmap = colors.ListedColormap(cmap_list, 'indexed')
     return cmap,clev_list
 
@@ -216,6 +250,173 @@ def cmap_clevs_me(vmin,vmax):
     for i in range(nclev):
         colors_list.append(colors0(nclev -1 - i))
     clevs = np.arange(vmin, vmax, inte)
+    cmap = colors.ListedColormap(colors_list, 'indexed')
+    return cmap,clevs
+
+
+def cmap_clevs_me_w0(vmin,vmax):
+    max_abs = max(abs(vmax),abs(vmin))
+    vmax = max_abs
+    vmin = -max_abs
+    dif = (vmax - vmin) / 10.0
+    inte = math.pow(10, math.floor(math.log10(dif)));
+    # 用基本间隔，将最大最小值除于间隔后小数点部分去除，最后把间隔也整数化
+    r = dif / inte
+    if r < 3 and r >= 1.5:
+        inte = inte * 2
+    elif r < 4.5 and r >= 3:
+        inte = inte * 4
+    elif r < 5.5 and r >= 4.5:
+        inte = inte * 5
+    elif r < 7 and r >= 5.5:
+        inte = inte * 6
+    elif r >= 7:
+        inte = inte * 8
+
+    inte = inte/2
+
+    vmin = inte * ((int)(vmin / inte) - 1)
+
+    vmax = inte * ((int)(vmax / inte) + 1)
+
+    clevs = np.arange(vmin, vmax, inte)
+    num = len(clevs)
+    rgb_colors = []
+    sp = 2/3
+    step = 360*sp / num
+    #print(num)
+    for i in range(num):
+        delta = abs(i-(num-1)/2)
+        if i < (num-1)/2:
+            h = 0.5 +(1-sp)/2 + delta * step / 360  # 首先均匀的取不同的色相，保持色相维度的差异最大化
+            i1 = delta % 4
+            s = 0.75 + 0.25 * i1 / 4  # 通过一个折线波浪 设置不同的饱和度
+            l = 0.9 - 0.6 * i1 / 4  # 通过一个折线波浪 设置不同的亮度
+        else:
+            h = 0.5 - (1 - sp) / 2 - delta * step / 360  # 首先均匀的取不同的色相，保持色相维度的差异最大化
+            i1 = delta % 4
+            s = 0.75 + 0.25 * i1 / 4  # 通过一个折线波浪 设置不同的饱和度
+            l = 0.75 - 0.5 * i1 / 4  # 通过一个折线波浪 设置不同的亮度
+
+        if delta <1:
+            l = 0.95
+
+        rgb1 = colorsys.hls_to_rgb(h, l, s)
+        rgb_colors.append(rgb1)
+
+    clevs = np.arange(vmin, vmax, inte)
+    cmap = colors.ListedColormap(rgb_colors, 'indexed')
+    return cmap,clevs
+
+def cmap_clevs_me_new(vmin,vmax):
+    max_abs = max(abs(vmax),abs(vmin))
+    vmax = max_abs
+    vmin = -max_abs
+    dif = (vmax - vmin) / 10.0
+    inte = math.pow(10, math.floor(math.log10(dif)));
+    # 用基本间隔，将最大最小值除于间隔后小数点部分去除，最后把间隔也整数化
+    r = dif / inte
+    if r < 3 and r >= 1.5:
+        inte = inte * 2
+    elif r < 4.5 and r >= 3:
+        inte = inte * 4
+    elif r < 5.5 and r >= 4.5:
+        inte = inte * 5
+    elif r < 7 and r >= 5.5:
+        inte = inte * 6
+    elif r >= 7:
+        inte = inte * 8
+
+    inte = inte/2
+
+    vmin = inte * ((int)(vmin / inte) - 1)
+
+    vmax = inte * ((int)(vmax / inte) + 2)
+    clevs1 = np.arange(vmin, -1e-6, inte)
+    nclev = len(clevs1)
+    colors0 = cm.get_cmap("winter", nclev)
+    colors_list = []
+    for i in range(nclev):
+        if i == nclev - 1:
+            c1 = np.array(list(colors0(i)))/5 +4/5
+            colors_list.append(c1)
+        else:
+            colors_list.append(colors0(i))
+
+    clevs2 = np.arange(0, vmax, inte)
+    nclev = len(clevs2)
+    colors0 = cm.get_cmap("autumn", nclev)
+    for i in range(nclev):
+        if i ==0:
+            c1 = np.array(list(colors0(nclev -1 - i)))/5 +4/5
+            colors_list.append(c1)
+        else:
+            colors_list.append(colors0(nclev -1 - i))
+
+    clevs = np.arange(vmin, vmax, inte)
+    cmap = colors.ListedColormap(colors_list, 'indexed')
+    return cmap,clevs
+
+
+def cmap_clevs_mae(vmax):
+
+    dif = (vmax) / 10.0
+    inte = math.pow(10, math.floor(math.log10(dif)));
+    # 用基本间隔，将最大最小值除于间隔后小数点部分去除，最后把间隔也整数化
+    r = dif / inte
+    if r < 3 and r >= 1.5:
+        inte = inte * 2
+    elif r < 4.5 and r >= 3:
+        inte = inte * 4
+    elif r < 5.5 and r >= 4.5:
+        inte = inte * 5
+    elif r < 7 and r >= 5.5:
+        inte = inte * 6
+    elif r >= 7:
+        inte = inte * 8
+
+    inte = inte / 2
+
+    vmin = 0
+
+    vmax = inte * ((int)(vmax / inte) + 1)
+
+    clevs = np.arange(vmin, vmax, inte)
+    num = len(clevs)
+    rgb_colors = []
+
+    for i in range(num):
+        h = 0.8 - i/num
+        s = 1
+        l = 1 - 0.6 * (i+1)/num
+        rgb1 = colorsys.hls_to_rgb(h, l, s)
+        rgb_colors.append(rgb1)
+
+    clevs = np.arange(vmin, vmax, inte)
+    cmap = colors.ListedColormap(rgb_colors, 'indexed')
+    return cmap, clevs
+
+def cmap_clevs_me_bwr(vmin,vmax):
+    max_abs = math.ceil(max(abs(vmax),abs(vmin)))
+    inte = 1
+    vmin = inte * ((int)(vmin / inte))
+    clevs = []
+    colors_list = []
+    for i in range(vmin,0,1):
+        clevs.append(i)
+        rgb = [1+ i/max_abs,1+ i/max_abs,1]
+        if i>=-1:
+            rgb= [1,1,1]
+        colors_list.append(rgb)
+
+    vmax = inte * ((int)(vmax / inte) + 1)
+    for i in range(vmax):
+        clevs.append(i)
+        rgb = [1,1- i/max_abs,1- i/max_abs]
+        if i < 1:
+            rgb = [1,1,1]
+        colors_list.append(rgb)
+    #print(colors_list)
     cmap = colors.ListedColormap(colors_list, 'indexed')
     return cmap,clevs
 
@@ -634,6 +835,10 @@ def get_cmap_and_clevs_by_name(cmap_name,vmin,vmax):
         cmap,clevs = cmap_clevs_error(vmin,vmax)
     elif cmap_name == "me":
         cmap,clevs = cmap_clevs_me(vmin,vmax)
+    elif cmap_name == "me_bwr":
+        cmap,clevs = cmap_clevs_me_bwr(vmin,vmax)
+    elif cmap_name == "me_w0":
+        cmap,clevs = cmap_clevs_me_w0(vmin,vmax)
     elif cmap_name == "ts":
         cmap,clevs= cmap_clevs_ts()
     elif cmap_name == "far":
@@ -650,6 +855,8 @@ def get_cmap_and_clevs_by_name(cmap_name,vmin,vmax):
         cmap,clevs = cmap_clevs_environment()
     elif cmap_name =="radar":
         cmap,clevs = cmap_clevs_radar()
+    elif cmap_name =="mae":
+        cmap, clevs = cmap_clevs_mae(vmax)
     else:
         print("该配色方案名称不识别")
         return None,None
@@ -683,6 +890,9 @@ class cmaps:
     temper_error_br ="temper_error_br"
     environment = "environment"
     radar = "radar"
+    me_bwr = "me_bwr"
+    me_w0 = "me_w0"
+    mae = "mae"
 
 
 def coordinate_cmap_to_clevs(cmap,clevs):
