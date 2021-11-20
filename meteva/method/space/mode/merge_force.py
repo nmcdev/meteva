@@ -50,13 +50,14 @@ def merge_force(look_match, verbose=False):
         out['grd_fo_features'] = x["grd_fo_features"]
         out['grd_ob_label'] = x["grd_ob_label"]
         out['grd_fo_label'] = x["grd_fo_label"]
-        vxunmatched = 0
-        if len(xp.keys()) >0:
-            vxunmatched = list(range(1, len(xp.keys()) + 1))
-        fcunmatched=0
-        if len(yp.keys())>0:
-            fcunmatched = list(range(1, len(yp.keys()) + 1))
-        out['unmatched'] = {'ob': vxunmatched, 'fo': fcunmatched}
+        # vxunmatched = 0
+        # if len(xp.keys()) >0:
+        #     vxunmatched = list(range(1, len(xp.keys()) + 1))
+        # fcunmatched=0
+        # if len(yp.keys())>0:
+        #     fcunmatched = list(range(1, len(yp.keys()) + 1))
+        #out['unmatched'] = {'ob': vxunmatched, 'fo': fcunmatched}
+        out["unmatched"] = x['unmatched']
         out['MergeForced'] = True
         out["grid"] = copy.deepcopy(look_match["grid"])
     else:

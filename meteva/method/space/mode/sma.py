@@ -10,15 +10,17 @@ def sma(data, log="", method="SMA",
     y = data['y']
 
     coeff = regress2(x, y, _method_type_2="reduced major axis")
-    if(np.isnan(coeff["predict"][0])) or coeff['slope']==0:
+    while(np.isnan(coeff["predict"][0])) or coeff['slope']==0:
         maxx = np.max(x) - np.min(x)
         maxy = np.max(y) - np.min(x)
         maxd = max(maxx,maxy)
-        x1 = np.random.randn(len(x))* 0.1 * maxd + x
-        y1 = np.random.randn(len(y))* 0.1 * maxd + y
-        coeff = regress2(x1, y1, _method_type_2="reduced major axis")
+        x1 = np.random.randn(len(x))* 0.01 * maxd + x
+        y1 = np.random.randn(len(y))* 0.01 * maxd + y
+        #coeff = regress2(x1, y1, _method_type_2="reduced major axis")
+        coeff = regress2(x1, y1, _method_type_2="major axis")
         #print(x)
         #print(y)
+    #print(coeff)
     slope = coeff['slope']
     intercept = coeff['intercept']
 

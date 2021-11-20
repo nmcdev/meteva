@@ -13,9 +13,9 @@ def interester(look, properties=None,
                b2=None, show=False, *params):
     x = copy.deepcopy(look)
     if b2 is None:
-        b2 = npy.array([100, 90, 0.8, 0.25, 85, 400, 200, 200, 400, 0.25, 200])
+        b2 = npy.array([3, 90, 0.8, 0.25, 0.85, 4, 2, 2, 4, 0.25, 2])
     if b1 is None:
-        b1 = npy.array([35, 30, 0, 0, 0.5, 35, 20, 40, 120, 1, 40])
+        b1 = npy.array([0.5, 30, 0, 0, 0.5, 0.35, 0.2, 0.4, 1.2, 1, 0.4])
 
     if weights is None:
         weights = npy.array([0.24, 0.12, 0.17, 0.12, 0, 0, 0, 0, 0, 0, 0.35])
@@ -70,6 +70,7 @@ def interester(look, properties=None,
                 a0[i] = 1 - a1[i] * b2[i]
 
     def ipwlin(x, b1, b2, a0, a1, property, *params):
+        #print(x)
         dn = []
         for j, value in enumerate(properties):
             dn.append(value in ["cent_dist", "angle_diff", "bdelta", "haus", "ph", "med", "msd", "minsep"])
@@ -150,6 +151,7 @@ def interester(look, properties=None,
         result = {}
         for j, value in enumerate(list(x)):
             result[value] = res[j]
+        #print(result)
         return result
 
     def ifun(id, bigX, Xhat, b1, b2, a0, a1, p, *params):
