@@ -38,8 +38,6 @@ def feature_axis(look,label,ob_or_fo = "ob",fac = 1, flipit=False, twixt=False):
     for index in range(len(ch)):
         pts[index] = (ch[index][0])
 
-
-
     out['pts'] = pts
     out["pts"][:,0] = grid0.slon + out["pts"][:,0] * grid0.dlon
     out["pts"][:,1] = grid0.slat + out["pts"][:,1] * grid0.dlat
@@ -71,8 +69,8 @@ def feature_axis(look,label,ob_or_fo = "ob",fac = 1, flipit=False, twixt=False):
         elif 270 < theta <= 360:
             theta = theta - 360
     MidPoint = midpoints_psp.midpoints_psp(axis_frame)
-
-    r = lengths_psp.lengths_psp(axis_frame) * fac
+    #r = lengths_psp.lengths_psp(axis_frame) * fac
+    r = tmp["y_range"][1] - tmp["y_range"][0]
     phi = angles_psp.angles_psp(rotate(np.array([[axis_x[0], axis_y[0]], [axis_x[1], axis_y[1]]]), math.pi / 2))
     minor_frame = {'xmid': MidPoint['x'], 'ymid': MidPoint['y'], 'length': l/fac, 'angle': phi}
     MinorAxis = as_psp.as_psp(minor_frame)

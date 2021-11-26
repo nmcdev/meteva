@@ -45,6 +45,10 @@ def time_list_line_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
         sta_ob_and_fos = meteva.base.in_id_list(sta_ob_and_fos1,[id])
         times_fo = sta_ob_and_fos.loc[:, "time"].values
         times_fo = list(set(times_fo))
+        # print(times_fo)
+        if (len(times_fo) == 1):
+            print("仅有单个起报时间的预报，程序退出")
+            return
         times_fo.sort()
         times_fo = np.array(times_fo)
         dhs_fo = (times_fo[1:] - times_fo[0:-1])
@@ -239,6 +243,9 @@ def time_list_line(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,sho
         sta_ob_and_fos = meteva.base.in_id_list(sta_ob_and_fos1,[id])
         times_fo = sta_ob_and_fos.loc[:, "time"].values
         times_fo = list(set(times_fo))
+        if (len(times_fo) == 1):
+            print("仅有单个起报时间的预报，程序退出")
+            return
         times_fo.sort()
         times_fo = np.array(times_fo)
         dhs_fo = (times_fo[1:] - times_fo[0:-1])
