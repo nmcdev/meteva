@@ -795,7 +795,6 @@ def scatter_sta(sta0,value_column=None,
             x = sta_one_member.loc[:, "lon"].values
             y = sta_one_member.loc[:, "lat"].values
             value = sta_one_member.loc[:, data_name].values
-
             fig = plt.figure(figsize=(width, height),dpi = dpi)
             rect1 = [left_plots_width / width, legend_hight / height, (width - right_plots_width - left_plots_width) / width,
                      1 - title_hight / height]
@@ -3031,8 +3030,6 @@ def mesh_time_dtime(sta,save_dir = None,save_path = None,
 #           , annot_kws = {'size': annot_size})
             myheatmap(ax2,dat.T,cmap_part,clevs_part,annot_f,annot_size)
 
-
-
             ax2.set_xlabel('起报时间',fontsize = sup_fontsize * 0.9)
             ax2.set_ylabel('预报时效',fontsize = sup_fontsize * 0.9)
             ax2.set_xticks(x_plot)
@@ -3091,6 +3088,9 @@ def add_scatter(ax,map_extend,sta0,cmap = None,clevs = None,point_size = None,fi
         elat = map_extend.elat
         rlon = map_extend.elon - map_extend.slon
         rlat = map_extend.elat - map_extend.slat
+
+    ax.set_xlim((slon, elon))
+    ax.set_ylim((slat, elat))
 
     sta_without_iv = meteva.base.sele.not_IV(sta)
 
