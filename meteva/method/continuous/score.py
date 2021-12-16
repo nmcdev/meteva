@@ -1,6 +1,7 @@
 import numpy as np
 from meteva.base.tool.math_tools import mean_iteration,sxy_iteration,ss_iteration
 from meteva.base import IV
+from scipy.signal import convolve
 def sample_count(Ob, Fo=None):
     '''
     计算检验的样本数
@@ -1228,11 +1229,11 @@ def FSS(Ob, Fo, window_sizes_list=[3], threshold_list=[50], Masker=None):
     nt = len(threshold_list)
     fss = np.zeros((nw, nt))
     for i in range(nw):
-        kernel = np.ones((nw, nw))
+        kernel = np.ones((window_sizes_list[i], window_sizes_list[i]))
         # print(kernel)
         ws = np.sum(kernel)
         if Masker is not None:
-            masker_sum = np.convolve(Masker, kernel, mode="same") + 1e-10
+            masker_sum = convolve(Masker, kernel, mode="same") + 1e-10
         else:
             masker_sum = np.ones(shape) * ws + 1e-10
         for j in range(nt):
@@ -1240,8 +1241,8 @@ def FSS(Ob, Fo, window_sizes_list=[3], threshold_list=[50], Masker=None):
             ob_hap[Ob > threshold_list[j]] = 1
             fo_hap = np.zeros(shape)
             fo_hap[Fo > threshold_list[j]] = 1
-            ob_hap_sum = np.convolve(ob_hap, kernel, mode="same")
-            fo_hap_sum = np.convolve(fo_hap, kernel, mode="same")
+            ob_hap_sum = convolve(ob_hap, kernel, mode="same")
+            fo_hap_sum = convolve(fo_hap, kernel, mode="same")
             ob_hap_p = ob_hap_sum / masker_sum
             fo_hap_p = fo_hap_sum / masker_sum
             a1 = np.sum(np.power(ob_hap_p - fo_hap_p, 2))
