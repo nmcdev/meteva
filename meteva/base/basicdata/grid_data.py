@@ -4,8 +4,6 @@ import xarray as xr
 import numpy as np
 import pandas as pd
 import datetime
-import re
-import math
 import copy
 import meteva
 
@@ -395,7 +393,7 @@ def xarray_to_griddata(xr0,
 
     da = da.transpose(dim_order["member"], dim_order["level"], dim_order["time"],
                       dim_order["dtime"], dim_order["lat"], dim_order["lon"])
-    # print(da)
+    #print(da)
     ds[name] = (("member", "level", "time", "dtime", "lat", "lon"), da.values)
     attrs_name = list(da.attrs)
     for key in attrs_name:
