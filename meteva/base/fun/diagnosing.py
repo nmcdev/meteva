@@ -1,7 +1,5 @@
 import math
 import meteva
-from meteva.base.tool.math_tools import lon_lat_to_cartesian
-from scipy.spatial import cKDTree
 import numpy as np
 import copy
 import pandas as pd
@@ -275,19 +273,25 @@ def u_v_to_wind(u,v):
 
 
 def wind_to_speed_angle(wind):
-    member_name = meteva.base.get_stadata_names(wind)
-    u = meteva.base.sele_by_para(wind, member=member_name[0::2])
-    v =meteva.base.sele_by_para(wind, member=member_name[1::2])
-    speed, angle = meteva.base.u_v_to_speed_angle(u, v)
-    names = meteva.base.get_stadata_names(u)
-    new_names = []
-    for name in names:
-        if name[0:2] == "u_":
-            name = name[2:]
-        new_names.append(name)
-    meteva.base.set_stadata_names(speed,new_names)
-    meteva.base.set_stadata_names(angle,new_names)
-    return speed,angle
+    if isinstance(wind,pd.DataFrame):
+        member_name = meteva.base.get_stadata_names(wind)
+        u = meteva.base.sele_by_para(wind, member=member_name[0::2])
+        v =meteva.base.sele_by_para(wind, member=member_name[1::2])
+        speed, angle = meteva.base.u_v_to_speed_angle(u, v)
+        names = meteva.base.get_stadata_names(u)
+        new_names = []
+        for name in names:
+            if name[0:2] == "u_":
+                name = name[2:]
+            new_names.append(name)
+        meteva.base.set_stadata_names(speed,new_names)
+        meteva.base.set_stadata_names(angle,new_names)
+        return speed, angle
+    else:
+        u = meteva.base.in_member_list(wind,member_list=[0],name_or_index="index")
+        v = meteva.base.in_member_list(wind, member_list=[1], name_or_index="index")
+        speed,angle = u_v_to_speed_angle(u,v)
+        return speed,angle
 
 def speed_angle_to_wind(speed,angle = None):
     if isinstance(speed, pd.DataFrame):
