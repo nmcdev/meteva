@@ -80,7 +80,8 @@ def group(sta_ob_and_fos,g = None,gll = None):
                 max = np.max(sta_ob_and_fos.loc[:,name1])
                 min =start - (int((start - min) / step) + 1) *step
                 max = start + (int((max - start)/step) +1) * step
-                for value in range(min,max,step):
+                value_list = np.arange(min,max,step)
+                for value in value_list:
                     group_list_list1.append([value,value+ step - 1e-6])
                 for group_list in group_list_list1:
                     sta = meteva.base.between_one_column_value_range(sta_ob_and_fos,name1,group_list[0],group_list[1])
@@ -470,9 +471,9 @@ def group(sta_ob_and_fos,g = None,gll = None):
 
                 min = start - (int((start - min) / step) + 1) * step
                 max = start + (int((max - start) / step) + 1) * step
-                for value in range(min, max, step):
+                value_list = np.arange(min,max,step)
+                for value in value_list:
                     group_list_list1.append([value, value + step - 1e-6])
-
                 for group_list in group_list_list1:
                     sta = meteva.base.between_last_range(sta_ob_and_fos, group_list[0], group_list[1])
                     if len(sta.index) != 0:
@@ -585,7 +586,6 @@ def split_grd(grd,used_coords = ["member","level","time","dtime"],grd_list = Non
 
 
 def group_grd(grd, g = None):
-
     if g == None:
         return [grd]
     else:
