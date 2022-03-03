@@ -1,17 +1,7 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Jun  9 11:40:04 2020
 
-@author: 1
-"""
-
-#======================  make.SpatialVx()  =======================
-
-import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import sys
-import math
 
 def isAllDigital(array):      #这个函数是用来判断list是否为一维纯数值，如果是二维，返回false
     ret = True

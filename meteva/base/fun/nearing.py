@@ -103,7 +103,6 @@ def sta_values_ensemble_near_by_grid(sta, grid,nearNum = 1):
     xyz_grid = meteva.base.tool.math_tools.lon_lat_to_cartesian(grid_lon.flatten(), grid_lat.flatten(),R = ER)
     tree = cKDTree(xyz_sta)
     value, inds = tree.query(xyz_grid, k=nearNum)
-
     data_name = meteva.base.get_stadata_names(sta)[0]
     input_dat = sta[data_name].values
 
@@ -118,6 +117,20 @@ def sta_values_ensemble_near_by_grid(sta, grid,nearNum = 1):
 
     return grd_en
 
+def sta_dis_ensemble_near_by_grid(sta, grid,nearNum = 1):
+    ER = meteva.base.ER
+    members = np.arange(nearNum).tolist()
+    grid1 = meteva.base.grid(grid.glon,grid.glat,member_list=members)
+    grd_en = meteva.base.grid_data(grid1)
+    xyz_sta =  meteva.base.tool.math_tools.lon_lat_to_cartesian(sta.loc[:,"lon"], sta.loc[:,"lat"],R = ER)
+    lon = np.arange(grid1.nlon) * grid1.dlon + grid1.slon
+    lat = np.arange(grid1.nlat) * grid1.dlat + grid1.slat
+    grid_lon,grid_lat = np.meshgrid(lon,lat)
+    xyz_grid = meteva.base.tool.math_tools.lon_lat_to_cartesian(grid_lon.flatten(), grid_lat.flatten(),R = ER)
+    tree = cKDTree(xyz_sta)
+    dis, inds = tree.query(xyz_grid, k=nearNum)
+    grd_en.values = dis.reshape((nearNum,1,1,1,grid1.nlat,grid1.nlon))
+    return grd_en
 
 
 def ids_list_list_in_r_of_sta(sta_to, r = 40, sta_from = None,drop_first = False):
@@ -154,7 +167,6 @@ def ids_list_list_in_r_of_sta(sta_to, r = 40, sta_from = None,drop_first = False
             ids_list.append(values)
     return ids_list
 
-
 def get_stations_near_by_cyclone_trace(sta_cyclone_trace,station, r = 1000):
     '''
 
@@ -177,7 +189,6 @@ def get_stations_near_by_cyclone_trace(sta_cyclone_trace,station, r = 1000):
         sta_near_list.append(near_sta)
     near_station_all = meteva.base.concat(sta_near_list)
     return near_station_all
-
 
 def values_list_list_in_r_of_sta(sta_to, r = 40, sta_from = None,drop_first = False):
     '''
@@ -280,6 +291,7 @@ def add_stavalue_to_nearest_grid(sta,grid):
     :param grid:
     :return:
     '''
+
     grd = meteva.base.grid_data(meteva.base.grid(grid.glon,grid.glat,gtime=[sta.iloc[0,1]],dtime_list=[sta.iloc[0,2]],level_list=[sta.iloc[0,0]]))
     sta1 = meteva.base.sele.in_grid_xy(sta, grid)
     data_names = meteva.base.get_stadata_names(sta1)
@@ -291,7 +303,6 @@ def add_stavalue_to_nearest_grid(sta,grid):
     jg_d = duplicate_data_sum["jg"].values
     value = duplicate_data_sum["value"].values
     grd.values[0, 0, 0, 0, jg_d, ig_d] = value[:]
-
     meteva.base.set_griddata_coords(grd, member_list=data_names)
     return grd
 

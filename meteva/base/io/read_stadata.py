@@ -289,18 +289,24 @@ def read_stadata_from_csv(filename, columns, member_list,skiprows=0,level = None
             sta1 = sta0[station_column]
             nsta = len(sta1.index)
             if "lon" in station_column:
-                for i in range(nsta):
-                    if sta1.loc[i, 'lon'] > 1000:
-                        a = sta1.loc[i, 'lon'] // 100 + (a % 100) / 60
-                        sta1.loc[i, 'lon'] = a
+                if sta1.loc[0,"lon"] >1000:
+                    a = sta1.loc[:, 'lon'] // 100 + (sta1.loc[:, 'lon'] %100)/60
+                    sta1.loc[:, "lon"] = a
             if "lat" in station_column:
-                for i in range(nsta):
-                    if sta1.loc[i, 'lat'] > 1000:
-                        a = sta1.loc[i, 'lat'] // 100 + (a % 100) / 60
-                        sta1.loc[i, 'lat'] = a
+                if sta1.loc[0, "lat"] > 1000:
+                    a = sta1.loc[:, 'lat'] // 100 + (sta1.loc[:, 'lat'] % 100) / 60
+                    sta1.loc[:, "lat"] = a
+                # for i in range(nsta):
+                #     if sta1.loc[i, 'lon'] > 1000:
+                #         a = sta1.loc[i, 'lon'] // 100 + (a % 100) / 60
+                #         sta1.loc[i, 'lon'] = a
+            # if "lat" in station_column:
+            #     for i in range(nsta):
+            #         if sta1.loc[i, 'lat'] > 1000:
+            #             a = sta1.loc[i, 'lat'] // 100 + (a % 100) / 60
+            #             sta1.loc[i, 'lat'] = a
             # sta = bd.sta_data(sta1)
             sta = meteva.base.basicdata.sta_data(sta1)
-
             if drop_same_id:
                 sta = sta.drop_duplicates(['id'])
 
@@ -1428,6 +1434,7 @@ def print_gds_file_values_names(filename):
     #if os.path.exists(filename):
     #    ip,port = None,None
     #else:
+        print(filename + "不是本地文件,尝试从服务器上读取相应数据")
         if meteva.base.gds_ip_port is None:
             print("在本地找不到文件"+filename+"考虑它为服务器上的路径")
             print("请先使用set_config 配置gds的ip和port")

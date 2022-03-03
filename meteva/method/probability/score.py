@@ -1,12 +1,20 @@
-
 import numpy as np
-from sklearn.metrics import roc_auc_score
-#from sklearn.metrics import brier_score_loss
 from meteva.base.tool.math_tools import ss_iteration
 from meteva.base import IV
 from meteva.method.yes_or_no.score import pofd_hfmc,pod_hfmc
 
 
+def roc_auc_score(ob,fo):
+    ob = ob[np.argsort(-fo)]
+    #fo = fo[np.argsort(-fo)]
+    ob_cs = np.cumsum(ob)
+    pod = ob_cs/ob_cs[-1]
+    pofd = (np.arange(1,ob.size+1) -ob_cs)/(ob.size - ob_cs[-1])
+    #plt.plot(pofd_rate,hit_rate)  roc曲线
+    delta_pofd = pofd[1:] - pofd[:-1]
+    mean_pod = (pod[1:]+pod[:-1])/2
+    score = np.sum(mean_pod * delta_pofd)
+    return score
 
 def tems(Ob, Fo):
     '''
@@ -193,6 +201,9 @@ def roc_auc(Ob, Fo):
         shape = list(Fo_shape[:ind])
         roc_auc_array = roc_auc_array.reshape(shape)
     return roc_auc_array
+
+
+
 
 def roc_auc_hnh(hnh_array):
     '''

@@ -1,9 +1,7 @@
 import pandas as pd
-import numpy as np
 import copy
 import meteva
 import datetime
-import time
 import math
 
 def concat(data_list):
@@ -331,7 +329,9 @@ def combine_on_obTime_id(sta_ob,sta_fo_list,need_match_ob = False):
                 sta_combine = sta_combine.fillna(meteva.base.IV)
         meteva.base.set_stadata_attrs(sta_combine,dtime_units=dtime_units)
         sta_combine.attrs = copy.deepcopy(sta_ob.attrs)
+        sta_combine.drop_duplicates(subset=["level", "time", "dtime", "id"], inplace=True)
         sta_combine.sort_values(by=["level", "time", "dtime", "id"], inplace=True)
+
         return sta_combine
 
 
@@ -458,6 +458,7 @@ def combine_on_obTime_id_bigData(sta_ob,sta_fo_list,need_match_ob = True,g = "id
     if sta_all is not None:
         sta_all = sta_all.fillna(meteva.base.IV)
     sta_all.attrs = copy.deepcopy(sta_ob.attrs)
+    sta_all.drop_duplicates(subset=["level","time","dtime","id"],inplace=True)
     sta_all.sort_values(by=["level", "time", "dtime", "id"], inplace=True)
     return sta_all
 

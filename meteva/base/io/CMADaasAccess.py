@@ -13,7 +13,6 @@ import json
 from .loglib import *
 from .httpconn import HttpConn
 from .SignGenUtil import SignGenUtil
-#import meteva.base as meb
 import numpy as np
 
 class CMADaasAccess():
@@ -455,8 +454,8 @@ class CMADaasAccess():
             
             for index in range(len(df)):
                 fname = df.loc[index,'FILE_NAME']
-                datetime = df.loc[index,'Datetime']
                 url = df.loc[index,'FILE_URL']
+                datetime = df.loc[index, 'Datetime']
                 ## url内容读取并文件保存
                 file_time = CMADaasAccess.get_datetime_from_str(datetime)
                 # 原url文件名
@@ -483,21 +482,17 @@ class CMADaasAccess():
         
 
 if __name__ == '__main__':
-    '''
-    qparams = {'serviceNodeId':'NMIC_MUSIC_CMADAAS',
-            'userId':'USR_liucouhua',
-            'interfaceId':'getRadaFileByTimeRange',
-            'dataCode':'RADA_L3_MST_CREF_GRID',
-            'elements':'Datetime,Station_Id_C,Lat,Lon,D_FILE_ID,File_URL,FILE_SIZE,FORMAT',
-            'timeRange':CMADaasAccess.get_timerange(dt),
-            'dataFormat':'xml',#'json',  #'html',
-            #'limitCnt':'10',
-            'timestamp':str(int(datetime.datetime.now().timestamp()*1000)), #'1599819398000',
-            'nonce':'3696663f-d202-4570-b39d-16306f419575',
-            'pwd':'130913'
-            }
-    '''
 
-    print('test done')
+    dati_list = [datetime.datetime(2021,12,1,0,0),datetime.datetime(2021,12,1,1,0)]
+    qparams = {'serviceNodeId':'NMIC_MUSIC_CMADAAS',
+            'userId':'NMC_SGFV',
+            'interfaceId':'getSateFileByTimeRange',
+            'dataCode':'SATE_FY4A_STA_L1',
+            'timeRange':CMADaasAccess.get_timerange(dati_list),
+            'pwd':'NMC_yfsjyk_601'
+            }
+    save_dir = r"H:\test_data\output\meb\get_files"
+    urlstr = CMADaasAccess.get_files_from_cmadaas(qparams,show_url=True,save_path=save_dir)
+    print(urlstr)
 
 

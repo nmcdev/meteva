@@ -1,13 +1,10 @@
 import numpy as np
-from matplotlib import cm
 import matplotlib.pyplot as plt
-
 plt.rcParams['font.sans-serif'] = ['SimHei']  # 用来正常显示中文标签
 plt.rcParams['axes.unicode_minus'] = False  # 用来正常显示负号
 from meteva.method.yes_or_no.score import pofd_hfmc, pod_hfmc
 from meteva.base.tool.plot_tools import set_plot_IV
 from meteva.base import IV
-import matplotlib.patches as patches
 import meteva
 import math
 

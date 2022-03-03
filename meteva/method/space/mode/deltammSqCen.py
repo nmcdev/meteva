@@ -6,14 +6,8 @@ Created on Sun Aug  2 16:55:54 2020
 """
 
 #============================  deltammSqCen()  ==============================
-#import rpy2.robjects as robjects
-from scipy import ndimage
 import numpy as np
 import pandas as pd
-import sys
-#sys.path.append(r'F:\Work\MODE\Submit')    #导入的函数路径
-from . import make_spatialVx
-from . import feature_finder
 from . import censqdelta
 from .centmatch import restructuring
 

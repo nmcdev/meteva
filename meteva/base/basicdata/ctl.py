@@ -14,16 +14,23 @@ def read_ctl(ctl_filename):
     if os.path.exists(ctl_filename):
         ctl = {}
         file = open(ctl_filename, 'r')
+        line = file.read()
+        strs_all = line.split()
+        file.close()
+
+        file = open(ctl_filename, 'r')
         line = file.readline()
         strs = line.split()
 
         if strs[1].__contains__('^'):
-            ctl["data_path"] = os.path.dirname(ctl_filename) + "\\" + strs[1][1:]
+            ctl["data_path"] = os.path.dirname(ctl_filename) + "/" + strs[1][1:]
         else:
             ctl["data_path"] = strs[1]
         print( ctl["data_path"])
+        index_zdef = 0
         while line:
             strs = line.split()
+            index_zdef += len(strs)
             if strs[0].upper() == "PDEF":
                 ctl["pdef"] = {}
                 ctl["pdef"]["nx"] = int(strs[1])
@@ -66,12 +73,19 @@ def read_ctl(ctl_filename):
                         levels.append(float(strs[3]) + ii * float(strs[4]))
                     ctl["zdef"] = levels
                 else:
-                    sstrss = strs[3:]
+                    nlevel =  int(strs[1])
+                    ctl["nlevel"] =nlevel
                     levels = []
-                    for strs2 in sstrss:
-                        levels.append(float(strs2))
+                    if len(strs) > 3:
+                        for i in range(nlevel):
+                            levels.append(float(strs_all[index_zdef + i - nlevel]))
+                    else:
+                        for i in range(nlevel):
+                            levels.append(float(strs_all[index_zdef + i]))
+
                     ctl["zdef"] = levels
                     ctl["nlevel"] = len(levels)
+
 
             if strs[0].upper() == "TDEF":
                 ntime = int(strs[1])
@@ -128,12 +142,13 @@ def read_ctl(ctl_filename):
                 cumulate = 0
                 for v in range(nvar):
                     line = file.readline()
-                    strs = line.split()
+                    #strs = line.split()
                     strs = re.split("\s+|,",line)
                     onev = {}
                     onev["name"] = strs[0]
                     nlevel = int(strs[1])
-                    if nlevel == 0: nlevel = 1
+                    if nlevel == 0:
+                        nlevel = 1
                     onev["nlevel"] = nlevel
                     onev["type"] = int(strs[2])
                     onev["discription"] = strs[3]
@@ -145,6 +160,8 @@ def read_ctl(ctl_filename):
         if "edef" not in ctl.keys():
             ctl["edef"] = [0]
             ctl["nensemble"] = 1
+        if "ntime" not in ctl.keys():
+            ctl["ntime"] = 1
         return ctl
     else:
         return None

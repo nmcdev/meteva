@@ -7,16 +7,12 @@ Created on Fri Jul 24 16:11:44 2020
 
 #============================  deltamm()  ==============================
 #Function:使用增量度量方法合并或匹配两个字段内已识别特征
-import numpy as np
-import pandas as pd
+
 import time
 import copy
 import sys
-#sys.path.append(r'F:\Work\MODE\Submit')    #导入的函数路径
-from . import make_spatialVx
-from . import feature_finder
 from . import deltammSqCen
-from . import data_pre
+
 
 
 def deltamm(look_ff, p = 2, max_delta = float("Inf"), const = float("Inf"), fun_type = "sqcen", N = 701, show = False):

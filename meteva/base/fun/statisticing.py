@@ -1,9 +1,5 @@
-import math
 import meteva
-from meteva.base.tool.math_tools import lon_lat_to_cartesian
-from scipy.spatial import cKDTree
 import numpy as np
-import copy
 import pandas as pd
 import datetime
 
@@ -22,8 +18,6 @@ def mean_of_sta(sta,used_coords = ["member"],span = 24,equal_weight = False,keep
         sta_mean['mean'] = mean
         return sta_mean
     elif used_coords == ["time"]:
-        if span is None:
-            print("if used_coords == [time], span must be int of float bigger than 0 ")
         times = sta.loc[:, 'time'].values
         times = list(set(times))
         times.sort()
@@ -32,47 +26,65 @@ def mean_of_sta(sta,used_coords = ["member"],span = 24,equal_weight = False,keep
         min_dtime = np.min(dtimes)
         min_dhour = min_dtime / np.timedelta64(1, 'h')
 
-        step = int(round(span/min_dhour))
+        if span is None:
 
-        sta1["count_for_add"] = 1
+            rain_ac = meteva.base.in_time_list(sta, [times[0]])
+            rain_ac["count_for_add"] = 1
+            meteva.base.set_stadata_coords(rain_ac, time=times[-1])
+            for i in range(1, len(times)):
+                rain01 = meteva.base.in_time_list(sta, times[i])
+                rain01["count_for_add"] = 1
+                meteva.base.set_stadata_coords(rain01, time=times[-1])
+                rain_ac = meteva.base.add_on_level_time_dtime_id(rain_ac, rain01, how="outer", default=0)
 
-        if not equal_weight:
-            names = meteva.base.get_stadata_names(sta1)
-            rain_ac = sta1.copy()
-            for name in names:
-                rain_ac[name] *= 0.5
-
-            for i in range(1,step):
-                rain1 = sta1.copy()
-                rain1["time"] = rain1["time"] + min_dtime * i
-                rain_ac = meteva.base.add_on_level_time_dtime_id(rain_ac, rain1, how="outer",default=0)
-            rain1 = sta1.copy()
-            rain1["time"] = rain1["time"] + min_dtime * step
-            for name in names:
-                rain1[name] *= 0.5
-            rain_ac = meteva.base.add_on_level_time_dtime_id(rain_ac, rain1, how="outer", default=0)
+            names = meteva.base.get_stadata_names(rain_ac)
+            for n in range(len(names)-1):
+                rain_ac[names[n]] /= rain_ac[names[-1]]
+            rain_ac = meteva.base.in_member_list(rain_ac,names[:-1])
+            rain_ac.attrs["valid_time"] = (times[-1] - times[0])/np.timedelta64(1, 'h')
+            return rain_ac
 
         else:
-            rain_ac = None
-            for i in range(step):
+            step = int(round(span/min_dhour))
+            sta1["count_for_add"] = 1
+            if not equal_weight:
+                names = meteva.base.get_stadata_names(sta1)
+                rain_ac = sta1.copy()
+                for name in names:
+                    rain_ac[name] *= 0.5
+
+                for i in range(1,step):
+                    rain1 = sta1.copy()
+                    rain1["time"] = rain1["time"] + min_dtime * i
+                    rain_ac = meteva.base.add_on_level_time_dtime_id(rain_ac, rain1, how="outer",default=0)
                 rain1 = sta1.copy()
-                rain1["time"] = rain1["time"] + min_dtime * i
-                rain_ac = meteva.base.add_on_level_time_dtime_id(rain_ac, rain1, how="outer",default=0)
+                rain1["time"] = rain1["time"] + min_dtime * step
+                for name in names:
+                    rain1[name] *= 0.5
+                rain_ac = meteva.base.add_on_level_time_dtime_id(rain_ac, rain1, how="outer", default=0)
 
-        names = meteva.base.get_stadata_names(rain_ac)
-        for n in range(len(names)-1):
-            rain_ac[names[n]] /= rain_ac[names[-1]]
-        rain_ac = meteva.base.in_member_list(rain_ac,names[:-1])
-        rain_ac = meteva.base.between_time_range(rain_ac, times[0], times[-1])  # 删除时效小于range的部分
+            else:
+                rain_ac = None
+                for i in range(step):
+                    rain1 = sta1.copy()
+                    rain1["time"] = rain1["time"] + min_dtime * i
+                    rain_ac = meteva.base.add_on_level_time_dtime_id(rain_ac, rain1, how="outer",default=0)
 
-        if not keep_all:
-            dtimes = times[:] - times[-1]
-            dh = (dtimes / min_dtime).astype(np.int32)
-            new_times = times[dh % step == 0]
-            rain_ac = meteva.base.in_time_list(rain_ac, new_times)
+            names = meteva.base.get_stadata_names(rain_ac)
+            for n in range(len(names)-1):
+                rain_ac[names[n]] /= rain_ac[names[-1]]
+            rain_ac = meteva.base.in_member_list(rain_ac,names[:-1])
+            rain_ac = meteva.base.between_time_range(rain_ac, times[0], times[-1])  # 删除时效小于range的部分
 
-        rain_ac.attrs["valid_time"] = span
-        return rain_ac
+            if not keep_all:
+                dtimes = times[:] - times[-1]
+                dh = (dtimes / min_dtime).astype(np.int32)
+                new_times = times[dh % step == 0]
+                rain_ac = meteva.base.in_time_list(rain_ac, new_times)
+
+            rain_ac.attrs["valid_time"] = span
+            return rain_ac
+
     elif used_coords ==["dtime"]:
         if span is None:
             print("if used_coords == [dtime], span must be int of float bigger than 0 ")

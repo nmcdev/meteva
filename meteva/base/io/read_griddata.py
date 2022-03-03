@@ -13,7 +13,6 @@ from . import DataBlock_pb2
 from .GDS_data_service import GDSDataService
 import bz2
 from .CMADaasAccess import CMADaasAccess
-import copy
 from .httpclient import get_http_result_cimiss
 import json
 
@@ -461,7 +460,7 @@ def read_griddata_from_nc(filename,grid = None,
         return None
 
 
-def print_grib_file_info(filename,level_type = None,level = None):
+def print_grib_file_info(filename,level_type = None,level = None,filter_by_keys = {}):
     if level_type is None:
         try:
             ds1 = xr.open_dataset(filename, engine="cfgrib", backend_kwargs={"indexpath": ""})
@@ -485,7 +484,7 @@ def print_grib_file_info(filename,level_type = None,level = None):
             else:
                 print(exstr)
     else:
-        filter_by_keys = {}
+        #filter_by_keys = {}
         filter_by_keys['typeOfLevel'] = level_type.strip()
         if level is not None:
             filter_by_keys['level'] = level
@@ -888,7 +887,9 @@ def read_gridwind_from_micaps11(filename,grid = None,level = None,time = None,dt
             elat = float(strs[13])
             nlon = float(strs[14])
             nlat = float(strs[15])
-            if (nlat - 1) * dlat == (elat - slat) and (nlon - 1) * dlon == (elon - slon):
+            delta_lon = abs((nlat - 1) * dlat - (elat - slat))
+            delta_lat = abs((nlon - 1) * dlon - (elon - slon))
+            if delta_lon <1e-5 and delta_lat<1e-5:
                 k = 16
                 grid0 =meteva.base.grid([slon,elon,dlon],[slat,elat,dlat])
             else:
@@ -1412,8 +1413,6 @@ def read_griddata_from_cmadaas(dataCode,element,level_type,level,time,dtime = No
     return grd
 
 
-
-
 def read_griddata_from_cimiss(dataCode,element,level,time,dtime,grid = None,data_name=None, show = False):
 
     time1 = meteva.base.all_type_time_to_datetime(time)
@@ -1493,6 +1492,9 @@ def decode_griddata_from_radar_mosaic_v3_byteArray(byteArray, grid=None, level=N
         grd = meteva.base.grid_data(grid0, data)
         meteva.base.reset(grd)
         meteva.base.set_griddata_coords(grd, gtime=[time], dtime_list=[dtime], level_list=[level])
+        if grid is not None:
+            grd = meteva.base.interp_gg_linear(grd, grid)
+        meteva.base.set_griddata_coords(grd, member_list=[data_name])
         return grd
     else:
         return None
@@ -1569,6 +1571,7 @@ def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim
 
     try:
         ctl = meteva.base.read_ctl(ctl_path)
+        #print(ctl)
         #print(ctl["pdef"])
         #print(ctl_path)
         if data_path is None:
@@ -1672,26 +1675,31 @@ def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim
                 meteva.base.set_griddata_coords(grd, member_list=[data_name])
             return grd
 
-
-
         else:
             grid0 = meteva.base.grid(ctl["glon"],ctl["glat"])
             blocksize_xy = grid0.nlon * grid0.nlat * 4
             ensembel_size = 1
-
+            nlevel = ctl["vars"][value_index]["nlevel"]
             blocksize_time_ensemble = blocksize_xy *  ctl["ntime"] * ctl["nensemble"]
             start_index = ctl["vars"][value_index]["start_bolck_index"] * blocksize_time_ensemble
             position = file.seek(start_index)
-            blocksize_one_value = blocksize_time_ensemble * ctl["nlevel"]
+            blocksize_one_value = blocksize_time_ensemble * nlevel
             content = file.read(blocksize_one_value)
             data = np.frombuffer(content, dtype=endian +"f")
-            data = data.reshape(ctl["nensemble"], ctl["ntime"], ctl["nlevel"], ctl["nlat"], ctl["nlon"])
+
+            data = data.reshape(ctl["nensemble"], ctl["ntime"], nlevel, ctl["nlat"], ctl["nlon"])
+            if nlevel != len(ctl["zdef"]):
+                level_list = np.arange(ctl["vars"][value_index]["nlevel"])
+            else:
+                level_list =ctl["zdef"]
+
             if dtime_dim is None:
-                grid1 = meteva.base.grid(ctl["glon"],ctl["glat"],gtime=ctl["gtime"],dtime_list=[0],level_list=ctl["zdef"],member_list=ctl["edef"])
+                grid1 = meteva.base.grid(ctl["glon"],ctl["glat"],gtime=ctl["gtime"],dtime_list=[0],level_list=level_list,member_list=ctl["edef"])
             else:
 
                 grid1 = meteva.base.grid(ctl["glon"], ctl["glat"], gtime=[ctl["gtime"][0]], dtime_list=ctl["dtime_list"] ,
-                                         level_list=ctl["zdef"], member_list=ctl["edef"])
+                                         level_list=level_list, member_list=ctl["edef"])
+            print(grid1)
             grd_one_var = meteva.base.grid_data(grid1,data)
             if grid is not None:
                 grd_one_var = meteva.base.interp_gg_linear(grd_one_var,grid=grid)
@@ -1707,3 +1715,130 @@ def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim
         print(ctl_path + "数据读取错误")
         return None
 
+
+def decode_griddata_from_swan_d131_byteArray(byteArray,grid = None,level = None,time = None,dtime = 0,data_name = "data0",scale_type=0):
+    head_dtype_raw = [
+        ('ZonName', 'S12'),
+        ('DataName', 'S38'),
+        ('Flag', 'S8'),
+        ('Version', 'S8'),
+        ('year', 'i2'),
+        ('month', 'i2'),
+        ('day', 'i2'),
+        ('hour', 'i2'),
+        ('minute', 'i2'),
+        ('interval', 'i2'),
+        ('XNumGrids', 'i2'),
+        ('YNumGrids', 'i2'),
+        ('ZNumGrids', 'i2'),
+        ('RadarCount', 'i4'),
+        ('StartLon', 'f4'),
+        ('StartLat', 'f4'),
+        ('CenterLon', 'f4'),
+        ('CenterLat', 'f4'),
+        ('XReso', 'f4'),
+        ('YReso', 'f4'),
+        ('ZhighGrids', 'f4', 40),
+        ('RadarStationName', 'S20', 16),
+        ('RadarLongitude', 'f4', 20),
+        ('RadarLatitude', 'f4', 20),
+        ('RadarAltitude', 'f4', 20),
+        ('MosaicFlag', 'S1', 20),
+        ('m_iDataType', 'i2'),
+        ('m_iLevelDimension', 'i2')]
+
+    head_suffix_01 = [('Reserved', 'S168')]  # v1.0
+    head_suffix_02 = [('offset', 'f4'),
+                      ('scale', 'f4'),
+                      ('Reserved', 'S160')]  # v2.0
+    head_dtype = head_dtype_raw + head_suffix_02
+    # print(head_dtype)
+    # read head information
+    head_info = np.frombuffer(byteArray[0:1024], dtype=head_dtype)
+    ind = 1024
+    # get coordinates
+    version = head_info['Version'][0].astype(np.float)
+    nlon = head_info['XNumGrids'][0].astype(np.int64)
+    nlat = head_info['YNumGrids'][0].astype(np.int64)
+    nlev = head_info['ZNumGrids'][0].astype(np.int64)
+    dlon = head_info['XReso'][0].astype(np.float)
+    dlat = head_info['YReso'][0].astype(np.float)
+    slon = head_info['StartLon'][0]
+    slat = head_info['StartLat'][0]
+    clat = head_info['CenterLat'][0]
+    if slat>clat and dlat>0:
+        slat = clat*2 - slat
+    elon = slon + (nlon - 1) * dlon
+    elat = slat + (nlat - 1) * dlat
+
+    if level is None:
+        levels = head_info['ZhighGrids'][0][0:nlev]
+    else:
+        levels = [level]
+    data_type = ['u1', 'u1', 'u2', 'i2']
+    ih = head_info['m_iDataType'][0]
+    if ih ==4:ih =3
+    data_type = data_type[ih]
+    data_len = (nlon * nlat * nlev)
+    data = np.frombuffer(
+        byteArray[ind:(ind + data_len * int(data_type[1]))],
+        dtype=data_type, count=data_len)
+    # convert data type
+    data.shape = (nlev, nlat, nlon)
+    data = data.astype(np.float32)
+    # scale
+    if scale_type == 0:  # qpe等
+        scale = [0.1, 0]
+    elif scale_type == 1:  # 雷达等
+        scale = [0.5, -33]
+    if version >= 2.:
+        scale[1] = head_info['offset'][0]
+        scale[0] = head_info['scale'][0]
+    # print('SWAN Version:', version)
+    # print('scale:', scale)
+    data = data * scale[0] + scale[1]
+    data = np.flip(data, 1) # reverse latitude axis
+    if time is None:
+        init_time = datetime.datetime(
+            head_info['year'][0], head_info['month'][0],
+            head_info['day'][0], head_info['hour'][0], head_info['minute'][0])
+    else:
+        init_time = time
+    grid_file = meteva.base.grid([slon,elon,dlon],[slat,elat,dlat],gtime=[init_time],dtime_list=[dtime],level_list=levels,member_list=[data_name])
+    grd = meteva.base.grid_data(grid_file,data)
+    meteva.base.reset(grd)
+    if grid is not None:
+        grd  = meteva.base.interp_gg_linear(grd,grid)
+    if data_name is not None:
+        grd.attrs['short_name'] = data_name
+        grd.attrs['units'] = 'mm'
+    grd.attrs['Conventions'] = "CF-1.6"
+    grd.attrs['Origin'] = 'MICAPS Cassandra Server'
+    return grd
+
+
+def read_griddata_from_swan_d131(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False,scale_type = 0):
+    try:
+        if not os.path.exists(filename):
+            print(filename + " does not exist")
+            return None
+        file = open(filename, 'rb')
+        if dtime is None:
+            dtime = 0
+            try:
+                dtime = int(int(filename.split('.')[1]) / 60.0)
+            except:
+                pass
+        byteArray = file.read()
+        grd = decode_griddata_from_swan_d131_byteArray(byteArray, grid, level=level, time=time, dtime=dtime,
+                                                   data_name=data_name,scale_type=scale_type)
+        if show:
+            print("success read from " + filename)
+        return grd
+    except:
+        if show:
+            exstr = traceback.format_exc()
+            print(exstr)
+
+        print(filename + "数据读取失败")
+        return None

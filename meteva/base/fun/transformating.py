@@ -2,7 +2,6 @@ import meteva
 import numpy as np
 import pandas as pd
 import copy
-from matplotlib.patches import Polygon
 #格点转换为站点
 def trans_grd_to_sta(grd):
     '''

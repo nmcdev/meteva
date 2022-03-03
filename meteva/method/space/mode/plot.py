@@ -5,7 +5,6 @@ Created on Wed Jan  6 16:03:10 2021
 """
 import copy
 import meteva
-import xarray as xr
 import numpy as np
 import matplotlib.pyplot as plt
 import math
@@ -408,7 +407,10 @@ def add_pts(ax,map_extend,line_dict,nmatched,line_width = None,sup_fontsize=10,d
             c = "r"
         else:
             c = "k"
-        point = line_dict[key]
+        point0 = line_dict[key]
+        point = np.zeros([point0.shape[0]+1,point0.shape[1]])
+        point[:-1,:] = point0[:,:]
+        point[-1,:] = point0[0,:]
         ax.plot(point[:, 0], point[:, 1], "k", linewidth=line_width)
         max_j = np.argmax(point[:,1])
         dlat = 0.1 * rlon / map_width

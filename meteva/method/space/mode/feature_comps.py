@@ -1,12 +1,6 @@
 # -*-coding:utf-8-*-
 
-import numpy as np
-import copy
-import sys
-import math
-#sys.path.append(r'F:\Work\MODE\Submit')
 from .feature_props import feature_props
-from . import utils
 from . import bearing as bear
 from .locperf import *
 from .deltametric import *

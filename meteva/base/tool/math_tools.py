@@ -44,6 +44,19 @@ def earth_surface_dis2(ax,ay,bx,by):
     dis2=d1*d1+d2*d2
     return dis2
 
+def angle_of_line(ax,ay,bx,by):
+    u = bx - ax
+    v = by - ay
+    s = math.sqrt(u * u + v * v)
+    if s ==0:
+        angle = 0
+    else:
+        if v >=0:
+            angle = 90 - math.asin(u / s) * 180 / math.pi
+        else:
+            angle = 270 + math.asin(u / s) * 180 / math.pi
+
+    return angle
 
 
 #经度纬度信息转换为直角坐标系
@@ -125,6 +138,7 @@ def greatest_common_divisor(value_list):
         x = hcf
     return x
 
+
 def u_v_to_s_d(u,v):
     s = np.sqrt(np.power(u, 2) + np.power(v, 2))
     d = np.zeros(u.shape)
@@ -134,9 +148,10 @@ def u_v_to_s_d(u,v):
     s_n0 = s[index]
     ag_n0 = 180 - np.arccos(vd_n0 / s_n0) * 180 / np.pi
     ag_n0[ud_n0 > 0] = 360 - ag_n0[ud_n0 > 0]
-
     d[index] = ag_n0
     return s,d
+
+
 
 def tran_direction_to_8angle(direction):
     '''
@@ -280,3 +295,4 @@ def isPoiWithinPoly(poi,poly):
                 sinsc += 1  # 有交点就加1
 
     return True if sinsc%2==1 else  False
+

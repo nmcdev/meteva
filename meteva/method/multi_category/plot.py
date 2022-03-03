@@ -1,10 +1,7 @@
 import numpy as np
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 import copy
-from  matplotlib import  cm
 import meteva
-import math
 
 
 

@@ -5,8 +5,6 @@ Created on Thu Jan 28 17:04:49 2021
 @author: 1
 """
 import numpy as np
-import pandas as pd
-import math
 
 def Earth(x1, x2 = 'NULL', miles = True, R = 'NULL'):
     #计算球面距离

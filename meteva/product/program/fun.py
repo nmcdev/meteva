@@ -242,17 +242,20 @@ def get_title_from_dict(method,s,g,group_list,model_name,title = None):
             if "id" in r.keys():
                 id0 = r["id"]
                 del r["id"]
-                if id0 in meteva.base.tool.station_id_name_dict.keys():
-                    id_str = "id:"+ str(id0) +"(" + meteva.base.tool.station_id_name_dict[id0]+")"
+                if id0 == meteva.base.IV or np.isnan(id0):
+                    s_str = ""
                 else:
-                    id_str = "id:" + str(id0)
-                if len(r.keys()) > 0:
-                    s_str = str(r) + ""
-                    s_str = s_str.replace("{", "").replace("}", "")
-                    s_str = id_str+ "," +s_str
-                    s_str = "\n{" + s_str + "}"
-                else:
-                    s_str = "\n{" + id_str + "}"
+                    if id0 in meteva.base.tool.station_id_name_dict.keys():
+                        id_str = "id:"+ str(id0) +"(" + meteva.base.tool.station_id_name_dict[id0]+")"
+                    else:
+                        id_str = "id:" + str(id0)
+                    if len(r.keys()) > 0:
+                        s_str = str(r) + ""
+                        s_str = s_str.replace("{", "").replace("}", "")
+                        s_str = id_str+ "," +s_str
+                        s_str = "\n{" + s_str + "}"
+                    else:
+                        s_str = "\n{" + id_str + "}"
             else:
                 if len(r.keys())>0:
                     s_str = "\n"+str(r)+""
@@ -533,7 +536,8 @@ def get_x_ticks(ticks,width,row = 2):
         ticks1.sort()
         times = np.array(ticks1)
         pd_times = pd.Series(0, index=times)
-        hours_pd = set(pd_times.index.hour)
+        hours_pd = list(set(pd_times.index.hour))
+        hours_pd.sort()
         dtimes = (times[1:] - times[0:-1])
         dhs =  dtimes / np.timedelta64(1, 'h')
         dhs_set = set(dhs.tolist())

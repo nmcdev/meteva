@@ -4,7 +4,7 @@ from os import path
 from setuptools import find_packages, setup
 from codecs import open
 name = "meteva"
-author ="liucouhua,daikan,wangbaoli"
+author ="liucouhua,daikan,wangbaoli,tangbuxing"
 version =__import__(name).__version__
 
 here = path.abspath(path.dirname(__file__))
@@ -36,23 +36,30 @@ setup(
     include_package_data=True,
     exclude_package_data={'': ['.gitignore']},
 
-    install_requires=['numpy>=1.12.1',
+    install_requires=[
                       'scipy>=0.19.0',
-                      'pandas>=1.0.1',
                       'xarray>=0.11.0',
-                      'scikit-learn>=0.21.2',
                       'matplotlib>=3.3.1',
                       "httplib2>=0.12.0",
                       "protobuf>=3.6.1",
-                      "netCDF4>=1.4.2",
-                      "seaborn>=0.9.0",
-                      "ipywidgets>=7.5.1",
                       "pyshp>=2.1.0",
                       "tables>=3.4.4",
                       "urllib3>=1.21.1",
-                      "opencv-python>=4.5.1.48",
-                      "scikit-image== 0.16.2",
-                      "statsmodels>=0.11.0",
-
                       ]
 )
+
+# install_requires = ['numpy>=1.12.1',
+#                     'scipy>=0.19.0',
+#                     'pandas>=1.0.1',
+#                     'xarray>=0.11.0',
+#                     'scikit-learn>=0.21.2',
+#                     'matplotlib>=3.3.1',
+#                     "httplib2>=0.12.0",
+#                     "protobuf>=3.6.1",
+#                     "netCDF4>=1.4.2",
+#                     "seaborn>=0.9.0",
+#                     "pyshp>=2.1.0",
+#                     "tables>=3.4.4",
+#                     "urllib3>=1.21.1",
+#                     "statsmodels>=0.11.0",
+#                     ]

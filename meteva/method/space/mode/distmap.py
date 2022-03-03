@@ -1,9 +1,6 @@
 # -*-coding:utf-8-*-
-
 import math
 import numpy as np
-from scipy import spatial
-
 
 # def distmap(a):
 #     xcol = a["xcol"]

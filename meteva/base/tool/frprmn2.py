@@ -1,6 +1,8 @@
 import math
 import numpy as np
 import time
+
+
 def frprmn2(x,targe,grads,tol = 0.001,caculate_time = 60):
     x0 = x
     n = len(x0)

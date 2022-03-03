@@ -1,4 +1,3 @@
-from multiprocessing.dummy import Pool as ThreadPool
 from multiprocessing import cpu_count,Process, freeze_support
 import time
 

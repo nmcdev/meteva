@@ -3,7 +3,6 @@ import numpy as np
 import meteva
 from scipy.ndimage import convolve
 from scipy.ndimage.filters import uniform_filter
-import math
 import copy
 #将两个站点数据信息进行合并，并去重。
 
@@ -46,8 +45,6 @@ def smooth(grd,smooth_times = 1,used_coords = "xy"):
     times = grd["time"].values
     dtimes = grd["dtime"].values
     members = grd["member"].values
-    lons = grd['lon'].values
-    lats = grd['lat'].values
     grid0 = meteva.base.basicdata.get_grid_of_data(grd)
     grd_new = meteva.base.grid_data(grid0)
     for i in range(len(levels)):
