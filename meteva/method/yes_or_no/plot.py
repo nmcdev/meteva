@@ -1,13 +1,11 @@
-import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib import cm
 plt.rcParams['font.sans-serif']=['SimHei'] #用来正常显示中文标签
 plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
 from meteva.method.yes_or_no.score import *
 import meteva
 
 
-def performance(ob, fo,grade_list=[1e-30],compair = ">=", member_list=None,x_y = "sr_pod", save_path=None,show = False,dpi = 300, title="综合表现图",
+def performance(ob, fo,grade_list=[1e-30],compare =">=",compair = None, member_list=None,x_y = "sr_pod", save_path=None,show = False,dpi = 300, title="综合表现图",
                 sup_fontsize =10,width = None,height = None):
     '''
 
@@ -16,7 +14,15 @@ def performance(ob, fo,grade_list=[1e-30],compair = ">=", member_list=None,x_y =
     :param grade_list:
     :return:
     '''
-    hfmc_array = hfmc(ob, fo, grade_list,compair=compair)
+
+    if compair is not None:
+        print("warning: the argument compair will be abolished, please use compare instead\n警告：参数compair 将被废除，以后请使用参数compare代替")
+        compare = compair
+    if compare not in [">=",">","<","<="]:
+        print("compare 参数只能是 >=   >  <  <=  中的一种")
+        return
+
+    hfmc_array = hfmc(ob, fo, grade_list,compare=compare)
     pod = pod_hfmc(hfmc_array)
     sr = sr_hfmc(hfmc_array)
     performance_sr_pod(sr,pod,grade_list, member_list,x_y = x_y, save_path=save_path,show = show,dpi = dpi, title=title,
@@ -25,14 +31,14 @@ def performance(ob, fo,grade_list=[1e-30],compair = ">=", member_list=None,x_y =
 
 
 def performance_mr_far(mr,far,grade_list, member_list,x_y = "sr_pod", save_path=None,show = False,dpi = 300, title="综合表现图",
-                sup_fontsize =10,width = None,height = None):
+                sup_fontsize =10,width = None,height = None,masker = None,masker_size = None):
     sr = 1 - far
     pod = 1 - mr
     performance_sr_pod(sr,pod,grade_list, member_list,x_y = x_y, save_path=save_path,show = show,dpi = dpi, title=title,
-                sup_fontsize =sup_fontsize,width = width,height = height)
+                sup_fontsize =sup_fontsize,width = width,height = height,masker = masker,masker_size = masker_size)
 
 def performance_sr_pod(sr,pod,grade_list, member_list,x_y = "sr_pod", save_path=None,show = False,dpi = 300, title="综合表现图",
-                sup_fontsize =10,width = None,height = None):
+                sup_fontsize =10,width = None,height = None,masker = None,masker_size = None):
     '''
 
     :param ob:
@@ -108,30 +114,55 @@ def performance_sr_pod(sr,pod,grade_list, member_list,x_y = "sr_pod", save_path=
     else:
         label.extend(member_list)
 
+    ngrade = len(grade_list)
     colors = meteva.base.color_tools.get_color_list(legend_num)
 
-    marker = ['o',  'v',  's','p',"P", "*", 'h',"X","d","1","+","x",".","^","<",">",
-              "2","3","4","8","H","D","|","_"]
+    masker_list = []
+    if masker is None:
+        masker_list = ['o',  'v',  's','p',"P", "*", 'h',"X","d","1","+","x",".","^","<",">",
+                  "2","3","4","8","H","D","|","_"]
+    else:
+        if isinstance(masker,list):
+            masker_list = masker
+        else:
+            for i in range(ngrade):
+                masker_list.append(masker)
 
+
+    if masker_size is None:
+        masker_size_list = np.ones(ngrade) * 6
+    else:
+        if isinstance(masker_size,list):
+            masker_size_list = masker_size
+        else:
+            masker_size_list = np.ones(ngrade) * masker_size
+
+    if isinstance(grade_list[0],str):
+        grade_name_list = grade_list
+    else:
+        grade_name_list = ['grade:'+str(i)for i in grade_list]
+
+    if masker_size_list is None:
+        masker_size_list = np.ones(len(grade_list)).tolist()
 
     a_list= []
     grade_num = len(grade_list)
     if legend_num>1 and grade_num>1:
         for line in range(legend_num):
             for i in range(len(grade_list)):
-                ax1.plot(new_sr[line, i], new_pod[line, i], marker[i],label = i*line, color=colors[line], markersize=6)
+                ax1.plot(new_sr[line, i], new_pod[line, i], masker_list[i],label = i*line, color=colors[line], markersize=masker_size_list[i])
                 a_list.append(i*line)
         lines,label1 = ax1.get_legend_handles_labels()
         legend2 = ax1.legend(lines[0:len(lines):len(grade_list)],label,loc="upper right",
                              bbox_to_anchor=(1.5, 1),ncol=1, fontsize=sup_fontsize * 0.9)
-        legend1=ax1.legend(lines[:len(grade_list)],['grade:'+str(i)for i in grade_list],loc="lower right",
+        legend1=ax1.legend(lines[:len(grade_list)],grade_name_list,loc="lower right",
                            bbox_to_anchor=(1.5, 0), ncol=1, fontsize=sup_fontsize * 0.9)
         ax1.add_artist(legend1)
         ax1.add_artist(legend2)
     elif legend_num>1:
         for line in range(legend_num):
             i = 0
-            ax1.plot(new_sr[line, i], new_pod[line, i], marker[line], label=i * line, color=colors[line], markersize=6)
+            ax1.plot(new_sr[line, i], new_pod[line, i], masker_list[0], label=i * line, color=colors[line], markersize=masker_size_list[0])
             a_list.append(i * line)
         lines, label1 = ax1.get_legend_handles_labels()
 
@@ -143,11 +174,11 @@ def performance_sr_pod(sr,pod,grade_list, member_list,x_y = "sr_pod", save_path=
         colors = meteva.base.color_tools.get_color_list(grade_num)
         for i in range(grade_num):
             line = 0
-            ax1.plot(new_sr[line, i], new_pod[line, i], marker[i], label=i * line, color=colors[i], markersize=6)
+            ax1.plot(new_sr[line, i], new_pod[line, i], masker_list[i], label=i * line, color=colors[i], markersize=masker_size_list[i])
             a_list.append(i * line)
         lines, label1 = ax1.get_legend_handles_labels()
 
-        legend1=ax1.legend(lines[:len(grade_list)],['grade:'+str(i)for i in grade_list],loc="upper right",
+        legend1=ax1.legend(lines[:len(grade_list)],grade_name_list,loc="upper right",
                            bbox_to_anchor=(1.5, 1), ncol=1, fontsize=sup_fontsize * 0.9)
         ax1.add_artist(legend1)
 
