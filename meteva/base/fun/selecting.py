@@ -1,7 +1,6 @@
 import meteva
 import pandas as pd
 import numpy as np
-import math
 import datetime
 
 def between_value_range(sta,start_value,end_value,start_open = False,end_open = False):
@@ -838,8 +837,6 @@ def sele_by_dict(data,s):
     if "drop_last" in s.keys():
         drop_last = s["drop_last"]
 
-
-
     sta1 = sele_by_para(data,member,level,time,time_range,year,month,day,dayofyear,hour,ob_time,ob_time_range,ob_year,ob_month,ob_day,ob_dayofyear,
                  ob_hour,dtime,dtime_range,dday,dhour,lon,lat,id,grid,gxy,gxyz,stadata,value,drop_IV,last,last_range,province_name,drop_last,ob_stadata)
     return sta1
@@ -993,3 +990,15 @@ def sele_by_para(data,member = None,level = None,time = None,time_range = None,y
 
 
 
+def drop_by_para(data,member = None,level = None,time = None,time_range = None,year = None,month = None,day = None,dayofyear = None,hour = None,
+           ob_time=None, ob_time_range=None, ob_year=None, ob_month=None, ob_day=None, ob_dayofyear=None, ob_hour=None,
+           dtime = None,dtime_range = None,dday = None, dhour = None,lon = None,lat = None,id = None,grid = None,gxy = None,gxyz = None,stadata = None,
+                 value = None,drop_IV = False,last = None,last_range = None,province_name = None,drop_last = True,ob_stadata = None,**kwargs):
+
+    data.reset_index(drop=True, inplace=True)
+    data_drop =  sele_by_para(data,member,level,time,time_range,year,month,day,dayofyear,hour,ob_time,ob_time_range,ob_year,ob_month,ob_day,ob_dayofyear,
+                 ob_hour,dtime,dtime_range,dday,dhour,lon,lat,id,grid,gxy,gxyz,stadata,value,drop_IV,last,last_range,province_name,drop_last,ob_stadata
+                           )
+    data_left = data.drop(data_drop.index)
+
+    return data_left
