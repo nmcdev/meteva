@@ -1,16 +1,18 @@
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 import meteva
 import numpy as np
 import  math
-from sklearn.linear_model import LinearRegression
+#from sklearn.linear_model import LinearRegression
 from  matplotlib import  cm
 from matplotlib.ticker import NullFormatter, FixedLocator
 import copy
+import pandas as pd
+import datetime
+import scipy.stats as st
 
 
 def scatter_regress(ob, fo,member_list = None, rtype="linear",vmax = None,vmin = None, ncol = None,save_path=None,show = False,dpi = 300, title="散点回归图",
-                    sup_fontsize = 10,width = None,height = None):
+                    sup_fontsize = 10,width = None,height = None,ylabel ="观测"):
     '''
     绘制观测-预报散点图和线性回归曲线
     :param Ob: 实况数据  任意维numpy数组
@@ -89,19 +91,35 @@ def scatter_regress(ob, fo,member_list = None, rtype="linear",vmax = None,vmin =
     else:
         width_fig = width
 
+    grid_count = meteva.base.grid([num_min,num_max,(num_max-num_min)/100],[num_min,num_max,(num_max-num_min)/100])
+
 
     fig = plt.figure(figsize=(width_fig,height_fig),dpi = dpi)
     for line in range(new_Fo_shape[0]):
         ob = ob.flatten()
         fo = new_Fo[line,:].flatten()
-        markersize = 5 * width_axis * heidht_axis / np.sqrt(ob.size)
-        if markersize < 1:
-            markersize = 1
+        markersize = width_axis * heidht_axis / np.sqrt(ob.size)
+        if markersize < 0.3:
+            markersize = 0.3
         elif markersize > 20:
             markersize = 20
 
         plt.subplot(nrows, ncols, line + 1)
-        plt.plot(fo, ob, '.', color='b', markersize=markersize)
+        df =pd.DataFrame({"lon":fo,"lat":ob})
+        sta_xy = meteva.base.sta_data(df)
+        sta_xy["time"] = datetime.datetime(2020,1,1,0)
+        sta_xy["data0"] = 1
+        grd_count = meteva.base.near.add_stavalue_to_nearest_grid(sta_xy,grid = grid_count)
+        sta_count = meteva.base.interp_gs_linear(grd_count,sta_xy)
+        colors = sta_count["data0"]
+        sort_index = colors.argsort()
+        fo_s = fo[sort_index]
+        ob_s = ob[sort_index]
+        colors = colors[sort_index]
+        #plt.scatter(fo_s, ob_s, c=colors,s = markersize,cmap="tab20c")
+        plt.scatter(fo_s, ob_s, c=colors, s=markersize, cmap="turbo")
+        #plt.plot(fo, ob, '.', color='b', markersize=markersize)
+
         plt.subplots_adjust(left=0, bottom=0.0, right=1.0, top = 1 - height_suptitle/height_fig,
                             hspace=height_hspace/heidht_axis,wspace=width_wspace/width_axis)
         if rtype == "rate":
@@ -112,15 +130,23 @@ def scatter_regress(ob, fo,member_list = None, rtype="linear",vmax = None,vmin =
             rg_text2 = "Y = " + '%.2f' % rate + "* X"
             plt.text(num_min + 0.05 * dmm, num_min + 0.92 * dmm, rg_text2, fontsize=0.8 * sup_fontsize, color="r")
         elif rtype == "linear":
-            X = np.zeros((len(fo), 1))
-            X[:, 0] = fo
-            clf = LinearRegression().fit(X, ob)
+            #X = np.zeros((len(fo), 1))
+            #X[:, 0] = fo
+            #clf = LinearRegression().fit(X, ob)
+            # 斜率，截距，r 值，p 值，标准误差
+            slope, intercept, r_value, p_value, std_err = st.linregress(fo, ob)
             ob_line = np.arange(num_min, num_max, dmm / 30)
-            X = np.zeros((len(ob_line), 1))
-            X[:, 0] = ob_line
-            fo_rg = clf.predict(X)
+            # X = np.zeros((len(ob_line), 1))
+            # X[:, 0] = ob_line
+            #fo_rg = clf.predict(X)
+            fo_rg = slope * ob_line + intercept
             plt.plot(ob_line, fo_rg, color="k")
-            rg_text2 = "Y = " + '%.2f' % (clf.coef_[0]) + "* X + " + '%.2f' % (clf.intercept_)
+            #rg_text2 = "Y = " + '%.2f' % (clf.coef_[0]) + "* X + " + '%.2f' % (clf.intercept_)
+            if intercept >=0:
+                rg_text2 = "Y = " + '%.2f' % (slope) + "* X + " + '%.2f' % (intercept)
+            else:
+                rg_text2 = "Y = " + '%.2f' % (slope) + "* X - " + '%.2f' % (-intercept)
+
             plt.text(num_min + 0.05 * dmm, num_min + 0.92 * dmm, rg_text2, fontsize=0.8 * sup_fontsize, color="r")
         corr1 = meteva.method.corr(ob,fo)
         re_text1 = "corr = "+ '%.2f' % (corr1)
@@ -142,7 +168,7 @@ def scatter_regress(ob, fo,member_list = None, rtype="linear",vmax = None,vmin =
             plt.xlabel(member_list[line], fontsize=0.9 * sup_fontsize)
         #plt.xlabel("预报", fontsize=0.9 * fontsize_sup)
 
-        plt.ylabel("观测", fontsize=0.9 * sup_fontsize)
+        plt.ylabel(ylabel, fontsize=0.9 * sup_fontsize)
         plt.rcParams['xtick.direction'] = 'in'  # 将x轴的刻度线方向设置抄向内
         plt.rcParams['ytick.direction'] = 'in'  # 将y轴的刻度方知向设置向内
         #plt.grid(linestyle='--', linewidth=0.5)
@@ -406,17 +432,17 @@ def box_plot_continue(ob, fo,  member_list=None,vmax = None,vmin = None, save_pa
 
 
 
-
+'''
 def box_plot_continue(ob, fo,  member_list=None,vmax = None,vmin = None, save_path=None, show = False,dpi = 300,title="频率对比箱须图",
                       sup_fontsize = 10,width = None,height = None,):
-    '''
-    box_plot 画一两组数据的箱型图
-    ---------------
-    :param Ob: 实况数据  任意维numpy数组
-    :param Fo: 预测数据 任意维numpy数组,Fo.shape 和Ob.shape一致
-    :param save_path: 图片保存路径，缺省时不输出图片，而是以默认绘图窗口形式展示
-    :return:图片，包含箱须图，等级包括,横坐标为"观测"、"预报"，纵坐标为数据值
-    '''
+    
+    #box_plot 画一两组数据的箱型图
+    #---------------
+    #:param Ob: 实况数据  任意维numpy数组
+    #:param Fo: 预测数据 任意维numpy数组,Fo.shape 和Ob.shape一致
+    #:param save_path: 图片保存路径，缺省时不输出图片，而是以默认绘图窗口形式展示
+    #:return:图片，包含箱须图，等级包括,横坐标为"观测"、"预报"，纵坐标为数据值
+    
     Fo_shape = fo.shape
     Ob_shape = ob.shape
     Ob_shpe_list = list(Ob_shape)
@@ -510,7 +536,7 @@ def box_plot_continue(ob, fo,  member_list=None,vmax = None,vmin = None, save_pa
         plt.show()
     plt.close()
 
-
+'''
 
 
 def taylor_diagram(ob, fo,member_list=None, save_path=None,show = False,dpi = 300, title="",
@@ -664,6 +690,160 @@ def taylor_diagram(ob, fo,member_list=None, save_path=None,show = False,dpi = 30
     if show is True:
         plt.show()
     plt.close()
+
+
+def taylor_diagram_(ob, fo,member_list=None, save_path=None,show = False,dpi = 300, title="",
+                sup_fontsize =10,width = None,height = None):
+    '''
+
+    :param ob:
+    :param fo:
+    :param grade_list:
+    :return:
+    '''
+
+    leftw = 0.3
+    rightw = 1.5
+    uphight = 1.2
+    lowhight = 1.2
+    axis_size_x = 3
+    axis_size_y = 3
+    if width is None:
+        width = axis_size_x + leftw + rightw
+
+    if height is None:
+        height = axis_size_y + uphight + lowhight
+
+    stds = meteva.method.ob_fo_std(ob,fo)
+    corrs = meteva.method.corr(ob,fo)
+    corrs1 = [1]
+    if isinstance(corrs,float):
+        corrs1.append(corrs)
+    else:
+        for i in range(len(corrs)):
+            corrs1.append(corrs[i])
+
+
+    fig = plt.figure(figsize=(width, height),dpi=dpi)
+    ax1 = fig.add_axes([leftw / width, lowhight / width, axis_size_x / width, axis_size_y / height])
+
+
+    max_stds = max(stds)
+
+    dif = (max_stds) / 10.0
+    if dif == 0:
+        inte = 1
+    else:
+        inte = math.pow(10, math.floor(math.log10(dif)))
+    # 用基本间隔，将最大最小值除于间隔后小数点部分去除，最后把间隔也整数化
+    r = dif / inte
+
+    if r < 2.3:
+        inte = inte * 2
+    elif r < 7:
+        inte = inte * 5
+    else:
+        inte = inte * 10
+    vmax = inte * ((int)(max_stds / inte) + 1)
+
+    std_list = np.arange(inte,vmax+inte/2,inte)
+
+    corr_list = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9,0.98]
+    #画观测弧线
+    # 画弧线
+    angle = np.arange(0,math.pi/2,math.pi/1000)
+    std = stds[0]
+    x2 = np.cos(angle) * std
+    y2 = np.sin(angle) * std
+    plt.plot(x2, y2,color = "steelblue",linewidth = 1)
+    for i in range(len(std_list)):
+        std = std_list[i]
+        x2 = np.cos(angle) * std
+        y2 = np.sin(angle) * std
+        if i <len(std_list)-1:
+            plt.plot(x2, y2, ":", color="k", linewidth=0.5)
+        else:
+            plt.plot(x2, y2,color = "k",linewidth = 0.5)
+
+
+    #画围绕观测的弧线
+    angle = np.arange(0,math.pi,math.pi/1000)
+    for i in range(len(std_list)):
+        std = std_list[i]
+        x2 = np.cos(angle) * std + stds[0]
+        y2 = np.sin(angle) * std
+        dis = np.sqrt(x2 * x2 + y2 * y2)
+        x2 = x2[dis < vmax]
+        y2 = y2[dis < vmax]
+
+        plt.plot(x2, y2, ":", color="g", linewidth=0.5)
+
+    #相关系数射线
+    r0 = np.arange(0,vmax,inte/100)
+    for i in range(len(corr_list)):
+        corr = corr_list[i]
+        angle = np.arccos(corr)
+        x1 = r0 * np.cos(angle)
+        y1 = r0 * np.sin(angle)
+        ax1.plot(x1, y1, '-.', color='b', linewidth=0.4)
+        rt = vmax* 1.01
+        xt = rt * np.cos(angle)
+        yt = rt * np.sin(angle)
+        ax1.text(xt, yt, str(corr),fontsize = sup_fontsize * 0.8)
+
+
+    angle = 60 * math.pi/180
+    rt = vmax * 1.01
+    xt = rt * np.cos(angle)
+    yt = rt * np.sin(angle)
+
+    ax1.text(xt, yt,"相关系数" , fontsize=sup_fontsize * 0.8,rotation=-30,)
+
+    ax1.set_xticks(std_list)
+    ax1.set_yticks(std_list)
+    ax1.set_xlim(0,vmax)
+    ax1.set_ylim(0, vmax)
+    ax1.spines['right'].set_visible(False)
+    ax1.spines['top'].set_visible(False)
+    ax1.set_xlabel("标准差")
+    ax1.set_ylabel("标准差")
+
+
+
+    # 画预报观测点
+    labels = ["观测"]
+    labels.extend(member_list)
+    for i in range(len(stds)):
+        corr = corrs1[i]
+        angle = np.arccos(corr)
+        xp = stds[i] * np.cos(angle)
+        yp = stds[i] * np.sin(angle)
+        ax1.plot(xp, yp,"o", label=labels[i], markersize=6)
+    lines, label1 = ax1.get_legend_handles_labels()
+
+    if len(stds)> 7:
+        legend2 = ax1.legend(lines, label1, loc="upper right",
+                         bbox_to_anchor=(1.4, 1.05), ncol=1, fontsize=sup_fontsize * 0.9)
+    elif len(stds)>5:
+        legend2 = ax1.legend(lines, label1, loc="upper right",
+                         bbox_to_anchor=(1.2, 1.05), ncol=1, fontsize=sup_fontsize * 0.9)
+    else:
+        legend2 = ax1.legend(lines, label1, loc="upper right",
+                         bbox_to_anchor=(1.1, 1.05), ncol=1, fontsize=sup_fontsize * 0.9)
+    ax1.add_artist(legend2)
+
+
+    title = title + "\n"
+    ax1.set_title(title,fontsize = sup_fontsize)
+    if save_path is None:
+        show = True
+    else:
+        plt.savefig(save_path,bbox_inches='tight')
+        print("检验结果已以图片形式保存至" + save_path)
+    if show is True:
+        plt.show()
+    plt.close()
+
 
 
 
