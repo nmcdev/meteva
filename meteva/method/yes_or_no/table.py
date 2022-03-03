@@ -1,11 +1,16 @@
-import sklearn
-from sklearn.metrics import confusion_matrix
-import matplotlib.pyplot as plt
-import copy
+#from sklearn.metrics import confusion_matrix
 import numpy as np
 import pandas as pd
 
-def contingency_table_yesorno(ob, fo, grade_list=[1e-30],compair = ">=",member_list=None,  save_path=None):
+def confusion_matrix(x,y):
+    d = np.sum(x * y)
+    b = np.sum((1-x) * y)
+    c = np.sum(x*(1-y))
+    a = np.sum((1-x)*(1-y))
+    result = np.array([[a,b],[c,d]])
+    return result
+
+def contingency_table_yesorno(ob, fo, grade_list=[1e-30],compare =">=",compair = None,member_list=None,  save_path=None):
     '''
     contingency_table 预测列联表
     :param ob: 实况数据 任意维numpy数组
@@ -15,8 +20,11 @@ def contingency_table_yesorno(ob, fo, grade_list=[1e-30],compair = ">=",member_l
     其中每一个sheet为一个等级的列联表
     :return: 返回一个列表，列表中的元素为一个阈值条件下，观测-预报列联表
     '''
-    if compair not in [">=",">","<","<="]:
-        print("compair 参数只能是 >=   >  <  <=  中的一种")
+    if compair is not None:
+        print("warning: the argument compair will be abolished, please use compare instead\n警告：参数compair 将被废除，以后请使用参数compare代替")
+        compare = compair
+    if compare not in [">=",">","<","<="]:
+        print("compare 参数只能是 >=   >  <  <=  中的一种")
         return
     Fo_shape = fo.shape
     Ob_shape = ob.shape
@@ -54,16 +62,16 @@ def contingency_table_yesorno(ob, fo, grade_list=[1e-30],compair = ">=",member_l
             new_fo = np.zeros(shape)
             index_list = ["No"]
 
-            if compair == ">=":
+            if compare == ">=":
                 ob_index_list = np.where(ob >= grade)
                 fo_index_list = np.where(fo_piece >= grade)
-            elif compair == "<=":
+            elif compare == "<=":
                 ob_index_list = np.where(ob <= grade)
                 fo_index_list = np.where(fo_piece <= grade)
-            elif compair == ">":
+            elif compare == ">":
                 ob_index_list = np.where(ob > grade)
                 fo_index_list = np.where(fo_piece > grade)
-            elif compair == "<":
+            else:
                 ob_index_list = np.where(ob < grade)
                 fo_index_list = np.where(fo_piece < grade)
 
