@@ -4,7 +4,7 @@ plt.rcParams['font.sans-serif']=['SimHei'] #用来正常显示中文标签
 plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
 import numpy  as np
 from meteva.base.tool.plot_tools import add_china_map_2basemap
-from sklearn.linear_model import LinearRegression
+#from sklearn.linear_model import LinearRegression
 import meteva
 from meteva.base import IV
 import math
@@ -12,7 +12,7 @@ from matplotlib.colors import BoundaryNorm
 from matplotlib.patches import Polygon
 import os
 import datetime
-import copy
+import scipy.stats as st
 
 
 def rain_24h_sg(sta_ob,grd_fo,save_path=None,show  = False,dpi = 200,add_county_line = False):
@@ -211,8 +211,28 @@ def rain_sg(sta_ob,grd_fo,grade_list,save_path=None,show  = False,dpi = 200,add_
         plt.close()
         return
     else:
-        if x_y == "dtime_member":
+        ob_time_list = []
+        ob_times = list(set(sta_ob_plot["time"].values))
+        ob_times.sort()
+        for ii in range(len(ob_times)):
+            ob_time_list.append(meteva.base.all_type_time_to_datetime(ob_times[ii]))
 
+        dtimes_valid = []
+        fo_time_valid = []
+        ob_time_valid = []
+        for dtime1 in dtimes_all:
+            for time1 in times_all:
+                fo_time = meteva.base.all_type_time_to_datetime(time1)
+                ob_time1 = fo_time + datetime.timedelta(hours=int(dtime1))
+                if ob_time1 in ob_time_list:
+                    dtimes_valid.append(dtime1)
+                    fo_time_valid.append(fo_time)
+                    ob_time_valid.append(ob_time1)
+                    break
+        if len(set(ob_time_valid))>1 and len(set(fo_time_valid))>1:
+            print("参数x_y=dtime_member时，暂时不能支持多个起报时间和多个观测时间对应情况下的检验")
+
+        if x_y == "dtime_member":
             x = grd_fo['lon'].values
             slon = x[0]
             elon = x[-1]
@@ -229,7 +249,7 @@ def rain_sg(sta_ob,grd_fo,grade_list,save_path=None,show  = False,dpi = 200,add_
             width_wspace = height_hspace
             width_colorbar = 0.0
             width_left_yticks = sup_fontsize * 0.03
-            ncol = len(dtimes_all)
+            ncol = len(dtimes_valid)
             nrow = len(members_all)
             nplot = ncol * nrow
 
@@ -317,23 +337,36 @@ def rain_sg(sta_ob,grd_fo,grade_list,save_path=None,show  = False,dpi = 200,add_
 
             fig = plt.figure(figsize=(width, height), dpi=dpi)
 
-            ob_time = meteva.base.all_type_time_to_datetime(sta_ob_plot["time"].values[0])
 
             cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=colors_sta, clevs=clevs, vmin=vmin, vmax=vmax)
             norm = BoundaryNorm(clevs, cmap1.N - 1)
 
             ax_up_right = None
             ylabel_seted = 0
+            #print(ncol)
+            #print(nrow)
             for pi in range(ncol):
-                dtime1 = dtimes_all[ncol - pi - 1]
-                fo_time1 = None
-                for time1 in times_all:
-                    fo_time = meteva.base.all_type_time_to_datetime(time1)
-                    ob_time1 = fo_time + datetime.timedelta(hours=int(dtime1))
-                    if ob_time1== ob_time:
-                        fo_time1 = time1
-                        break
-                if fo_time1 is None: continue
+                #print(str(pi) + " ---")
+                if len(ob_time_valid) == 1:
+                    dtime1 = dtimes_valid[ncol - pi - 1]
+                    ob_time = ob_time_valid[0]
+                    fo_time1 = None
+                    for time1 in fo_time_valid:
+                        fo_time = meteva.base.all_type_time_to_datetime(time1)
+                        ob_time1 = fo_time + datetime.timedelta(hours=int(dtime1))
+                        if ob_time1== ob_time:
+                            fo_time1 = time1
+                            break
+                    if fo_time1 is None: continue
+                else:
+                    dtime1 = int(dtimes_valid[pi])
+                    fo_time1 = fo_time_valid[0]
+                    ob_time1 = fo_time1 + datetime.timedelta(hours = dtime1)
+                    sta_ob_plot1 = meteva.base.sele_by_para(sta_ob_plot,time = ob_time1)
+                    x_ob = sta_ob_plot1.loc[:, "lon"].values
+                    y_ob = sta_ob_plot1.loc[:, "lat"].values
+                    dat_ob = sta_ob_plot1.values[:, -1]
+
                 grd1 = meteva.base.in_time_list(grd_fo,[fo_time1])
                 grd1 = meteva.base.in_dtime_list(grd1,[dtime1])
 
@@ -348,6 +381,7 @@ def rain_sg(sta_ob,grd_fo,grade_list,save_path=None,show  = False,dpi = 200,add_
                              width_map / width,
                              height_map / height]
                     ax = plt.axes(rect1)
+
                     if pi ==ncol-1 and pj == 0:
                         ax_up_right = ax
 
@@ -604,7 +638,7 @@ def rain_comprehensive_sg(sta_ob,grd_fo,grade_list, save_path=None,show = False,
     index = np.where(~np.isnan(ob_fo))
     ob = ob[index]
     fo = fo[index]
-    ax2.plot(ob, fo, '.', color='k')
+    ax2.plot(fo, ob, '.', color='k')
     maxy = max(np.max(ob), np.max(fo)) + 5
 
     # 绘制比例线
@@ -615,24 +649,34 @@ def rain_comprehensive_sg(sta_ob,grd_fo,grade_list, save_path=None,show = False,
 
 
     # 绘制回归线
-    X = np.zeros((len(ob), 1))
-    X[:, 0] = ob[:]
-    clf = LinearRegression().fit(X, fo)
-    X = np.zeros((len(ob_line), 1))
-    X[:, 0] = ob_line[:]
-    fo_rg = clf.predict(X)
+    # X = np.zeros((len(ob), 1))
+    # X[:, 0] = ob[:]
+    # clf = LinearRegression().fit(X, fo)
+    # X = np.zeros((len(ob_line), 1))
+    # X[:, 0] = ob_line[:]
+    # fo_rg = clf.predict(X)
+    # ax2.plot(ob_line, fo_rg, color='r')
+    # cor = np.corrcoef(ob,fo)
+    # rg_text1 = "R = " + '%.2f' % (cor[0, 1])
+    # rg_text2 = "y = " + '%.2f' % (clf.coef_[0]) + "* x + " + '%.2f' % (clf.intercept_)
+    # print(rg_text2)
+    slope, intercept, r_value, p_value, std_err = st.linregress(fo, ob)
+    fo_rg = slope * ob_line + intercept
     ax2.plot(ob_line, fo_rg, color='r')
-    cor = np.corrcoef(ob,fo)
-    rg_text1 = "R = " + '%.2f' % (cor[0, 1])
-    rg_text2 = "y = " + '%.2f' % (clf.coef_[0]) + "* x + " + '%.2f' % (clf.intercept_)
+    rg_text1 = "R = " + '%.2f' % (r_value)
+    if intercept >= 0:
+        rg_text2 = "Y = " + '%.2f' % (slope) + "* X + " + '%.2f' % (intercept)
+    else:
+        rg_text2 = "Y = " + '%.2f' % (slope) + "* X - " + '%.2f' % (-intercept)
+
 
     plt.xlim(0, maxy)
     plt.ylim(0, maxy)
     plt.text(0.05 * maxy, 0.9 * maxy, rg_text1, fontsize=10)
     plt.text(0.05 * maxy, 0.8 * maxy, rg_text2, fontsize=10)
     maxy = max(np.max(ob), np.max(fo))
-    ax2.set_xlabel("观测", fontsize=9)
-    ax2.set_ylabel("预报", fontsize=9)
+    ax2.set_xlabel("预报", fontsize=9)
+    ax2.set_ylabel("观测", fontsize=9)
     ax2.set_title("Obs.vs Pred. Scatter plot", fontsize=12)
     # 设置次刻度间隔
 
@@ -752,9 +796,8 @@ def rain_comprehensive_sg(sta_ob,grd_fo,grade_list, save_path=None,show = False,
     text += "Mean-squared error:" + "%6.2f" % mse + "\n"
     text += "Root mean-squared error:" + "%6.2f" % rmse + "\n"
     text += "Bias:" + "%6.2f" % bias_c + "\n"
-    text += "Correctlation coefficiant:" + "%6.2f" % cor + "\n"
+    text += "Correlation ceoefficient:" + "%6.2f" % cor + "\n"
     text += "晴雨准确率:" + "%6.2f" % pc_sun_rain + "\n\n"
-
 
     clevs_name = ["0"]
     for g0 in range(len(grade_list)-1):
@@ -937,7 +980,7 @@ def rain_comprehensive_chinaland_sg(sta_ob,grd_fo,grade_list, save_path=None,sho
     index = np.where(~np.isnan(ob_fo))
     ob = ob[index]
     fo = fo[index]
-    ax2.plot(ob, fo, '.', color='k')
+    ax2.plot(fo, ob, '.', color='k')
     maxy = max(np.max(ob), np.max(fo)) + 5
 
     # 绘制比例线
@@ -947,24 +990,33 @@ def rain_comprehensive_chinaland_sg(sta_ob,grd_fo,grade_list, save_path=None,sho
     ax2.plot(ob_line[0:30], fo_rate[0:30], 'b', linestyle='dashed')
 
     # 绘制回归线
-    X = np.zeros((len(ob), 1))
-    X[:, 0] = ob[:]
-    clf = LinearRegression().fit(X, fo)
-    X = np.zeros((len(ob_line), 1))
-    X[:, 0] = ob_line[:]
-    fo_rg = clf.predict(X)
+    # X = np.zeros((len(ob), 1))
+    # X[:, 0] = ob[:]
+    # clf = LinearRegression().fit(X, fo)
+    # X = np.zeros((len(ob_line), 1))
+    # X[:, 0] = ob_line[:]
+    # fo_rg = clf.predict(X)
+    # ax2.plot(ob_line, fo_rg, color='r')
+    # cor = np.corrcoef(ob, fo)
+    # rg_text1 = "R = " + '%.2f' % (cor[0, 1])
+    # rg_text2 = "y = " + '%.2f' % (clf.coef_[0]) + "* x + " + '%.2f' % (clf.intercept_)
+
+    slope, intercept, r_value, p_value, std_err = st.linregress(fo, ob)
+    fo_rg = slope * ob_line + intercept
     ax2.plot(ob_line, fo_rg, color='r')
-    cor = np.corrcoef(ob, fo)
-    rg_text1 = "R = " + '%.2f' % (cor[0, 1])
-    rg_text2 = "y = " + '%.2f' % (clf.coef_[0]) + "* x + " + '%.2f' % (clf.intercept_)
+    rg_text1 = "R = " + '%.2f' % (r_value)
+    if intercept >= 0:
+        rg_text2 = "Y = " + '%.2f' % (slope) + "* X + " + '%.2f' % (intercept)
+    else:
+        rg_text2 = "Y = " + '%.2f' % (slope) + "* X - " + '%.2f' % (-intercept)
 
     plt.xlim(0, maxy)
     plt.ylim(0, maxy)
     plt.text(0.05 * maxy, 0.9 * maxy, rg_text1, fontsize=10)
     plt.text(0.05 * maxy, 0.8 * maxy, rg_text2, fontsize=10)
     maxy = max(np.max(ob), np.max(fo))
-    ax2.set_xlabel("观测", fontsize=9)
-    ax2.set_ylabel("预报", fontsize=9)
+    ax2.set_xlabel("预报", fontsize=9)
+    ax2.set_ylabel("观测", fontsize=9)
     ax2.set_title("Obs.vs Pred. Scatter plot", fontsize=12)
     # 设置次刻度间隔
     if(maxy <5):
@@ -1084,7 +1136,7 @@ def rain_comprehensive_chinaland_sg(sta_ob,grd_fo,grade_list, save_path=None,sho
     text += "Mean-squared error:" + "%6.2f" % mse + "\n"
     text += "Root mean-squared error:" + "%6.2f" % rmse + "\n"
     text += "Bias:" + "%6.2f" % bias_c + "\n"
-    text += "Correctlation coefficiant:" + "%6.2f" % cor + "\n"
+    text += "Correlation ceoefficient:" + "%6.2f" % cor + "\n"
     text += "晴雨准确率:" + "%6.2f" % pc_sun_rain + "\n\n"
 
 
@@ -1320,7 +1372,7 @@ def rain_comprehensive_sl(sta_ob,m14,map_extend,grade_list,save_path=None,show =
     index = np.where(~np.isnan(ob_fo))
     ob = ob[index]
     fo = fo[index]
-    ax2.plot(ob, fo, '.', color='k')
+    ax2.plot(fo, ob, '.', color='k')
     maxy = max(np.max(ob), np.max(fo)) + 5
 
     # 绘制比例线
@@ -1330,24 +1382,32 @@ def rain_comprehensive_sl(sta_ob,m14,map_extend,grade_list,save_path=None,show =
     ax2.plot(ob_line[0:30], fo_rate[0:30], 'b', linestyle='dashed')
 
     # 绘制回归线
-    X = np.zeros((len(ob), 1))
-    X[:, 0] = ob[:]
-    clf = LinearRegression().fit(X, fo)
-    X = np.zeros((len(ob_line), 1))
-    X[:, 0] = ob_line[:]
-    fo_rg = clf.predict(X)
+    # X = np.zeros((len(ob), 1))
+    # X[:, 0] = ob[:]
+    # clf = LinearRegression().fit(X, fo)
+    # X = np.zeros((len(ob_line), 1))
+    # X[:, 0] = ob_line[:]
+    # fo_rg = clf.predict(X)
+    # ax2.plot(ob_line, fo_rg, color='r')
+    # cor = np.corrcoef(ob, fo)
+    # rg_text1 = "R = " + '%.2f' % (cor[0, 1])
+    # rg_text2 = "y = " + '%.2f' % (clf.coef_[0]) + "* x + " + '%.2f' % (clf.intercept_)
+    slope, intercept, r_value, p_value, std_err = st.linregress(fo, ob)
+    fo_rg = slope * ob_line + intercept
     ax2.plot(ob_line, fo_rg, color='r')
-    cor = np.corrcoef(ob, fo)
-    rg_text1 = "R = " + '%.2f' % (cor[0, 1])
-    rg_text2 = "y = " + '%.2f' % (clf.coef_[0]) + "* x + " + '%.2f' % (clf.intercept_)
+    rg_text1 = "R = " + '%.2f' % (r_value)
+    if intercept >= 0:
+        rg_text2 = "Y = " + '%.2f' % (slope) + "* X + " + '%.2f' % (intercept)
+    else:
+        rg_text2 = "Y = " + '%.2f' % (slope) + "* X - " + '%.2f' % (-intercept)
 
     plt.xlim(0, maxy)
     plt.ylim(0, maxy)
     plt.text(0.05 * maxy, 0.9 * maxy, rg_text1, fontsize=10)
     plt.text(0.05 * maxy, 0.8 * maxy, rg_text2, fontsize=10)
     maxy = max(np.max(ob), np.max(fo))
-    ax2.set_xlabel("观测", fontsize=9)
-    ax2.set_ylabel("预报", fontsize=9)
+    ax2.set_xlabel("预报", fontsize=9)
+    ax2.set_ylabel("观测", fontsize=9)
     ax2.set_title("Obs.vs Pred. Scatter plot", fontsize=12)
     # 设置次刻度间隔
 
@@ -1467,7 +1527,7 @@ def rain_comprehensive_sl(sta_ob,m14,map_extend,grade_list,save_path=None,show =
     text += "Mean-squared error:" + "%6.2f" % mse + "\n"
     text += "Root mean-squared error:" + "%6.2f" % rmse + "\n"
     text += "Bias:" + "%6.2f" % bias_c + "\n"
-    text += "Correctlation coefficiant:" + "%6.2f" % cor + "\n"
+    text += "Correlation ceoefficient:" + "%6.2f" % cor + "\n"
     text += "晴雨准确率:" + "%6.2f" % pc_sun_rain + "\n\n"
 
     clevs_name = ["0"]
@@ -1672,7 +1732,7 @@ def rain_comprehensive_chinaland_sl(sta_ob,m14,grade_list, save_path=None,show =
     index = np.where(~np.isnan(ob_fo))
     ob = ob[index]
     fo = fo[index]
-    ax2.plot(ob, fo, '.', color='k')
+    ax2.plot(fo, ob, '.', color='k')
     maxy = max(np.max(ob), np.max(fo)) + 5
 
     # 绘制比例线
@@ -1682,24 +1742,32 @@ def rain_comprehensive_chinaland_sl(sta_ob,m14,grade_list, save_path=None,show =
     ax2.plot(ob_line[0:30], fo_rate[0:30], 'b', linestyle='dashed')
 
     # 绘制回归线
-    X = np.zeros((len(ob), 1))
-    X[:, 0] = ob[:]
-    clf = LinearRegression().fit(X, fo)
-    X = np.zeros((len(ob_line), 1))
-    X[:, 0] = ob_line[:]
-    fo_rg = clf.predict(X)
+    # X = np.zeros((len(ob), 1))
+    # X[:, 0] = ob[:]
+    # clf = LinearRegression().fit(X, fo)
+    # X = np.zeros((len(ob_line), 1))
+    # X[:, 0] = ob_line[:]
+    # fo_rg = clf.predict(X)
+    # ax2.plot(ob_line, fo_rg, color='r')
+    # cor = np.corrcoef(ob, fo)
+    # rg_text1 = "R = " + '%.2f' % (cor[0, 1])
+    # rg_text2 = "y = " + '%.2f' % (clf.coef_[0]) + "* x + " + '%.2f' % (clf.intercept_)
+    slope, intercept, r_value, p_value, std_err = st.linregress(fo, ob)
+    fo_rg = slope * ob_line + intercept
     ax2.plot(ob_line, fo_rg, color='r')
-    cor = np.corrcoef(ob, fo)
-    rg_text1 = "R = " + '%.2f' % (cor[0, 1])
-    rg_text2 = "y = " + '%.2f' % (clf.coef_[0]) + "* x + " + '%.2f' % (clf.intercept_)
+    rg_text1 = "R = " + '%.2f' % (r_value)
+    if intercept >= 0:
+        rg_text2 = "Y = " + '%.2f' % (slope) + "* X + " + '%.2f' % (intercept)
+    else:
+        rg_text2 = "Y = " + '%.2f' % (slope) + "* X - " + '%.2f' % (-intercept)
 
     plt.xlim(0, maxy)
     plt.ylim(0, maxy)
     plt.text(0.05 * maxy, 0.9 * maxy, rg_text1, fontsize=10)
     plt.text(0.05 * maxy, 0.8 * maxy, rg_text2, fontsize=10)
     maxy = max(np.max(ob), np.max(fo))
-    ax2.set_xlabel("观测", fontsize=9)
-    ax2.set_ylabel("预报", fontsize=9)
+    ax2.set_xlabel("预报", fontsize=9)
+    ax2.set_ylabel("观测", fontsize=9)
     ax2.set_title("Obs.vs Pred. Scatter plot", fontsize=12)
     # 设置次刻度间隔
     if(maxy <5):
@@ -1817,7 +1885,7 @@ def rain_comprehensive_chinaland_sl(sta_ob,m14,grade_list, save_path=None,show =
     text += "Mean-squared error:" + "%6.2f" % mse + "\n"
     text += "Root mean-squared error:" + "%6.2f" % rmse + "\n"
     text += "Bias:" + "%6.2f" % bias_c + "\n"
-    text += "Correctlation coefficiant:" + "%6.2f" % cor + "\n"
+    text += "Correlation ceoefficient:" + "%6.2f" % cor + "\n"
     text += "晴雨准确率:" + "%6.2f" % pc_sun_rain + "\n\n"
 
 
@@ -2161,9 +2229,9 @@ def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None,show = False,dpi = 20
     # 保证这两个值的正确性
     ob = grd_ob.values.flatten()
     fo = grd_fo.values.flatten()
-    X = np.zeros((len(fo), 1))
-    X[:, 0] = fo
-    clf = LinearRegression().fit(X, ob)
+    #X = np.zeros((len(fo), 1))
+    #X[:, 0] = fo
+    #clf = LinearRegression().fit(X, ob)
     num_max = max(np.max(ob), np.max(fo))
     num_min = min(np.min(ob), np.min(fo))
     dmm = num_max - num_min
@@ -2172,9 +2240,20 @@ def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None,show = False,dpi = 20
     num_max += dmm * 0.1
     dmm = num_max - num_min
     ob_line = np.arange(num_min, num_max, dmm / 30)
-    X = np.zeros((len(ob_line), 1))
-    X[:, 0] = ob_line
-    fo_rg = clf.predict(X)
+
+    #X = np.zeros((len(ob_line), 1))
+    #X[:, 0] = ob_line
+    #fo_rg = clf.predict(X)
+
+    slope, intercept, r_value, p_value, std_err = st.linregress(fo, ob)
+    fo_rg = slope * ob_line + intercept
+    ax2.plot(ob_line, fo_rg, color='r')
+    rg_text1 = "R = " + '%.2f' % (r_value)
+    if intercept >= 0:
+        rg_text2 = "Y = " + '%.2f' % (slope) + "* X + " + '%.2f' % (intercept)
+    else:
+        rg_text2 = "Y = " + '%.2f' % (slope) + "* X - " + '%.2f' % (-intercept)
+
     ax2.plot(fo, ob, '.', color='b',markersize=1)
     ax2.plot(ob_line, fo_rg, color="r")
     ax2.plot(ob_line, ob_line, '--', color="k")
@@ -2182,7 +2261,7 @@ def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None,show = False,dpi = 20
     ax2.set_ylim(num_min, num_max)
     ax2.set_xlabel(fo_name,fontsize=10)
     ax2.set_ylabel(ob_name,fontsize=10)
-    rg_text2 = "Y = " + '%.2f' % (clf.coef_[0]) + "* X + " + '%.2f' % (clf.intercept_)
+    #rg_text2 = "Y = " + '%.2f' % (clf.coef_[0]) + "* X + " + '%.2f' % (clf.intercept_)
     ax2.text(num_min + 0.05 * dmm, num_min + 0.90 * dmm, rg_text2, fontsize=15, color="r")
 
     # 设置次刻度间隔
@@ -2251,7 +2330,7 @@ def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None,show = False,dpi = 20
     text += "Mean-squared error:" + "%6.2f" % msee + "\n\n"
     text += "Root mean-squared error:" + "%6.2f" % rmsee + "\n\n"
     text += "Bias:" + "%6.2f" % bias_ce + "\n\n"
-    text += "Correctlation coefficiant:" + "%6.2f" % cor + "\n"
+    text += "Correlation ceoefficient:" + "%6.2f" % cor + "\n"
     plt.text(0, 0, text, fontsize=9)
 
     # 图片显示或保存
@@ -2402,9 +2481,9 @@ def temper_comprehensive_sg(sta_ob,grd_fo,save_path = None,show = False,dpi = 20
     # 保证这两个值的正确性
     ob = sta_ob1.iloc[:,-1].values
     fo = sta_fo1.iloc[:,-1].values
-    X = np.zeros((len(fo), 1))
-    X[:, 0] = fo
-    clf = LinearRegression().fit(X, ob)
+    # X = np.zeros((len(fo), 1))
+    # X[:, 0] = fo
+    # clf = LinearRegression().fit(X, ob)
     num_max = max(np.max(ob), np.max(fo))
     num_min = min(np.min(ob), np.min(fo))
     dmm = num_max - num_min
@@ -2413,9 +2492,19 @@ def temper_comprehensive_sg(sta_ob,grd_fo,save_path = None,show = False,dpi = 20
     num_max += dmm * 0.1
     dmm = num_max - num_min
     ob_line = np.arange(num_min, num_max, dmm / 30)
-    X = np.zeros((len(ob_line), 1))
-    X[:, 0] = ob_line
-    fo_rg = clf.predict(X)
+    # X = np.zeros((len(ob_line), 1))
+    # X[:, 0] = ob_line
+    # fo_rg = clf.predict(X)
+
+    slope, intercept, r_value, p_value, std_err = st.linregress(fo, ob)
+    fo_rg = slope * ob_line + intercept
+    ax2.plot(ob_line, fo_rg, color='r')
+    rg_text1 = "R = " + '%.2f' % (r_value)
+    if intercept >= 0:
+        rg_text2 = "Y = " + '%.2f' % (slope) + "* X + " + '%.2f' % (intercept)
+    else:
+        rg_text2 = "Y = " + '%.2f' % (slope) + "* X - " + '%.2f' % (-intercept)
+
     ax2.plot(fo, ob, '.', color='b',markersize=1)
     ax2.plot(ob_line, fo_rg, color="r")
     ax2.plot(ob_line, ob_line, '--', color="k")
@@ -2423,7 +2512,7 @@ def temper_comprehensive_sg(sta_ob,grd_fo,save_path = None,show = False,dpi = 20
     ax2.set_ylim(num_min, num_max)
     ax2.set_xlabel(fo_name,fontsize=10)
     ax2.set_ylabel(ob_name,fontsize=10)
-    rg_text2 = "Y = " + '%.2f' % (clf.coef_[0]) + "* X + " + '%.2f' % (clf.intercept_)
+    #rg_text2 = "Y = " + '%.2f' % (clf.coef_[0]) + "* X + " + '%.2f' % (clf.intercept_)
     ax2.text(num_min + 0.05 * dmm, num_min + 0.90 * dmm, rg_text2, fontsize=15, color="r")
 
     # 设置次刻度间隔
@@ -2492,7 +2581,7 @@ def temper_comprehensive_sg(sta_ob,grd_fo,save_path = None,show = False,dpi = 20
     text += "Mean-squared error:" + "%6.2f" % msee + "\n\n"
     text += "Root mean-squared error:" + "%6.2f" % rmsee + "\n\n"
     text += "Bias:" + "%6.2f" % bias_ce + "\n\n"
-    text += "Correctlation coefficiant:" + "%6.2f" % cor + "\n"
+    text += "Correlation ceoefficient:" + "%6.2f" % cor + "\n"
     plt.text(0, 0, text, fontsize=9)
 
     # 图片显示或保存
@@ -2827,9 +2916,9 @@ def temper_comprehensive_ss(sta_ob,sta_fo,map_extend = None,save_path = None,sho
     # 保证这两个值的正确性
     ob = sta_ob1.iloc[:,-1].values
     fo = sta_fo1.iloc[:,-1].values
-    X = np.zeros((len(fo), 1))
-    X[:, 0] = fo
-    clf = LinearRegression().fit(X, ob)
+    # X = np.zeros((len(fo), 1))
+    # X[:, 0] = fo
+    # clf = LinearRegression().fit(X, ob)
     num_max = max(np.max(ob), np.max(fo))
     num_min = min(np.min(ob), np.min(fo))
     dmm = num_max - num_min
@@ -2838,9 +2927,19 @@ def temper_comprehensive_ss(sta_ob,sta_fo,map_extend = None,save_path = None,sho
     num_max += dmm * 0.1
     dmm = num_max - num_min
     ob_line = np.arange(num_min, num_max, dmm / 30)
-    X = np.zeros((len(ob_line), 1))
-    X[:, 0] = ob_line
-    fo_rg = clf.predict(X)
+    # X = np.zeros((len(ob_line), 1))
+    # X[:, 0] = ob_line
+    # fo_rg = clf.predict(X)
+
+    slope, intercept, r_value, p_value, std_err = st.linregress(fo, ob)
+    fo_rg = slope * ob_line + intercept
+    ax2.plot(ob_line, fo_rg, color='r')
+    rg_text1 = "R = " + '%.2f' % (r_value)
+    if intercept >= 0:
+        rg_text2 = "Y = " + '%.2f' % (slope) + "* X + " + '%.2f' % (intercept)
+    else:
+        rg_text2 = "Y = " + '%.2f' % (slope) + "* X - " + '%.2f' % (-intercept)
+
     ax2.plot(fo, ob, '.', color='b',markersize=1)
     ax2.plot(ob_line, fo_rg, color="r")
     ax2.plot(ob_line, ob_line, '--', color="k")
@@ -2848,7 +2947,7 @@ def temper_comprehensive_ss(sta_ob,sta_fo,map_extend = None,save_path = None,sho
     ax2.set_ylim(num_min, num_max)
     ax2.set_xlabel(fo_name,fontsize=10)
     ax2.set_ylabel(ob_name,fontsize=10)
-    rg_text2 = "Y = " + '%.2f' % (clf.coef_[0]) + "* X + " + '%.2f' % (clf.intercept_)
+    #rg_text2 = "Y = " + '%.2f' % (clf.coef_[0]) + "* X + " + '%.2f' % (clf.intercept_)
     ax2.text(num_min + 0.05 * dmm, num_min + 0.90 * dmm, rg_text2, fontsize=15, color="r")
 
     # 设置次刻度间隔
@@ -2917,7 +3016,7 @@ def temper_comprehensive_ss(sta_ob,sta_fo,map_extend = None,save_path = None,sho
     text += "Mean-squared error:" + "%6.2f" % msee + "\n\n"
     text += "Root mean-squared error:" + "%6.2f" % rmsee + "\n\n"
     text += "Bias:" + "%6.2f" % bias_ce + "\n\n"
-    text += "Correctlation coefficiant:" + "%6.2f" % cor + "\n"
+    text += "Correlation ceoefficient:" + "%6.2f" % cor + "\n"
     plt.text(0, 0, text, fontsize=9)
 
     # 图片显示或保存
