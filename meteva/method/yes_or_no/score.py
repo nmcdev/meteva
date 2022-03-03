@@ -40,7 +40,7 @@ def ob_fo_hc_hfmc(hfmc_array):
 
 
 
-def ob_fo_hr(Ob,Fo,grade_list = [1e-30],compair = ">="):
+def ob_fo_hr(Ob,Fo,grade_list = [1e-30],compare =">=",compair = None):
     '''
 
     :param Ob:
@@ -48,10 +48,13 @@ def ob_fo_hr(Ob,Fo,grade_list = [1e-30],compair = ">="):
     :param grade_list:
     :return:
     '''
-    hfmc_array = hfmc(Ob, Fo, grade_list,compair = compair)
+    if compair is not None:
+        print("warning: the argument compair will be abolished, please use compare instead\n警告：参数compair 将被废除，以后请使用参数compare代替")
+        compare = compair
+    hfmc_array = hfmc(Ob, Fo, grade_list,compare= compare)
     return ob_fo_hr_hfmc(hfmc_array)
 
-def ob_fo_hc(Ob,Fo,grade_list = [1e-30],compair = ">="):
+def ob_fo_hc(Ob,Fo,grade_list = [1e-30],compare =">=",compair = None):
     '''
 
     :param Ob:
@@ -59,10 +62,13 @@ def ob_fo_hc(Ob,Fo,grade_list = [1e-30],compair = ">="):
     :param grade_list:
     :return:
     '''
-    hfmc_array = hfmc(Ob, Fo, grade_list,compair = compair)
+    if compair is not None:
+        print("warning: the argument compair will be abolished, please use compare instead\n警告：参数compair 将被废除，以后请使用参数compare代替")
+        compare = compair
+    hfmc_array = hfmc(Ob, Fo, grade_list,compare= compare)
     return ob_fo_hc_hfmc(hfmc_array)
 
-def hap_count(Ob,Fo, grade_list=[1e-30],compair = ">="):
+def hap_count(Ob,Fo, grade_list=[1e-30],compare =">=",compair = None):
     '''
     观测发生率，观测的正样本占总样本的比例
     :param Ob: 实况数据  任意维numpy数组
@@ -70,18 +76,21 @@ def hap_count(Ob,Fo, grade_list=[1e-30],compair = ">="):
     :param grade_list: 多个阈值同时检验时的等级参数
     :return:  0-1的实数，观测的正样本占总样本的比例
     '''
+    if compair is not None:
+        print("warning: the argument compair will be abolished, please use compare instead\n警告：参数compair 将被废除，以后请使用参数compare代替")
+        compare = compair
     result = []
     for grade in grade_list:
-        if compair == ">=":
+        if compare == ">=":
             result.append(Ob[Ob>=grade].size)
-        elif compair == "<=":
+        elif compare == "<=":
             result.append(Ob[Ob <= grade].size)
-        elif compair == ">":
+        elif compare == ">":
             result.append(Ob[Ob>grade].size)
-        elif compair == "<":
+        elif compare == "<":
             result.append(Ob[Ob < grade].size)
         else:
-            print("compair 参数只能是 >=   >  <  <=  中的一种")
+            print("compare 参数只能是 >=   >  <  <=  中的一种")
             return
     if len(grade_list) == 1:
         result = result[0]
@@ -89,7 +98,7 @@ def hap_count(Ob,Fo, grade_list=[1e-30],compair = ">="):
         result = np.array(result)
     return result
 
-def s(Ob,Fo, grade_list=[1e-30],compair = ">="):
+def s(Ob,Fo, grade_list=[1e-30],compare =">=",compair = None):
     '''
     观测发生率，观测的正样本占总样本的比例
     :param Ob: 实况数据  任意维numpy数组
@@ -97,19 +106,22 @@ def s(Ob,Fo, grade_list=[1e-30],compair = ">="):
     :param grade_list: 多个阈值同时检验时的等级参数
     :return:  0-1的实数，观测的正样本占总样本的比例
     '''
+    if compair is not None:
+        print("warning: the argument compair will be abolished, please use compare instead\n警告：参数compair 将被废除，以后请使用参数compare代替")
+        compare = compair
     result = []
     num = Ob.size
     for grade in grade_list:
-        if compair == ">=":
+        if compare == ">=":
             result.append(Ob[Ob>=grade].size/num)
-        elif compair == "<=":
+        elif compare == "<=":
             result.append(Ob[Ob <= grade].size / num)
-        elif compair == ">":
+        elif compare == ">":
             result.append(Ob[Ob > grade].size/num)
-        elif compair == "<":
+        elif compare == "<":
             result.append(Ob[Ob < grade].size / num)
         else:
-            print("compair 参数只能是 >=   >  <  <=  中的一种")
+            print("compare 参数只能是 >=   >  <  <=  中的一种")
     if len(grade_list) == 1:
         result = result[0]
     else:
@@ -129,7 +141,7 @@ def s_hfmc(hfmc_array):
     s0 = (hit + mis) / (hit + mis + fal + cn)
     return s0
 
-def r(Ob,Fo, grade_list=[1e-30],compair = ">="):
+def r(Ob,Fo, grade_list=[1e-30],compare =">=",compair = None):
     '''
     预测发生率，预测的正样本占总样本的比例
     :param Ob: 实况数据  任意维numpy数组
@@ -137,7 +149,10 @@ def r(Ob,Fo, grade_list=[1e-30],compair = ">="):
     :param grade_list: 多个阈值同时检验时的等级参数
     :return: 0-1的实数，预测的正样本占总样本的比例
     '''
-    hfmc_array= hfmc(Ob, Fo,grade_list,compair = compair)
+    if compair is not None:
+        print("warning: the argument compair will be abolished, please use compare instead\n警告：参数compair 将被废除，以后请使用参数compare代替")
+        compare = compair
+    hfmc_array= hfmc(Ob, Fo,grade_list,compare= compare)
     return r_hfmc(hfmc_array)
 
 def r_hfmc(hfmc_array):
@@ -226,7 +241,7 @@ def hfmc_of_sun_rain(Ob, Fo):
     hfmc_of_sun_rain_array = hfmc_of_sun_rain_array.reshape(shape)
     return hfmc_of_sun_rain_array
 
-def pc(Ob,Fo, grade_list=[1e-30],compair = ">="):
+def pc(Ob,Fo, grade_list=[1e-30],compare =">=",compair = None):
     '''
     准确率，反映被正确预报的样本占比
     :param Ob: 实况数据  任意维numpy数组
@@ -234,7 +249,10 @@ def pc(Ob,Fo, grade_list=[1e-30],compair = ">="):
     :param grade_list: 多个阈值同时检验时的等级参数
     :return: 0-1的实数，最优值为1
     '''
-    hfmc_array = hfmc(Ob,Fo,grade_list,compair = compair)
+    if compair is not None:
+        print("warning: the argument compair will be abolished, please use compare instead\n警告：参数compair 将被废除，以后请使用参数compare代替")
+        compare = compair
+    hfmc_array = hfmc(Ob,Fo,grade_list,compare= compare)
     return pc_hfmc(hfmc_array)
 
 def pc_hfmc(hfmc_array):
@@ -254,7 +272,7 @@ def pc_hfmc(hfmc_array):
         accurace0 = accurace0[0]
     return accurace0
 
-def pod(Ob, Fo, grade_list=[1e-30],compair = ">="):
+def pod(Ob, Fo, grade_list=[1e-30],compare =">=",compair = None):
     '''
     命中率，反映观测的正样本中多少被预报
     :param Ob: 实况数据  任意维numpy数组
@@ -262,7 +280,10 @@ def pod(Ob, Fo, grade_list=[1e-30],compair = ">="):
     :param grade_list: 多个阈值同时检验时的等级参数
     :return: 0到1的实数，完美值为1
     '''
-    hfmc_array = hfmc(Ob, Fo, grade_list,compair = compair)
+    if compair is not None:
+        print("warning: the argument compair will be abolished, please use compare instead\n警告：参数compair 将被废除，以后请使用参数compare代替")
+        compare = compair
+    hfmc_array = hfmc(Ob, Fo, grade_list,compare= compare)
     return pod_hfmc(hfmc_array)
 
 def pod_hfmc(hfmc_array):
@@ -284,7 +305,7 @@ def pod_hfmc(hfmc_array):
 
     return pod0
 
-def sr(Ob, Fo, grade_list=[1e-30],compair = ">="):
+def sr(Ob, Fo, grade_list=[1e-30],compare =">=",compair = None):
     '''
     报中率，反映预报的正样本中实际发生的比例
     :param Ob: 实况数据  任意维numpy数组
@@ -292,7 +313,10 @@ def sr(Ob, Fo, grade_list=[1e-30],compair = ">="):
     :param grade_list: 多个阈值同时检验时的等级参数
     :return:0-1,最优值为1
     '''
-    hfmc_array = hfmc(Ob, Fo, grade_list,compair = compair)
+    if compair is not None:
+        print("warning: the argument compair will be abolished, please use compare instead\n警告：参数compair 将被废除，以后请使用参数compare代替")
+        compare = compair
+    hfmc_array = hfmc(Ob, Fo, grade_list,compare= compare)
     return sr_hfmc(hfmc_array)
 
 def sr_hfmc(hfmc_array):
@@ -313,7 +337,7 @@ def sr_hfmc(hfmc_array):
         sr0 = sr0[0]
     return sr0
 
-def far(Ob, Fo, grade_list=[1e-30],compair = ">="):
+def far(Ob, Fo, grade_list=[1e-30],compare =">=",compair = None):
     '''
     空报率, 反映预报的正样本中多少未发生
     :param Ob: 实况数据  任意维numpy数组
@@ -321,7 +345,10 @@ def far(Ob, Fo, grade_list=[1e-30],compair = ">="):
     :param grade_list: 多个阈值同时检验时的等级参数
     :return: 0到1的实数，最优值为0
     '''
-    hfmc_array = hfmc(Ob, Fo, grade_list,compair = compair)
+    if compair is not None:
+        print("warning: the argument compair will be abolished, please use compare instead\n警告：参数compair 将被废除，以后请使用参数compare代替")
+        compare = compair
+    hfmc_array = hfmc(Ob, Fo, grade_list,compare= compare)
     return far_hfmc(hfmc_array)
 
 def far_hfmc(hfmc_array):
@@ -341,7 +368,7 @@ def far_hfmc(hfmc_array):
         far0 = far0[0]
     return far0
 
-def pofd(Ob,Fo,grade_list=[1e-30],compair = ">="):
+def pofd(Ob,Fo,grade_list=[1e-30],compare =">=",compair = None):
     '''
     报空率, 事件未发生样本被预报为会发生的比例
     :param Ob: 实况数据  任意维numpy数组
@@ -349,7 +376,10 @@ def pofd(Ob,Fo,grade_list=[1e-30],compair = ">="):
     :param grade_list: 多个阈值同时检验时的等级参数
     :return: 0到1的实数，最优值为0
     '''
-    hfmc_array = hfmc(Ob,Fo,grade_list,compair = compair)
+    if compair is not None:
+        print("warning: the argument compair will be abolished, please use compare instead\n警告：参数compair 将被废除，以后请使用参数compare代替")
+        compare = compair
+    hfmc_array = hfmc(Ob,Fo,grade_list,compare= compare)
     return pofd_hfmc(hfmc_array)
 
 def pofd_hfmc(hfmc_array):
@@ -370,7 +400,7 @@ def pofd_hfmc(hfmc_array):
         podf0 = podf0[0]
     return podf0
 
-def mr(Ob, Fo, grade_list=[1e-30],compair = ">="):
+def mr(Ob, Fo, grade_list=[1e-30],compare =">=",compair = None):
     '''
     漏报率，观测的正样本被漏报的比例
     :param Ob: 实况数据  任意维numpy数组
@@ -378,7 +408,10 @@ def mr(Ob, Fo, grade_list=[1e-30],compair = ">="):
     :param grade_list: 多个阈值同时检验时的等级参数
     :return: 0到1的实数，最优值为0
     '''
-    hfmc_array = hfmc(Ob, Fo, grade_list,compair = compair)
+    if compair is not None:
+        print("warning: the argument compair will be abolished, please use compare instead\n警告：参数compair 将被废除，以后请使用参数compare代替")
+        compare = compair
+    hfmc_array = hfmc(Ob, Fo, grade_list,compare= compare)
     return mr_hfmc(hfmc_array)
 
 def mr_hfmc(hfmc_array):
@@ -399,7 +432,7 @@ def mr_hfmc(hfmc_array):
         mr0 = mr0[0]
     return mr0
 
-def bias(Ob, Fo, grade_list=[1e-30],compair = ">="):
+def bias(Ob, Fo, grade_list=[1e-30],compare =">=",compair = None):
     '''
     样本偏差，预报的正样本数 和 观测的正样本数的比值
     :param Ob: 实况数据  任意维numpy数组
@@ -407,7 +440,10 @@ def bias(Ob, Fo, grade_list=[1e-30],compair = ">="):
     :param grade_list: 多个阈值同时检验时的等级参数
     :return: 0到正无穷的实数，完美值为1
     '''
-    hfmc_array = hfmc(Ob, Fo, grade_list,compair = compair)
+    if compair is not None:
+        print("warning: the argument compair will be abolished, please use compare instead\n警告：参数compair 将被废除，以后请使用参数compare代替")
+        compare = compair
+    hfmc_array = hfmc(Ob, Fo, grade_list,compare= compare)
     return bias_hfmc(hfmc_array)
 
 def bias_hfmc(hfmc_array):
@@ -466,7 +502,7 @@ def bias_extend_log(bias_array):
     return bias_extend0
 
 
-def ts(Ob, Fo, grade_list=[1e-30],compair = ">="):
+def ts(Ob, Fo, grade_list=[1e-30],compare =">=",compair = None):
     '''
     ts评分
     :param Ob: 实况数据  任意维numpy数组
@@ -474,14 +510,20 @@ def ts(Ob, Fo, grade_list=[1e-30],compair = ">="):
     :param grade_list: 多个阈值同时检验时的等级参数
     :return: 0-1的实数，0代表没有技巧，完美值为1
     '''
-    hfmc_array =hfmc(Ob, Fo, grade_list,compair = compair)
+    if compair is not None:
+        print("warning: the argument compair will be abolished, please use compare instead\n警告：参数compair 将被废除，以后请使用参数compare代替")
+        compare = compair
+    hfmc_array =hfmc(Ob, Fo, grade_list,compare= compare)
     return ts_hfmc(hfmc_array)
 
 
-def hfmdt(Ob, Fo, dtime, grade_list=[1e-30],compair = ">="):
+def hfmdt(Ob, Fo, dtime, grade_list=[1e-30],compare =">=",compair = None):
 
+    if compair is not None:
+        print("warning: the argument compair will be abolished, please use compare instead\n警告：参数compair 将被废除，以后请使用参数compare代替")
+        compare = compair
     if compair not in [">=",">","<","<="]:
-        print("compair 参数只能是 >=   >  <  <=  中的一种")
+        print("compare 参数只能是 >=   >  <  <=  中的一种")
         return
 
     Ob_shape = Ob.shape
@@ -505,16 +547,16 @@ def hfmdt(Ob, Fo, dtime, grade_list=[1e-30],compair = ">="):
             threshold = grade_list[i]
             obhap = np.zeros_like(Ob)
             fohap = np.zeros_like(new_Fo[line, :])
-            if compair == ">=":
+            if compare == ">=":
                 obhap[Ob >= threshold] = 1
                 fohap[new_Fo[line, :] >= threshold] = 1
-            elif compair == "<=":
+            elif compare == "<=":
                 obhap[Ob <= threshold] = 1
                 fohap[new_Fo[line, :] <= threshold] = 1
-            elif compair == ">":
+            elif compare == ">":
                 obhap[Ob > threshold] = 1
                 fohap[new_Fo[line, :] > threshold] = 1
-            elif compair == "<":
+            elif compare == "<":
                 obhap[Ob < threshold] = 1
                 fohap[new_Fo[line, :] < threshold] = 1
 
@@ -552,7 +594,7 @@ def effective_dtime_hfmdt(hfmdt_array):
     edt_array =efdt / sum
     return edt_array
 
-def effective_dtime(Ob,Fo,dtime,grade_list = [1e-30],compair = ">="):
+def effective_dtime(Ob,Fo,dtime,grade_list = [1e-30],compare =">=",compair = None):
     '''
 
     :param Ob: ob
@@ -561,7 +603,10 @@ def effective_dtime(Ob,Fo,dtime,grade_list = [1e-30],compair = ">="):
     :param grade_list: 等级
     :return:  有效预报时效
     '''
-    hfmdt_array = hfmdt(Ob,Fo,dtime,grade_list,compair = compair)
+    if compair is not None:
+        print("warning: the argument compair will be abolished, please use compare instead\n警告：参数compair 将被废除，以后请使用参数compare代替")
+        compare = compair
+    hfmdt_array = hfmdt(Ob,Fo,dtime,grade_list,compare= compare)
     edt_array =effective_dtime_hfmdt(hfmdt_array)
     return edt_array
 
@@ -586,7 +631,7 @@ def ts_hfmc(hfmc_array):
         ts_array = ts_array[0]
     return ts_array
 
-def ets(Ob, Fo, grade_list=[1e-30],compair = ">="):
+def ets(Ob, Fo, grade_list=[1e-30],compare =">=",compair = None):
     '''
     ets评分
     :param Ob: 实况数据  任意维numpy数组
@@ -594,7 +639,10 @@ def ets(Ob, Fo, grade_list=[1e-30],compair = ">="):
     :param grade_list: 多个阈值同时检验时的等级参数
     :return: -1/3 到1 的实数，完美值为1, 0代表没有技巧
     '''
-    hfmc_array = hfmc(Ob, Fo, grade_list,compair = compair)
+    if compair is not None:
+        print("warning: the argument compair will be abolished, please use compare instead\n警告：参数compair 将被废除，以后请使用参数compare代替")
+        compare = compair
+    hfmc_array = hfmc(Ob, Fo, grade_list,compare= compare)
     return ets_hfmc(hfmc_array)
 
 def ets_hfmc(hfmc_array):
@@ -621,7 +669,7 @@ def ets_hfmc(hfmc_array):
         ets_array = ets_array[0]
     return ets_array
 
-def hfmc(Ob, Fo, grade_list=[1e-30],compair = ">="):
+def hfmc(Ob, Fo, grade_list=[1e-30],compare =">=",compair = None):
     '''
     预报列联表
     :param Ob: 实况数据  任意维numpy数组
@@ -629,8 +677,11 @@ def hfmc(Ob, Fo, grade_list=[1e-30],compair = ">="):
     :param grade_list: 多个阈值同时检验时的等级参数
     :return: python numpy数组，其中最后一维长度为4，分别记录了（命中数，漏报数，空报数，正确否定数）
     '''
-    if compair not in [">=",">","<","<="]:
-        print("compair 参数只能是 >=   >  <  <=  中的一种")
+    if compair is not None:
+        print("warning: the argument compair will be abolished, please use compare instead\n警告：参数compair 将被废除，以后请使用参数compare代替")
+        compare = compair
+    if compare not in [">=",">","<","<="]:
+        print("compare 参数只能是 >=   >  <  <=  中的一种")
         return
     Ob_shape = Ob.shape
     Fo_shape = Fo.shape
@@ -653,16 +704,16 @@ def hfmc(Ob, Fo, grade_list=[1e-30],compair = ">="):
             threshold = grade_list[i]
             obhap = np.zeros_like(Ob)
             fohap = np.zeros_like(fo)
-            if compair ==">=":
+            if compare ==">=":
                 obhap[Ob >= threshold] = 1
                 fohap[fo >= threshold] = 1
-            elif compair =="<=":
+            elif compare =="<=":
                 obhap[Ob <= threshold] = 1
                 fohap[fo <= threshold] = 1
-            elif compair ==">":
+            elif compare ==">":
                 obhap[Ob > threshold] = 1
                 fohap[fo > threshold] = 1
-            elif compair =="<":
+            elif compare =="<":
                 obhap[Ob < threshold] = 1
                 fohap[fo < threshold] = 1
 
@@ -683,8 +734,11 @@ def hfmc(Ob, Fo, grade_list=[1e-30],compair = ">="):
     return hfmc_array
 
 
-def hk_yesorno(Ob,Fo,grade_list=[1e-30],compair = ">="):
-    hfmc_array = hfmc(Ob, Fo, grade_list,compair = compair)
+def hk_yesorno(Ob,Fo,grade_list=[1e-30],compare =">=",compair = None):
+    if compair is not None:
+        print("warning: the argument compair will be abolished, please use compare instead\n警告：参数compair 将被废除，以后请使用参数compare代替")
+        compare = compair
+    hfmc_array = hfmc(Ob, Fo, grade_list,compare= compare)
     return hk_yesorno_hfmc(hfmc_array)
 
 def hk_yesorno_hfmc(hfmc_array):
@@ -705,8 +759,11 @@ def hk_yesorno_hfmc(hfmc_array):
     return hk
 
 
-def hss_yesorno(Ob,Fo,grade_list= [1e-30],compair = ">="):
-    hfmc_array = hfmc(Ob, Fo, grade_list,compair = compair)
+def hss_yesorno(Ob,Fo,grade_list= [1e-30],compare =">=",compair = None):
+    if compair is not None:
+        print("warning: the argument compair will be abolished, please use compare instead\n警告：参数compair 将被废除，以后请使用参数compare代替")
+        compare = compair
+    hfmc_array = hfmc(Ob, Fo, grade_list,compare= compare)
     return hss_yesorno_hfmc(hfmc_array)
 
 def hss_yesorno_hfmc(hfmc_array):
@@ -745,7 +802,7 @@ def odds_ratio_hfmc(hfmc_array):
         ors = ors[0]
     return ors
 
-def odds_ratio(Ob,Fo,grade_list= [1e-30],compair = ">="):
+def odds_ratio(Ob,Fo,grade_list= [1e-30],compare =">=",compair = None):
     '''
 
     :param Ob:
@@ -754,7 +811,11 @@ def odds_ratio(Ob,Fo,grade_list= [1e-30],compair = ">="):
     :param compair:
     :return: 0 到无穷大的实数，完美值为无穷大, 0代表没有技巧
     '''
-    hfmc_array = hfmc(Ob, Fo, grade_list,compair = compair)
+
+    if compair is not None:
+        print("warning: the argument compair will be abolished, please use compare instead\n警告：参数compair 将被废除，以后请使用参数compare代替")
+        compare = compair
+    hfmc_array = hfmc(Ob, Fo, grade_list,compare= compare)
     return odds_ratio_hfmc(hfmc_array)
 
 
@@ -775,7 +836,7 @@ def orss_hfmc(hfmc_array):
         ors = ors[0]
     return ors
 
-def orss(Ob,Fo,grade_list= [1e-30],compair = ">="):
+def orss(Ob,Fo,grade_list= [1e-30],compare =">=",compair = None):
     '''
 
     :param Ob:
@@ -784,11 +845,13 @@ def orss(Ob,Fo,grade_list= [1e-30],compair = ">="):
     :param compair:
     :return: -1 到1， 完美值为1
     '''
-
-    hfmc_array = hfmc(Ob, Fo, grade_list,compair = compair)
+    if compair is not None:
+        print("warning: the argument compair will be abolished, please use compare instead\n警告：参数compair 将被废除，以后请使用参数compare代替")
+        compare = compair
+    hfmc_array = hfmc(Ob, Fo, grade_list,compare= compare)
     return orss_hfmc(hfmc_array)
 
-def fscore(Ob,Fo,grade_list = [1e-30],compair = ">=",belta = 1):
+def fscore(Ob,Fo,grade_list = [1e-30],compare =">=",compair = None,belta = 1):
     '''
     = (1+belta^2)*(pod*sr)/(belta^2 * sr + pod)
     :param Ob:
@@ -798,11 +861,14 @@ def fscore(Ob,Fo,grade_list = [1e-30],compair = ">=",belta = 1):
     :param belta:
     :return:
     '''
-    #precision = sr(Ob,Fo,grade_list=grade_list,compair=compair)
-    #recall = pod(Ob,Fo,grade_list=grade_list,compair=compair)
+    #precision = sr(Ob,Fo,grade_list=grade_list,compair=compare)
+    #recall = pod(Ob,Fo,grade_list=grade_list,compair=compare)
 
     #f_score = (1 + belta * belta) * (precision * recall)/(belta * belta * precision + recall)
-    hfmc_array= hfmc(Ob,Fo,grade_list,compair)
+    if compair is not None:
+        print("warning: the argument compair will be abolished, please use compare instead\n警告：参数compair 将被废除，以后请使用参数compare代替")
+        compare = compair
+    hfmc_array= hfmc(Ob,Fo,grade_list,compare)
     f_score = fscore_hfmc(hfmc_array,belta)
 
     return f_score
@@ -829,8 +895,11 @@ def fscore_hfmc(hfmc_array,belta = 1):
 
     return fscore_array
 
-def dts(Ob,Fo,grade_list= [1e-30],compair = ">="):
-    hfmc_array = hfmc(Ob, Fo, grade_list,compair = compair)
+def dts(Ob,Fo,grade_list= [1e-30],compare =">=",compair = None):
+    if compair is not None:
+        print("warning: the argument compair will be abolished, please use compare instead\n警告：参数compair 将被废除，以后请使用参数compare代替")
+        compare = compair
+    hfmc_array = hfmc(Ob, Fo, grade_list,compare= compare)
     return dts_hfmc(hfmc_array)
 
 def dts_hfmc(hfmc_array):
@@ -855,81 +924,4 @@ def dts_hfmc(hfmc_array):
 
 
 
-def FSS_time(Ob,Fo,grade_list = [1e-30],compair = ">=",window_size = None):
-    '''
-    :param Ob: 二维numpy数组Ob[i,j]，其中i取值为0  - 站点数， j为取值为0 - 时效维度的size
-    :param Fo: 二维numpy数组Fo[i,j]，其中i取值为0  - 站点数， j为取值为0 - 时效维度的size
-    :param window_size:
-    :param grade_list:
-    :return:
-    '''
-    mid_array = mid_FSS_time(Ob,Fo,grade_list,window_size=window_size,compair = compair)
-    result = FSS_time_base_on_mid(mid_array)
-    return result
 
-def FSS_time_base_on_mid(mid_array):
-    '''
-
-    :param mid_array:
-    :return:
-    '''
-    result = 1 - mid_array[...,0]/(mid_array[...,1]+1e-30)
-    return result
-
-def merge_mid_FSS_time(mid_array1,mid_array2):
-    '''
-
-    :param mid_array1:
-    :param mid_array2:
-    :return:
-    '''
-    if mid_array1 is None:
-        return mid_array2
-    if mid_array2 is None:
-        return mid_array1
-    return mid_array1 + mid_array2
-
-def mid_FSS_time(Ob,Fo,grade_list = [1e-30],compair = ">=",window_size = None):
-    '''
-    :param Ob: 二维numpy数组Ob[i,j]，其中i取值为0  - 站点数， j为取值为0 - 时效维度的size
-    :param Fo: 二维numpy数组Fo[i,j]，其中i取值为0  - 站点数， j为取值为0 - 时效维度的size
-    :param window_size:
-    :param grade_list:
-    :return:
-    '''
-    if compair not in [">=",">","<","<="]:
-        print("compair 参数只能是 >=   >  <  <=  中的一种")
-        return
-    shape = Ob.shape
-    if len(shape) == 1:
-        Ob = Ob.reshape(1,shape[0])
-        Fo = Fo.reshape(1,shape[0])
-        shape = Ob.shape
-    if window_size is None:
-        window_size = shape[1]//3
-    left_size = shape[1] - window_size
-    ng = len(grade_list)
-    result = np.zeros((ng,window_size,left_size,2))
-    for i in range(1,1+window_size):
-        for j in range(left_size):
-            for g in range(ng):
-                ob1 = np.zeros((shape[0],i))
-                fo1 = np.zeros((shape[0],i))
-                if compair == ">=":
-                    ob1[Ob[:, j + window_size -i:j+window_size] >= grade_list[g]] = 1
-                    fo1[Fo[:, j + window_size -i:j+window_size] >= grade_list[g]] = 1
-                elif compair == "<=":
-                    ob1[Ob[:, j + window_size -i:j+window_size] <= grade_list[g]] = 1
-                    fo1[Fo[:, j + window_size -i:j+window_size] <= grade_list[g]] = 1
-                elif compair == ">":
-                    ob1[Ob[:, j + window_size -i:j+window_size] > grade_list[g]] = 1
-                    fo1[Fo[:, j + window_size -i:j+window_size] > grade_list[g]] = 1
-                elif compair == "<":
-                    ob1[Ob[:, j + window_size -i:j+window_size] < grade_list[g]] = 1
-                    fo1[Fo[:, j + window_size -i:j+window_size] < grade_list[g]] = 1
-
-                ob_hap_p =np.sum(ob1,axis=1)
-                fo_hap_p =np.sum(fo1,axis=1)
-                result[g,i - 1, j,  0] = np.sum(np.power(ob_hap_p - fo_hap_p, 2))
-                result[g,i - 1, j,  1] = np.sum(np.power(ob_hap_p, 2)) + np.sum(np.power(fo_hap_p, 2))
-    return result
