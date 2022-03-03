@@ -5,7 +5,6 @@ Created on Tue Oct 20 16:26:07 2020
 @author: 1
 """
 import numpy as np
-import xarray as xr
 import meteva
 
 #提取连通域分析以后被标记的数据

@@ -6,7 +6,6 @@ Created on Thu Aug  6 10:53:50 2020
 """
 import numpy as np
 from scipy import ndimage
-#import rpy2.robjects as robjects
 import sys
 
 

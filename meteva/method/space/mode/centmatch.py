@@ -7,12 +7,10 @@ Created on Fri Jul 24 15:50:13 2020
 
 #============================  centmatch()  ==============================
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
+
 import math
 import sys
 import copy
-#sys.path.append(r'F:\Work\MODE\Submit')
 from . import data_pre
 from .feature_props import feature_props
 

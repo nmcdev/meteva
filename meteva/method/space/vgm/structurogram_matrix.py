@@ -5,7 +5,6 @@ Created on Fri Jan 22 17:52:38 2021
 @author: 1
 """
 import numpy as np
-import pandas as pd
 import meteva
 import matplotlib.pyplot as plt
 import math

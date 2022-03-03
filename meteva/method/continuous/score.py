@@ -1,5 +1,5 @@
 import numpy as np
-from meteva.base.tool.math_tools import mean_iteration,sxy_iteration,ss_iteration
+from meteva.base.tool.math_tools import sxy_iteration,ss_iteration
 from meteva.base import IV
 def sample_count(Ob, Fo=None):
     '''

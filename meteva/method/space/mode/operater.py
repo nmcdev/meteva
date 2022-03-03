@@ -40,12 +40,19 @@ def operate(grd_ob, grd_fo, smooth, threshold,minsize,match_method = centmatch,s
         json_save_path =  meteva.base.get_path(json_save_path,time1,dtime1)
         meteva.base.creat_path(json_save_path)
         nmatch = features["match_count"]
+        #json_str = json.dumps(features)
+        #print(json_str)
         features_list = copy.deepcopy(features)
         if  features["interester"] is not None:
             features_list["interester"] = features["interester"].tolist()
         for i in range(1,nmatch+1):
             features_list[i]["feature_props"]["ob"]["intensity"] =features[i]["feature_props"]["ob"]["intensity"][0].tolist()
             features_list[i]["feature_props"]["fo"]["intensity"] = features[i]["feature_props"]["fo"]["intensity"][0].tolist()
+        for i in range(1,nmatch+1):
+            q = [50, 75, 90, 95, 100]
+            for k in range(len(q)):
+                features_list[i]["feature_props"]["ob"]["intensity_"+str(q[k])] =features[i]["feature_props"]["ob"]["intensity"][k].tolist()
+                features_list[i]["feature_props"]["fo"]["intensity_"+str(q[k])] = features[i]["feature_props"]["fo"]["intensity"][k].tolist()
 
         json_str = json.dumps(features_list)
         br = open(json_save_path, 'w')

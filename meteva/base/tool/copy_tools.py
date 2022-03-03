@@ -1,10 +1,8 @@
 import os
 import meteva
-import matplotlib.colors as colors
 import time
 from meteva.base.io.GDS_data_service import GDSDataService
 from meteva.base.io import DataBlock_pb2
-from multiprocessing import freeze_support,Process,cpu_count
 
 
 

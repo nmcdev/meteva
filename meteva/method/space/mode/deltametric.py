@@ -1,12 +1,21 @@
 # -*-coding:utf-8-*-
 
-import math
-import sys
-#sys.path.append(r'F:\Work\MODE\Submit')
 from .distmap import *
-import cv2
-from scipy import ndimage
-import meteva
+from scipy.spatial import cKDTree
+
+def cv2_distanceTransform(array_01):
+    #计算每个格点到目标的最近距离
+    nx = array_01.shape[1]
+    ny = array_01.shape[0]
+    index = np.where(array_01 ==0)
+    xy = np.array(index).T
+    tree = cKDTree(xy)
+    xy_g = np.array(np.meshgrid(np.arange(ny),np.arange(nx))).T
+    d,_ = tree.query(xy_g, k=1)
+    d_g = d.reshape(ny,nx)
+    return d_g
+
+
 
 def deltametric(a, b, p=2, c=float('inf')):
     if p == float('inf') or (type(p).__name__ != "str" and str(p).isnumeric() and p > 0):
@@ -14,10 +23,14 @@ def deltametric(a, b, p=2, c=float('inf')):
         a = rebound(a, window)
         b = rebound(b, window)
 
-        #dA = ndimage.morphology.distance_transform_edt(~(a['m'] == 1) + 0)
-        # dB = ndimage.morphology.distance_transform_edt(~(b['m'] == 1) + 0)
-        dA = cv2.distanceTransform(np.array(~(a['m'] == 1) + 0, np.uint8), cv2.DIST_L2, 3, dstType=cv2.CV_32F)
-        dB = cv2.distanceTransform(np.array(~(b['m'] == 1) + 0, np.uint8), cv2.DIST_L2, 3, dstType=cv2.CV_32F)
+        #dA = cv2.distanceTransform(np.array(~(a['m'] == 1) + 0, np.uint8), cv2.DIST_L2, 3, dstType=cv2.CV_32F)
+        am = np.array(~(a['m'] == 1) + 0, np.uint8)
+        dA= cv2_distanceTransform(am)
+
+        #dB = cv2.distanceTransform(np.array(~(b['m'] == 1) + 0, np.uint8), cv2.DIST_L2, 3, dstType=cv2.CV_32F)
+        bm = np.array(~(b['m'] == 1) + 0, np.uint8)
+        dB = cv2_distanceTransform(bm)
+
         if not math.isinf(c):
             dA = np.minimum(dA, c)
             dB = np.minimum(dB, c)

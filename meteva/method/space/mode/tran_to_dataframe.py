@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 import meteva
 
 def features_tran(features):
@@ -30,6 +29,7 @@ def features_tran(features):
                 "ob_area": [fi["feature_props"]["ob"]["area"]],
                 "ob_intensity": [fi["feature_props"]["ob"]["intensity"]],
 
+
                 "fo_lenghts_MajorAxis": [fi["feature_axis"]["fo"]["lengths"]["MajorAxis"]],
                 "fo_lenghts_MinorAxis": [fi["feature_axis"]["fo"]["lengths"]["MinorAxis"]],
                 "fo_window_x0": [fi["feature_axis"]["fo"]["window"]["x0"]],
@@ -41,6 +41,12 @@ def features_tran(features):
                 "fo_area": [fi["feature_props"]["fo"]["area"]],
                 "fo_intensity": [fi["feature_props"]["fo"]["intensity"]]
             }
+
+            if "intensity_50" in fi["feature_props"]["ob"].keys():
+                q = [50, 75, 90, 95, 100]
+                for k in range(len(q)):
+                    dict1["ob_intensity_" + str(q[k])] = [fi["feature_props"]["ob"]["intensity_" + str(q[k])]]
+                    dict1["fo_intensity_" + str(q[k])] = [fi["feature_props"]["fo"]["intensity_" + str(q[k])]]
 
             keys = ["cent_dist", "angle_diff", "area_ratio", "int_area", "bearing",
                     "bdelta", "haus", "medMiss", "medFalseAlarm", "msdMiss", "msdFalseAlarm", "ph", "fom", "minsep"]
@@ -64,7 +70,7 @@ def features_list_to_df(feature_list):
         hmfc,df = features_tran(features)
         df_list.append(df)
         hmfc_list.append(hmfc)
-
+    #print(df_list)
     df_all = pd.concat(df_list,axis=0)
     df_all = df_all.reset_index(drop=True)
     hmfc_all = pd.concat(hmfc_list,axis=0)

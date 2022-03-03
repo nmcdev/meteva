@@ -4,7 +4,6 @@ import math
 import meteva
 import os
 import traceback
-import zlib
 import warnings
 warnings.filterwarnings("ignore")
 

@@ -4,9 +4,6 @@ import copy
 import numpy as np
 import pandas as pd
 from scipy import ndimage
-#sys.path.append(r'F:\Work\MODE\Submit')    #导入的函数路径
-#from Spatialvx import make_spatialVx   
-#from Spatialvx import feature_finder
 from . import data_pre
 from .centmatch import restructuring
 

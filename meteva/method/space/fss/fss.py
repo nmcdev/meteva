@@ -1,11 +1,8 @@
 import meteva
 import numpy as np
 from scipy.ndimage.filters import uniform_filter
-import copy
 import datetime
 import pandas as pd
-
-
 
 def fss_merge(fss_df,s = None):
     pass

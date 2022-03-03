@@ -1,4 +1,3 @@
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 import os
 import math
@@ -472,7 +471,7 @@ def statisitic_uv(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量分�
     ax_ob = None
     ax_fo = None
     for line in range(new_Fo_shape[0]):
-
+        print(member_list[line])
         pi = line % ncol
         pj = int(line / ncol)
         rect1 = [(width_left_yticks + pi * (width_axis + width_wspace))/width,

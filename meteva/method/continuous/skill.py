@@ -38,6 +38,8 @@ def sst(mae,mae_base):
     :param mae_base: 中央台的平均绝对误差
     :return: 省台相对于中央台的技巧
     '''
+
+
     if mae_base == 0:
         skill = 1.01
     else:

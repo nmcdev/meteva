@@ -1,10 +1,7 @@
-import shutil
 import datetime
 import meteva
 import os
-import numpy as np
-#from meteva.base.io import DataBlock_pb2
-#from meteva.base.io.GDS_data_service import GDSDataService
+
 from multiprocessing import Process,cpu_count
 
 para_example= {

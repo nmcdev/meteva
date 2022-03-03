@@ -1,11 +1,8 @@
 # -*-coding:utf-8-*-
-import numpy as np
 import pandas as pd
 from . import loc_list_setup as lls
 from .distmap import *
-from scipy import ndimage
-import cv2
-
+from .deltametric import cv2_distanceTransform
 
 def locperf(X, Y, which_stats=None, alpha=0.1, k=4, a=None):
     if which_stats is None:
@@ -16,8 +13,10 @@ def locperf(X, Y, which_stats=None, alpha=0.1, k=4, a=None):
     Y = rebound(Y, window)
     # dY = ndimage.morphology.distance_transform_edt(~(Y['m'] == 1) + 0)
     # dX = ndimage.morphology.distance_transform_edt(~(X['m'] == 1) + 0)
-    dY = cv2.distanceTransform(np.array(~(Y['m'] == 1) + 0, np.uint8), cv2.DIST_L2, 3, dstType=cv2.CV_32F)
-    dX = cv2.distanceTransform(np.array(~(X['m'] == 1) + 0, np.uint8), cv2.DIST_L2, 3, dstType=cv2.CV_32F)
+    #dY = cv2.distanceTransform(np.array(~(Y['m'] == 1) + 0, np.uint8), cv2.DIST_L2, 3, dstType=cv2.CV_32F)
+    dY = cv2_distanceTransform(np.array(~(Y['m'] == 1) + 0, np.uint8))
+    #dX = cv2.distanceTransform(np.array(~(X['m'] == 1) + 0, np.uint8), cv2.DIST_L2, 3, dstType=cv2.CV_32F)
+    dX = cv2_distanceTransform(np.array(~(X['m'] == 1) + 0, np.uint8))
     if not Y['m'].max() == 1:
         dY = np.unique(np.array(dY))
         dYcheck = False

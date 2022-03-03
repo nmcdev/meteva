@@ -1,8 +1,6 @@
 # -*-coding:utf-8-*-
 import math
-import sys
 import copy
-sys.path.append(r'F:\Work\MODE\Submit')   #导入的函数路径
 from . import data_pre
 
 def estimate_negatives(look):

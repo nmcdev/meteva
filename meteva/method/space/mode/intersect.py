@@ -1,6 +1,4 @@
 # -*-coding:utf-8-*-
-import sys
-sys.path.append(r'F:\Work\MODE\Submit')
 from .distmap import *
 
 

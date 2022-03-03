@@ -1,17 +1,62 @@
 # -*-coding:utf-8-*-
-import pandas as pd
-import cv2
-import copy
-#import sys
-#sys.path.append(r'F:\Work\MODE\Submit')
-from . import utils
+
 from .distmap import *
 from .sma import sma
 from . import angles_psp
-from . import lengths_psp
 from . import midpoints_psp
 from . import as_psp
 
+
+def convexHull(rx0):
+    max_v = np.max(rx0)
+    min_v = np.min(rx0)
+    d = rx0[:,0] + (rx0[:,1] - min_v)/max_v
+    rx = rx0[d.argsort()]
+    #先求下包络线
+    # 首先用一根皮筋从头连到尾
+    line_low = rx.copy().tolist()
+    len0 = -1
+    while len(line_low) != len0:
+        len0 = len(line_low)
+        line_list = [line_low[0]]
+        for i in range(1,len0-1):
+            dx1 = line_low[i][0] - line_low[i-1][0]
+            dy1 = line_low[i][1] - line_low[i-1][1]
+            dx2 = line_low[i+1][0] - line_low[i - 1][0]
+            dy2 = line_low[i+1][1] - line_low[i - 1][1]
+            cross = dx1 * dy2 - dy1 * dx2
+            if cross>0:
+                line_list.append(line_low[i])  # 相邻两个点是逆时针选择则保留，否则松开
+        line_list.append(line_low[-1])
+        line_low = line_list
+
+    #再求上包络线
+    # 首先用一根皮筋从头连到尾
+    line_up = rx.tolist()
+    len0 = -1
+    while len(line_up) != len0:
+        len0 = len(line_up)
+        line_list = [line_up[0]]
+        for i in range(1,len0-1):
+            dx1 = line_up[i][0] - line_up[i-1][0]
+            dy1 = line_up[i][1] - line_up[i-1][1]
+            dx2 = line_up[i+1][0] - line_up[i - 1][0]
+            dy2 = line_up[i+1][1] - line_up[i - 1][1]
+            cross = dx1 * dy2 - dy1 * dx2
+            if cross<0:
+                line_list.append(line_up[i])  # 相邻两个点是顺时针选择则保留，否则松开
+        line_list.append(line_up[-1])
+        line_up = line_list
+
+    #将上下两根包络线想连
+
+    line_all = []
+    for i in range(len0-1,0,-1):
+        line_all.append(line_up[i])
+    line_all.extend(line_low[0:-1])
+
+    result = np.array(line_all).astype(np.float32)
+    return result
 
 
 def feature_axis(look,label,ob_or_fo = "ob",fac = 1, flipit=False, twixt=False):
@@ -27,16 +72,11 @@ def feature_axis(look,label,ob_or_fo = "ob",fac = 1, flipit=False, twixt=False):
     if flipit:
         x = np.transpose(x)
 
-    out['point'] = getRedDotsCoordinatesFromLeftToRight(x)
+    rx = getRedDotsCoordinatesFromLeftToRight(x)
+    pts = convexHull(rx)
+    out['point'] = rx
     out["point"][:,0] = grid0.slon +  out["point"][:,0] * grid0.dlon
     out["point"][:,1] = grid0.slon + out["point"][:,1] * grid0.dlon
-    # img = Image.fromarray(x['labels_1']).convert('RGB')
-    ch = cv2.convexHull(getRedDotsCoordinatesFromLeftToRight(x))
-    #out['chull'] = ch
-    # pts = np.hstack(ch['bdry'][[1]][["x"]], ch['bdry'][[1]][["y"]])
-    pts = np.zeros([len(ch), 2])
-    for index in range(len(ch)):
-        pts[index] = (ch[index][0])
 
     out['pts'] = pts
     out["pts"][:,0] = grid0.slon + out["pts"][:,0] * grid0.dlon
@@ -45,8 +85,10 @@ def feature_axis(look,label,ob_or_fo = "ob",fac = 1, flipit=False, twixt=False):
     axfit_frame = {'x': pts[:, 0], 'y': pts[:, 1]}
     axfit = sma(axfit_frame)
     axis_x = np.array([axfit['from'], axfit['to']])
-    a = axfit['coef']['slope']
-    b = axfit['coef']['intercept']
+    # a = axfit['coef']['slope']
+    # b = axfit['coef']['intercept']
+    a = axfit["slope"]
+    b = axfit["intercept"]
     axis_y = b + a * axis_x
 
     if axis_x[0] is None or axis_x[1] is None or axis_y[0] is None or axis_y[1] is None:
@@ -61,7 +103,7 @@ def feature_axis(look,label,ob_or_fo = "ob",fac = 1, flipit=False, twixt=False):
         theta2 = 3 * math.pi / 2 - theta
     tmp = rotate(pts, theta2)
     tmp = boundingbox(tmp, tmp)
-    l = tmp['x_range'][1] - tmp['x_range'][0]
+    l = float(tmp['x_range'][1] - tmp['x_range'][0])
     theta = theta * 180 / math.pi
     if twixt:
         if 90 < theta <= 270:
@@ -70,7 +112,7 @@ def feature_axis(look,label,ob_or_fo = "ob",fac = 1, flipit=False, twixt=False):
             theta = theta - 360
     MidPoint = midpoints_psp.midpoints_psp(axis_frame)
     #r = lengths_psp.lengths_psp(axis_frame) * fac
-    r = tmp["y_range"][1] - tmp["y_range"][0]
+    r = float(tmp["y_range"][1] - tmp["y_range"][0])
     phi = angles_psp.angles_psp(rotate(np.array([[axis_x[0], axis_y[0]], [axis_x[1], axis_y[1]]]), math.pi / 2))
     minor_frame = {'xmid': MidPoint['x'], 'ymid': MidPoint['y'], 'length': l/fac, 'angle': phi}
     MinorAxis = as_psp.as_psp(minor_frame)

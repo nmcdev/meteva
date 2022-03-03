@@ -1,10 +1,6 @@
 import copy
-import sys
-sys.path.append(r'F:\Work\MODE\Submit')
-from .feature_comps import feature_comps
 import numpy as np
 from .utils import get_attributes_for_feat, remove_key_from_list
-
 from .feature_props import feature_props
 from .feature_comps import feature_comps
 from .feature_table import feature_table

@@ -6,7 +6,6 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 import meteva
-import pandas as pd
 
 def rdist(Id, loc):
     # 计算两点间欧式距离
