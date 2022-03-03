@@ -1,14 +1,11 @@
 import meteva
 import numpy as np
-import matplotlib as mpl
 import matplotlib.pyplot as plt
-from matplotlib.patches import Polygon
 plt.rcParams['font.sans-serif']=['SimHei'] #用来正常显示中文标签
 plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
 import math
 from matplotlib.colors import BoundaryNorm
-import json
-import datetime
+
 
 
 
@@ -25,7 +22,7 @@ def add_map(ax,add_county_line = False,add_worldmap = True,title = None,sup_font
 
 
 def creat_axs(nplot,map_extend,ncol = None,height  = None,width = None,dpi = 300,sup_title = None,sup_fontsize = 12,
-              add_county_line = False,add_worldmap = True,title_list = None,add_index = None):
+              add_county_line = False,add_worldmap = True,title_list = None,add_index = None,wspace = None):
 
 
     ax_index = []
@@ -61,9 +58,12 @@ def creat_axs(nplot,map_extend,ncol = None,height  = None,width = None,dpi = 300
 
     height_title = sup_fontsize * 0.1
     height_bottem_xticsk = sup_fontsize * 0.05
-    height_hspace = sup_fontsize * 0.03
+    height_hspace = sup_fontsize * 0.1
 
-    width_wspace = height_hspace*2
+    if wspace is None:
+        width_wspace = height_hspace*2
+    else:
+        width_wspace = wspace
 
     width_colorbar = 0.5
     width_left_yticks = sup_fontsize * 0.2
@@ -103,8 +103,12 @@ def creat_axs(nplot,map_extend,ncol = None,height  = None,width = None,dpi = 300
     vmax = elon
     vmin = slon
     r = rlon
-    if r <= 1:
+    if r <= 0.1:
+        inte = 0.05
+    elif r <= 0.5:
         inte = 0.1
+    elif r <= 1:
+        inte = 0.2
     elif r <= 5 and r > 1:
         inte = 1
     elif r <= 10 and r > 5:
@@ -119,13 +123,17 @@ def creat_axs(nplot,map_extend,ncol = None,height  = None,width = None,dpi = 300
         inte = 20
 
     vmin = inte * (math.ceil(vmin / inte))
-    vmax = inte * ((int)(vmax / inte) + 1)
+    vmax = inte * ((int)(vmax / inte)+0.5)
 
     xticks = np.arange(vmin, vmax, inte)
     xticks_label = []
     xticks_label_None = []
     for x in range(len(xticks)):
-        xticks_label.append(str(round(xticks[x], 6)))
+        v1 = xticks[x]
+        if abs(v1 - int(v1))<1e-7:
+            xticks_label.append(str(int(round(v1, 6))))
+        else:
+            xticks_label.append(str(round(v1, 6)))
         xticks_label_None.append("")
     if xticks[-1] > 0:
         xticks_label[-1] = "   " + xticks_label[-1] + "°E"
@@ -135,7 +143,11 @@ def creat_axs(nplot,map_extend,ncol = None,height  = None,width = None,dpi = 300
     vmax = elat
     vmin = slat
     r = rlat
-    if r <= 1:
+    if r <= 0.05:
+        inte = 0.01
+    elif r <= 0.3:
+        inte = 0.05
+    elif r <= 1:
         inte = 0.1
     elif r <= 5 and r > 1:
         inte = 1
@@ -149,15 +161,21 @@ def creat_axs(nplot,map_extend,ncol = None,height  = None,width = None,dpi = 300
         inte = 10
 
     vmin = inte * (math.ceil(vmin / inte))
-    vmax = inte * ((int)(vmax / inte) + 1)
+    vmax = inte * ((int)(vmax / inte)+0.5)
     yticks = np.arange(vmin, vmax, inte)
     yticks_label = []
     yticks_label_None = []
     for y in range(len(yticks)):
-        if yticks[y] >= 0:
-            yticks_label.append(str(round(yticks[y], 6)) + "°N")
+        v1 = yticks[y]
+        if abs(v1 - int(v1))<1e-7:
+            v1 = int(round(v1, 6))
         else:
-            yticks_label.append(str(round(-yticks[y], 6)) + "°S")
+            v1 = round(v1, 6)
+
+        if yticks[y] >= 0:
+            yticks_label.append(str(v1) + "°N")
+        else:
+            yticks_label.append(str(v1) + "°S")
         yticks_label_None.append("")
 
     fig = plt.figure(figsize=(width, height), dpi=dpi)
@@ -177,69 +195,79 @@ def creat_axs(nplot,map_extend,ncol = None,height  = None,width = None,dpi = 300
         ax.set_xlim((slon, elon))
         ax.set_ylim((slat, elat))
 
-        vmax = elon
-        vmin = slon
-        r = rlon
-        if r <= 1:
-            inte = 0.1
-        elif r <= 5 and r > 1:
-            inte = 1
-        elif r <= 10 and r > 5:
-            inte = 2
-        elif r < 20 and r >= 10:
-            inte = 4
-        elif r <= 30 and r >= 20:
-            inte = 5
-        elif r < 180:
-            inte = 10
-        else:
-            inte = 20
-
-        vmin = inte * (math.ceil(vmin / inte))
-        vmax = inte * ((int)(vmax / inte) + 1)
-        xticks = np.arange(vmin, vmax, inte)
-        xticks_label = []
-        for x in range(len(xticks)):
-            xticks_label.append(str(round(xticks[x], 6)))
-        if xticks[-1] > 0:
-            xticks_label[-1] = "   " + xticks_label[-1] + "°E"
-        else:
-            xticks_label[-1] = "   " + xticks_label[-1] + "°W"
+        # vmax = elon
+        # vmin = slon
+        # r = max(rlon,rlat)
+        # if r <= 0.1:
+        #     inte = 0.05
+        # elif r <= 0.5:
+        #     inte = 0.1
+        # elif r <=1:
+        #     inte = 0.2
+        # elif r <= 5 and r > 1:
+        #     inte = 1
+        # elif r <= 10 and r > 5:
+        #     inte = 2
+        # elif r < 20 and r >= 10:
+        #     inte = 4
+        # elif r <= 30 and r >= 20:
+        #     inte = 5
+        # elif r < 180:
+        #     inte = 10
+        # else:
+        #     inte = 20
+        #
+        # vmin = inte * (math.ceil(vmin / inte))
+        # vmax = inte * ((int)(vmax / inte) + 0.5)
+        # xticks = np.arange(vmin, vmax, inte)
+        # xticks_label = []
+        # for x in range(len(xticks)):
+        #     xticks_label.append(str(round(xticks[x], 6)))
+        # if xticks[-1] > 0:
+        #     xticks_label[-1] = "   " + xticks_label[-1] + "°E"
+        # else:
+        #     xticks_label[-1] = "   " + xticks_label[-1] + "°W"
         ax.set_xticks(xticks)
         ax.set_xticklabels(xticks_label, fontsize=sup_fontsize * 0.9, family='Times New Roman')
 
-        vmax = elat
-        vmin = slat
-        r = rlat
-        if r <= 1:
-            inte = 0.1
-        elif r <= 5 and r > 1:
-            inte = 1
-        elif r <= 10 and r > 5:
-            inte = 2
-        elif r < 20 and r >= 10:
-            inte = 4
-        elif r <= 30 and r >= 20:
-            inte = 5
-        else:
-            inte = 10
-
-        vmin = inte * (math.ceil(vmin / inte))
-        vmax = inte * ((int)(vmax / inte) + 1)
-        yticks = np.arange(vmin, vmax, inte)
-        yticks_label = []
-        for y in range(len(yticks)):
-
-            if yticks[y] >= 0 and y == len(yticks) - 1:
-                yticks_label.append(str(round(yticks[y], 6)) + "°N")
-            elif yticks[y] < 0 and y == 0:
-                yticks_label.append(str(round(-yticks[y], 6)) + "°S")
-            elif yticks[y] == 0:
-                yticks_label.append("EQ" + "  ")
-            else:
-                yticks_label.append(str(round(yticks[y], 6)) + "    ")
+        # vmax = elat
+        # vmin = slat
+        # r = rlat
+        # if r <= 0.1:
+        #     inte = 0.05
+        # elif r <= 0.5:
+        #     inte = 0.1
+        # elif r <=1:
+        #     inte = 0.2
+        # elif r <= 5 and r > 1:
+        #     inte = 1
+        # elif r <= 10 and r > 5:
+        #     inte = 2
+        # elif r < 20 and r >= 10:
+        #     inte = 4
+        # elif r <= 30 and r >= 20:
+        #     inte = 5
+        # else:
+        #     inte = 10
+        #
+        # vmin = inte * (math.ceil(vmin / inte))
+        # vmax = inte * ((int)(vmax / inte)+0.5)
+        # yticks = np.arange(vmin, vmax, inte)
+        # yticks_label = []
+        # for y in range(len(yticks)):
+        #
+        #     if yticks[y] >= 0 and y == len(yticks) - 1:
+        #         yticks_label.append(str(round(yticks[y], 6)) + "°N")
+        #     elif yticks[y] < 0 and y == 0:
+        #         yticks_label.append(str(round(-yticks[y], 6)) + "°S")
+        #     elif yticks[y] == 0:
+        #         yticks_label.append("EQ" + "  ")
+        #     else:
+        #         yticks_label.append(str(round(yticks[y], 6)) + "    ")
         ax.set_yticks(yticks)
         ax.set_yticklabels(yticks_label, fontsize=sup_fontsize * 0.9, family='Times New Roman')
+
+
         if title_list is None:
             sub_title = None
         else:
@@ -471,7 +499,7 @@ def add_barbs(ax,wind,color = "k",skip = None):
 
 
 
-def add_scatter(ax,map_extend,sta0,cmap = None,clevs = None,point_size = None,fix_size = True,title = None,threshold = 2,min_spot_value = 0,mean_value = 2,
+def add_scatter(ax,map_extend,sta0,cmap = "rainbow",clevs = None,point_size = None,fix_size = True,title = None,threshold = 2,min_spot_value = 0,mean_value = 2,
                 grid = False,add_colorbar = True,alpha = None):
     sta = sta0
     if isinstance(map_extend, list):
@@ -562,23 +590,42 @@ def add_scatter_text(ax,sta0,map_extend = None,color = "k",cmap = None,clevs = N
     data_names = meteva.base.get_stadata_names(sta_without_iv)
     sta_without_iv = sta_without_iv.sort_values(by=data_names[-1], ascending=True)
 
-    values = sta_without_iv.iloc[:, -1].values
-
     vmax_v = np.max(sta_without_iv.iloc[:,-1].values)
     vmin_v = np.min(sta_without_iv.iloc[:,-1].values)
+    clevs1 = None
+    cmap1 = None
     if cmap is not None:
         cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap, clevs=clevs, vmin=vmin_v, vmax=vmax_v)
 
-        norm = BoundaryNorm(clevs1, ncolors=cmap1.N - 1)
     fig = plt.gcf()
-    map_width = ax.bbox.width/fig.dpi
     fmt_tag = "%." + str(tag) + "f"
-    nsta = len(sta_without_iv.index)
-    for i in range(nsta):
-        x = sta_without_iv.iloc[i,4]
-        y = sta_without_iv.iloc[i,5]
-        v = sta_without_iv.iloc[i,-1]
-        plt.text(x, y, fmt_tag % v, ha="center", va="center",fontsize=font_size,color = color)
+
+    if cmap1 is None:
+        nsta = len(sta_without_iv.index)
+        for i in range(nsta):
+            x = sta_without_iv.iloc[i,4]
+            y = sta_without_iv.iloc[i,5]
+            v = sta_without_iv.iloc[i,-1]
+            if isinstance(v,str):
+                ax.text(x, y, v, ha="center", va="center", fontsize=font_size, color=color)
+            else:
+                ax.text(x, y, fmt_tag % v, ha="center", va="center",fontsize=font_size,color = color)
+    else:
+        x = sta_without_iv.iloc[:, 4].values
+        y = sta_without_iv.iloc[:, 5].values
+        v = sta_without_iv.iloc[:, -1].values
+        for k in range(len(clevs1)-1):
+            index = np.where((v>clevs1[k])&(v<clevs1[k+1]))
+            if len(index[0])>0:
+                x1 = x[index]
+                y1 = y[index]
+                v1 = v[index]
+                color = cmap1(k)
+                for j in range(x1.size):
+                    if isinstance(v1[j],str):
+                        ax.text(x1[j], y1[j], v1[j], ha="center", va="center", fontsize=font_size, c=color)
+                    else:
+                        ax.text(x1[j], y1[j], fmt_tag % v1[j], ha="center", va="center", fontsize=font_size,  c=color)
 
 
 
