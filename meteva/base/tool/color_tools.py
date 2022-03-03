@@ -275,31 +275,42 @@ def cmap_clevs_me_w0(vmin,vmax):
 
     inte = inte/2
 
-    vmin = inte * ((int)(vmin / inte) - 1)
+    vmin = inte * int(math.floor((vmin / inte)))
 
     vmax = inte * ((int)(vmax / inte) + 1)
 
     clevs = np.arange(vmin, vmax, inte)
     num = len(clevs)
     rgb_colors = []
-    sp = 2/3
+    sp = 3/4
     step = 360*sp / num
     #print(num)
+    delta0 = int((num-1)/2)
+    left = delta0 % 4
     for i in range(num):
-        delta = abs(i-(num-1)/2)
+        delta = abs(i-((num-1)/2))
         if i < (num-1)/2:
-            h = 0.5 +(1-sp)/2 + delta * step / 360  # 首先均匀的取不同的色相，保持色相维度的差异最大化
-            i1 = delta % 4
-            s = 0.75 + 0.25 * i1 / 4  # 通过一个折线波浪 设置不同的饱和度
-            l = 0.9 - 0.6 * i1 / 4  # 通过一个折线波浪 设置不同的亮度
-        else:
-            h = 0.5 - (1 - sp) / 2 - delta * step / 360  # 首先均匀的取不同的色相，保持色相维度的差异最大化
-            i1 = delta % 4
-            s = 0.75 + 0.25 * i1 / 4  # 通过一个折线波浪 设置不同的饱和度
-            l = 0.75 - 0.5 * i1 / 4  # 通过一个折线波浪 设置不同的亮度
+            h = 0.25 +(1-sp)/2 + delta * step / 360  # 首先均匀的取不同的色相，保持色相维度的差异最大化
+            if delta <=(left + 4):
+                if delta <=1:delta = 0
+                s = 0.75 + 0.25 * delta / (left + 4)  # 通过一个折线波浪 设置不同的饱和度
+                l = 0.9 - 0.6 * np.power(delta / (left + 4),1)  # 通过一个折线波浪 设置不同的亮度
+            else:
+                i1 = i % 4
+                s = 0.75 + 0.25 * (i1 / 4)  # 通过一个折线波浪 设置不同的饱和度
+                l = 0.3 + 0.6 * np.power((i1 / 4),1)  # 通过一个折线波浪 设置不同的亮度
 
-        if delta <1:
-            l = 0.95
+        else:
+            h = 0.25 - (1 - sp) / 2 - delta * step / 360  # 首先均匀的取不同的色相，保持色相维度的差异最大化
+            if delta < (left + 4):
+                s = 0.75 + 0.25 * delta / (left + 4)  # 通过一个折线波浪 设置不同的饱和度
+                l = 0.9 - 0.6 * np.power(delta / (left + 4),1)  # 通过一个折线波浪 设置不同的亮度
+            else:
+                i1 = 4 - (num-1 - i) % 4
+                s = 1 - 0.25 * i1 / 4  # 通过一个折线波浪 设置不同的饱和度
+                l = 0.75 - 0.35 * np.power(i1 / 4,1)  # 通过一个折线波浪 设置不同的亮度
+
+
 
         rgb1 = colorsys.hls_to_rgb(h, l, s)
         rgb_colors.append(rgb1)
@@ -396,24 +407,57 @@ def cmap_clevs_mae(vmax):
     cmap = colors.ListedColormap(rgb_colors, 'indexed')
     return cmap, clevs
 
+
 def cmap_clevs_me_bwr(vmin,vmax):
-    max_abs = math.ceil(max(abs(vmax),abs(vmin)))
-    inte = 1
-    vmin = inte * ((int)(vmin / inte))
+
+    # max_abs = math.ceil(max(abs(vmax),abs(vmin)))
+    # inte = 1
+    # vmin = inte * ((int)(vmin / inte))
+    #
+    max_abs = max(abs(vmax),abs(vmin))
+    vmax = max_abs
+    vmin = -max_abs
+    dif = (vmax - vmin) / 10.0
+    inte = math.pow(10, math.floor(math.log10(dif)));
+    # 用基本间隔，将最大最小值除于间隔后小数点部分去除，最后把间隔也整数化
+    r = dif / inte
+    if r < 3 and r >= 1.5:
+        inte = inte * 2
+    elif r < 4.5 and r >= 3:
+        inte = inte * 4
+    elif r < 5.5 and r >= 4.5:
+        inte = inte * 5
+    elif r < 7 and r >= 5.5:
+        inte = inte * 6
+    elif r >= 7:
+        inte = inte * 8
+
+    inte = inte/2
+
+    vmin = inte * ((int)(vmin / inte) - 1)
+    vmax = inte * ((int)(vmax / inte) + 2)
+    max_abs_h = math.ceil(max(abs(vmax),abs(vmin)))/2
     clevs = []
     colors_list = []
-    for i in range(vmin,0,1):
+
+    for i in np.arange(vmin,0,inte).tolist():
         clevs.append(i)
-        rgb = [1+ i/max_abs,1+ i/max_abs,1]
-        if i>=-1:
+        if i <= -max_abs_h:
+            rgb = [0,0,(i - vmin)/max_abs_h]
+        else:
+            rgb = [1+ i/max_abs_h,1+ i/max_abs_h,1]
+        #print(rgb)
+        if i>=-inte:
             rgb= [1,1,1]
         colors_list.append(rgb)
 
-    vmax = inte * ((int)(vmax / inte) + 1)
-    for i in range(vmax):
+    for i in np.arange(0,vmax,inte).tolist():
         clevs.append(i)
-        rgb = [1,1- i/max_abs,1- i/max_abs]
-        if i < 1:
+        if i <= max_abs_h:
+            rgb = [1,1- i/max_abs,1- i/max_abs]
+        else:
+            rgb = [(vmax - i)/max_abs_h,0,0]
+        if i < inte:
             rgb = [1,1,1]
         colors_list.append(rgb)
     #print(colors_list)
@@ -933,6 +977,7 @@ def def_cmap_clevs(cmap = "rainbow",clevs = None,vmin = None,vmax = None,cut_col
                 vmin = np.min(np.array(clevs))
             if vmax is None:
                 vmax = np.max(np.array(clevs))
+            if vmax is not None and vmin == vmax:vmin = vmax - 1
             cmap,clevs1= get_cmap_and_clevs_by_name(cmap, vmin, vmax)
     if isinstance(cmap,list):
         if isinstance(cmap[0],list):
