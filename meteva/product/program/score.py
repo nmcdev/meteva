@@ -3,7 +3,6 @@ from meteva.method import *
 from meteva.product.program.fun import *
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 
 
 def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = None,plot = None,
@@ -24,9 +23,11 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
 
     if type(method) == str:
         method =  globals().get(method)
-    if method == meteva.method.FSS_time:
+
+
+    if method == meteva.method.fss_time:
         if g == "dtime":
-            msg = "FSS_time 检验时，参数group_by不能选择dtime"
+            msg = "fss_time 检验时，参数group_by不能选择dtime"
             print(msg)
             return
 
@@ -128,14 +129,14 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
         grade_names = ["0"]
     grade_num = len(grade_names)
 
-    if method == meteva.method.FSS_time:
+    if method == meteva.method.fss_time:
         #统计dtime的集合
         dtime_list = list(set(sta_ob_and_fos["dtime"].values.tolist()))
         dtime_list.sort()
         ndtime = len(dtime_list)
         result= []
         for sta_ob_and_fo in sta_ob_and_fos_list:
-            # 将观测和预报数据重新整理成FSS_time所需格式
+            # 将观测和预报数据重新整理成fss_time所需格式
             ob = in_member_list(sta_ob_and_fo,[data_name[0]])
             ob_dtimes = None
             for k in range(ndtime):
@@ -157,7 +158,7 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
                 fo_array = fo_dtimes.values[:,6:]
 
                 #调用检验程序
-                result2 = FSS_time(ob_array, fo_array, **kwargs)
+                result2 = fss_time(ob_array, fo_array, **kwargs)
                 result1.append(result2)
             result.append(result1)
         result = np.array(result) #将数据转换成数组
