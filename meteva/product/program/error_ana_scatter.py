@@ -1,7 +1,4 @@
 import meteva
-import numpy as np
-import math
-
 
 def error_scatter(sta_ob_and_fos,method,s = None,g = None,gll = None,group_name_list= None,save_dir=None,save_path = None,show = False,
                  print_max = 0,print_min = 0,threshold = 0,add_county_line = False,map_extend = None,dpi = 300,title=None,
