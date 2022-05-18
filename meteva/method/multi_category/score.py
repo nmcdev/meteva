@@ -22,7 +22,7 @@ def tc(ob, fo, grade_list=None):
     Fo_Ob_index = list(Fo_shape[ind:])
 
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
     Ob_shpe_list.insert(0, -1)
     new_Fo_shape = tuple(Ob_shpe_list)
@@ -76,7 +76,7 @@ def tcof(ob, fo, grade_list=None):
     Fo_Ob_index = list(Fo_shape[ind:])
 
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
     Ob_shpe_list.insert(0, -1)
     new_Fo_shape = tuple(Ob_shpe_list)
@@ -126,7 +126,7 @@ def hfmc_grade(ob, fo, grade_list):
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
 
     total_count = ob.size
@@ -190,7 +190,7 @@ def hfmc_multi(ob, fo, grade_list=None):
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
 
     total_count = ob.size
@@ -412,7 +412,7 @@ def hss(ob, fo, grade_list=None):
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
 
         return
     Ob_shpe_list.insert(0, -1)
@@ -463,7 +463,7 @@ def hk(ob, fo, grade_list=None):
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
 
         return
     Ob_shpe_list.insert(0, -1)
