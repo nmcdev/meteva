@@ -5,6 +5,8 @@ import pandas as pd
 import numpy as np
 
 
+
+
 def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = None,plot = None,
           vmax = None,vmin = None,bar_width = None,save_path = None,show = False,dpi = 300,title = "",excel_path = None,**kwargs):
 
@@ -32,6 +34,10 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
             return
 
     # get method_args and plot_args
+
+
+    iv_in_fo = meteva.base.IV in sta_ob_and_fos.iloc[:,7:].values
+
     method_args = {}
     plot_args = {}
     method_para_list = method.__code__.co_varnames
@@ -168,6 +174,19 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
         result_list = []
         for i in range(group_num):
             sta = sta_ob_and_fos_list[i]
+
+            valid_index = [0]
+            not_all_iv = [True]
+            if iv_in_fo:
+                len_ = len(sta.columns)
+                for nv in range(7,len_):
+                    not_all_iv1 = np.any(sta.iloc[:,nv].values != meteva.base.IV)
+                    not_all_iv.append(not_all_iv1)
+                    if not_all_iv1:
+                        valid_index.append(nv-6)
+                sta = meteva.base.in_member_list(sta,member_list=valid_index,name_or_index ="index")
+                sta = meteva.base.not_IV(sta)
+            data_name = meteva.base.get_stadata_names(sta)
             #if(len(sta.index) == 0):
             #    result[i,:] = meteva.base.IV
             #else:
@@ -181,9 +200,29 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
                 ob = sta[data_name[0]].values
                 fo = sta[data_name[1:]].values.T
                 result1 = method(ob,fo,**method_args)
-            result_list.append(result1)
 
+            #if len(result1.shape)==2: result1 = result1.squeeze()
+            if iv_in_fo:
+                di = len(not_all_iv) - fo_num
+                shape_ = result1.shape
+                if len(shape_)==2:
+                    result_with_iv = np.ones((fo_num,shape_[1])) * meteva.base.IV
+                    kiv = 0
+                    for nv in range(fo_num):
+                        if not_all_iv[nv+di]:
+                            result_with_iv[nv,:] = result1[kiv,:]
+                            kiv += 1
+                else:
+                    result_with_iv = np.ones(fo_num) * meteva.base.IV
+                    kiv = 0
+                    for nv in range(fo_num):
+                        if not_all_iv[nv+di]:
+                            result_with_iv[nv] = result1[kiv]
+                            kiv += 1
+                result1 = result_with_iv.squeeze()
+            result_list.append(result1)
         result = np.array(result_list)
+
     if plot is not None or excel_path is not None:
 
         name_list_dict = {}
@@ -242,6 +281,7 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
             plot_args["ylabel"] = method.__name__.upper()
 
 
+
         bigthan0_method = [meteva.method.ts,meteva.method.ob_fo_hr,meteva.method.ob_fo_std,meteva.method.ts_multi,
                            meteva.method.s,meteva.method.pc_of_sun_rain,meteva.method.bias_multi,meteva.method.bias,
                            meteva.method.pc,meteva.method.mr,meteva.method.far,meteva.method.tc,
@@ -251,6 +291,11 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
         if vmin is None:
             if method in bigthan0_method:
                 vmin = 0
+        if "hline" not in plot_args.keys():
+            if method in [meteva.method.me]:
+                plot_args["hline"] = 0
+            elif method in [meteva.method.bias]:
+                plot_args["hline"] = 1
 
 
         if plot is not None:
@@ -335,9 +380,6 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
         fo_name = ["STD","RMSE"]
     else:
         fo_name = data_names[1:]
-
-
-
     fo_num = len(fo_name)
 
 
@@ -477,7 +519,7 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
                             title1 =meteva.product.program.get_title_from_dict(title, s, g, group_name_list[k],
                                                                                  fo_name[ii])
                         else:
-                            title1 = meteva.product.program.get_title_from_dict(method, s, g,
+                            title1 = meteva.product.program.get_title_from_dict("", s, g,
                                                                                 group_name_list[k], fo_name[ii])
                         if grade_num>1:
                             title1 += "(grade_" + str(grade_names[i])+")"
