@@ -17,7 +17,7 @@ def feature_props(look,label,ob_or_fo = "ob",which_comps=None, q=None):
     if which_comps is None:
         which_comps = ["centroid", "area", "axis", "intensity"]
     if q is None:
-        q = [0.5, 0.75,0.9,0.95,1]
+        q = [0,0.05,0.1,0.25,0.5, 0.75,0.9,0.95,1]
     out = {}
 
     if "centroid" in which_comps:

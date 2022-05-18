@@ -291,8 +291,6 @@ class mfig:
         if(add_colorbar):
             colorbar_position = fig.add_axes(location)  # 位置[左,下,宽,高]
             cb =  plt.colorbar(im,cax= colorbar_position)
-
-
             if matched :
                 cticks = [-1]
                 cticks.extend((np.array(clevs1[2:])+0.5).tolist())
