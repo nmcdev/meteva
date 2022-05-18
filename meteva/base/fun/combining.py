@@ -82,8 +82,6 @@ def combine_join(sta, sta1):
     return sta
 
 
-
-
 # 两个站点信息合并为一个，以站号为公共部分，在原有的dataframe的基础上增加列数
 def combine_on_id(sta, sta1,how = "inner"):
     if sta is None:
@@ -266,7 +264,7 @@ def combine_on_level_time_dtime(sta, sta1,how = 'inner'):
         return df
 
 
-def combine_on_obTime_id(sta_ob,sta_fo_list,need_match_ob = False):
+def combine_on_obTime_id(sta_ob,sta_fo_list,need_match_ob = False,how_fo = "inner"):
     '''
     将观测
     :param sta_ob:
@@ -289,20 +287,29 @@ def combine_on_obTime_id(sta_ob,sta_fo_list,need_match_ob = False):
                 sta_fo1["dtime"] *= 60
                 sta_fo1.attrs["dtime_units"] = "minute"
 
+
     dtime_list = list(set(sta_fo_list[0]['dtime'].values.tolist()))
     nsta_ob = len(sta_ob.index)
-
     if(nsta_ob * len(dtime_list) >= 10000000):
         if nsta_ob >= 10000000:
             print("请注意，在大规模数据匹配合并时，need_match_ob 参数将自动切换为True")
-            return combine_on_obTime_id_bigData(sta_ob,sta_fo_list)
+            return combine_on_obTime_id_bigData(sta_ob,sta_fo_list,how_fo = how_fo)
         else:
-            return combine_on_obTime_id_bigData(sta_ob, sta_fo_list,need_match_ob=need_match_ob,g = "dtime")
+            return combine_on_obTime_id_bigData(sta_ob, sta_fo_list,need_match_ob=need_match_ob,g = "dtime",how_fo= how_fo)
     else:
+
+
+        sta_combine_fo = None
+        for sta_fo in sta_fo_list:
+            sta_combine_fo = combine_on_level_time_dtime_id(sta_combine_fo, sta_fo,how = how_fo)
+            if sta_combine_fo is not None:
+                sta_combine_fo = sta_combine_fo.fillna(meteva.base.IV)
+
+
         if sta_ob is None:
             sta_combine = None
         else:
-            #print(dtime_list)
+            dtime_list = list(set(sta_combine_fo['dtime'].values.tolist()))
             sta_combine = []
             for dtime in dtime_list:
                 sta = copy.deepcopy(sta_ob)
@@ -315,11 +322,6 @@ def combine_on_obTime_id(sta_ob,sta_fo_list,need_match_ob = False):
             sta_combine = concat(sta_combine)
 
 
-        sta_combine_fo = None
-        for sta_fo in sta_fo_list:
-            sta_combine_fo = combine_on_level_time_dtime_id(sta_combine_fo, sta_fo)
-
-
         if need_match_ob:
             sta_combine = meteva.base.not_IV(sta_combine)
             sta_combine = combine_on_level_time_dtime_id(sta_combine, sta_combine_fo, how="inner")
@@ -327,6 +329,7 @@ def combine_on_obTime_id(sta_ob,sta_fo_list,need_match_ob = False):
             sta_combine = combine_on_level_time_dtime_id(sta_combine,sta_combine_fo,how="right")
             if sta_combine is not None:
                 sta_combine = sta_combine.fillna(meteva.base.IV)
+
         meteva.base.set_stadata_attrs(sta_combine,dtime_units=dtime_units)
         sta_combine.attrs = copy.deepcopy(sta_ob.attrs)
         sta_combine.drop_duplicates(subset=["level", "time", "dtime", "id"], inplace=True)
@@ -335,7 +338,7 @@ def combine_on_obTime_id(sta_ob,sta_fo_list,need_match_ob = False):
         return sta_combine
 
 
-def combine_on_obTime_one_id(sta_ob,sta_fo_list,how = "inner"):
+def combine_on_obTime_one_id(sta_ob,sta_fo_list,how = "inner",how_fo = "inner"):
     '''
     将观测
     :param sta_ob:
@@ -346,17 +349,20 @@ def combine_on_obTime_one_id(sta_ob,sta_fo_list,how = "inner"):
         sta_fo_list = [sta_fo_list]
 
     dtime_units ="hour"
-
-
     if len(sta_fo_list[0].attrs) >0:
         if "dtime_units" in sta_fo_list[0].attrs:
             if sta_fo_list[0].attrs["dtime_units"] != "hour":
                 dtime_units = "minute"
 
+
+    sta_combine_fo = None
+    for sta_fo in sta_fo_list:
+        sta_combine_fo = combine_on_level_time_dtime(sta_combine_fo, sta_fo,how= how_fo)
+
     if sta_ob is None:
         sta_combine = None
     else:
-        dtime_list = list(set(sta_fo_list[0]['dtime'].values.tolist()))
+        dtime_list = list(set(sta_combine_fo['dtime'].values.tolist()))
         #print(dtime_list)
         sta_combine = []
         for dtime in dtime_list:
@@ -368,16 +374,14 @@ def combine_on_obTime_one_id(sta_ob,sta_fo_list,how = "inner"):
             sta["dtime"] = dtime
             sta_combine.append(sta)
         sta_combine = concat(sta_combine)
-    sta_combine_fo = None
-    for sta_fo in sta_fo_list:
-        sta_combine_fo = combine_on_level_time_dtime(sta_combine_fo, sta_fo,how= how)
-    sta_combine = combine_on_level_time_dtime(sta_combine, sta_combine_fo)
 
+    sta_combine = combine_on_level_time_dtime(sta_combine, sta_combine_fo,how = how)
+    if sta_combine is not None:
+        sta_combine = sta_combine.fillna(meteva.base.IV)
     sta_combine.attrs = copy.deepcopy(sta_ob.attrs)
     return sta_combine
 
-
-def combine_on_obTime_id_bigData(sta_ob,sta_fo_list,need_match_ob = True,g = "id"):
+def combine_on_obTime_id_bigData(sta_ob,sta_fo_list,need_match_ob = True,g = "id",how_fo = None):
     import sys,gc
     '''
     将观测
@@ -385,8 +389,6 @@ def combine_on_obTime_id_bigData(sta_ob,sta_fo_list,need_match_ob = True,g = "id
     :param sta_fo_list:
     :return:
     '''
-
-
     if not isinstance(sta_fo_list, list):
         print("the second args shold be a list")
         return
@@ -402,6 +404,7 @@ def combine_on_obTime_id_bigData(sta_ob,sta_fo_list,need_match_ob = True,g = "id
         gc.collect()
         sta_all = []
         n_id = len(id_ob)
+
         if need_match_ob:
             how = "inner"
         else:
@@ -422,15 +425,19 @@ def combine_on_obTime_id_bigData(sta_ob,sta_fo_list,need_match_ob = True,g = "id
                 else:
                     all_fos_have = False
             if all_fos_have:
-                combine_one = combine_on_obTime_one_id(sta_ob_one_id,sta_fos_one_id,how = how)
+                combine_one = combine_on_obTime_one_id(sta_ob_one_id,sta_fos_one_id,how = how,how_fo = how_fo)
                 sta_all.append(combine_one)
         sta_all = concat(sta_all)
     elif g == "dtime":
         nfo = len(sta_fo_list)
         grouped_fo_list = []
+        dtime_list = []
         for i in range(nfo):
-            grouped_fo_list.append(dict(list(sta_fo_list[i].groupby("dtime"))))
-        dtime_list = list(grouped_fo_list[0].keys())
+            dict1 = dict(list(sta_fo_list[i].groupby("dtime")))
+            grouped_fo_list.append(dict1)
+            dtime_list.extend(list(dict1.keys()))
+        dtime_list = list(set(dtime_list))
+        print(dtime_list)
         sys._clear_type_cache()
         gc.collect()
         sta_list = []
@@ -443,13 +450,17 @@ def combine_on_obTime_id_bigData(sta_ob,sta_fo_list,need_match_ob = True,g = "id
             key = dtime_list[i]
             all_fos_have = True
             sta_fos_one_dtime= []
+
             for i in range(nfo):
                 if key in grouped_fo_list[i].keys():
                     sta_fos_one_dtime.append(grouped_fo_list[i].pop(key))
                 else:
-                    all_fos_have = False
+                    if how_fo == "outer":
+                        pass
+                    else:
+                        all_fos_have = False
             if all_fos_have:
-                combine_one = combine_on_obTime_id(sta_ob, sta_fos_one_dtime, need_match_ob=need_match_ob)
+                combine_one = combine_on_obTime_id(sta_ob, sta_fos_one_dtime, need_match_ob=need_match_ob,how_fo=how_fo)
                 sta_list.append(combine_one)
                 del sta_fos_one_dtime
 
