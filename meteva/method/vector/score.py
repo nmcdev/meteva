@@ -49,7 +49,7 @@ def nas_d(d_ob,d_fo,s_ob = None,s_fo = None, ignore_breeze = False):
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
     Ob_shpe_list.insert(0, -1)
     new_Fo_shape = tuple(Ob_shpe_list)
@@ -194,7 +194,7 @@ def nasws_s(s_ob,s_fo,min_s = 0,max_s = 300):
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
     Ob_shpe_list.insert(0, -1)
     new_Fo_shape = tuple(Ob_shpe_list)
@@ -465,7 +465,7 @@ def na_ds(d_ob,d_fo,s_ob,s_fo):
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
     Ob_shpe_list.insert(0, -1)
     new_Fo_shape = tuple(Ob_shpe_list)

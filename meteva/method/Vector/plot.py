@@ -25,7 +25,7 @@ def scatter_uv_error(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量�
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
     Ob_shpe_list.insert(0, -1)
     new_Fo_shape = tuple(Ob_shpe_list)
@@ -173,7 +173,7 @@ def scatter_uv(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量散点�
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
     Ob_shpe_list.insert(0, -1)
     new_Fo_shape = tuple(Ob_shpe_list)
@@ -373,7 +373,7 @@ def statisitic_uv(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量分�
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
     Ob_shpe_list.insert(0, -1)
     new_Fo_shape = tuple(Ob_shpe_list)
