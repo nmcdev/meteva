@@ -43,7 +43,7 @@ def features_tran(features):
             }
 
             if "intensity_50" in fi["feature_props"]["ob"].keys():
-                q = [50, 75, 90, 95, 100]
+                q = [0,5,10,25,50, 75, 90, 95, 100]
                 for k in range(len(q)):
                     dict1["ob_intensity_" + str(q[k])] = [fi["feature_props"]["ob"]["intensity_" + str(q[k])]]
                     dict1["fo_intensity_" + str(q[k])] = [fi["feature_props"]["fo"]["intensity_" + str(q[k])]]

@@ -9,3 +9,4 @@ from .fun import get_time_str_list,get_group_name,get_x_label,get_title_from_dic
 from .error_ana_list import error_boxplot,error_boxplot_abs
 from .error_ana_scatter import mae_scatter,rmse_scatter,me_scatter
 from .sample_statistic import sample_tdt,sample_id
+from .diurnal import diunal_max_hour_id,diunal_max_hour

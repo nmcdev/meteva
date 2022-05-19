@@ -22,7 +22,7 @@ def cr(ob,fo,grade_list=[1e-30],compair = ">="):
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
 
     Ob_shpe_list.insert(0, -1)

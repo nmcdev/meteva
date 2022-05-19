@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import meteva
 import numpy as np
 import  math
@@ -45,7 +46,7 @@ def scatter_regress(ob, fo,member_list = None, rtype="linear",vmax = None,vmin =
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
     Ob_shpe_list.insert(0, -1)
     new_Fo_shape = tuple(Ob_shpe_list)
@@ -207,7 +208,7 @@ def pdf_plot(ob, fo,member_list = None,vmax = None,vmin = None, save_path=None, 
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
     Ob_shpe_list.insert(0, -1)
     new_Fo_shape = tuple(Ob_shpe_list)
@@ -345,7 +346,7 @@ def box_plot_continue(ob, fo,  member_list=None,vmax = None,vmin = None, save_pa
     Fo_Ob_index = list(Fo_shape[ind:])
 
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
     Ob_shpe_list.insert(0, -1)
     new_Fo_shape = tuple(Ob_shpe_list)
@@ -451,7 +452,7 @@ def box_plot_continue(ob, fo,  member_list=None,vmax = None,vmin = None, save_pa
     Fo_Ob_index = list(Fo_shape[ind:])
 
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
     Ob_shpe_list.insert(0, -1)
     new_Fo_shape = tuple(Ob_shpe_list)
@@ -846,10 +847,6 @@ def taylor_diagram_(ob, fo,member_list=None, save_path=None,show = False,dpi = 3
 
 
 
-
-
-
-
 def frequency_histogram_error(ob, fo,grade_list=None, member_list=None,  vmax = None,save_path=None,show = False,dpi = 300,plot = "bar", title="误差频率统计图",
                         sup_fontsize = 10,width = None,height = None,log_y = False):
     '''
@@ -869,7 +866,7 @@ def frequency_histogram_error(ob, fo,grade_list=None, member_list=None,  vmax = 
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
     Ob_shpe_list.insert(0, -1)
     new_Fo_shape = tuple(Ob_shpe_list)
@@ -928,3 +925,165 @@ def frequency_histogram_error(ob, fo,grade_list=None, member_list=None,  vmax = 
         meteva.base.plot_tools.plot(result_array, name_list_dict, ylabel="样本占比", vmin=vmin, vmax=vmax, save_path=save_path,
                                    show=show, dpi=dpi, title=title,
                                     width = width,height = height,sup_fontsize= sup_fontsize,log_y = log_y)
+
+
+
+
+
+def accumulation_change_with_strenght(ob,fo,member_list = None,save_path=None,  show = False,dpi = 300,title="降水量随强度变化图",
+             sup_fontsize = 14,width = None,height = None,y_log = False):
+
+    accu_stren = meteva.method.continuous.table.accumulation_strenght_table(ob,fo)
+    min_not_zero = np.min(accu_stren[accu_stren>0])
+    maxv = np.max(accu_stren)
+    shape = accu_stren.shape
+    grade = np.arange(1,shape[1]+1,1)
+    nfo = shape[0]-1
+    if width is None:
+        width = 10
+    if height is None:
+        height = width *0.6
+
+    fig = plt.figure(figsize=(width, height),dpi = dpi)
+
+    if member_list is None:
+        labels = ["观测"]
+        for i in range(1,nfo+1):
+            labels.append("预报"+str(i))
+    else:
+        labels = ["观测"]
+        labels.extend(member_list)
+    for line in range(len(labels)):
+        plt.plot(grade,accu_stren[line], label=labels[line],marker = ".")
+        plt.xlabel("降水强度(毫米/小时)", fontsize=0.9 * sup_fontsize)
+        plt.ylabel("累计降水量", fontsize=0.9 * sup_fontsize)
+        plt.title(title, fontsize=0.9 * sup_fontsize)
+        if(y_log):
+            ax_one = plt.gca()
+            for tick in ax_one.yaxis.get_major_ticks():
+                tick.label1.set_fontproperties('stixgeneral')
+            plt.yscale('log')
+        plt.xticks(fontsize=0.8 * sup_fontsize)
+        plt.legend(loc="upper right")
+
+
+
+    # 设置次刻度间隔
+    maxx = len(grade)
+    if(maxx <20):
+        xmi = 1
+        Xmi = 1
+    elif(maxx <50):
+        xmi = 1
+        Xmi = 5
+    elif (maxx <100):
+        xmi = 1
+        Xmi = 10
+    elif (maxx <300):
+        xmi = 5
+        Xmi = 20
+    elif (maxx <1000):
+        xmi = 10
+        Xmi = 50
+    else:
+        xmi = 50
+        Xmi = 200
+    ax1 = plt.gca()
+    xmajorLocator = mpl.ticker.MultipleLocator(Xmi)  # 将x主刻度标签设置为次刻度10倍
+    ax1.xaxis.set_major_locator(xmajorLocator)
+    xminorLocator = mpl.ticker.MultipleLocator(xmi)  # 将x轴次刻度标签设置xmi
+    ax1.xaxis.set_minor_locator(xminorLocator)
+    plt.xlim(0,maxx)
+    if y_log:
+        plt.ylim(min_not_zero,maxv * 3)
+    else:
+        plt.ylim(0,maxv * 1.1)
+    if save_path is None:
+        show = True
+    else:
+        plt.savefig(save_path, bbox_inches='tight')
+        print("检验结果已以图片形式保存至" + save_path)
+    if show is True:
+        plt.show()
+    plt.close()
+    return accu_stren
+
+def frequency_change_with_strenght(ob,fo,member_list = None,save_path=None,  show = False,dpi = 300,title="降水量随强度变化图",
+             sup_fontsize = 14,width = None,height = None,y_log = False):
+
+    accu_stren = meteva.method.continuous.table.frequency_strenght_table(ob,fo)
+    min_not_zero = np.min(accu_stren[accu_stren>0])
+    maxv = np.max(accu_stren)
+    shape = accu_stren.shape
+    grade = np.arange(1,shape[1]+1,1)
+    nfo = shape[0]-1
+    if width is None:
+        width = 10
+    if height is None:
+        height = width *0.6
+
+    fig = plt.figure(figsize=(width, height),dpi = dpi)
+
+    if member_list is None:
+        labels = ["观测"]
+        for i in range(1,nfo+1):
+            labels.append("预报"+str(i))
+    else:
+        labels = ["观测"]
+        labels.extend(member_list)
+    for line in range(len(labels)):
+        plt.plot(grade,accu_stren[line], label=labels[line],marker = ".")
+        plt.xlabel("降水强度(毫米/小时)", fontsize=0.9 * sup_fontsize)
+        plt.ylabel("降水频次", fontsize=0.9 * sup_fontsize)
+        plt.title(title, fontsize=0.9 * sup_fontsize)
+        if(y_log):
+            ax_one = plt.gca()
+            for tick in ax_one.yaxis.get_major_ticks():
+                tick.label1.set_fontproperties('stixgeneral')
+            plt.yscale('log')
+        plt.xticks(fontsize=0.8 * sup_fontsize)
+        plt.legend(loc="upper right")
+
+
+
+    # 设置次刻度间隔
+    maxx = len(grade)
+    if(maxx <20):
+        xmi = 1
+        Xmi = 1
+    elif(maxx <50):
+        xmi = 1
+        Xmi = 5
+    elif (maxx <100):
+        xmi = 1
+        Xmi = 10
+    elif (maxx <300):
+        xmi = 5
+        Xmi = 20
+    elif (maxx <1000):
+        xmi = 10
+        Xmi = 50
+    else:
+        xmi = 50
+        Xmi = 200
+    ax1 = plt.gca()
+    xmajorLocator = mpl.ticker.MultipleLocator(Xmi)  # 将x主刻度标签设置为次刻度10倍
+    ax1.xaxis.set_major_locator(xmajorLocator)
+    xminorLocator = mpl.ticker.MultipleLocator(xmi)  # 将x轴次刻度标签设置xmi
+    ax1.xaxis.set_minor_locator(xminorLocator)
+    plt.xlim(0,maxx)
+    if y_log:
+        plt.ylim(min_not_zero,maxv * 3)
+    else:
+        plt.ylim(0,maxv * 1.1)
+    if save_path is None:
+        show = True
+    else:
+        plt.savefig(save_path, bbox_inches='tight')
+        print("检验结果已以图片形式保存至" + save_path)
+    if show is True:
+        plt.show()
+    plt.close()
+    return accu_stren
+
+

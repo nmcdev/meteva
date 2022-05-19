@@ -375,7 +375,7 @@ def newFun(Obj):
 #     out["grid"] = meteva.base.get_grid_of_data(grd_ob)
 #     return out
 
-def feature_finder(grd_ob0, grd_fo0, smooth, threshold, minsize, maxsize = float("Inf")):
+def feature_finder(grd_ob0, grd_fo0, smooth, threshold, minsize,compare = ">=",maxsize = float("Inf")):
     
     #读观测数据
     #dataset_ob = xr.open_dataset(filename_ob)  #通过xarray程序库读取nc文件中的所有内容
@@ -547,11 +547,36 @@ def feature_finder(grd_ob0, grd_fo0, smooth, threshold, minsize, maxsize = float
     
     #返回的out列表里面包括:观测数据（X）,预报数据（Xhat），连通域分析后单个区域（X.feats,Yfeats）并包括了很多的属性信息
     #X.feats,Yfeats包括了很多的属性信息：x,y的范围xrange,yrange，维度dim,步长xstep,ystep,行列信息等；标记后的连通域（Xlab,Ylab）；
-    #识别函数、标记函数名称：Convolution Threshold。
-    Xprop = propCounts(Xsm > thresh[0], minsize[0], maxsize[0])[3]
-    Yprop = propCounts(Ysm > thresh[1], minsize[1], maxsize[1])[3]
-    Xlabelsfeature = propCounts(Xsm > thresh[0], minsize[0], maxsize[0])[4]
-    Ylabelsfeature = propCounts(Ysm > thresh[1], minsize[1], maxsize[1])[4]
+
+    ob_hp = None
+    fo_hp = None
+    if compare[0] ==">=":
+        ob_hp = Xsm >= thresh[0]
+        fo_hp = Ysm >= thresh[1]
+    elif compare[0] ==">":
+        ob_hp = Xsm > thresh[0]
+        fo_hp = Ysm > thresh[1]
+    elif compare[0] =="<=":
+        ob_hp = Xsm <= thresh[0]
+        fo_hp = Ysm <= thresh[1]
+    elif compare[0] =="<":
+        ob_hp = Xsm <= thresh[0]
+        fo_hp = Ysm <= thresh[1]
+    else:
+        print("compare parameter must be >=  >  <  or <=" )
+
+
+
+    # #识别函数、标记函数名称：Convolution Threshold。
+    # Xprop = propCounts(Xsm > thresh[0], minsize[0], maxsize[0])[3]
+    # Yprop = propCounts(Ysm > thresh[1], minsize[1], maxsize[1])[3]
+    # Xlabelsfeature = propCounts(Xsm > thresh[0], minsize[0], maxsize[0])[4]
+    # Ylabelsfeature = propCounts(Ysm > thresh[1], minsize[1], maxsize[1])[4]
+
+    Xprop = propCounts(ob_hp, minsize[0], maxsize[0])[3]
+    Yprop = propCounts(fo_hp, minsize[1], maxsize[1])[3]
+    Xlabelsfeature = propCounts(ob_hp, minsize[0], maxsize[0])[4]
+    Ylabelsfeature = propCounts(fo_hp, minsize[1], maxsize[1])[4]
 
     out = {'grd_ob':grd_ob, 'grd_fo':grd_fo,
            "grd_ob_smooth":grd_ob_smooth,"grd_fo_smooth":grd_fo_smooth,

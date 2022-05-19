@@ -153,7 +153,6 @@ def mean_of_sta(sta,used_coords = ["member"],span = 24,equal_weight = False,keep
         rain_ac.attrs["valid_time"] = span
         return rain_ac
 
-
 def std_of_sta(sta,used_coords = ["member"]):
     sta_std = sta.loc[:,meteva.base.get_coord_names()]
     sta_data = sta[meteva.base.get_stadata_names(sta)]
@@ -266,7 +265,6 @@ def max_of_sta(sta,used_coords = ["member"],span = None, contain_start = False,k
                 rain_ac = meteva.base.in_dtime_list(rain_ac, new_dtimes)
             return rain_ac
 
-
 def min_of_sta(sta,used_coords = ["member"],span = None,contain_start = False,keep_all = True,ignore_missing = False):
     if not isinstance(used_coords,list):
         used_coords = [used_coords]
@@ -360,9 +358,6 @@ def min_of_sta(sta,used_coords = ["member"],span = None,contain_start = False,ke
                 new_dtimes = dtimes[dh % step == 0]
                 rain_ac = meteva.base.in_dtime_list(rain_ac, new_dtimes)
             return rain_ac
-
-
-
 
 def sum_of_sta(sta,used_coords = ["member"],span = None,keep_all = True):
     if not isinstance(used_coords,list):
@@ -467,16 +462,39 @@ def sum_of_sta(sta,used_coords = ["member"],span = None,keep_all = True):
                 rain_ac = meteva.base.in_dtime_list(rain_ac, new_dtimes)
             return rain_ac
 
-
-
 #获取网格数据的平均值
-def mean_of_grd(grd,used_coords = ["member"]):
-    grid0 = meteva.base.basicdata.get_grid_of_data(grd)
-    grid1 = meteva.base.basicdata.grid(grid0.glon,grid0.glat,grid0.gtime,grid0.dtimes,grid0.levels,member_list=["mean"])
-    dat = np.squeeze(grd.values)
-    if len(dat.shape) > 2:
-        dat = np.mean(dat,axis = 0)
-    grd1 = meteva.base.basicdata.grid_data(grid1,dat)
+def mean_of_grd(grd,used_coords = ["member"],span = None):
+
+    if used_coords==["member"]:
+        grid0 = meteva.base.basicdata.get_grid_of_data(grd)
+        grid1 = meteva.base.basicdata.grid(grid0.glon,grid0.glat,grid0.gtime,grid0.dtimes,grid0.levels,member_list=["mean"])
+        dat = np.squeeze(grd.values)
+        if len(dat.shape) > 2:
+            dat = np.mean(dat,axis = 0)
+        grd1 = meteva.base.basicdata.grid_data(grid1,dat)
+    elif used_coords == "dtime" or used_coords == ["dtime"]:
+        if span == None:
+            grid0 = meteva.base.get_grid_of_data(grd)
+            dtimes = np.array(grid0.dtimes)
+            dtimes_sum = [dtimes[-1]]
+            grid1 = meteva.base.grid(grid0.glon, grid0.glat, grid0.gtime, dtimes_sum, grid0.levels, grid0.members)
+            grd_sum = meteva.base.grid_data(grid1)
+            grd_sum.values[:, :, :, 0, :, :] = np.mean(grd.values[:, :, :, :, :, :], axis=3)
+            return grd_sum
+        else:
+            grid0 = meteva.base.get_grid_of_data(grd)
+            dtimes = np.array(grid0.dtimes)
+            dtimes_sum = dtimes[dtimes >= span]
+            grid1 = meteva.base.grid(grid0.glon, grid0.glat, grid0.gtime, dtimes_sum, grid0.levels, grid0.members)
+            grd_sum = meteva.base.grid_data(grid1)
+            for i in range(len(dtimes_sum)):
+                dtime_e = dtimes_sum[i]
+                dtime_s = dtimes_sum[i] - span
+                index = np.where((dtimes > dtime_s) & (dtimes <= dtime_e))[0]
+
+                grd_sum.values[:, :, :, i, :, :] = np.mean(grd.values[:, :, :, index, :, :], axis=3)
+            return grd_sum
+
     return grd1
 
 #获取网格数据的方差
@@ -531,7 +549,13 @@ def sum_of_grd(grd,used_coords = ["member"],span = None):
         return grd1
     elif used_coords == "dtime" or used_coords ==["dtime"]:
         if span == None:
-            pass
+            grid0 = meteva.base.get_grid_of_data(grd)
+            dtimes = np.array(grid0.dtimes)
+            dtimes_sum = [dtimes[-1]]
+            grid1 = meteva.base.grid(grid0.glon, grid0.glat, grid0.gtime, dtimes_sum, grid0.levels, grid0.members)
+            grd_sum = meteva.base.grid_data(grid1)
+            grd_sum.values[:, :, :, 0, :, :] = np.sum(grd.values[:, :, :, :, :, :], axis=3)
+            return grd_sum
         else:
             grid0 = meteva.base.get_grid_of_data(grd)
             dtimes = np.array(grid0.dtimes)
@@ -545,7 +569,6 @@ def sum_of_grd(grd,used_coords = ["member"],span = None):
 
                 grd_sum.values[:,:,:,i,:,:] = np.sum(grd.values[:,:,:,index,:,:],axis=3)
             return grd_sum
-
 
 def time_ceilling(sta,step = 1, time_unit = "h",begin_hour= 8):
     '''
@@ -567,8 +590,6 @@ def time_ceilling(sta,step = 1, time_unit = "h",begin_hour= 8):
     sta1["time"] = time0
     sta1["time"] += delta * np.timedelta64(1, "s")
     return sta1
-
-
 
 def loc_of_max(sta,used_coords = ["dtime"],ignore_missing = False):
     '''
@@ -616,8 +637,6 @@ def loc_of_max(sta,used_coords = ["dtime"],ignore_missing = False):
             max_loc = meteva.base.combine_on_level_time_dtime_id(max_loc,sta1_dtime)
 
         return max_loc
-
-
 
 def loc_of_min(sta,used_coords = ["dtime"],ignore_missing = False):
     sta1 = sta.copy()

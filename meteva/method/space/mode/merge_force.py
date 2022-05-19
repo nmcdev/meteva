@@ -5,6 +5,33 @@ from .centmatch import centmatch
 from .deltamm import deltamm
 from .minboundmatch import minboundmatch
 
+
+def reset_label_id_by_area(look_merge):
+    xfeats =look_merge['grd_ob_features']
+    yfeats = look_merge['grd_fo_features']
+    match_count = look_merge["match_count"]
+    area_list = []
+    for i in range(match_count):
+        area_list.append(xfeats[i+1][0].size)
+    area_array = np.array(area_list)
+    sort_index = match_count - np.argsort(np.argsort(area_array))
+
+    dlon_dlat = look_merge["grid"].dlon *  look_merge["grid"].dlat
+    look_merge_new = copy.deepcopy(look_merge)
+    for i in range(match_count):
+        j = sort_index[i]
+        look_merge_new["grd_ob_label"].values[look_merge["grd_ob_label"].values == i+1] = j
+        look_merge_new["grd_fo_label"].values[look_merge["grd_fo_label"].values == i+1] = j
+        look_merge_new["grd_ob_features"][j] = look_merge["grd_ob_features"][i+1]
+        look_merge_new["grd_fo_features"][j] = look_merge["grd_fo_features"][i+1]
+
+    for j in range(look_merge_new["grd_ob_features"]["label_count"]):
+        look_merge_new["grd_ob_features"]["area"].append(look_merge_new["grd_ob_features"][j+1][0].size * dlon_dlat)
+    for j in range(look_merge_new["grd_fo_features"]["label_count"]):
+        look_merge_new["grd_fo_features"]["area"].append(look_merge_new["grd_fo_features"][j+1][0].size * dlon_dlat)
+
+    return look_merge_new
+
 def merge_force(look_match, verbose=False):
     x = copy.deepcopy(look_match)
     out = {}
@@ -63,9 +90,9 @@ def merge_force(look_match, verbose=False):
     else:
 
         xfeats = {'Type': xp['Type'], 'xrange': xp['xrange'], 'yrange': xp['yrange'], 'dim': xp['dim'], 'warnings': xp['warnings'],
-                  'xstep': xp['xstep'], 'ystep': xp['ystep'], 'area': xp['area'], 'xcol': xp['xcol'], 'yrow': xp['yrow']}
+                  'xstep': xp['xstep'], 'ystep': xp['ystep'], 'area': [], 'xcol': xp['xcol'], 'yrow': xp['yrow']}
         yfeats = {'Type': yp['Type'], 'xrange': yp['xrange'], 'yrange': yp['yrange'], 'dim': yp['dim'], 'warnings': yp['warnings'],
-                  'xstep': yp['xstep'], 'ystep': yp['ystep'], 'area': yp['area'], 'xcol': yp['xcol'], 'yrow': yp['yrow']}
+                  'xstep': yp['xstep'], 'ystep': yp['ystep'], 'area': [], 'xcol': yp['xcol'], 'yrow': yp['yrow']}
         xlabeled = np.zeros([xdim[0], xdim[1]], dtype=int)
         ylabeled = np.zeros([xdim[0], xdim[1]], dtype=int)
 
@@ -196,6 +223,7 @@ def merge_force(look_match, verbose=False):
         out['unmatched'] = {'ob': vxunmatched, 'fo': fcunmatched}
         out['MergeForced'] = True
         out["grid"] = x["grid"]
+        out = reset_label_id_by_area(out)
     return out
 
 

@@ -460,48 +460,92 @@ def read_griddata_from_nc(filename,grid = None,
         return None
 
 
-def print_grib_file_info(filename,level_type = None,level = None,filter_by_keys = {}):
-    if level_type is None:
-        try:
-            ds1 = xr.open_dataset(filename, engine="cfgrib", backend_kwargs={"indexpath": ""})
-            print(filename + "中只有一种leve_type，\n请根据以下数据内容信息，确认其中的level维度名称")
-            print(ds1)
-            ds1.close()
-        except:
-            exstr = traceback.format_exc()
-            strs = exstr.split("\n")
-            level_types = []
-            for str1 in strs:
-                if str1.find("filter_by_keys=") >= 0:
-                    str2 = str1.split("={")[1].replace("}", "")
-                    str3 = str2.split(":")[1].strip()
-                    level_types.append(str3)
-            if len(level_types)>0:
-                print(filename + "中包含的levelType有：")
-                for str3 in level_types:
-                    print(str3)
-                print("从上述文件读取数据前，需从上述选项中指定具体level_type值,其中：")
-            else:
-                print(exstr)
-    else:
-        #filter_by_keys = {}
-        filter_by_keys['typeOfLevel'] = level_type.strip()
-        if level is not None:
-            filter_by_keys['level'] = level
-        ds0 = xr.open_dataset(filename, engine="cfgrib", backend_kwargs={'filter_by_keys': filter_by_keys,"indexpath": ""})
-        print(ds0)
-        ds0.close()
+def print_grib_file_info(filename):
+    try:
+        ds1 = xr.open_dataset(filename, engine="cfgrib", backend_kwargs={"indexpath": ""})
+        print(filename + "中只有一种leve_type，\n请根据以下数据内容信息，确认其中的level维度名称")
+        print(ds1)
+        ds1.close()
+    except:
+        exstr = traceback.format_exc()
+        strs = exstr.split("\n")
+        for str1 in strs:
+            if str1.find("filter_by_keys=") >= 0:
+                filter_by_keys = {}
+                str1s = str1.split("=")
+                str1s = str1s[1].replace("{","").replace("}","").replace("'","").replace(" ","").split(",")
+                for str2 in str1s:
+                    key,value = str2.split(":")
+                    filter_by_keys[key] = value
+                    print(filter_by_keys)
+                    try:
+                        ds2 = xr.open_dataset(filename, engine="cfgrib",
+                                        backend_kwargs={'filter_by_keys': filter_by_keys, "indexpath": ""})
+                        print(ds2)
+                    except:
+                        print("errorr****")
+                        exstr2 = traceback.format_exc()
+                        strs = exstr2.split("\n")
+                        # print(strs)
 
 
 
-def read_griddata_from_grib(filename,level_type,grid = None,
+def print_grib_file_info_old(filename,level_type = None,level = None,filter_by_keys = {}):
+    try:
+        if level_type is None and len(filter_by_keys.keys()) ==0:
+            try:
+                ds1 = xr.open_dataset(filename, engine="cfgrib", backend_kwargs={"indexpath": ""})
+                print(filename + "中只有一种leve_type，\n请根据以下数据内容信息，确认其中的level维度名称")
+                print(ds1)
+                ds1.close()
+            except:
+                exstr = traceback.format_exc()
+                strs = exstr.split("\n")
+                print("请增加如下参数种的一种：")
+                para_list = ""
+                level_types = []
+                for str1 in strs:
+                    if str1.find("filter_by_keys=") >= 0:
+                        para_list += str1
+                        para_list += "\n"
+                #         str2 = str1.split("={")[1].replace("}", "")
+                #         str3 = str2.split(":")[1].strip()
+                #         level_types.append(str3)
+                # if len(level_types)>0:
+                #     print(filename + "中包含的levelType有：")
+                #     for str3 in level_types:
+                #         print(str3)
+                #     print("从上述文件读取数据前，需从上述选项中指定具体level_type值,其中：")
+                # else:
+                #     print(exstr)
+                print(para_list +"后重试")
+        else:
+            #filter_by_keys = {}
+            if level_type is not None:
+                filter_by_keys['typeOfLevel'] = level_type.strip()
+
+            if level is not None:
+                filter_by_keys['level'] = level
+            ds0 = xr.open_dataset(filename, engine="cfgrib", backend_kwargs={'filter_by_keys': filter_by_keys,"indexpath": ""})
+            print(ds0)
+            ds0.close()
+    except:
+        import pygrib
+        grbs = pygrib.open(filename)
+        for grb in grbs:
+            print(str(grb))
+
+
+
+
+
+def read_griddata_from_grib(filename,level_type= None,grid = None,
             value_name = None,member_dim = None,time_dim = None,dtime_dim = None,lat_dim = None,lon_dim = None,
                          level=None, time=None, dtime=None, data_name="data0",filter_by_keys = {},show = False):
-
-
     try:
 
-        filter_by_keys['typeOfLevel'] = level_type
+        if level_type is not None:filter_by_keys['typeOfLevel'] = level_type
+        if "typeOfLevel" in filter_by_keys.keys(): level_type = filter_by_keys['typeOfLevel']
         if level is not None:
             filter_by_keys['level'] = level
         ds0 = xr.open_dataset(filename, engine="cfgrib", backend_kwargs={'filter_by_keys': filter_by_keys,"indexpath": ""},)
@@ -1372,21 +1416,29 @@ def read_griddata_from_rasterData(filename,grid = None,level = None,time = None,
         return None
 
 def read_griddata_from_cmadaas(dataCode,element,level_type,level,time,dtime = None,grid = None,data_name= None,show = False):
-    if dtime is None:
-        qparams = { 'interfaceId':'getNafpAnaEleGridByTimeAndLevel'
+
+    if dataCode.find("SURF") >=0:
+        qparams = { 'interfaceId':'getSurfEleGridByTime'
                     ,'dataCode':dataCode
                     ,'fcstEle':element
-                    ,'levelType':str(level_type)
-                    ,'fcstLevel':str(level)
                     }
     else:
-        qparams = { 'interfaceId':'getNafpEleGridByTimeAndLevelAndValidtime'
-                    ,'dataCode':dataCode
-                    ,'fcstEle':element
-                    ,'levelType':str(level_type)
-                    ,'fcstLevel':str(level)
-                    ,'validTime': dtime
-                    }
+        if dtime is None:
+            qparams = { 'interfaceId':'getNafpAnaEleGridByTimeAndLevel'
+                        ,'dataCode':dataCode
+                        ,'fcstEle':element
+                        ,'levelType':str(level_type)
+                        ,'fcstLevel':str(level)
+                        }
+        else:
+            qparams = { 'interfaceId':'getNafpEleGridByTimeAndLevelAndValidtime'
+                        ,'dataCode':dataCode
+                        ,'fcstEle':element
+                        ,'levelType':str(level_type)
+                        ,'fcstLevel':str(level)
+                        ,'validTime': dtime
+                        }
+
 
     #print(qparams)
     url = CMADaasAccess.combine_url_from_para(qparams,time=time, time_name='time',show_url = show)
@@ -1688,6 +1740,7 @@ def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim
             data = np.frombuffer(content, dtype=endian +"f")
 
             data = data.reshape(ctl["nensemble"], ctl["ntime"], nlevel, ctl["nlat"], ctl["nlon"])
+            data = data.transpose(0,2,1,3,4)
             if nlevel != len(ctl["zdef"]):
                 level_list = np.arange(ctl["vars"][value_index]["nlevel"])
             else:
@@ -1699,7 +1752,7 @@ def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim
 
                 grid1 = meteva.base.grid(ctl["glon"], ctl["glat"], gtime=[ctl["gtime"][0]], dtime_list=ctl["dtime_list"] ,
                                          level_list=level_list, member_list=ctl["edef"])
-            print(grid1)
+            #print(grid1)
             grd_one_var = meteva.base.grid_data(grid1,data)
             if grid is not None:
                 grd_one_var = meteva.base.interp_gg_linear(grd_one_var,grid=grid)

@@ -17,8 +17,6 @@ def temp_decrease_in_process(sta,used_coords = "dtime"):
         change_most.attrs = copy.deepcopy(sta.attrs)
         return change_most
 
-
-
 def accumulate_time(sta_ob,step,keep_all = True):
     '''
     观测数据累加
@@ -271,7 +269,6 @@ def u_v_to_wind(u,v):
         wind.values[1, :, :, :, :, :] = v.values[0, :, :, :, :, :]
         return wind
 
-
 def wind_to_speed_angle(wind):
     if isinstance(wind,pd.DataFrame):
         member_name = meteva.base.get_stadata_names(wind)
@@ -358,7 +355,7 @@ def t_dtp_to_rh(temp,dtp):
         e0 = 6.11 * np.exp(17.15 * T/(235 + T))
         e1 = 6.11 * np.exp(17.15 * D / (235 + D))
 
-        rh = e0/e1
+        rh = e1/e0
         grd = meteva.base.grid_data(grid0,rh)
 
         return grd

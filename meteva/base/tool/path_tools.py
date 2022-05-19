@@ -13,9 +13,9 @@ import pathlib
 
 
 #获取最新的gds路径
-def get_latest_gds_path(ip,port,dir,time,dtime,dt_cell = "hour",dt_step = 1,farthest = 240):
+def get_latest_gds_path(dir,time,dtime,dt_cell = "hour",dt_step = 1,farthest = 240):
     dir1,filemodel = os.path.split(dir)
-    file_list = get_gds_file_list_in_one_dir(ip,port,dir1)
+    file_list = get_gds_file_list_in_one_dir(dir1)
     for ddt in range(0,farthest,dt_step):
         if dt_cell.lower() == "hour":
             time1 = time - datetime.timedelta(hours=ddt)
@@ -80,7 +80,7 @@ def get_path_without_star(dir,time,dt = None,dt_cell = "hour"):
     :return:
     '''
     if(dt is not None):
-        if not (isinstance(dt,np.int16) or isinstance(dt,np.int32) or type(dt) == type(1)):
+        if not (isinstance(dt,np.int16) or isinstance(dt,np.int32) or isinstance(dt,np.int64)or type(dt) == type(1)):
             if(dt_cell.lower()=="hour"):
                 dt = int(dt.total_seconds() / 3600)
             elif(dt_cell.lower()=="minute"):
@@ -91,9 +91,10 @@ def get_path_without_star(dir,time,dt = None,dt_cell = "hour"):
                 dt = int(dt.total_seconds())
     else:
         dt = 0
+    cdt2 = '%02d' % dt
     cdt3 = '%03d' % dt
     cdt4 = '%04d' % dt
-    dir1 = dir.replace("TTTT",cdt4).replace("TTT",cdt3)
+    dir1 = dir.replace("TTTT",cdt4).replace("TTT",cdt3).replace("TT",cdt2)
     y4 = time.strftime("%Y")
     y2 = y4[2:]
     mo = time.strftime("%m")
@@ -285,10 +286,11 @@ def exist_in_gds(path):
     else:
         return False
 
-def get_gds_all_dir(ip,port,path,all_path,service = None):
+def get_gds_all_dir(path,all_path,service = None):
     # 初始化GDS客户端
 
     if service is None:
+        ip, port = meteva.base.gds_ip_port
         service = GDSDataService(ip, port)
     # 获得指定目录下的所有文件
     path = path.replace("mdfs:///", "")
@@ -309,7 +311,7 @@ def get_gds_all_dir(ip,port,path,all_path,service = None):
                         path1 = path1[1:]
                     if(path1[0:1] == "/"):
                         path1 = path1[1:]
-                    get_gds_all_dir(ip,port,path1,all_path,service)
+                    get_gds_all_dir(path1,all_path,service)
                     #print(name_size_pair[0])
             if(not contain_dir):
                 all_path.append(path)

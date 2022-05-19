@@ -24,7 +24,7 @@ def hnh(Ob, Fo, grade_count=10,member_list=None,  save_path=None):
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
     Ob_shpe_list.insert(0, -1)
     new_Fo_shape = tuple(Ob_shpe_list)

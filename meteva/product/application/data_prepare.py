@@ -466,6 +466,8 @@ def creat_ob_dataset(para,ele = "ob",recover = True):
                     if not isinstance(dat, pd.DataFrame):
                         interp = para["interp"]
                         dat = interp(dat, station)
+                    else:
+                        dat = meteva.base.fun.comp.put_stadata_on_station(dat, station)
                     if reasonable_value is not None:
                         dat = meteva.base.sele_by_para(dat, value=reasonable_value)
                     data_name0 = meteva.base.get_stadata_names(dat)

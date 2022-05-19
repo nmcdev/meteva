@@ -21,7 +21,7 @@ def ob_fo_sum(ob,fo):
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
 
     if len(fo.shape) == len(ob.shape):
@@ -43,7 +43,7 @@ def ob_fo_mean(ob,fo):
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
 
     if len(fo.shape) == len(ob.shape):
@@ -96,7 +96,7 @@ def ob_fo_quantile(ob,fo,grade_list=[0.5]):
     Fo_Ob_index = list(Fo_shape[ind:])
 
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
     if len(fo.shape) == len(ob.shape):
         ob1 = np.sort(ob)
@@ -153,7 +153,7 @@ def ob_fo_min(ob,fo,count = 1):
         ind = -size
         Fo_Ob_index = list(Fo_shape[ind:])
         if Fo_Ob_index != Ob_shpe_list:
-            print('实况数据和观测数据维度不匹配')
+            print('预报数据和观测数据维度不匹配')
             return
 
         if len(fo.shape) == len(ob.shape):
@@ -175,7 +175,7 @@ def ob_fo_min(ob,fo,count = 1):
         ind = -size
         Fo_Ob_index = list(Fo_shape[ind:])
         if Fo_Ob_index != Ob_shpe_list:
-            print('实况数据和观测数据维度不匹配')
+            print('预报数据和观测数据维度不匹配')
             return
         ob_f = ob.flatten()
         index = ob_f.argsort()[:count]
@@ -205,7 +205,7 @@ def ob_fo_max(ob,fo, count = 1):
         ind = -size
         Fo_Ob_index = list(Fo_shape[ind:])
         if Fo_Ob_index != Ob_shpe_list:
-            print('实况数据和观测数据维度不匹配')
+            print('预报数据和观测数据维度不匹配')
             return
 
         if len(fo.shape) == len(ob.shape):
@@ -227,7 +227,7 @@ def ob_fo_max(ob,fo, count = 1):
         ind = -size
         Fo_Ob_index = list(Fo_shape[ind:])
         if Fo_Ob_index != Ob_shpe_list:
-            print('实况数据和观测数据维度不匹配')
+            print('预报数据和观测数据维度不匹配')
             return
         ob_f = ob.flatten()
         index = ob_f.argsort()[-count:][::-1]
@@ -257,7 +257,7 @@ def ob_fo_std(ob,fo):
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
 
     if len(fo.shape) == len(ob.shape):
@@ -268,6 +268,38 @@ def ob_fo_std(ob,fo):
             result.append(np.std(fo[i,:]))
     result = np.array(result)
     return result
+
+
+def ob_fo_precipitation_strenght(ob,fo):
+    '''
+    :param ob: 观测降水序列
+    :param fo: 预报降水序列
+    :return: 观测和预报各自的平均降水强度，平均降水强度等于降水量大于等于0.1mm的站次的降水的平均值
+    '''
+    Fo_shape = fo.shape
+    Ob_shape = ob.shape
+
+    Ob_shpe_list = list(Ob_shape)
+    size = len(Ob_shpe_list)
+    ind = -size
+    Fo_Ob_index = list(Fo_shape[ind:])
+    if Fo_Ob_index != Ob_shpe_list:
+        print('预报数据和观测数据维度不匹配')
+        return
+
+    ob_not_0 = ob[ob >= 0.1]
+    result = [np.mean(ob_not_0)]
+    if len(fo.shape) == len(ob.shape):
+        fo_not_0 = fo[fo>=0.1]
+        result.append(np.mean(fo_not_0))
+    else:
+        for i in range(Fo_shape[0]):
+            foi= fo[i,:]
+            fo_not_0 = foi[foi >= 0.1]
+            result.append(np.mean(fo_not_0))
+    result = np.array(result)
+    return result
+
 
 
 def ob_mean(Ob, Fo=None):
@@ -298,7 +330,7 @@ def fo_mean(Ob, Fo):
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
     if len(Fo_shape)> len(Ob_shape):
         Ob_shpe_list.insert(0, -1)
@@ -335,7 +367,7 @@ def tc_count(Ob, Fo, grade_list = [2]):
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
     Ob_shpe_list.insert(0, -1)
     new_Fo_shape = tuple(Ob_shpe_list)
@@ -432,7 +464,7 @@ def tlfo(Ob,Fo):
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
     Ob_shpe_list.insert(0, -1)
     new_Fo_shape = tuple(Ob_shpe_list)
@@ -491,7 +523,7 @@ def tase(Ob, Fo):
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
     Ob_shpe_list.insert(0, -1)
     new_Fo_shape = tuple(Ob_shpe_list)
@@ -520,7 +552,7 @@ def max_error(Ob,Fo):
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
     if len(Fo_shape)> len(Ob_shape):
         Ob_shpe_list.insert(0, -1)
@@ -547,7 +579,7 @@ def min_error(Ob,Fo):
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
     if len(Fo_shape)> len(Ob_shape):
         Ob_shpe_list.insert(0, -1)
@@ -575,7 +607,7 @@ def max_abs_error(Ob,Fo):
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
     if len(Fo_shape)> len(Ob_shape):
         Ob_shpe_list.insert(0, -1)
@@ -609,7 +641,7 @@ def me(Ob, Fo):
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
     if len(Fo_shape)> len(Ob_shape):
         Ob_shpe_list.insert(0, -1)
@@ -655,7 +687,7 @@ def mae(Ob, Fo):
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
     if len(Fo_shape) == len(Ob_shape):
         mean_abs_error = np.mean(np.abs(Fo - Ob))
@@ -703,7 +735,7 @@ def mse(Ob, Fo):
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
     if len(Fo_shape) == len(Ob_shape):
         mean_square_error = np.mean(np.square(Fo - Ob))
@@ -750,7 +782,7 @@ def rmse(Ob, Fo):
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
     if len(Fo_shape) == len(Ob_shape):
         mean_square_error = np.sqrt(np.mean(np.square(Fo - Ob)))
@@ -801,7 +833,7 @@ def bias_m(Ob, Fo):
         ind = -size
         Fo_Ob_index = list(Fo_shape[ind:])
         if Fo_Ob_index != Ob_shpe_list:
-            print('实况数据和观测数据维度不匹配')
+            print('预报数据和观测数据维度不匹配')
             return
         if len(Fo_shape) == len(Ob_shape):
             bias0 = np.mean(Fo) / mean_ob
@@ -861,7 +893,7 @@ def corr_rank(Ob,Fo):
     Fo_Ob_index = list(Fo_shape[ind:])
 
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
     if len(Fo_shape) == len(Ob_shape):
 
@@ -970,7 +1002,7 @@ def tmmsss(Ob, Fo):
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
     Ob_shpe_list.insert(0, -1)
     new_Fo_shape = tuple(Ob_shpe_list)
@@ -1054,7 +1086,7 @@ def mre(Ob, Fo):
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
 
     s = Ob + Fo
@@ -1127,7 +1159,7 @@ def toar(Ob, Fo):
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
     s = Ob + Fo
     d = Ob - Fo
@@ -1167,7 +1199,7 @@ def nse(Ob, Fo):
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
 
     mob = np.mean(Ob)

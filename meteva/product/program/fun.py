@@ -306,7 +306,7 @@ def get_title_from_dict(method,s,g,group_list,model_name,title = None):
                         group_name += str(loc)+"|"+ str(group_list[1])+"|...|"+str(group_list[-1])
             group_name = group_name + ")"
         if model_name is not None:
-            model_name = "(" + str(model_name) + ")"
+            model_name = str(model_name)
         else:
             model_name = ""
         print()

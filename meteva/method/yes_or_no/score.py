@@ -208,7 +208,7 @@ def hfmc_of_sun_rain(Ob, Fo):
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
 
         return
     Ob_shpe_list.insert(0, -1)
@@ -534,7 +534,7 @@ def hfmdt(Ob, Fo, dtime, grade_list=[1e-30],compare =">=",compair = None):
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
     Ob_shpe_list.insert(0, -1)
     new_Fo_shape = tuple(Ob_shpe_list)
@@ -691,7 +691,7 @@ def hfmc(Ob, Fo, grade_list=[1e-30],compare =">=",compair = None):
     ind = -size
     Fo_Ob_index = list(Fo_shape[ind:])
     if Fo_Ob_index != Ob_shpe_list:
-        print('实况数据和观测数据维度不匹配')
+        print('预报数据和观测数据维度不匹配')
         return
     Ob_shpe_list.insert(0, -1)
     new_Fo_shape = tuple(Ob_shpe_list)

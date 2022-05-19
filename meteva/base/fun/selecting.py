@@ -380,7 +380,7 @@ def in_dtime_list(data,dtime_list):
         dtime_list1 = []
         for dtime in dtime_list:
             if dtime not in grid0.dtimes:
-                print(dtime +" not exist in griddata's dtime_list")
+                print(str(dtime) +" not exist in griddata's dtime_list")
             else:
                 for i in range(len(grid0.dtimes)):
                     if dtime == grid0.dtimes[i]:

@@ -503,6 +503,22 @@ def cmap_clevs_ts():
     cmap = colors.ListedColormap(colors_list, 'indexed')
     return cmap,clevs
 
+def hour():
+    #import matplotlib.colors as colors
+    cmap = np.array([[0,0,255],
+                     [0,115,255],
+                     [16,190,56],
+                     [255,255,0],
+                     [254,147,5],
+                     [255,18,0],
+                     [177,0,62],
+                     [117,0,121],
+                     [0,0,255],])/255
+    cmap = cmap.tolist()
+    cmap = colors.ListedColormap(cmap, 'indexed')
+    clevs = np.arange(0,24,3).tolist()
+    return  cmap ,clevs
+
 
 def cmap_clevs_radar():
     clevs = np.arange(5,75,5).tolist()
@@ -901,6 +917,8 @@ def get_cmap_and_clevs_by_name(cmap_name,vmin,vmax):
         cmap,clevs = cmap_clevs_radar()
     elif cmap_name =="mae":
         cmap, clevs = cmap_clevs_mae(vmax)
+    elif cmap_name =="hour":
+        cmap,clevs = hour()
     else:
         print("该配色方案名称不识别")
         return None,None
@@ -937,6 +955,7 @@ class cmaps:
     me_bwr = "me_bwr"
     me_w0 = "me_w0"
     mae = "mae"
+    hour = "hour"
 
 
 def coordinate_cmap_to_clevs(cmap,clevs):
