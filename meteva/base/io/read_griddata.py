@@ -796,7 +796,6 @@ def decode_gridwind_from_gds_byteArray(byteArray,grid = None,level = None,time =
     lonInterval = (endLon - startLon) / (nlon - 1)
     latInterval = (endLat - startLat) / (nlat - 1)
     wind = None
-    print(nmem)
     if nmem ==0:
         if (data_len * 2 == (len(byteArray) - 278)):
             grid0 = meteva.base.grid([startLon, endLon, lonInterval], [startLat, endLat, latInterval])
