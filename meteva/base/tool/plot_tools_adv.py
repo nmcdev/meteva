@@ -7,22 +7,44 @@ import math
 from matplotlib.colors import BoundaryNorm
 
 
-
-
 def add_map(ax,add_county_line = False,add_worldmap = True,title = None,sup_fontsize = 12):
-    if add_worldmap:
-        meteva.base.tool.plot_tools.add_china_map_2basemap(ax, name="world", edgecolor='k', lw=0.3, encoding='gbk', grid0=None)  # "国界"
-    meteva.base.tool.plot_tools.add_china_map_2basemap(ax, name="nation", edgecolor='k', lw=0.3,encoding = 'gbk')  #"国界"
-    meteva.base.tool.plot_tools.add_china_map_2basemap(ax, edgecolor='k', lw=0.3,encoding = 'gbk')  #"省界"
-    if add_county_line:
-        meteva.base.tool.plot_tools.add_china_map_2basemap(ax, name="county", edgecolor='k', lw=0.2, encoding='gbk')  # "省界"
-    ax.set_title(title,fontsize = sup_fontsize* 0.9)
-    return ax
 
+    if meteva.base.customized_basemap_list is None:
+        if add_worldmap:
+            meteva.base.tool.plot_tools.add_china_map_2basemap(ax, name="world", edgecolor='k', lw=0.3, encoding='gbk', grid0=None)  # "国界"
+        meteva.base.tool.plot_tools.add_china_map_2basemap(ax, name="nation", edgecolor='k', lw=0.3,encoding = 'gbk')  #"国界"
+        meteva.base.tool.plot_tools.add_china_map_2basemap(ax, edgecolor='k', lw=0.3,encoding = 'gbk')  #"省界"
+        if add_county_line:
+            meteva.base.tool.plot_tools.add_china_map_2basemap(ax, name="county", edgecolor='k', lw=0.2, encoding='gbk')  # "省界"
+        ax.set_title(title,fontsize = sup_fontsize* 0.9)
+        return ax
+    else:
+        for shpfile in meteva.base.customized_basemap_list:
+            # print(shpfile)
+
+            try:
+                shp1 = meteva.base.tool.plot_tools.readshapefile(shpfile, default_encoding=encoding)
+                lines = meteva.base.tool.plot_tools.LineCollection(shp1, antialiaseds=(1,), zorder=100)
+                lines.set_color("k")
+                lines.set_linewidth(1)
+                lines.set_label('_nolabel_')
+                ax.add_collection(lines)
+            except:
+                if encoding == "gbk":
+                    encoding = "utf-8"
+                elif encoding == "utf-8":
+                    encoding = "gbk"
+
+                shp1 = meteva.base.tool.plot_tools.readshapefile(shpfile, default_encoding=encoding)
+                lines = meteva.base.tool.plot_tools.LineCollection(shp1, antialiaseds=(1,), zorder=100)
+                lines.set_color("k")
+                lines.set_linewidth(1)
+                lines.set_label('_nolabel_')
+                ax.add_collection(lines)
 
 
 def creat_axs(nplot,map_extend,ncol = None,height  = None,width = None,dpi = 300,sup_title = None,sup_fontsize = 12,
-              add_county_line = False,add_worldmap = True,title_list = None,add_index = None,wspace = None):
+              add_county_line = False,add_worldmap = True,add_minmap = None,title_list = None,add_index = None,wspace = None,grid = True):
 
 
     ax_index = []
@@ -58,7 +80,8 @@ def creat_axs(nplot,map_extend,ncol = None,height  = None,width = None,dpi = 300
 
     height_title = sup_fontsize * 0.1
     height_bottem_xticsk = sup_fontsize * 0.05
-    height_hspace = sup_fontsize * 0.1
+    height_hspace = sup_fontsize * 0.025
+
 
     if wspace is None:
         width_wspace = height_hspace*2
@@ -179,10 +202,12 @@ def creat_axs(nplot,map_extend,ncol = None,height  = None,width = None,dpi = 300
         yticks_label_None.append("")
 
     fig = plt.figure(figsize=(width, height), dpi=dpi)
-    y_sup_title = (height_bottem_xticsk -0.1 + (nrow) * (height_map + height_hspace)) / height
+    y_sup_title = (height_bottem_xticsk  + nrow * height_map +(nrow-1) * height_hspace) / height
     if sup_title is not None:
-        plt.suptitle(sup_title, x = 0.6,y = y_sup_title,fontsize=sup_fontsize)
+        plt.suptitle(sup_title, x = width_left_yticks / width,y = y_sup_title,fontsize=sup_fontsize,horizontalalignment ="left",
+                     verticalalignment  ="bottom")
     ax_list = []
+    min_ax_list = []
     for p in range(nplot):
         pi = p % ncol
         pj = int(p / ncol)
@@ -195,79 +220,13 @@ def creat_axs(nplot,map_extend,ncol = None,height  = None,width = None,dpi = 300
         ax.set_xlim((slon, elon))
         ax.set_ylim((slat, elat))
 
-        # vmax = elon
-        # vmin = slon
-        # r = max(rlon,rlat)
-        # if r <= 0.1:
-        #     inte = 0.05
-        # elif r <= 0.5:
-        #     inte = 0.1
-        # elif r <=1:
-        #     inte = 0.2
-        # elif r <= 5 and r > 1:
-        #     inte = 1
-        # elif r <= 10 and r > 5:
-        #     inte = 2
-        # elif r < 20 and r >= 10:
-        #     inte = 4
-        # elif r <= 30 and r >= 20:
-        #     inte = 5
-        # elif r < 180:
-        #     inte = 10
-        # else:
-        #     inte = 20
-        #
-        # vmin = inte * (math.ceil(vmin / inte))
-        # vmax = inte * ((int)(vmax / inte) + 0.5)
-        # xticks = np.arange(vmin, vmax, inte)
-        # xticks_label = []
-        # for x in range(len(xticks)):
-        #     xticks_label.append(str(round(xticks[x], 6)))
-        # if xticks[-1] > 0:
-        #     xticks_label[-1] = "   " + xticks_label[-1] + "°E"
-        # else:
-        #     xticks_label[-1] = "   " + xticks_label[-1] + "°W"
+
         ax.set_xticks(xticks)
         ax.set_xticklabels(xticks_label, fontsize=sup_fontsize * 0.9, family='Times New Roman')
-
-        # vmax = elat
-        # vmin = slat
-        # r = rlat
-        # if r <= 0.1:
-        #     inte = 0.05
-        # elif r <= 0.5:
-        #     inte = 0.1
-        # elif r <=1:
-        #     inte = 0.2
-        # elif r <= 5 and r > 1:
-        #     inte = 1
-        # elif r <= 10 and r > 5:
-        #     inte = 2
-        # elif r < 20 and r >= 10:
-        #     inte = 4
-        # elif r <= 30 and r >= 20:
-        #     inte = 5
-        # else:
-        #     inte = 10
-        #
-        # vmin = inte * (math.ceil(vmin / inte))
-        # vmax = inte * ((int)(vmax / inte)+0.5)
-        # yticks = np.arange(vmin, vmax, inte)
-        # yticks_label = []
-        # for y in range(len(yticks)):
-        #
-        #     if yticks[y] >= 0 and y == len(yticks) - 1:
-        #         yticks_label.append(str(round(yticks[y], 6)) + "°N")
-        #     elif yticks[y] < 0 and y == 0:
-        #         yticks_label.append(str(round(-yticks[y], 6)) + "°S")
-        #     elif yticks[y] == 0:
-        #         yticks_label.append("EQ" + "  ")
-        #     else:
-        #         yticks_label.append(str(round(yticks[y], 6)) + "    ")
         ax.set_yticks(yticks)
         ax.set_yticklabels(yticks_label, fontsize=sup_fontsize * 0.9, family='Times New Roman')
 
-
+        if grid: plt.grid(linestyle = "--",linewidth = 0.5)
         if title_list is None:
             sub_title = None
         else:
@@ -275,149 +234,97 @@ def creat_axs(nplot,map_extend,ncol = None,height  = None,width = None,dpi = 300
         add_map(ax,add_county_line=add_county_line,add_worldmap=add_worldmap,sup_fontsize=sup_fontsize,title=sub_title)
 
         if len(ax_index)>1:
-
-            ix = slon + 0.008*(elon - slon) * sup_fontsize / width_map
-            iy = elat - 0.018*(elat - slat) * sup_fontsize / height_map
-
-            plt.text(ix, iy, ax_index[p], bbox=dict(fc='white', ec='white'),fontsize = sup_fontsize,zorder=100)
-
-
+            ix = slon + 0.02*(elon - slon) * 5 / width_map
+            iy = elat - 0.035*(elat - slat) * 5 / height_map
+            plt.text(ix, iy, ax_index[p], bbox=dict(fc='white', ec='white',pad = 0),fontsize = sup_fontsize,zorder=100)
         ax_list.append(ax)
 
 
+        if slon< 75 and elon >130 and elat >50 and slat >3 and slat <25:
+            if add_minmap is None:
+                print("返回结果中自动添加了南海小地图，请注意返回结果中包含了两个绘图框列表")
+                add_minmap = "left"
 
-    return ax_list
+        if add_minmap is not None:
+            if add_minmap == "left" or add_minmap=="right":
+                minmap_lon_lat = [105, 123, 0, 20]
+                minmap_height_rate = 0.27
+                height_bigmap = rect1[3]
+                height_minmap = height_bigmap * minmap_height_rate
+                width_minmap = height_minmap * (minmap_lon_lat[1] - minmap_lon_lat[0]) * height / (
+                            minmap_lon_lat[3] - minmap_lon_lat[2])/width
 
-
-def cread_ax(map_extend,height  = None,width = None,dpi = 300,add_county_line = False,title = None,sup_fontsize = 10,add_worldmap = False):
-    if isinstance(map_extend,list):
-        slon = map_extend[0]
-        elon = map_extend[1]
-        slat = map_extend[2]
-        elat = map_extend[3]
-
-    elif isinstance(map_extend,meteva.base.grid):
-        slon = map_extend.slon
-        slat = map_extend.slat
-        elon = map_extend.elon
-        elat = map_extend.elat
-
-    rlon = elon - slon
-    rlat = elat - slat
-
-    if height is None:
-        height = 4
-    title_hight = 0.3
-    legend_hight = 0.1
-    left_plots_width  = 0.8
-    right_plots_width = 0.8
-    if width is None:
-        width = (height - title_hight - legend_hight) * rlon / rlat + left_plots_width + right_plots_width
-    #print(width)
-    fig = plt.figure(figsize=(width, height),dpi = dpi)
-    rect1 = [left_plots_width / width, legend_hight/height, (width - right_plots_width - left_plots_width) / width, 1-title_hight/height]
-    ax = plt.axes(rect1)
-
-
-    if slon < 70 or elon > 140 or slat < 10 or elat > 60:
-        add_worldmap = True
-    if add_worldmap:
-        meteva.base.tool.plot_tools.add_china_map_2basemap(ax, name="world", edgecolor='k', lw=0.3, encoding='gbk', grid0=None)  # "国界"
-
-    meteva.base.tool.plot_tools.add_china_map_2basemap(ax, name="nation", edgecolor='k', lw=0.3,encoding = 'gbk')  #"国界"
-    meteva.base.tool.plot_tools.add_china_map_2basemap(ax, edgecolor='k', lw=0.3,encoding = 'gbk')  #"省界"
-    if add_county_line:
-        meteva.base.tool.plot_tools.add_china_map_2basemap(ax, name="county", edgecolor='k', lw=0.2, encoding='gbk')  # "省界"
-    ax.set_xlim((slon, elon))
-    ax.set_ylim((slat, elat))
-    ax.set_title(title,fontsize = sup_fontsize)
-
-
-    vmax = elon
-    vmin = slon
-    r = rlon
-    if r <= 1:
-        inte = 0.1
-    elif r <= 5 and r > 1:
-        inte = 1
-    elif r <= 10 and r > 5:
-        inte = 2
-    elif r < 20 and r >= 10:
-        inte = 4
-    elif r <= 30 and r >= 20:
-        inte = 5
-    elif r <180:
-        inte = 10
+                width_between_two_map =  height_bigmap *0.01
+                sy_minmap = width_between_two_map + rect1[1]
+                if add_minmap =="left":
+                    sx_minmap = rect1[0] + width_between_two_map
+                else:
+                    sx_minmap = rect1[0] + rect1[2] - width_minmap - width_between_two_map
+                rect_min = [sx_minmap,sy_minmap,width_minmap,height_minmap]
+                ax_min = plt.axes(rect_min)
+                plt.xticks([])
+                plt.yticks([])
+                ax_min.set_xlim((minmap_lon_lat[0], minmap_lon_lat[1]))
+                ax_min.set_ylim((minmap_lon_lat[2], minmap_lon_lat[3]))
+                ax_min.spines["top"].set_linewidth(0.3)
+                ax_min.spines["bottom"].set_linewidth(0.3)
+                ax_min.spines["right"].set_linewidth(0.3)
+                ax_min.spines["left"].set_linewidth(0.3)
+                add_map(ax_min, add_worldmap =True)  # "国界"
+                min_ax_list.append(ax_min)
+    if len(min_ax_list)==0:
+        return ax_list
     else:
-        inte = 20
+        return ax_list,min_ax_list
 
-    vmin = inte * (math.ceil(vmin / inte))
-    vmax = inte * ((int)(vmax / inte)+1)
-    xticks = np.arange(vmin,vmax,inte)
-    xticks_label = []
-    for x in range(len(xticks)):
-        xticks_label.append(str(round(xticks[x],6)))
-    if xticks[-1] >0:
-        xticks_label[-1] ="   " +xticks_label[-1] + "°E"
-    else:
-        xticks_label[-1] ="   " +xticks_label[-1] + "°W"
-    ax.set_xticks(xticks)
-    ax.set_xticklabels(xticks_label,fontsize = sup_fontsize * 0.9)
 
-    vmax = elat
-    vmin = slat
-    r = rlat
-    if r <= 1:
-        inte = 0.1
-    elif r <= 5 and r > 1:
-        inte = 1
-    elif r <= 10 and r > 5:
-        inte = 2
-    elif r < 20 and r >= 10:
-        inte = 4
-    elif r <= 30 and r >= 20:
-        inte = 5
-    else:
-        inte = 10
+def add_contourf(ax,grd,cmap ="rainbow",clevs= None,add_colorbar = True,cut_colorbar = True,title = None,title_fontsize = 8):
+    slon = ax.transLimits._boxin.x0
+    elon = ax.transLimits._boxin.x1
+    slat = ax.transLimits._boxin.y0
+    elat = ax.transLimits._boxin.y1
 
-    vmin = inte * (math.ceil(vmin / inte))
-    vmax = inte * ((int)(vmax / inte)+1)
-    yticks = np.arange(vmin,vmax,inte)
-    yticks_label = []
-    for y in range(len(yticks)):
-        if yticks[y] >= 0:
-            yticks_label.append(str(round(yticks[y],6))+"°N")
-        else:
-            yticks_label.append(str(round(-yticks[y], 6)) +"°S")
-    ax.set_yticks(yticks)
-    ax.set_yticklabels(yticks_label,fontsize = sup_fontsize * 0.9)
-    return ax
+    grid0 = meteva.base.get_grid_of_data(grd)
+    grid1 = meteva.base.grid([slon,elon,grid0.dlon],[slat,elat,grid0.dlat])
+    grd1 = meteva.base.interp_gg_linear(grd,grid1,outer_value=np.nan)
 
-def add_contourf(ax,grd,cmap ="rainbow",clevs= None,add_colorbar = True,cut_colorbar = True):
-    x = grd['lon'].values
-    y = grd['lat'].values
-    vmax = np.max(grd.values)
-    vmin = np.min(grd.values)
+    x = grd1['lon'].values
+    y = grd1['lat'].values
+    vmax = np.nanmax(grd1.values)
+    vmin = np.nanmin(grd1.values)
 
     cmap1,clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap,clevs=clevs,vmin=vmin,vmax = vmax,cut_colorbar = cut_colorbar)
     norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
-    im = ax.contourf(x, y, np.squeeze(grd.values), levels=clevs1, cmap=cmap1,norm = norm)
+    im = ax.contourf(x, y, np.squeeze(grd1.values), levels=clevs1, cmap=cmap1,norm = norm)
 
     fig = plt.gcf()
     width = fig.bbox.width/fig.dpi
     height = fig.bbox.height/fig.dpi
     location = [ax.bbox.x1/fig.dpi/width+0.005, ax.bbox.y0 / fig.dpi/height, 0.01, ax.bbox.height/fig.dpi/height]
-
-    if(add_colorbar):
+    plt.title(title)
+    if add_colorbar:
         colorbar_position = fig.add_axes(location)  # 位置[左,下,宽,高]
         plt.colorbar(im,cax= colorbar_position)
     return im
 
-def add_contour(ax,grd,color='k',clevs = None,linewidths = 1,label_fontsize = 5):
-    x = grd['lon'].values
-    y = grd['lat'].values
-    vmax = np.max(grd.values)
-    vmin = np.min(grd.values)
+def add_contour(ax,grd,color='k', linewidth = 1,label_fontsize = 5,clevs = None,title = None,title_fontsize = 8):
+
+
+    slon = ax.transLimits._boxin.x0
+    elon = ax.transLimits._boxin.x1
+    slat = ax.transLimits._boxin.y0
+    elat = ax.transLimits._boxin.y1
+
+    grid0 = meteva.base.get_grid_of_data(grd)
+    grid1 = meteva.base.grid([slon,elon,grid0.dlon],[slat,elat,grid0.dlat])
+    grd1 = meteva.base.interp_gg_linear(grd,grid1,outer_value=np.nan)
+
+    x = grd1['lon'].values
+    y = grd1['lat'].values
+    vmax = np.nanmax(grd1.values)
+    vmin = np.nanmin(grd1.values)
+
+
     if clevs is None:
         dif = (vmax - vmin) / 10.0
         inte = math.pow(10, math.floor(math.log10(dif)));
@@ -453,69 +360,86 @@ def add_contour(ax,grd,color='k',clevs = None,linewidths = 1,label_fontsize = 5)
         f1 = 1
         f2 = 0
     fmt = "%"+str(f1)+"."+str(f2)+"f"
-    print(clevs)
-    cs = ax.contour(x, y, np.squeeze(grd.values),levels = clevs,colors = color,linewidths = linewidths)
+    ax.set_title(title,fontsize =title_fontsize)
+    cs = ax.contour(x, y, np.squeeze(grd1.values),levels = clevs,colors = color,linewidths = linewidth)
     ax.clabel(cs, inline=1, fontsize=label_fontsize,fmt=fmt)
 
-def add_mesh(ax,grd,cmap ="rainbow",clevs= None,add_colorbar = True):
-    x = grd['lon'].values
-    y = grd['lat'].values
-    vmax = np.max(grd.values)
-    vmin = np.min(grd.values)
+def add_mesh(ax,grd,cmap ="rainbow",clevs= None,add_colorbar = True,title = None,title_fontsize = 8):
+
+
+    slon = ax.transLimits._boxin.x0
+    elon = ax.transLimits._boxin.x1
+    slat = ax.transLimits._boxin.y0
+    elat = ax.transLimits._boxin.y1
+
+    grid0 = meteva.base.get_grid_of_data(grd)
+    grid1 = meteva.base.grid([slon,elon,grid0.dlon],[slat,elat,grid0.dlat])
+    grd1 = meteva.base.interp_gg_linear(grd,grid1,outer_value=np.nan)
+
+    x = grd1['lon'].values
+    y = grd1['lat'].values
+    vmax = np.nanmax(grd1.values)
+    vmin = np.nanmin(grd1.values)
     cmap1,clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap,clevs=clevs,vmin=vmin,vmax = vmax)
     norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
-    im = ax.pcolormesh(x, y, np.squeeze(grd.values), cmap=cmap1, norm=norm)
+    im = ax.pcolormesh(x, y, np.squeeze(grd1.values), cmap=cmap1, norm=norm)
     #im = ax.contourf(x, y, np.squeeze(grd.values), levels=clevs1, cmap=cmap1,norm = norm)
 
     fig = plt.gcf()
     width = fig.bbox.width/fig.dpi
     height = fig.bbox.height/fig.dpi
     left_low = (width +0.1 - 0.8) / width
+    location = [ax.bbox.x1/fig.dpi/width+0.005, ax.bbox.y0 / fig.dpi/height, 0.01, ax.bbox.height/fig.dpi/height]
+    ax.set_title(title,fontsize =title_fontsize)
     if add_colorbar:
-        colorbar_position = fig.add_axes([left_low, 0.1 / height, 0.02, 1 - 0.3 / height])  # 位置[左,下,宽,高]
+        colorbar_position = fig.add_axes(location)  # 位置[左,下,宽,高]
         plt.colorbar(im,cax= colorbar_position)
+    return im
 
-def add_barbs(ax,wind,color = "k",skip = None):
-    x = wind['lon'].values
-    y = wind['lat'].values
+def add_barbs(ax,wind,color = "k",skip = None,title = None,title_fontsize = 8):
+
+    slon = ax.transLimits._boxin.x0
+    elon = ax.transLimits._boxin.x1
+    slat = ax.transLimits._boxin.y0
+    elat = ax.transLimits._boxin.y1
+
+    grid0 = meteva.base.get_grid_of_data(wind)
+    grid1 = meteva.base.grid([slon,elon,grid0.dlon],[slat,elat,grid0.dlat])
+    wind1 = meteva.base.interp_gg_linear(wind,grid1,outer_value=np.nan)
+
+    x = wind1['lon'].values
+    y = wind1['lat'].values
     X, Y = np.meshgrid(x, y)
-    u = np.squeeze(wind.values[0,...])
-    v = np.squeeze(wind.values[1,...])
+    u = np.squeeze(wind1.values[0,...])
+    v = np.squeeze(wind1.values[1,...])
 
     fig = plt.gcf()
     width = fig.bbox.width/fig.dpi
 
     if skip is  not None:
-        length = math.sqrt((width-1) * skip / x.size) * 10
+        length = math.sqrt((width-1) * skip / x.size) * 8
     else:
         length = ax.bbox.width/fig.dpi
         skip =int((length /10)**2 * x.size / (width - 1))+1
-
-    print(length)
-    ax.barbs(X[::skip,::skip],Y[::skip,::skip] , u[::skip,::skip], v[::skip,::skip],
+    ax.set_title(title,fontsize =title_fontsize)
+    im = ax.barbs(X[::skip,::skip],Y[::skip,::skip] , u[::skip,::skip], v[::skip,::skip],
              sizes=dict(emptybarb=0.01, spacing=0.23, height=0.5,width = 0.25),color = color,
              barb_increments=dict(half=2, full=4, flag=20),length = length,linewidth = length * length  * 0.03)
-    #ax.barbs(X,Y,u,v,regrid_shape = 20)
 
 
+    return im
 
-def add_scatter(ax,map_extend,sta0,cmap = "rainbow",clevs = None,point_size = None,fix_size = True,title = None,threshold = 2,min_spot_value = 0,mean_value = 2,
-                grid = False,add_colorbar = True,alpha = None):
+
+def add_scatter(ax,sta0,cmap = "rainbow",clevs = None,point_size = None,fix_size = True,threshold = 2,min_spot_value = 0,mean_value = 2,
+                add_colorbar = True,alpha = None,title = None,title_fontsize = 8):
+
+    slon = ax.transLimits._boxin.x0
+    elon = ax.transLimits._boxin.x1
+    slat = ax.transLimits._boxin.y0
+    elat = ax.transLimits._boxin.y1
+    rlon = elon - slon
+    rlat = elat - slat
     sta = sta0
-    if isinstance(map_extend, list):
-        slon = map_extend[0]
-        elon = map_extend[1]
-        slat = map_extend[2]
-        elat = map_extend[3]
-        rlon = elon - slon
-        rlat = elat - slat
-    else:
-        slon = map_extend.slon
-        slat = map_extend.slat
-        elon = map_extend.elon
-        elat = map_extend.elat
-        rlon = map_extend.elon - map_extend.slon
-        rlat = map_extend.elat - map_extend.slat
 
     sta_without_iv = meteva.base.sele.not_IV(sta)
     data_names = meteva.base.get_stadata_names(sta_without_iv)
@@ -562,10 +486,11 @@ def add_scatter(ax,map_extend,sta0,cmap = "rainbow",clevs = None,point_size = No
             if (threshold is not None):
                 area[np.abs(values - min_spot_value) < threshold] *= 0.1
             im = ax.scatter(x, y, c=colors, cmap=cmap1, norm=norm, s=area,edgecolors  = 'face',alpha = alpha)
-            if grid: plt.grid()
+
     else:
         im = ax.scatter(x, y, c=colors, cmap=cmap1, norm=norm, s=fix_size,edgecolors  = 'face',alpha = alpha)
-    plt.title(title)
+    ax.set_title(title,fontsize =title_fontsize)
+
 
     if add_colorbar:
         width = fig.bbox.width / fig.dpi
@@ -578,9 +503,8 @@ def add_scatter(ax,map_extend,sta0,cmap = "rainbow",clevs = None,point_size = No
             plt.colorbar(im, cax=colorbar_position)
     return im
 
-
-def add_scatter_text(ax,sta0,map_extend = None,color = "k",cmap = None,clevs = None,title = None,tag = 2,
-                grid = False,add_colorbar = True,alpha = None,font_size = 10):
+def add_scatter_text(ax,sta0,color = "k",cmap = None,clevs = None,tag = 2,
+               alpha = 1,font_size = 10,title = None,title_fontsize = 8):
     x0 = ax.transLimits._boxin.x0
     x1 = ax.transLimits._boxin.x1
     y0 = ax.transLimits._boxin.y0
@@ -607,9 +531,9 @@ def add_scatter_text(ax,sta0,map_extend = None,color = "k",cmap = None,clevs = N
             y = sta_without_iv.iloc[i,5]
             v = sta_without_iv.iloc[i,-1]
             if isinstance(v,str):
-                ax.text(x, y, v, ha="center", va="center", fontsize=font_size, color=color)
+                ax.text(x, y, v, ha="center", va="center", fontsize=font_size, color=color, clip_on=True,alpha = alpha)
             else:
-                ax.text(x, y, fmt_tag % v, ha="center", va="center",fontsize=font_size,color = color)
+                ax.text(x, y, fmt_tag % v, ha="center", va="center",fontsize=font_size,color = color, clip_on=True,alpha = alpha)
     else:
         x = sta_without_iv.iloc[:, 4].values
         y = sta_without_iv.iloc[:, 5].values
@@ -623,59 +547,15 @@ def add_scatter_text(ax,sta0,map_extend = None,color = "k",cmap = None,clevs = N
                 color = cmap1(k)
                 for j in range(x1.size):
                     if isinstance(v1[j],str):
-                        ax.text(x1[j], y1[j], v1[j], ha="center", va="center", fontsize=font_size, c=color)
+                        ax.text(x1[j], y1[j], v1[j], ha="center", va="center", fontsize=font_size, c=color, clip_on=True,alpha = alpha)
                     else:
-                        ax.text(x1[j], y1[j], fmt_tag % v1[j], ha="center", va="center", fontsize=font_size,  c=color)
 
+                        ax.text(x1[j], y1[j], fmt_tag % v1[j], ha="center", va="center", fontsize=font_size,  c=color, clip_on=True,alpha = alpha)
 
+    ax.set_title(title,fontsize =title_fontsize)
+    return
 
-
-
-
-def add_shear_line(ax,map_extend,graphy):
-    if isinstance(map_extend,list):
-        slon = map_extend[0]
-        elon = map_extend[1]
-        slat = map_extend[2]
-        elat = map_extend[3]
-
-    elif isinstance(map_extend,meteva.base.grid):
-        slon = map_extend.slon
-        slat = map_extend.slat
-        elon = map_extend.elon
-        elat = map_extend.elat
-
-    rlon = elon - slon
-    rlat = elat - slat
-    fig = plt.gcf()
-    map_width = ax.bbox.width / fig.dpi
-
-    line_width = rlon *  0.015/ map_width
-
-    features = graphy["features"]
-    for value in features.values():
-        line = value["axes"]
-        line_type = line["line_type"]
-        point = np.array(line["point"])
-        dp = np.zeros(point.shape)
-        dp[:-1,:] = point[1:,:] - point[:-1,:]
-        dp[-1,:] = dp[-2,:]
-        length = (dp[:,0]**2 + dp[:,1] **2)**0.5
-        dx = -dp[:,1] * line_width/ length
-        dy = dp[:,0] * line_width/length
-
-
-        if line_type =="c":
-            ax.plot(point[:,0] - dx ,point[:,1] - dy,"b",linewidth = 1)
-            ax.plot(point[:, 0] + dx, point[:, 1] + dy, "b",linewidth =  1)
-        else:
-            ax.plot(point[:, 0] - dx, point[:, 1] - dy, "r",linewidth =  1)
-            ax.plot(point[:, 0] + dx, point[:, 1] + dy, "r",linewidth =  1)
-    ax.set_xlim(slon,elon)
-    ax.set_ylim(slat,elat)
-
-
-def add_closed_line(ax,graphy,color = "k",line_width=2,fontsize = 10):
+def add_closed_line(ax,graphy,color = "k",linewidth=2,fontsize = 10,title = None,title_fontsize = 8):
     x0 = ax.transLimits._boxin.x0
     x1 = ax.transLimits._boxin.x1
     y0 = ax.transLimits._boxin.y0
@@ -687,7 +567,7 @@ def add_closed_line(ax,graphy,color = "k",line_width=2,fontsize = 10):
 
     for n in range(ncontour):
         line_array = contours["cn_xyz"][n][:,0:2]
-        ax.plot(line_array[:,0], line_array[:,1], color=color, linewidth=line_width)
+        ax.plot(line_array[:,0], line_array[:,1], color=color, linewidth=linewidth)
         value = contours["cn_label"][n]
         i_s = -1
         line_dict = None
@@ -695,7 +575,6 @@ def add_closed_line(ax,graphy,color = "k",line_width=2,fontsize = 10):
             i_s += 1
             x = line_array[i_s,0]
             y = line_array[i_s,1]
-
             if x >=x0 and x<= x1 and y >=y0 and y <= y1:
                 if i_s == 0:
                     x_1 = line_array[1,0]
@@ -704,7 +583,7 @@ def add_closed_line(ax,graphy,color = "k",line_width=2,fontsize = 10):
                         rotation = 90
                     else:
                         rotation = math.atan((y_1 - y)/(x_1 - x)) * 180 / math.pi
-                    plt.text(x, y, value, ha="center", va="center", fontsize=fontsize, color=color,
+                    ax.text(x, y, value, ha="center", va="center", fontsize=fontsize, color=color,
                             rotation = rotation,bbox ={"facecolor":"w","pad":0,"linewidth":0})
                     break
                 else:
@@ -728,56 +607,81 @@ def add_closed_line(ax,graphy,color = "k",line_width=2,fontsize = 10):
                             rotation = 90
                         else:
                             rotation = math.atan((y_1 - y) / (x_1 - x)) * 180 / math.pi
-                        plt.text(x, y, value, ha="center", va="center", fontsize=fontsize, color=color,
+                        ax.text(x, y, value, ha="center", va="center", fontsize=fontsize, color=color,
                                  rotation=rotation,bbox ={"facecolor":"w","pad":0,"linewidth":0})
                         line_dict = None
-
-
+    ax.set_title(title,fontsize =title_fontsize)
     return
 
 
-def add_trough_axes(ax,map_extend,graphy,line_width = None):
-    if isinstance(map_extend,list):
-        slon = map_extend[0]
-        elon = map_extend[1]
-        slat = map_extend[2]
-        elat = map_extend[3]
 
-    elif isinstance(map_extend,meteva.base.grid):
-        slon = map_extend.slon
-        slat = map_extend.slat
-        elon = map_extend.elon
-        elat = map_extend.elat
+def add_shear_line(ax,graphy,linewidth = 1,title = None,title_fontsize = 8):
+    slon = ax.transLimits._boxin.x0
+    elon = ax.transLimits._boxin.x1
+    slat = ax.transLimits._boxin.y0
+    elat = ax.transLimits._boxin.y1
 
     rlon = elon - slon
     rlat = elat - slat
     fig = plt.gcf()
     map_width = ax.bbox.width / fig.dpi
 
-    if line_width is None:
-        line_width = rlon *  0.015/ map_width
+    line_width = rlon *  0.015/ map_width
+
+    features = graphy["features"]
+    for value in features.values():
+        line = value["axes"]
+        line_type = line["line_type"]
+        point = np.array(line["point"])
+        dp = np.zeros(point.shape)
+        dp[:-1,:] = point[1:,:] - point[:-1,:]
+        dp[-1,:] = dp[-2,:]
+        length = (dp[:,0]**2 + dp[:,1] **2)**0.5
+        dx = -dp[:,1] * line_width/ length
+        dy = dp[:,0] * line_width/length
+
+
+        if line_type =="c":
+            ax.plot(point[:,0] - dx ,point[:,1] - dy,"b",linewidth = linewidth)
+            ax.plot(point[:, 0] + dx, point[:, 1] + dy, "b",linewidth =  linewidth)
+        else:
+            ax.plot(point[:, 0] - dx, point[:, 1] - dy, "r",linewidth =  linewidth)
+            ax.plot(point[:, 0] + dx, point[:, 1] + dy, "r",linewidth =  linewidth)
+    ax.set_xlim(slon,elon)
+    ax.set_ylim(slat,elat)
+    ax.set_title(title,fontsize =title_fontsize)
+    return
+
+def add_trough_axes(ax,graphy,linewidths = None,title = None,title_fontsize = 8):
+    slon = ax.transLimits._boxin.x0
+    elon = ax.transLimits._boxin.x1
+    slat = ax.transLimits._boxin.y0
+    elat = ax.transLimits._boxin.y1
+
+    rlon = elon - slon
+    rlat = elat - slat
+    fig = plt.gcf()
+    map_width = ax.bbox.width / fig.dpi
+
+    if linewidths is None:
+        linewidths = rlon *  0.015/ map_width
 
     features = graphy["features"]
     for value in features.values():
         line = value["axes"]
         point = np.array(line["point"])
-        ax.plot(point[:, 0], point[:, 1], "r", linewidth=line_width)
+        ax.plot(point[:, 0], point[:, 1], "r", linewidth=linewidths)
 
     ax.set_xlim(slon,elon)
     ax.set_ylim(slat,elat)
+    ax.set_title(title,fontsize =title_fontsize)
+    return
 
-def add_jet_axes(ax,map_extend,graphy):
-    if isinstance(map_extend,list):
-        slon = map_extend[0]
-        elon = map_extend[1]
-        slat = map_extend[2]
-        elat = map_extend[3]
-
-    elif isinstance(map_extend,meteva.base.grid):
-        slon = map_extend.slon
-        slat = map_extend.slat
-        elon = map_extend.elon
-        elat = map_extend.elat
+def add_jet_axes(ax,graphy,title = None,title_fontsize = 8):
+    slon = ax.transLimits._boxin.x0
+    elon = ax.transLimits._boxin.x1
+    slat = ax.transLimits._boxin.y0
+    elat = ax.transLimits._boxin.y1
 
     rlon = elon - slon
     rlat = elat - slat
@@ -808,9 +712,10 @@ def add_jet_axes(ax,map_extend,graphy):
 
     ax.set_xlim(slon,elon)
     ax.set_ylim(slat,elat)
+    ax.set_title(title,fontsize =title_fontsize)
+    return
 
-
-def add_cyclone_trace(ax,sta_cyclone_trace,size = 0.2):
+def add_cyclone_trace(ax,sta_cyclone_trace,size = 0.2,linewidth = 1,title = None,title_fontsize = 8):
 
     np = len(sta_cyclone_trace.index)
     for i in range(np - 1):
@@ -831,7 +736,7 @@ def add_cyclone_trace(ax,sta_cyclone_trace,size = 0.2):
             color = "m"
         else:
             color = "r"
-        ax.plot(lon, lat, c = color, linewidth=1, zorder=29)
+        ax.plot(lon, lat, c = color, linewidth=linewidth, zorder=29)
         time_ob = sta_cyclone_trace.iloc[i,1]
 
         if (time_ob.hour - 2) %12 ==0:
@@ -851,7 +756,7 @@ def add_cyclone_trace(ax,sta_cyclone_trace,size = 0.2):
                     lat1 = lat[0] + r_o * math.sin(theta)
                 lon_list.append(lon1)
                 lat_list.append(lat1)
-            plt.fill(lon_list,lat_list,c = color,zorder = 30)
+            ax.fill(lon_list,lat_list,c = color,zorder = 30)
             r_o = size * 0.3
             lon_list = []
             lat_list = []
@@ -861,5 +766,6 @@ def add_cyclone_trace(ax,sta_cyclone_trace,size = 0.2):
                 lat1 = lat[0] + r_o * math.sin(theta)
                 lon_list.append(lon1)
                 lat_list.append(lat1)
-            plt.fill(lon_list,lat_list,c = "white",zorder = 30)
-
+            ax.fill(lon_list,lat_list,c = "white",zorder = 30)
+    ax.set_title(title,fontsize =title_fontsize)
+    return
