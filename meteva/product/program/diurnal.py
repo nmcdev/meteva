@@ -9,7 +9,7 @@ import numpy as np
 
 
 def diunal_max_hour(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = None,plot = None,
-          vmax = None,vmin = None,bar_width = None,save_path = None,show = False,dpi = 300,title = "",excel_path = None,**kwargs):
+          vmax = 24,vmin = 0,bar_width = None,save_path = None,show = False,dpi = 300,title = "",excel_path = None,**kwargs):
     '''
     对于每个分组的样本，先统计日变化的曲线，再求日变化曲线的顶点
     :param sta_ob_and_fos0:
@@ -148,9 +148,11 @@ def diunal_max_hour(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_na
     result_list =[]
     for i in range(len(gll1)):
         result_all,hour_list = meteva.product.program.score(sta_ob_and_fos_list[i],method,g = "ob_hour",gll = ob_hours_list)
+        hours = np.array(hour_list)
         if len(hour_list) == ob_hour_count:
             gll_valid.append(gll1[i])
-            result_max = np.argmax(result_all,axis=0)
+            result_max_index = np.argmax(result_all,axis=0)
+            result_max = hours[result_max_index]
             result_list.append(result_max)
     result = np.array(result_list)
     group_num = len(gll_valid)
@@ -210,7 +212,7 @@ def diunal_max_hour(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_na
                 legend = keys[1]
                 axis = keys[0]
         if "ylabel" not in plot_args.keys():
-            plot_args["ylabel"] = method.__name__.upper()
+            plot_args["ylabel"] = "峰值时间"
 
 
 
