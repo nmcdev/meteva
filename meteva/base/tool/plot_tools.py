@@ -82,7 +82,7 @@ def readshapefile(shapefile, default_encoding='utf-8'):
             #print(shapefile)
             continue
             #raise ValueError('readshapefile can only handle a single shape type per file')
-        if shptype not in [1,3,5,8,13]:
+        if shptype not in [1,3,5,8,13,15]:
             raise ValueError('readshapefile can only handle 2D shape types')
         verts = shp.points
         if shptype in [1,8]: # a Point or MultiPoint shape.
@@ -966,7 +966,6 @@ def scatter_sta(sta0,value_column=None,
 
 
     else:
-        print(add_minmap)
         split = ["level","time","dtime","member"]
         if not isinstance(subplot,list):
             subplot = [subplot]
@@ -1009,7 +1008,7 @@ def scatter_sta(sta0,value_column=None,
                              mean_value = mean_value,save_path = save_path1,show = show,dpi = dpi,
                             title = title1,sup_fontsize = sup_fontsize,
                              height=height,width= width,min_spot_value=min_spot_value,grid = grid,ncol = ncol,point_size=point_size,sup_title=sup_title[n],
-                             add_minmap = add_minmap)
+                             add_minmap = add_minmap,print_max = print_max,print_min = print_min)
 
 
 def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_worldmap = False,
@@ -1018,7 +1017,7 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
                 save_path=None,show = False,dpi = 300,title = None,
                 sup_fontsize = 10,
                 height = None,width = None,
-                min_spot_value = 0,grid = False,ncol = None,point_size = None,sup_title = None,add_minmap = None):
+                min_spot_value = 0,grid = False,ncol = None,point_size = None,sup_title = None,add_minmap = None,print_max = None,print_min = None):
 
     sta0 = sta0_list[0]
     if isinstance(map_extend, list):
@@ -1213,6 +1212,7 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
         pj = int(p / ncol)
 
 
+
         rect1 = [(width_left_yticks + pi * (width_map + width_wspace))/width,
                  (height_bottem_xticsk + (nrow -1- pj) * (height_map + height_hspace))/height,
                  width_map / width,
@@ -1308,7 +1308,25 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
             add_china_map_2basemap(ax_min, name="world", edgecolor='k', lw=0.2, encoding='gbk', grid0=None)  # "国界"
             add_china_map_2basemap(ax_min, name="nation", edgecolor='k', lw=0.2, encoding='gbk', grid0=None)  # "省界"
 
+        if print_max >0 or print_min >0:
+            print(title1)
+        if print_max > 0:
+            print("取值最大的" + str(print_max) + "个站点：")
+            indexs = value.argsort()[-print_max:][::-1]
+            for index in indexs:
+                print("id:" + str(sta_one_member.iloc[index, 3].values[0]) + "   lon:" + str(
+                    sta_one_member.iloc[index, 4].values[0]) + "  lat:" + str(sta_one_member.iloc[index, 5].values[0]) +
+                      " value:" + str(sta_one_member.iloc[index, 6].values[0]))
 
+        if print_min > 0:
+            print("取值最小的" + str(print_min) + "个站点：")
+            indexs = value.argsort()[:print_min]
+            for index in indexs:
+                print("id:" + str(sta_one_member.iloc[index, 3].values[0]) + "   lon:" + str(
+                    sta_one_member.iloc[index, 4].values[0]) + "  lat:" + str(sta_one_member.iloc[index, 5].values[0]) +
+                      " value:" + str(sta_one_member.iloc[index, 6].values[0]))
+        if print_max > 0 or print_min > 0:
+            print("______________")
 
     left_low = (width_left_yticks + ncol * (width_map  + width_wspace))/width
     colorbar_position = fig.add_axes([left_low, height_bottem_xticsk / height,0.02, height_all_plot/height])  # 位置[左,下,宽,高]
@@ -1608,7 +1626,6 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
                     fmt_tag = "%." + str(tag) + "f"
                     plt.text(a, b, fmt_tag % b, ha="center", va=va,
                              fontsize=sup_fontsize * 0.6)
-
 
         plt.xticks(xticks,xticks_labels,fontsize = xticks_font)
         plt.yticks(fontsize=sup_fontsize * 0.8)
