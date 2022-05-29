@@ -153,7 +153,7 @@ def download_from_gds(para):
     for down_set in para["sta_origin_dirs"]:
         if in_op_time(hm,down_set[1]):
             dir_list = []
-            meteva.base.tool.path_tools.get_gds_all_dir(ip,port,down_set[0],dir_list)
+            meteva.base.tool.path_tools.get_gds_all_dir(down_set[0],dir_list,service=service)
             for dir in dir_list:
                 file_list = meteva.base.tool.path_tools.get_gds_file_list_in_one_dir(dir)
                 file_list.sort(reverse = True)
@@ -172,7 +172,7 @@ def download_from_gds(para):
         for down_set in down_set_group:
             if in_op_time(hm, down_set[1]):
                 dir_list = []
-                meteva.base.tool.path_tools.get_gds_all_dir(ip,port,down_set[0],dir_list)
+                meteva.base.tool.path_tools.get_gds_all_dir(down_set[0],dir_list,service=service)
                 for dir in dir_list:
                     file_list = meteva.base.tool.path_tools.get_gds_file_list_in_one_dir(dir)
                     file_list.sort(reverse=True)
