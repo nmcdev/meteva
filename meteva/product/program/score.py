@@ -11,6 +11,8 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
           vmax = None,vmin = None,bar_width = None,save_path = None,show = False,dpi = 300,title = "",excel_path = None,**kwargs):
 
 
+
+
     if s is not None:
         if g is not None:
             if g == "last_range" or g == "last_step":
@@ -309,6 +311,8 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
     if result.size != 1:
         result = result.squeeze()
     return result,group_list_list1
+
+
 
 
 
@@ -794,7 +798,7 @@ def score_tdt(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_lis
                         title1 = meteva.product.program.get_title_from_dict(title, s, g, group_name_list[k],
                                                                             fo_name[ii])
                     else:
-                        title1 = meteva.product.program.get_title_from_dict(method, s, g,
+                        title1 = meteva.product.program.get_title_from_dict("", s, g,
                                                                             group_name_list[k], fo_name[ii])
                     if grade_num > 1:
                         title1 += "(grade_" + str(grade_names[i]) + ")"
