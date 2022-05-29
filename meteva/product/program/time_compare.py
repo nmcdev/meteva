@@ -138,7 +138,19 @@ def time_list_line_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
             plt.plot(x,np.zeros(x.size),linewidth = sup_fontsize *0.07)
             for name in data_names[1:]:
                 value = sta.loc[:, name].values - sta.iloc[:, 6].values
-                plt.plot(x, value, label=name,marker = ".",linewidth = sup_fontsize *0.1,markersize = sup_fontsize *0.3)
+                #plt.plot(x, value, label=name,marker = ".",linewidth = sup_fontsize *0.1,markersize = sup_fontsize *0.3)
+
+                #value = sta.loc[:, name].values
+                index_iv = np.where(value == meteva.base.IV)
+                dat0_all = meteva.base.tool.plot_tools.set_plot_IV_with_out_start_end(value)
+                plt.plot(x, dat0_all, "--", linewidth=0.5, color="k")
+                x_iv = x[index_iv[0]]
+                dat0_iv = dat0_all[index_iv[0]]
+                plt.plot(x_iv, dat0_iv, ".", color='k',markersize = sup_fontsize * 0.1)
+                dat0_notiv = value.copy()
+                dat0_notiv[dat0_notiv == meteva.base.IV] = np.nan
+                plt.plot(x, dat0_notiv, label=name,marker = ".",linewidth = sup_fontsize * 0.1,markersize = sup_fontsize * 0.3)
+
                 plt.ylim(vmin, vmax)
                 plt.yticks(yticks,fontsize = sup_fontsize *0.6)
                 plt.xlim(x_all[0],x_all[-1])
@@ -317,7 +329,17 @@ def time_list_line(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,sho
             x = dhour0 + sta.loc[:, "dtime"].values
             for name in data_names:
                 value = sta.loc[:, name].values
-                plt.plot(x, value, label=name,marker = ".",linewidth = sup_fontsize * 0.1,markersize = sup_fontsize * 0.3)
+                index_iv = np.where(value == meteva.base.IV)
+                dat0_all = meteva.base.tool.plot_tools.set_plot_IV_with_out_start_end(value)
+                plt.plot(x, dat0_all, "--", linewidth=0.5, color="k")
+                x_iv = x[index_iv[0]]
+                dat0_iv = dat0_all[index_iv[0]]
+                plt.plot(x_iv, dat0_iv, ".", color='k',markersize = sup_fontsize * 0.1)
+                dat0_notiv = value.copy()
+                dat0_notiv[dat0_notiv == meteva.base.IV] = np.nan
+                plt.plot(x, dat0_notiv, label=name,marker = ".",linewidth = sup_fontsize * 0.1,markersize = sup_fontsize * 0.3)
+
+
                 plt.ylim(vmin, vmax)
                 plt.yticks(fontsize = sup_fontsize * 0.6)
                 plt.xlim(x_all[0],x_all[-1])

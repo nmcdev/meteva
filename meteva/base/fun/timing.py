@@ -6,8 +6,6 @@ import math
 import numpy as np
 
 
-
-
 def rain_to_01process(rain01h_ob_fos,used_coords = "time"):
     '''
     降水过程必须被完整包含在时间（时效）序列内，否则起止时间会有偏差
@@ -42,6 +40,7 @@ def rain_to_01process(rain01h_ob_fos,used_coords = "time"):
     rain02h_ob_fos_hap_back01[used_coords] -= step
     rain02h_ob_fos_hap_sprate02 =meteva.base.min_on_level_time_dtime_id(rain02h_ob_fos_hap,rain02h_ob_fos_hap_back01,how = "outer",default=0)
 
+    rain02h_ob_fos_hap_sprate02.sort_values(by = ["level","time","dtime","id"],inplace=True)
     return  rain02h_ob_fos_hap_sprate02
 
 def rain_process_start(rain01h_ob_fos,used_coords = "time"):
@@ -52,10 +51,10 @@ def rain_process_start(rain01h_ob_fos,used_coords = "time"):
     '''
     rain02h_ob_fos_hap_sprate02 = rain_to_01process(rain01h_ob_fos,used_coords=used_coords)
     delta = meteva.base.change(rain02h_ob_fos_hap_sprate02,used_coords=used_coords,delta=1)
-    if used_coords =="time":
-        delta[used_coords] -= datetime.timedelta(hours=1)
-    else:
-        delta[used_coords] -= 1
+    # if used_coords =="time":
+    #     delta[used_coords] -= datetime.timedelta(hours=1)
+    # else:
+    #     delta[used_coords] -= 1
     values = delta.iloc[:, 6:].values
     values[values <=0] = 0
     rain_start_01 = delta.copy()
