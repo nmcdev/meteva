@@ -27,15 +27,15 @@ def accumulation_strenght_table(ob,fo, member_list = None,save_path=None):
     new_Fo_shape = tuple(Ob_shpe_list)
     new_Fo = fo.reshape(new_Fo_shape)
     new_Fo_shape = new_Fo.shape
-    label = ["观测"]
     if member_list is None:
+        label = ["观测"]
         if new_Fo_shape[0] <= 1:
             label.append('预报')
         else:
             for i in range(new_Fo_shape[0]):
                 label.append('预报' + str(i + 1))
     else:
-        label.extend(member_list)
+        label = member_list
 
     max_ob = np.max(ob)
     max_fo = np.max(fo)
@@ -64,9 +64,9 @@ def accumulation_strenght_table(ob,fo, member_list = None,save_path=None):
                 conf_mx[line + 1, i] = np.sum(fo_part)
 
     if save_path is not None:
-        table_data = pd.DataFrame(conf_mx,
-                                  columns=pd.MultiIndex.from_product([['类别'], index_list]),
-                                  index=pd.MultiIndex.from_product([['ob-fo'], label])
+        table_data = pd.DataFrame(conf_mx.T,
+                                  index=pd.MultiIndex.from_product([['类别'], index_list]),
+                                  columns=pd.MultiIndex.from_product([['ob-fo'], label])
                                   )
         table_data.to_excel(save_path, sheet_name='sheet1')
         print("累计降水量随强度变化表已以excel表格形式保存至" + save_path)
@@ -98,15 +98,16 @@ def frequency_strenght_table(ob,fo, member_list = None,save_path=None):
     new_Fo_shape = tuple(Ob_shpe_list)
     new_Fo = fo.reshape(new_Fo_shape)
     new_Fo_shape = new_Fo.shape
-    label = ["观测"]
+
     if member_list is None:
+        label = ["观测"]
         if new_Fo_shape[0] <= 1:
             label.append('预报')
         else:
             for i in range(new_Fo_shape[0]):
                 label.append('预报' + str(i + 1))
     else:
-        label.extend(member_list)
+        label = member_list
 
     max_ob = np.max(ob)
     max_fo = np.max(fo)
@@ -135,9 +136,9 @@ def frequency_strenght_table(ob,fo, member_list = None,save_path=None):
                 conf_mx[line + 1, i] = fo_part.size
 
     if save_path is not None:
-        table_data = pd.DataFrame(conf_mx,
-                                  columns=pd.MultiIndex.from_product([['类别'], index_list]),
-                                  index=pd.MultiIndex.from_product([['ob-fo'], label])
+        table_data = pd.DataFrame(conf_mx.T,
+                                  index=pd.MultiIndex.from_product([['类别'], index_list]),
+                                  columns=pd.MultiIndex.from_product([['ob-fo'], label])
                                   )
         table_data.to_excel(save_path, sheet_name='sheet1')
         print("降水频次随强度变化表已以excel表格形式保存至" + save_path)
