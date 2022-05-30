@@ -7,7 +7,7 @@ import math
 from matplotlib.colors import BoundaryNorm
 
 
-def add_map(ax,add_county_line = False,add_worldmap = True,title = None,sup_fontsize = 12):
+def add_map(ax,add_county_line = False,add_worldmap = True,title = None,sup_fontsize = 12,linewidth = [0.3,0.3,0.2],color = ["k","k","k"]):
 
     if meteva.base.customized_basemap_list is None:
         if add_worldmap:
@@ -19,32 +19,30 @@ def add_map(ax,add_county_line = False,add_worldmap = True,title = None,sup_font
         ax.set_title(title,fontsize = sup_fontsize* 0.9)
         return ax
     else:
-        for shpfile in meteva.base.customized_basemap_list:
+        for i in range(len(meteva.base.customized_basemap_list)):
+            shpfile  = meteva.base.customized_basemap_list[i]
             # print(shpfile)
-
+            encoding = 'utf-8'
             try:
                 shp1 = meteva.base.tool.plot_tools.readshapefile(shpfile, default_encoding=encoding)
                 lines = meteva.base.tool.plot_tools.LineCollection(shp1, antialiaseds=(1,), zorder=100)
-                lines.set_color("k")
-                lines.set_linewidth(1)
+                lines.set_color(color[i])
+                lines.set_linewidth(linewidth[i])
                 lines.set_label('_nolabel_')
                 ax.add_collection(lines)
             except:
-                if encoding == "gbk":
-                    encoding = "utf-8"
-                elif encoding == "utf-8":
-                    encoding = "gbk"
-
+                encoding = "gbk"
                 shp1 = meteva.base.tool.plot_tools.readshapefile(shpfile, default_encoding=encoding)
                 lines = meteva.base.tool.plot_tools.LineCollection(shp1, antialiaseds=(1,), zorder=100)
-                lines.set_color("k")
-                lines.set_linewidth(1)
+                lines.set_color(color[i])
+                lines.set_linewidth(linewidth[i])
                 lines.set_label('_nolabel_')
                 ax.add_collection(lines)
 
 
 def creat_axs(nplot,map_extend,ncol = None,height  = None,width = None,dpi = 300,sup_title = None,sup_fontsize = 12,
-              add_county_line = False,add_worldmap = True,add_minmap = None,title_list = None,add_index = None,wspace = None,grid = True):
+              add_county_line = False,add_worldmap = True,add_minmap = None,title_list = None,add_index = None,wspace = None,grid = True,
+              xticks_inter = None,yticks_inter = None,linewidth = [0.3,0.3,0.2],color = ["k","k","k"]):
 
 
     ax_index = []
@@ -125,25 +123,28 @@ def creat_axs(nplot,map_extend,ncol = None,height  = None,width = None,dpi = 300
 
     vmax = elon
     vmin = slon
-    r = rlon
-    if r <= 0.1:
-        inte = 0.05
-    elif r <= 0.5:
-        inte = 0.1
-    elif r <= 1:
-        inte = 0.2
-    elif r <= 5 and r > 1:
-        inte = 1
-    elif r <= 10 and r > 5:
-        inte = 2
-    elif r < 20 and r >= 10:
-        inte = 4
-    elif r <= 30 and r >= 20:
-        inte = 5
-    elif r < 180:
-        inte = 10
+    if xticks_inter is None:
+        r = rlon
+        if r <= 0.1:
+            inte = 0.05
+        elif r <= 0.5:
+            inte = 0.1
+        elif r <= 1:
+            inte = 0.2
+        elif r <= 5 and r > 1:
+            inte = 1
+        elif r <= 10 and r > 5:
+            inte = 2
+        elif r < 20 and r >= 10:
+            inte = 4
+        elif r <= 30 and r >= 20:
+            inte = 5
+        elif r < 180:
+            inte = 10
+        else:
+            inte = 20
     else:
-        inte = 20
+        inte = xticks_inter
 
     vmin = inte * (math.ceil(vmin / inte))
     vmax = inte * ((int)(vmax / inte)+0.5)
@@ -165,23 +166,26 @@ def creat_axs(nplot,map_extend,ncol = None,height  = None,width = None,dpi = 300
 
     vmax = elat
     vmin = slat
-    r = rlat
-    if r <= 0.05:
-        inte = 0.01
-    elif r <= 0.3:
-        inte = 0.05
-    elif r <= 1:
-        inte = 0.1
-    elif r <= 5 and r > 1:
-        inte = 1
-    elif r <= 10 and r > 5:
-        inte = 2
-    elif r < 20 and r >= 10:
-        inte = 4
-    elif r <= 30 and r >= 20:
-        inte = 5
+    if yticks_inter is None:
+        r = rlat
+        if r <= 0.05:
+            inte = 0.01
+        elif r <= 0.3:
+            inte = 0.05
+        elif r <= 1:
+            inte = 0.1
+        elif r <= 5 and r > 1:
+            inte = 1
+        elif r <= 10 and r > 5:
+            inte = 2
+        elif r < 20 and r >= 10:
+            inte = 4
+        elif r <= 30 and r >= 20:
+            inte = 5
+        else:
+            inte = 10
     else:
-        inte = 10
+        inter = yticks_inter
 
     vmin = inte * (math.ceil(vmin / inte))
     vmax = inte * ((int)(vmax / inte)+0.5)
@@ -231,7 +235,8 @@ def creat_axs(nplot,map_extend,ncol = None,height  = None,width = None,dpi = 300
             sub_title = None
         else:
             sub_title = title_list[p]
-        add_map(ax,add_county_line=add_county_line,add_worldmap=add_worldmap,sup_fontsize=sup_fontsize,title=sub_title)
+        add_map(ax,add_county_line=add_county_line,add_worldmap=add_worldmap,sup_fontsize=sup_fontsize,title=sub_title,
+                linewidth = linewidth,color =color)
 
         if len(ax_index)>1:
             ix = slon + 0.02*(elon - slon) * 5 / width_map
@@ -278,7 +283,7 @@ def creat_axs(nplot,map_extend,ncol = None,height  = None,width = None,dpi = 300
         return ax_list,min_ax_list
 
 
-def add_contourf(ax,grd,cmap ="rainbow",clevs= None,add_colorbar = True,cut_colorbar = True,title = None,title_fontsize = 8):
+def add_contourf(ax,grd,cmap ="rainbow",clevs= None,add_colorbar = True,cut_colorbar = True,title = None,title_fontsize = 8,clip = None):
     slon = ax.transLimits._boxin.x0
     elon = ax.transLimits._boxin.x1
     slat = ax.transLimits._boxin.y0
@@ -301,13 +306,24 @@ def add_contourf(ax,grd,cmap ="rainbow",clevs= None,add_colorbar = True,cut_colo
     width = fig.bbox.width/fig.dpi
     height = fig.bbox.height/fig.dpi
     location = [ax.bbox.x1/fig.dpi/width+0.005, ax.bbox.y0 / fig.dpi/height, 0.01, ax.bbox.height/fig.dpi/height]
-    plt.title(title)
+    ax.set_title(title,fontsize =title_fontsize)
     if add_colorbar:
         colorbar_position = fig.add_axes(location)  # 位置[左,下,宽,高]
         plt.colorbar(im,cax= colorbar_position)
+
+    if clip is not None:
+        try:
+            meteva.base.tool.maskout.shp2clip_by_shpfile(im,ax,clip)
+        except:
+            if isinstance(clip, str): clip = [clip]
+            if isinstance(clip[0], str):
+                meteva.base.tool.maskout.shp2clip_by_region_name(im, ax, clip)
+            else:
+                meteva.base.tool.maskout.shp2clip_by_lines(im, ax, clip)
+
     return im
 
-def add_contour(ax,grd,color='k', linewidth = 1,label_fontsize = 5,clevs = None,title = None,title_fontsize = 8):
+def add_contour(ax,grd,color='k', linewidth = 1,label_fontsize = 5,clevs = None,title = None,title_fontsize = 8,clip = None):
 
 
     slon = ax.transLimits._boxin.x0
@@ -361,8 +377,21 @@ def add_contour(ax,grd,color='k', linewidth = 1,label_fontsize = 5,clevs = None,
         f2 = 0
     fmt = "%"+str(f1)+"."+str(f2)+"f"
     ax.set_title(title,fontsize =title_fontsize)
-    cs = ax.contour(x, y, np.squeeze(grd1.values),levels = clevs,colors = color,linewidths = linewidth)
-    ax.clabel(cs, inline=1, fontsize=label_fontsize,fmt=fmt)
+    im = ax.contour(x, y, np.squeeze(grd1.values),levels = clevs,colors = color,linewidths = linewidth)
+    ax.clabel(im, inline=1, fontsize=label_fontsize,fmt=fmt)
+    if clip is not None:
+        try:
+            meteva.base.tool.maskout.shp2clip_by_shpfile(im,ax,clip)
+        except:
+            if isinstance(clip, str): clip = [clip]
+            if isinstance(clip[0], str):
+                meteva.base.tool.maskout.shp2clip_by_region_name(im, ax, clip)
+            else:
+                meteva.base.tool.maskout.shp2clip_by_lines(im, ax, clip)
+
+    return im
+
+
 
 def add_mesh(ax,grd,cmap ="rainbow",clevs= None,add_colorbar = True,title = None,title_fontsize = 8):
 
@@ -531,9 +560,9 @@ def add_scatter_text(ax,sta0,color = "k",cmap = None,clevs = None,tag = 2,
             y = sta_without_iv.iloc[i,5]
             v = sta_without_iv.iloc[i,-1]
             if isinstance(v,str):
-                ax.text(x, y, v, ha="center", va="center", fontsize=font_size, color=color, clip_on=True,alpha = alpha)
+                ax.text(x, y, v, ha="center", va="center", fontsize=font_size, color=color, clip_on=True,alpha = alpha, zorder=1000)
             else:
-                ax.text(x, y, fmt_tag % v, ha="center", va="center",fontsize=font_size,color = color, clip_on=True,alpha = alpha)
+                ax.text(x, y, fmt_tag % v, ha="center", va="center",fontsize=font_size,color = color, clip_on=True,alpha = alpha, zorder=1000)
     else:
         x = sta_without_iv.iloc[:, 4].values
         y = sta_without_iv.iloc[:, 5].values
@@ -547,10 +576,9 @@ def add_scatter_text(ax,sta0,color = "k",cmap = None,clevs = None,tag = 2,
                 color = cmap1(k)
                 for j in range(x1.size):
                     if isinstance(v1[j],str):
-                        ax.text(x1[j], y1[j], v1[j], ha="center", va="center", fontsize=font_size, c=color, clip_on=True,alpha = alpha)
+                        ax.text(x1[j], y1[j], v1[j], ha="center", va="center", fontsize=font_size, c=color, clip_on=True,alpha = alpha, zorder=1000)
                     else:
-
-                        ax.text(x1[j], y1[j], fmt_tag % v1[j], ha="center", va="center", fontsize=font_size,  c=color, clip_on=True,alpha = alpha)
+                        ax.text(x1[j], y1[j], fmt_tag % v1[j], ha="center", va="center", fontsize=font_size,  c=color, clip_on=True,alpha = alpha, zorder=1000)
 
     ax.set_title(title,fontsize =title_fontsize)
     return
