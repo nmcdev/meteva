@@ -15,9 +15,9 @@ import datetime
 import scipy.stats as st
 
 
-def rain_24h_sg(sta_ob,grd_fo,save_path=None,show  = False,dpi = 200,add_county_line = False):
+def rain_24h_sg(sta_ob,grd_fo,save_path=None,show  = False,dpi = 200,add_county_line = False,sup_fontsize = 10,point_size = None):
     grade_list = [0.1, 10, 25, 50, 100, 250, 1000]
-    rain_sg(sta_ob, grd_fo, grade_list, save_path=save_path, show=show, dpi=dpi, add_county_line=add_county_line)
+    rain_sg(sta_ob, grd_fo, grade_list, save_path=save_path, show=show, dpi=dpi, add_county_line=add_county_line,sup_fontsize=sup_fontsize,point_size = point_size)
 
 
 def rain_sg(sta_ob,grd_fo,grade_list,save_path=None,show  = False,dpi = 200,add_county_line = False,x_y = "dtime_member",sup_fontsize = 10,
@@ -88,7 +88,7 @@ def rain_sg(sta_ob,grd_fo,grade_list,save_path=None,show  = False,dpi = 200,add_
         width = (hight - title_hight - legend_hight) * grid_fo.nlon / grid_fo.nlat + left_plots_width + right_plots_width
         map_width = width - left_plots_width - right_plots_width
 
-        fig = plt.figure(figsize=(width, hight))
+        fig = plt.figure(figsize=(width, hight),dpi=dpi)
         # 设置画幅的布局方式，
         rect1 = [left_plots_width / width, 0.12, (width - right_plots_width - left_plots_width) / width, 0.84]  # 左下宽高,中央对比图
         ylabelwidth = 0.52 / width
@@ -506,7 +506,7 @@ def rain_comprehensive_sg(sta_ob,grd_fo,grade_list, save_path=None,show = False,
     map_width = width - left_plots_width - right_plots_width
     map_area = (hight - title_hight - legend_hight) *map_width
 
-    fig = plt.figure(figsize=(width, hight))
+    fig = plt.figure(figsize=(width, hight),dpi=dpi)
     # 设置画幅的布局方式，
     rect1 = [left_plots_width/width, 0.12, (width - right_plots_width - left_plots_width)/width, 0.84]  # 左下宽高,中央对比图
     ylabelwidth = 0.52/width
@@ -876,7 +876,7 @@ def rain_comprehensive_chinaland_sg(sta_ob,grd_fo,grade_list, save_path=None,sho
         print("grade_list 暂时仅支持长度为7的列表，包含小雨、中雨、大雨、暴雨、大暴雨、特大暴雨以及一个降水上限值")
         return
     grid_fo = meteva.base.get_grid_of_data(grd_fo)
-    fig = plt.figure(figsize=(10, 7))
+    fig = plt.figure(figsize=(10, 7),dpi=dpi)
     # 平面对比图
     rect1 = [0.05, 0.43, 0.65, 0.53]  # 左下宽高
     map_area = 70 * 0.41 * 0.55
@@ -1199,7 +1199,7 @@ def rain_comprehensive_chinaland_sg(sta_ob,grd_fo,grade_list, save_path=None,sho
     plt.close()
     return
 
-def rain_comprehensive_sl(sta_ob,m14,map_extend,grade_list,save_path=None,show = False,dpi = 200,add_county_line = False):
+def rain_comprehensive_sl(sta_ob,m14,map_extend,grade_list,save_path=None,show = False,dpi = 200,add_county_line = False,point_size = None,fontsize = None):
 
     if isinstance(map_extend, list):
         slon = map_extend[0]
@@ -1226,7 +1226,7 @@ def rain_comprehensive_sl(sta_ob,m14,map_extend,grade_list,save_path=None,show =
     map_width = width - left_plots_width - right_plots_width
     map_area = (hight - title_hight - legend_hight) * map_width
 
-    fig = plt.figure(figsize=(width, hight))
+    fig = plt.figure(figsize=(width, hight),dpi=dpi)
     # 设置画幅的布局方式，
     rect1 = [left_plots_width / width, 0.12, (width - right_plots_width - left_plots_width) / width, 0.84]  # 左下宽高,中央对比图
     ylabelwidth = 0.52 / width
@@ -1273,11 +1273,59 @@ def rain_comprehensive_sl(sta_ob,m14,map_extend,grade_list,save_path=None,show =
         ploys_dict[g] = []
         for n in range(ncontour):
             if float(contours["cn_label"][n]) == grade or (int(float(contours["cn_label"][n])) ==0 and g ==0):
-                line = contours["cn_xyz"][n][:,0:2]
-                poly = Polygon(line,facecolor = colors_grid[g],edgecolor="k",linewidth=0.5)
+                # line = contours["cn_xyz"][n][:,0:2]
+                # poly = Polygon(line,facecolor = colors_grid[g],edgecolor="k",linewidth=0.5)
+                # poly.set_zorder(0)
+                # ax.add_patch(poly)
+                # ploys_dict[g].append(line)
+                line_array = contours["cn_xyz"][n][:, 0:2]
+                poly = Polygon(line_array, facecolor=colors_grid[g], edgecolor="k", linewidth=0.5)
                 poly.set_zorder(0)
                 ax.add_patch(poly)
-                ploys_dict[g].append(line)
+                ploys_dict[g].append(line_array)
+                value = contours["cn_label"][n]
+                i_s = -1
+                line_dict = None
+
+                while i_s < line_array.shape[0] - 1:
+                    i_s += 1
+                    x = line_array[i_s, 0]
+                    y = line_array[i_s, 1]
+                    if x >= slon and x <= elon and y >= slat and y <= elat:
+                        if i_s == 0:
+                            x_1 = line_array[1, 0]
+                            y_1 = line_array[1, 1]
+                            if x_1 == x:
+                                rotation = 90
+                            else:
+                                rotation = math.atan((y_1 - y) / (x_1 - x)) * 180 / math.pi
+                            ax.text(x, y, value, ha="center", va="center", fontsize=fontsize, color="k",
+                                    rotation=rotation, bbox={"facecolor": "w", "pad": 0, "linewidth": 0})
+                            break
+                        else:
+                            if line_dict is None:
+                                line_dict = {}
+                                line_dict["x"] = []
+                                line_dict["y"] = []
+                            else:
+                                line_dict["x"].append(x)
+                                line_dict["y"].append(y)
+                    else:
+                        if line_dict is not None:
+                            npoint = len(line_dict["x"])
+                            if npoint > 5:
+                                np_half = int(npoint / 2)
+                                x = line_dict["x"][np_half]
+                                y = line_dict["y"][np_half]
+                                x_1 = line_dict["x"][np_half + 1]
+                                y_1 = line_dict["y"][np_half + 1]
+                                if x_1 == x:
+                                    rotation = 90
+                                else:
+                                    rotation = math.atan((y_1 - y) / (x_1 - x)) * 180 / math.pi
+                                ax.text(x, y, value, ha="center", va="center", fontsize=fontsize, color="k",
+                                        rotation=rotation, bbox={"facecolor": "w", "pad": 0, "linewidth": 0})
+                                line_dict = None
 
 
     # 绘制填色站点值
@@ -1303,10 +1351,12 @@ def rain_comprehensive_sl(sta_ob,m14,map_extend,grade_list,save_path=None,show =
 
 
     #cleves_name = ["0", "0.1-10", "10-25", "25-50", "50-100", "100-250", ">=250"]
-
-    pointsize = int(100 * map_area / len(dat))
-    if (pointsize > 30): pointsize = 30
-    if (pointsize < 1): pointsize = 1
+    if point_size is None:
+        pointsize = int(100 * map_area / len(dat))
+        if (pointsize > 30): pointsize = 30
+        if (pointsize < 1): pointsize = 1
+    else:
+        pointsize = point_size
 
     for i in range(len(clevs) - 1):
         index0 = np.where((dat >= clevs[i]) & (dat < clevs[i + 1]))
@@ -1591,7 +1641,7 @@ def rain_comprehensive_sl(sta_ob,m14,map_extend,grade_list,save_path=None,show =
 
 
 
-def rain_comprehensive_chinaland_sl(sta_ob,m14,grade_list, save_path=None,show = False,dpi = 200,add_county_line = False):
+def rain_comprehensive_chinaland_sl(sta_ob,m14,grade_list, save_path=None,show = False,dpi = 200,add_county_line = False,point_size = None,fontsize = None):
     '''
     #绘制24小时降水实况与预报综合对比检验图，专为为全国区域设置的画面布局，画面更加紧凑
     :param grd_fo: 输入的网格数据，包含一个平面的网格场
@@ -1603,7 +1653,7 @@ def rain_comprehensive_chinaland_sl(sta_ob,m14,grade_list, save_path=None,show =
         print("grade_list 暂时仅支持长度为7的列表，包含小雨、中雨、大雨、暴雨、大暴雨、特大暴雨以及一个降水上限值")
         return
 
-    fig = plt.figure(figsize=(10, 7))
+    fig = plt.figure(figsize=(10, 7),dpi=dpi)
     # 平面对比图
     rect1 = [0.05, 0.43, 0.65, 0.53]  # 左下宽高
     grid_fo = meteva.base.grid([73,135,0.05],[18,54,0.05])
@@ -1629,16 +1679,63 @@ def rain_comprehensive_chinaland_sl(sta_ob,m14,grade_list, save_path=None,show =
     ncontour = len(contours["cn_label"])
     ploys_dict = {}
 
+
     for g in range(len(grade_list)):
         grade = grade_list[g]
         ploys_dict[g] = []
         for n in range(ncontour):
             if float(contours["cn_label"][n]) == grade or (int(float(contours["cn_label"][n])) ==0 and g ==0):
-                line = contours["cn_xyz"][n][:,0:2]
-                poly = Polygon(line,facecolor = colors_grid[g],edgecolor="k",linewidth=0.5)
+                line_array = contours["cn_xyz"][n][:,0:2]
+                poly = Polygon(line_array,facecolor = colors_grid[g],edgecolor="k",linewidth=0.5)
                 poly.set_zorder(0)
                 ax.add_patch(poly)
-                ploys_dict[g].append(line)
+                ploys_dict[g].append(line_array)
+                value = contours["cn_label"][n]
+                i_s = -1
+                line_dict = None
+
+                while i_s < line_array.shape[0] - 1:
+                    i_s += 1
+                    x = line_array[i_s, 0]
+                    y = line_array[i_s, 1]
+                    if x >= grid_fo.slon and x <= grid_fo.elon and y >= grid_fo.slat and y <= grid_fo.elat:
+                        if i_s == 0:
+                            x_1 = line_array[1, 0]
+                            y_1 = line_array[1, 1]
+                            if x_1 == x:
+                                rotation = 90
+                            else:
+                                rotation = math.atan((y_1 - y) / (x_1 - x)) * 180 / math.pi
+                            ax.text(x, y, value, ha="center", va="center", fontsize=fontsize, color="k",
+                                    rotation=rotation, bbox={"facecolor": "w", "pad": 0, "linewidth": 0})
+                            break
+                        else:
+                            if line_dict is None:
+                                line_dict = {}
+                                line_dict["x"] = []
+                                line_dict["y"] = []
+                            else:
+                                line_dict["x"].append(x)
+                                line_dict["y"].append(y)
+                    else:
+                        if line_dict is not None:
+                            npoint = len(line_dict["x"])
+                            if npoint > 5:
+                                np_half = int(npoint / 2)
+                                x = line_dict["x"][np_half]
+                                y = line_dict["y"][np_half]
+                                x_1 = line_dict["x"][np_half + 1]
+                                y_1 = line_dict["y"][np_half + 1]
+                                if x_1 == x:
+                                    rotation = 90
+                                else:
+                                    rotation = math.atan((y_1 - y) / (x_1 - x)) * 180 / math.pi
+                                ax.text(x, y, value, ha="center", va="center", fontsize=fontsize, color="k",
+                                        rotation=rotation, bbox={"facecolor": "w", "pad": 0, "linewidth": 0})
+                                line_dict = None
+
+
+
 
     #colorbar_position_grid = fig.add_axes([0.085, 0.93, 0.25, 0.015])  # 位置[左,下,宽,高]
     #plt.colorbar(plot_grid, cax=colorbar_position_grid, orientation='horizontal')
@@ -1666,10 +1763,12 @@ def rain_comprehensive_chinaland_sl(sta_ob,m14,grade_list, save_path=None,show =
 
 
     #cleves_name = ["0", "0.1-10", "10-25", "25-50", "50-100", "100-250", ">=250"]
-
-    pointsize = int(100 * map_area / len(dat))
-    if (pointsize > 30): pointsize = 30
-    if (pointsize < 1): pointsize = 1
+    if point_size is None:
+        pointsize = int(100 * map_area / len(dat))
+        if (pointsize > 30): pointsize = 30
+        if (pointsize < 1): pointsize = 1
+    else:
+        pointsize = point_size
 
     for i in range(len(clevs) - 1):
         index0 = np.where((dat >= clevs[i]) & (dat < clevs[i + 1]))
@@ -1684,7 +1783,7 @@ def rain_comprehensive_chinaland_sl(sta_ob,m14,grade_list, save_path=None,show =
                                linewidths=0.3, edgecolor='k')
                 else:
                     ax.scatter(x, y, c=colors_sta[i],  s=pointsize, label=clevs_name[i],
-                               linewidths=0.1, edgecolor="k")
+                               linewidths=0.1, edgecolor="k",)
     ax.legend(loc="lower left", facecolor='whitesmoke', title="观测",  edgecolor='whitesmoke',fontsize=9)
 
     #设置图片标题
@@ -2009,7 +2108,7 @@ def temper_gg(grd_ob,grd_fo,save_path = None,show = False,dpi = 200,add_county_l
     rect6 = [0.67, 0.01, 0.3, height_veri_plot / height-0.03]  # 左下宽高
     rect_title = [ width_colorbar/width,(height_veri_plot+ height_map)/height,1-2*width_colorbar/width, 0.001]
 
-    fig = plt.figure(figsize=(width, height))
+    fig = plt.figure(figsize=(width, height),dpi=dpi)
     # 平面对比图1
 
 
@@ -2146,7 +2245,7 @@ def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None,show = False,dpi = 20
     rect6 = [0.67, 0.01, 0.3, height_veri_plot / height-0.03]  # 左下宽高
     rect_title = [ width_colorbar/width,(height_veri_plot+ height_map)/height,1-2*width_colorbar/width, 0.001]
 
-    fig = plt.figure(figsize=(width, height))
+    fig = plt.figure(figsize=(width, height),dpi=dpi)
     # 平面对比图1
 
 
@@ -2399,7 +2498,7 @@ def temper_comprehensive_sg(sta_ob,grd_fo,save_path = None,show = False,dpi = 20
     rect6 = [0.67, 0.01, 0.3, height_veri_plot / height-0.03]  # 左下宽高
     rect_title = [ width_colorbar/width,(height_veri_plot+ height_map)/height,1-2*width_colorbar/width, 0.001]
 
-    fig = plt.figure(figsize=(width, height))
+    fig = plt.figure(figsize=(width, height),dpi=dpi)
     # 平面对比图1
 
 
@@ -2652,7 +2751,7 @@ def temper_sg(sta_ob,grd_fo,save_path = None,show = False,dpi = 200,add_county_l
     rect6 = [0.67, 0.01, 0.3, height_veri_plot / height-0.03]  # 左下宽高
     rect_title = [ width_colorbar/width,(height_veri_plot+ height_map)/height,1-2*width_colorbar/width, 0.001]
 
-    fig = plt.figure(figsize=(width, height))
+    fig = plt.figure(figsize=(width, height),dpi=dpi)
     # 平面对比图1
 
 
@@ -2839,7 +2938,7 @@ def temper_comprehensive_ss(sta_ob,sta_fo,map_extend = None,save_path = None,sho
     rect6 = [0.67, 0.01, 0.3, height_veri_plot / height-0.03]  # 左下宽高
     rect_title = [ width_colorbar/width,(height_veri_plot+ height_map)/height,1-2*width_colorbar/width, 0.001]
 
-    fig = plt.figure(figsize=(width, height))
+    fig = plt.figure(figsize=(width, height),dpi=dpi)
     # 平面对比图1
 
     # 设置地图背景
@@ -3134,7 +3233,7 @@ def temper_ss(sta_ob, sta_fo, map_extend=None, save_path=None, show=False, dpi=2
     rect_title = [width_colorbar / width, (height_veri_plot + height_map) / height, 1 - 2 * width_colorbar / width,
                   0.001]
 
-    fig = plt.figure(figsize=(width, height))
+    fig = plt.figure(figsize=(width, height),dpi=dpi)
     # 平面对比图1
 
     # 设置地图背景
