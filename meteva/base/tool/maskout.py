@@ -101,6 +101,8 @@ def shp2clip_pro_id(originfig, ax, shpfile, num_list):
     return path, patch
 
 
+
+
 def shp2clip_by_lines(originfig, ax, line_list):
     vertices = []  # 这块是已经修改的地方
     codes = []  # 这块是已经修改的地方
@@ -159,4 +161,29 @@ def shp2clip_by_region_name(originfig, ax, region_name_list):
     region_id_list = list(set(region_id_list))
     shp2clip_pro_id(originfig, ax, province, region_id_list)
 
+
+def shp2clip_by_shpfile(originfig, ax, shpfile):
+    sf = shapefile.Reader(shpfile)
+    vertices = []  # 这块是已经修改的地方
+    codes = []  # 这块是已经修改的地方
+    shape_recs = sf.shapeRecords()
+    for i in range(len(shape_recs)):
+        # if shape_rec.record[3] == region:  # 这里需要找到和region匹配的唯一标识符，record[]中必有一项是对应的。
+
+        # if(len(shape_rec.record) ==1):continue
+            shape_rec = shape_recs[i]
+            pts = shape_rec.shape.points
+            prt = list(shape_rec.shape.parts) + [len(pts)]
+            for i in range(len(prt) - 1):
+                for j in range(prt[i], prt[i + 1]):
+                    vertices.append((pts[j][0], pts[j][1]))
+                codes += [Path.MOVETO]
+                codes += [Path.LINETO] * (prt[i + 1] - prt[i] - 2)
+                codes += [Path.CLOSEPOLY]
+            path = Path(vertices, codes)
+            # extents = path.get_extents()
+            patch = PathPatch(path, transform=ax.transData, facecolor='none', edgecolor='black')
+    for contour in originfig.collections:
+        contour.set_clip_path(patch)
+    return path, patch
 

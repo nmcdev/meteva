@@ -386,7 +386,6 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
         fo_name = data_names[1:]
     fo_num = len(fo_name)
 
-
     if title is not None:
         if isinstance(title, list):
             if fo_num * g_num * grade_num != len(title):
@@ -612,27 +611,30 @@ def score_tdt(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_lis
 
     if method.__name__.find("ob_fo") >= 0:
         fo_name = data_names
-    elif method.__name__.find("_uv")>=0:
-        fo_name = []
-        for i in range(2,len(data_names),2):
-            strs = data_names[i]
-            strs = strs.replace("u_","")
-            fo_name.append(strs)
-    elif method.__name__ == "sample_count":
-        fo_name = [data_names[0]]
-    elif method == meteva.method.variance_mse:
-        fo_name = ["variance","MSE"]
-    elif method ==meteva.method.std_rmse:
-        fo_name = ["STD","RMSE"]
-
+        png_name = data_names[1:]
     else:
-        fo_name = data_names[1:]
-    fo_num = len(fo_name)
+        if method.__name__.find("_uv")>=0:
+            fo_name = []
+            for i in range(2,len(data_names),2):
+                strs = data_names[i]
+                strs = strs.replace("u_","")
+                fo_name.append(strs)
+        elif method.__name__ == "sample_count":
+            fo_name = [data_names[0]]
+        elif method == meteva.method.variance_mse:
+            fo_name = ["variance","MSE"]
+        elif method ==meteva.method.std_rmse:
+            fo_name = ["STD","RMSE"]
 
+        else:
+            fo_name = data_names[1:]
+        png_name = fo_name
+    fo_num = len(fo_name)
+    png_num = len(png_name)
 
     if title is not None:
         if isinstance(title, list):
-            if fo_num * g_num * grade_num != len(title):
+            if png_num * g_num * grade_num != len(title):
                 print("手动设置的title数目和要绘制的图形数目不一致")
                 return
 
@@ -640,7 +642,7 @@ def score_tdt(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_lis
     if save_path is not None:
         if isinstance(save_path, str):
             save_path = [save_path]
-        if fo_num * g_num * grade_num != len(save_path):
+        if png_num * g_num * grade_num != len(save_path):
             print("手动设置的save_path数目和要绘制的图形数目不一致")
             return
 
@@ -790,19 +792,20 @@ def score_tdt(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_lis
             title1_list = None
             if isinstance(title, list):
                 kk = k * grade_num + i
-                title1_list = title[kk * fo_num: (kk + 1) * fo_num]
+                title1_list = title[kk *png_num : (kk + 1) * png_num]
             else:
                 title1_list = []
-                for ii in range(fo_num):
+                for ii in range(png_num):
                     if title is not None:
                         title1 = meteva.product.program.get_title_from_dict(title, s, g, group_name_list[k],
-                                                                            fo_name[ii])
+                                                                            png_name[ii])
                     else:
                         title1 = meteva.product.program.get_title_from_dict("", s, g,
-                                                                            group_name_list[k], fo_name[ii])
+                                                                            group_name_list[k], png_name[ii])
                     if grade_num > 1:
                         title1 += "(grade_" + str(grade_names[i]) + ")"
                     title1_list.append(title1)
+
 
             save_path1 = None
             if save_path is None:
@@ -814,19 +817,24 @@ def score_tdt(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_lis
                         fileName = title1_list[i].replace("\n", "").replace(":", "")
                         save_path1.append(save_dir + "/" + fileName + ".png")
             else:
-                save_path1 = save_path[k * fo_num: (k + 1) * fo_num]
+                save_path1 = save_path[k * png_num: (k + 1) * png_num]
 
-            #绘制图形
-            #print("start plot")
-            if x_y == "obtime_time":
-                meteva.base.tool.plot_tools.mesh_obtime_time(sta_result1,save_dir=save_dir,save_path=save_path1,show = show,dpi = dpi,title = title1_list,annot = annot,**plot_args)
-            elif x_y == "obtime_dtime":
-                meteva.base.tool.plot_tools.mesh_obtime_dtime(sta_result1, save_dir=save_dir,save_path=save_path1,show = show,dpi = dpi, title=title1_list,annot = annot,**plot_args)
-            elif x_y == "time_dtime":
-                #print(sta_result1)
-                meteva.base.tool.plot_tools.mesh_time_dtime(sta_result1, save_dir=save_dir,save_path=save_path1,show = show,dpi = dpi, title=title1_list,annot = annot,**plot_args)
+            if method.__name__.find("ob_fo") >= 0:
+                meteva.product.time_list_mesh(sta_result1,save_dir = save_dir,save_path = save_path1,show=show,dpi = dpi,title = title1_list,annot= annot,plot_error=False,**plot_args)
             else:
-                print("目前绘图样式参数 x_y仅支持 obtime_time, obtime_dtime, time_dtime三种形式")
+
+                #绘制图形
+                #print("start plot")
+
+                if x_y == "obtime_time":
+                    meteva.base.tool.plot_tools.mesh_obtime_time(sta_result1,save_dir=save_dir,save_path=save_path1,show = show,dpi = dpi,title = title1_list,annot = annot,**plot_args)
+                elif x_y == "obtime_dtime":
+                    meteva.base.tool.plot_tools.mesh_obtime_dtime(sta_result1, save_dir=save_dir,save_path=save_path1,show = show,dpi = dpi, title=title1_list,annot = annot,**plot_args)
+                elif x_y == "time_dtime":
+                    #print(sta_result1)
+                    meteva.base.tool.plot_tools.mesh_time_dtime(sta_result1, save_dir=save_dir,save_path=save_path1,show = show,dpi = dpi, title=title1_list,annot = annot,**plot_args)
+                else:
+                    print("目前绘图样式参数 x_y仅支持 obtime_time, obtime_dtime, time_dtime三种形式")
         if len(sta_all_g_list) == 1:
             sta_all_g_list = sta_all_g_list[0]
 

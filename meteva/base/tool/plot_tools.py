@@ -451,13 +451,15 @@ def plot_2d_grid_list(grd_list,type = "contour",save_path = None,title = None,cl
             ax.set_yticklabels(yticks_label_None, fontsize=sup_fontsize * 0.8, family='Times New Roman')
         if type == "contour":
             im = ax.contourf(x, y, np.squeeze(grd_list[p].values), levels=clevs1, cmap=cmap1, norm=norm)
-
             if clip is not None:
-                if isinstance(clip,str):clip = [clip]
-                if isinstance(clip[0],str):
-                    meteva.base.tool.maskout.shp2clip_by_region_name(im, ax, clip)
-                else:
-                    meteva.base.tool.maskout.shp2clip_by_lines(im,ax,clip)
+                try:
+                    meteva.base.tool.maskout.shp2clip_by_shpfile(im, ax, clip)
+                except:
+                    if isinstance(clip, str): clip = [clip]
+                    if isinstance(clip[0], str):
+                        meteva.base.tool.maskout.shp2clip_by_region_name(im, ax, clip)
+                    else:
+                        meteva.base.tool.maskout.shp2clip_by_lines(im, ax, clip)
 
         else:
             im = ax.pcolormesh(x, y, np.squeeze(grd_list[p].values), cmap=cmap1, norm=norm)
