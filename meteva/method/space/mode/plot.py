@@ -244,6 +244,7 @@ class mfig:
 
         self.ax_list = ax_list
         self.sup_fontsize = sup_fontsize
+        self.ncol = ncol
 
 
     def add_contourf(self,i,grd,cmap ="rainbow",clevs= None,add_colorbar = True):
@@ -320,26 +321,95 @@ class mfig:
 
 
 
-def plot_value_and_label(look,cmap = "rain_24h",clevs = None,save_path = None,sup_fontsize=10,dpi = 300,show = False):
-    grid1 = look["grid"]
-    mfg1 = mfig(6,map_extend=grid1,ncol=2,sup_fontsize=sup_fontsize,dpi=dpi)
-    plot_value(look,cmap,clevs,mfg1 = mfg1)
-    plot_label(look,mfg1 = mfg1)
+def plot_value_list(look_list, cmap ="rain_24h",clevs = None,save_path = None,show = False,sup_fontsize=10,dpi = 300,mfg1 = None):
+
+    ncol = len(look_list)
+    grid1 = look_list[0]["grid"]
+    # grd_ob = look["grd_ob"]
+    # grd_fo = look["grd_fo"]
+    # grd_ob_smooth = look["grd_ob_smooth"]
+    # grd_fo_smooth = look["grd_fo_smooth"]
+    # vmax = np.max((np.max(grd_ob), np.max(grd_fo)))
+    cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap, clevs=clevs)
+
+    mfg1_show = True
+    if mfg1 is None:
+        mfg1 = mfig(2*ncol,map_extend=grid1,ncol=ncol,sup_fontsize=sup_fontsize,dpi=dpi)
+    else:
+        mfg1_show = False
+
+    for i in range(ncol):
+        look1 = look_list[i]
+        grd = look1["grd"]
+        grd_smooth = look1["grd_smooth"]
+        mfg1.add_contourf(i,grd,cmap = cmap1,clevs=clevs1,add_colorbar=(i==ncol-1))
+        mfg1.add_contourf(ncol + i, grd_smooth, cmap=cmap1, clevs=clevs1,add_colorbar=(i==ncol-1))
+
+    if mfg1_show:
+        if save_path is None:
+            show = True
+        if save_path is not None:
+            meteva.base.tool.path_tools.creat_path(save_path)
+            file1, extension = os.path.splitext(save_path)
+            if(len(extension) ==0):
+                print("save_path中没包含后缀，如.png等,未能输出至指定路径")
+                return
+            extension = extension[1:]
+            plt.savefig(save_path,format = extension,bbox_inches='tight')
+            print("图片已保存至" + save_path)
+        if show:
+            plt.show()
+        plt.close()
+
+
+
+
+def plot_value_and_label_list(look_list,cmap = "rain_24h",clevs = None,save_path = None,sup_fontsize=10,dpi = 300,show = False):
+    ncol = len(look_list)
+    grid1 = look_list[0]["grid"]
+    mfg1 = mfig(3*ncol, map_extend=grid1, ncol=ncol, sup_fontsize=sup_fontsize, dpi=dpi)
+    plot_value_list(look_list, cmap, clevs, mfg1=mfg1)
+    plot_label_list(look_list, mfg1=mfg1)
     if save_path is None:
         show = True
 
     if save_path is not None:
         meteva.base.tool.path_tools.creat_path(save_path)
         file1, extension = os.path.splitext(save_path)
-        if(len(extension) ==0):
+        if (len(extension) == 0):
             print("save_path中没包含后缀，如.png等,未能输出至指定路径")
             return
         extension = extension[1:]
-        plt.savefig(save_path,format = extension,bbox_inches='tight')
+        plt.savefig(save_path, format=extension, bbox_inches='tight')
         print("图片已保存至" + save_path)
     if show:
         plt.show()
     plt.close()
+
+def plot_value_and_label(look,cmap = "rain_24h",clevs = None,save_path = None,sup_fontsize=10,dpi = 300,show = False):
+
+    if isinstance(look,list):
+        plot_value_and_label_list(look,cmap =cmap,clevs = clevs,save_path = save_path,sup_fontsize=sup_fontsize,dpi = dpi,show = show)
+    else:
+        grid1 = look["grid"]
+        mfg1 = mfig(6,map_extend=grid1,ncol=2,sup_fontsize=sup_fontsize,dpi=dpi)
+        plot_value(look,cmap,clevs,mfg1 = mfg1)
+        plot_label(look,mfg1 = mfg1)
+        if save_path is None:
+            show = True
+
+        if save_path is not None:
+            meteva.base.tool.path_tools.creat_path(save_path)
+            file1, extension = os.path.splitext(save_path)
+            if(len(extension) ==0):
+                print("save_path中没包含后缀，如.png等,未能输出至指定路径")
+                return
+            extension = extension[1:]
+            plt.savefig(save_path,format = extension,bbox_inches='tight')
+            print("图片已保存至" + save_path)
+        if show:
+            plt.show()
+        plt.close()
 
 
 def plot_value(look, cmap ="rain_24h",clevs = None,save_path = None,show = False,sup_fontsize=10,dpi = 300,mfg1 = None):
@@ -398,7 +468,7 @@ def add_pts(ax,map_extend,line_dict,nmatched,line_width = None,sup_fontsize=10,d
     map_width = ax.bbox.width / fig.dpi
 
     if line_width is None:
-        line_width = rlon *  0.03/ map_width
+        line_width = map_width *  0.2
 
     for key in line_dict.keys():
         if key <= nmatched:
@@ -436,6 +506,76 @@ def add_pts(ax,map_extend,line_dict,nmatched,line_width = None,sup_fontsize=10,d
     ax.set_ylim(slat,elat)
 
 
+
+def plot_label_list(look_list,ncol = None,save_path = None,show = False,sup_fontsize=10,dpi = 300,mfg1 = None):
+
+    nlook = len(look_list)
+    grid1 = look_list[0]["grid"]
+    start_ax = 2 * nlook
+    mfg1_show = True
+
+    if mfg1 is None:
+        mfg1 = mfig(nlook,map_extend=grid1,ncol=ncol,sup_fontsize=sup_fontsize,dpi=dpi)
+        start_ax = 0
+        ncol = mfg1.ncol
+    else:
+        mfg1_show = False
+        ncol = nlook
+
+
+
+    vmax = 1
+    label_list = []
+    for i in range(nlook):
+        look =look_list[i]
+        nmatch = 1000
+        if "match_count" in look.keys():
+            nmatch = look["match_count"]
+        data_labeled = look['grd_label'].copy()
+        data_labeled.values[data_labeled.values>nmatch] = -1
+        label_list.append(data_labeled)
+        vmax1 = np.max(data_labeled)
+        if vmax1 > vmax:
+            vmax = vmax1
+
+    cmap2, clevs2 = meteva.base.tool.color_tools.def_cmap_clevs(cmap="mode", clevs=None, vmin=0, vmax=vmax)
+
+    for i in range(nlook):
+        look = look_list[i]
+        nmatch = 1000
+        if "match_count" in look.keys():
+            matched = True
+            nmatch = look["match_count"]
+        else:
+            matched = False
+
+        mfg1.add_mesh(start_ax+i,label_list[i],cmap=cmap2,clevs=clevs2,add_colorbar=((i+1)%ncol==0),matched = matched)
+
+        label_count = look["grd_features"]["label_count"]
+        pts_dict = {}
+        for j in range(label_count):
+            feature = meteva.method.feature_axis(look, j + 1, None)
+            if feature is not None:
+                pts = feature["pts"]
+                pts_dict[j+1] =pts
+        add_pts(mfg1.ax_list[start_ax + i],look["grid"],pts_dict,nmatch)
+
+    if mfg1_show:
+        if save_path is None:
+            show = True
+        if save_path is not None:
+            meteva.base.tool.path_tools.creat_path(save_path)
+            file1, extension = os.path.splitext(save_path)
+            if(len(extension) ==0):
+                print("save_path中没包含后缀，如.png等,未能输出至指定路径")
+                return
+            extension = extension[1:]
+            plt.savefig(save_path,format = extension,bbox_inches='tight')
+            print("图片已保存至" + save_path)
+        if show:
+            plt.show()
+        plt.close()
+
 def plot_label(look,save_path = None,show = False,sup_fontsize=10,dpi = 300,mfg1 = None):
 
     grid1 = look["grid"]
@@ -460,14 +600,12 @@ def plot_label(look,save_path = None,show = False,sup_fontsize=10,dpi = 300,mfg1
     vmax = np.max((np.max(data_Xlabeled), np.max(data_Ylabeled))) + 1
     cmap2, clevs2 = meteva.base.tool.color_tools.def_cmap_clevs(cmap="mode", clevs=None, vmin=0, vmax=vmax)
 
-
     mfg1.add_mesh(start_ax,data_Xlabeled,cmap=cmap2,clevs=clevs2,add_colorbar=False,matched = matched)
     mfg1.add_mesh(start_ax+1, data_Ylabeled, cmap=cmap2, clevs=clevs2,add_colorbar=True,matched = matched)
 
     #ax_list = plot_2d_grid_list([data_Xlabeled, data_Ylabeled],type="mesh",
     #            cmap = "mode", vmax = np.max((np.max(data_Xlabeled), np.max(data_Ylabeled)))+1,ncol=2)
     nob = look["grd_ob_features"]["label_count"]
-
 
     pts_dict = {}
     for i in range(nob):
@@ -498,8 +636,6 @@ def plot_label(look,save_path = None,show = False,sup_fontsize=10,dpi = 300,mfg1
         if show:
             plt.show()
         plt.close()
-
-
 
 
 def plot_interest(interest,save_path = None,show = False):

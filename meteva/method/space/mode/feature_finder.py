@@ -626,57 +626,181 @@ def feature_finder(grd_ob0, grd_fo0, smooth, threshold, minsize,compare = ">=",m
     out["grid"] = grid0
 
     return out
-        
-        
-    
-    
-    
-    
-#=============================  Example  ===================================
-'''
-#make.SpatialVx参数
-hold = make_SpatialVx_PA1.makeSpatialVx(X = pd.read_csv(r'F:\Work\MODE\tra_test\QPEF\QPE\0802.csv'),
-                     Xhat = pd.read_csv(r'F:\Work\MODE\tra_test\QPEF\QPF\0801.csv'),
-                     thresholds = [0.01, 20.01], loc = pd.read_csv("F:\\Work\\MODE\\tra_test\\FeatureFinder\\ICPg240Locs.csv"),
-                     projection = True, subset = None, timevals = None, reggrid = True, 
-                     Map = True, locbyrow = True, fieldtype = "Precipitation", units = ("mm/h"), 
-                     dataname = "ICP Perturbed Cases", obsname = "pert000" ,modelname = "pert004",
-                     q = (0, 0.1, 0.25, 0.33, 0.5, 0.66, 0.75, 0.9, 0.95) ,qs = None)
-'''                    
-#FeatureFinder参数
-'''
-Object = hold.copy()    #make.SpatialVx生成的结果
-smoothfun = "disk2dsmooth"
-dosmooth = True
-smoothpar = 17    #卷积核的大小
-smoothfunargs = None
-thresh = 310    #R里面的阈值为5,2D卷积平滑增强图像，阈值设为310才能结果对应
-idfun = "disjointer"
-minsize = np.array([10, 5])    #判断连通域大小的下限，超过两个值的话用数组
-maxsize = float("Inf")    #判断连通域大小的上限，默认无穷大,如果是数值的话，可以直接赋值，超过两个值的话用数组
-fac = 1
-zerodown = False
-timepoint = 1
-obs = 1
-model = 1
 
-look = featureFinder(Object, smoothfun, dosmooth, smoothpar, smoothfunargs,\
-                     thresh, idfun, minsize, maxsize, fac, zerodown, timepoint, obs, model)
-'''
 
-'''
-#thresh是阈值，翻译后是扩大了约60倍的数据
-look_FeatureFinder = featureFinder(Object = hold.copy(), smoothfun = "disk2dsmooth", 
-                     dosmooth = True, smoothpar = 17, smoothfunargs = None,
-                     thresh = 1800, idfun = "disjointer", minsize = np.array([1]),
-                     maxsize = float("Inf"), fac = 1, zerodown = False, timepoint = 1,
-                     obs = 1, model = 1)
 
-look = featureFinder(Object = hold.copy(), smoothpar = 17, thresh = 25)
-'''
-#计算程序运行时间
-#end = time.clock()
-#print('Running time: %s s'%(end-start))
+def feature_finder_and_merge(grd_ob0,smooth, threshold, minsize,compare = ">=",near_dis = 300,near_rate = 0.3):
+    grd_ob = grd_ob0.copy()
+    grd_ob.attrs["var_name"] = "原始场"
+    X = np.squeeze(np.array(grd_ob)).astype(np.float32)
+
+    # 读经纬度，并形成R里面的格式
+    lon = grd_ob['lon']
+    lat = grd_ob['lat']
+    X_lon, Y_lat = np.meshgrid(lon, lat)
+    loc1 = X_lon.reshape(X_lon.size, order='F')
+    loc2 = Y_lat.reshape(Y_lat.size, order='F')
+    loc = np.vstack((loc1, loc2)).T
+
+    Object = {"grd_ob": X, "loc": loc}  # hold是make_saptialVx的计算结果
+    thresh = threshold
+    zerodown = False
+    dat = {'ob': Object['grd_ob']}  # 引用hold里的X,Xhat要素并赋值
+    X = dat['ob']
+
+    if smooth > 0:
+        kernel_X = get_disk_kernel(smooth)
+        Xsm = convolve(X, kernel_X)
+        if (zerodown):
+            Xsm = np.where(Xsm > 0, Xsm, 0)  # Xsm中大于0的值被0代替
+    else:
+        Xsm = X
+
+    grd_ob_smooth = grd_ob.copy()
+    grd_ob_smooth.attrs["var_name"] = "平滑场"
+    grd_ob_smooth[:] = Xsm[:]
+
+    if (np.size(thresh) == 1):
+        thresh = np.tile(thresh, 2)
+    fac = 1
+    thresh = thresh * fac
+
+    ob_hp = None
+    if compare == ">=":
+        ob_hp = Xsm >= thresh[0]
+    elif compare== ">":
+        ob_hp = Xsm > thresh[0]
+    elif compare == "<=":
+        ob_hp = Xsm <= thresh[0]
+    elif compare == "<":
+        ob_hp = Xsm <= thresh[0]
+    else:
+        print("compare parameter must be >=  >  <  or <=")
+
+    Xprop = propCounts(ob_hp, minsize, 1e8 )[3]
+    Xlabelsfeature = propCounts(ob_hp, minsize, 1e8)[4]
+    grid0 = meteva.base.get_grid_of_data(grd_ob)
+    if near_dis >0:
+        near_dis = near_dis/111/grid0.dlon
+        Xlabelsfeature = meteva.method.mode.consistent.combined_near_labels(Xlabelsfeature,near_dis,near_rate)
+
+    out = {'grd': grd_ob,
+           "grd_smooth": grd_ob_smooth,
+           "grd_label": None,
+           "identifier_label": "Convolution Threshold",
+           "grd_prop": Xprop,
+           "grd_features": Xlabelsfeature}
+
+
+    grd_ob_labeled = grd_ob.copy()
+    grd_ob_labeled.attrs["var_name"] = "目标编号"
+    label_value = np.zeros((grid0.nlat, grid0.nlon))
+    for i in range(Xlabelsfeature["label_count"]):
+        label = Xlabelsfeature[i + 1]
+        label_value[label] = i + 1
+    grd_ob_labeled.values[:] = label_value[:]
+
+    out.update({"grd_label": grd_ob_labeled})
+    # 每个格点的长、宽
+    a = grid0.dlon
+    b = grid0.dlat
+    S = a * b
+    # if len(out["grd_ob_features"].keys())>0:
+    if out["grd_features"]["label_count"] > 0:
+        ob_area = (np.array(out['grd_features']['area']) * S).tolist()
+        out['grd_features']['area'] = ob_area
+    out["grid"] = grid0
+    return out
+
+def feature_finder_single(grd_fo0,smooth, threshold, minsize,compare = ">="):
+    grd_fo = grd_fo0.copy()
+    grd_fo.attrs["var_name"] = "原始场"
+
+    X = np.squeeze(np.array(grd_fo)).astype(np.float32)
+
+    # 读经纬度，并形成R里面的格式
+    lon = grd_fo['lon']
+    lat = grd_fo['lat']
+    X_lon, Y_lat = np.meshgrid(lon, lat)
+    loc1 = X_lon.reshape(X_lon.size, order='F')
+    loc2 = Y_lat.reshape(Y_lat.size, order='F')
+    loc = np.vstack((loc1, loc2)).T
+
+    Object = {"grd": X, "loc": loc}  # hold是make_saptialVx的计算结果
+    thresh = threshold
+    zerodown = False
+
+    dat = {'fo': Object['grd']}  # 引用hold里的X,Xhat要素并赋值
+
+    Y = dat['fo']
+
+    if smooth > 0:
+        kernel_X = get_disk_kernel(smooth)
+        Xsm = convolve(Y, kernel_X)
+        if (zerodown):
+            Xsm = np.where(Xsm > 0, Xsm, 0)  # Xsm中大于0的值被0代替
+    else:
+        Xsm = Y
+
+    grd_fo_smooth = grd_fo.copy()
+    grd_fo_smooth.attrs["var_name"] = "平滑场"
+    grd_fo_smooth[:] = Xsm[:]
+
+    if (np.size(thresh) == 1):
+        thresh = np.tile(thresh, 2)
+    fac = 1
+    thresh = thresh * fac
+
+    ob_hp = None
+    if compare == ">=":
+        ob_hp = Xsm >= thresh[0]
+    elif compare== ">":
+        ob_hp = Xsm > thresh[0]
+    elif compare == "<=":
+        ob_hp = Xsm <= thresh[0]
+    elif compare == "<":
+        ob_hp = Xsm <= thresh[0]
+    else:
+        print("compare parameter must be >=  >  <  or <=")
+
+    Xprop = propCounts(ob_hp, minsize, 1e8 )[3]
+    Xlabelsfeature = propCounts(ob_hp, minsize, 1e8)[4]
+
+    out = {'grd': grd_fo,
+           "grd_smooth": grd_fo_smooth,
+           "grd_label": None,
+           "identifier_label": "Convolution Threshold",
+           "grd_prop": Xprop,
+           "grd_features": Xlabelsfeature}
+
+    # print(Xlabelsfeature)
+    # Xlabels = data_pre.pick_labels(copy.deepcopy(Xlabelsfeature))
+    grid0 = meteva.base.get_grid_of_data(grd_fo)
+
+    grd_fo_labeled = grd_fo.copy()
+    grd_fo_labeled.attrs["var_name"] = "目标编号"
+    label_value = np.zeros((grid0.nlat, grid0.nlon))
+    for i in range(Xlabelsfeature["label_count"]):
+        label = Xlabelsfeature[i + 1]
+        label_value[label] = i + 1
+    grd_fo_labeled.values[:] = label_value[:]
+
+    # grd_fo_labeled.values[:] = Ylabeled[:]
+
+    out.update({"grd_label": grd_fo_labeled})
+    # 每个格点的长、宽
+
+    a = grid0.dlon
+    b = grid0.dlat
+    S = a * b
+    # if len(out["grd_fo_features"].keys())>0:
+    if out["grd_features"]["label_count"] > 0:
+        ob_area = (np.array(out['grd_features']['area']) * S).tolist()
+        out['grd_features']['area'] = ob_area
+
+    out["grid"] = grid0
+
+    return out
 
 
 

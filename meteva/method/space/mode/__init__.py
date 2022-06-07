@@ -30,23 +30,25 @@ from . import plot
 from . import operater
 from . import load
 from . import tran_to_dataframe
+from . import consistent
 
 
 # 采用如下形式将5个用户必要的函数导入到mode模块下
 from .make_spatialVx import make_spatialVx
-from .feature_finder import feature_finder
+from .feature_finder import feature_finder,feature_finder_single,feature_finder_and_merge
 from .centmatch import centmatch
 from .merge_force import merge_force,merge
 from .deltamm import deltamm
 from .minboundmatch import minboundmatch
 from .feature_table import feature_table
-from .feature_axis import feature_axis
+from .feature_axis import feature_axis,caculate_feature_axis
 from .feature_props import feature_props
 from .feature_comps import feature_comps
 from .feature_match_analyzer import  feature_merged_analyzer,get_summary
-from .plot import plot_value,plot_label,plot_value_and_label,plot_interest,plot_feature
+from .plot import plot_value,plot_label,plot_value_and_label,plot_interest,plot_feature,plot_value_list,plot_label_list,plot_value_and_label_list
 from .utils import get_attributes_for_feat,remove_key_from_list
 from .interester import interester
 from .operater import operate
 from .load import load_feature_summary,load_feature_summary_list
 from .tran_to_dataframe import features_list_to_df
+from .consistent import combined_near_labels,unimatch

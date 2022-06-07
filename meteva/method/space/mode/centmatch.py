@@ -280,34 +280,7 @@ def centmatch(look_ff, criteria = 1, const = 14,  show = False):
     out["grid"] = copy.deepcopy(look_ff["grid"])
 
     return out
-'''
-hold = make_SpatialVx_PA1.makeSpatialVx(X = pd.read_csv("F:\\Work\\MODE\\tra_test\\FeatureFinder\\pert000.csv"), \
-                    Xhat = pd.read_csv(r"F:\Work\MODE\tra_test\FeatureFinder\pert004.csv"), \
-                    loc = pd.read_csv(r"F:\Work\MODE\tra_test\FeatureFinder\ICPg240Locs.csv"), \
-                    thresholds = [0.01, 20.01], projection = True, subset = None, timevals = None, reggrid = True,\
-                    Map = True, locbyrow = True, fieldtype = "Precipitation", units = ("mm/h"), dataname = "ICP Perturbed Cases", obsname = "pert000", \
-                    modelname = "pert004" , q = (0, 0.1, 0.25, 0.33, 0.5, 0.66, 0.75, 0.9, 0.95), qs = None)
 
-look_FeatureFinder = FeatureFinder_test_PA3.featureFinder(Object = hold.copy(), smoothfun = "disk2dsmooth", \
-                     dosmooth = True, smoothpar = 17, smoothfunargs = None,\
-                     thresh = 310, idfun = "disjointer", minsize = np.array([1]),\
-                     maxsize = float("Inf"), fac = 1, zerodown = False, timepoint = 1,\
-                     obs = 1, model = 1)
-'''
-#centmatch参数：
-#经纬度信息
-'''
-loc = pd.read_csv("F:\\Work\\MODE\\tra_test\\makeSpatialVx\\UKloc.csv")
-x = lookFeatureFinder.copy()
-criteria = 1
-const = 14
-distfun = "rdist"
-areafac = 1
-show = False
-
-look_centmatch = centmatch(x = look_featureFinder.copy(), criteria = 1, const = 14, distfun = "rdist", areafac = 1, show = False)
-
-'''
 
 
 

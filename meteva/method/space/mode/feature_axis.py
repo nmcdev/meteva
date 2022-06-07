@@ -58,30 +58,7 @@ def convexHull(rx0):
     result = np.array(line_all).astype(np.float32)
     return result
 
-
-def feature_axis(look,label,ob_or_fo = "ob",fac = 1, flipit=False, twixt=False):
-
-    grid0 = look["grid"]
-    if ob_or_fo =="ob":
-        tmp = look['grd_ob_features'][label]
-    else:
-        tmp = look['grd_fo_features'][label]
-    x = np.zeros((grid0.nlat,grid0.nlon))
-    x[tmp] = 1
-    out = {}
-    if flipit:
-        x = np.transpose(x)
-
-    rx = getRedDotsCoordinatesFromLeftToRight(x)
-    pts = convexHull(rx)
-    out['point'] = rx
-    out["point"][:,0] = grid0.slon +  out["point"][:,0] * grid0.dlon
-    out["point"][:,1] = grid0.slon + out["point"][:,1] * grid0.dlon
-
-    out['pts'] = pts
-    out["pts"][:,0] = grid0.slon + out["pts"][:,0] * grid0.dlon
-    out["pts"][:,1] = grid0.slat + out["pts"][:,1] * grid0.dlat
-
+def caculate_feature_axis(pts,fac = 1, twixt = False):
     axfit_frame = {'x': pts[:, 0], 'y': pts[:, 1]}
     axfit = sma(axfit_frame)
     axis_x = np.array([axfit['from'], axfit['to']])
@@ -117,6 +94,7 @@ def feature_axis(look,label,ob_or_fo = "ob",fac = 1, flipit=False, twixt=False):
     minor_frame = {'xmid': MidPoint['x'], 'ymid': MidPoint['y'], 'length': l/fac, 'angle': phi}
     MinorAxis = as_psp.as_psp(minor_frame)
     phi = phi * 180 / math.pi
+    out = {}
     out['phi'] = phi
     out['MajorAxis'] = {'ends': axis_frame}
     out['MinorAxis'] = MinorAxis
@@ -128,6 +106,39 @@ def feature_axis(look,label,ob_or_fo = "ob",fac = 1, flipit=False, twixt=False):
     out["window"] = MidPoint["window"]
     out['lengths'] = {'MajorAxis': r, 'MinorAxis': l}
     out['sma_fit'] = axfit
+    return out
+
+def feature_axis(look,label,ob_or_fo = "ob",fac = 1, flipit=False, twixt=False):
+
+    grid0 = look["grid"]
+    if ob_or_fo =="ob":
+        tmp = look['grd_ob_features'][label]
+    elif ob_or_fo == "fo":
+        tmp = look['grd_fo_features'][label]
+    else:
+        if label in look["grd_features"].keys():
+            tmp = look['grd_features'][label]
+        else:
+            return None
+    x = np.zeros((grid0.nlat,grid0.nlon))
+    x[tmp] = 1
+    out = {}
+    if flipit:
+        x = np.transpose(x)
+
+    rx = getRedDotsCoordinatesFromLeftToRight(x)
+    pts = convexHull(rx)
+    out['point'] = rx
+    out["point"][:,0] = grid0.slon +  out["point"][:,0] * grid0.dlon
+    out["point"][:,1] = grid0.slon + out["point"][:,1] * grid0.dlon
+
+    out['pts'] = pts
+    out["pts"][:,0] = grid0.slon + out["pts"][:,0] * grid0.dlon
+    out["pts"][:,1] = grid0.slat + out["pts"][:,1] * grid0.dlat
+
+    out1 = caculate_feature_axis(pts,fac=fac,twixt=twixt)
+    out.update(out1)
+
     return out
 
 '''
