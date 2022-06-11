@@ -37,9 +37,12 @@ setup(
     exclude_package_data={'': ['.gitignore']},
 
     install_requires=[
+                      'numpy>=1.12.1',
+                      'pandas>=1.0.4',
+                      "netCDF4>=1.4.2",
                       'scipy>=0.19.0',
-                      'xarray>=0.11.0',
-                      'matplotlib>=3.3.1',
+                      'xarray>=0.10.0',
+                      'matplotlib>=3.0.0',
                       "httplib2>=0.12.0",
                       "protobuf>=3.6.1",
                       "pyshp>=2.1.0",

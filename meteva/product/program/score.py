@@ -20,6 +20,8 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
             else:
                 s["drop_last"] = True
     sta_ob_and_fos = sele_by_dict(sta_ob_and_fos0, s)
+    index = np.where(sta_ob_and_fos.iloc[:,6].values != meteva.base.IV)
+    sta_ob_and_fos = sta_ob_and_fos.iloc[index[0],:]
     if(len(sta_ob_and_fos.index) == 0):
         msg = "there is no data to verify"
         print(msg)
@@ -298,7 +300,6 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
                 plot_args["hline"] = 0
             elif method in [meteva.method.bias]:
                 plot_args["hline"] = 1
-
 
         if plot is not None:
             if plot =="bar":

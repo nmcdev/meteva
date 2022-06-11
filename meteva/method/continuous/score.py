@@ -811,6 +811,38 @@ def rmse_tase(tase_array):
     root_mean_sqrt_error = np.sqrt(tase_array[..., 3] / tase_array[..., 0])
     return root_mean_sqrt_error
 
+def si(Ob,Fo):
+    si_list = []
+    Fo_shape = Fo.shape
+    Ob_shape = Ob.shape
+
+    Ob_shpe_list = list(Ob_shape)
+    size = len(Ob_shpe_list)
+    ind = -size
+    Fo_Ob_index = list(Fo_shape[ind:])
+    mean_ob = np.mean(Ob)
+    if Fo_Ob_index != Ob_shpe_list:
+        print('预报数据和观测数据维度不匹配')
+        return
+    if len(Fo_shape) == len(Ob_shape):
+        root_mean_sqrt_error = np.sqrt(np.mean(np.square(Fo - Ob)))
+
+        si = root_mean_sqrt_error/mean_ob
+        return si
+    else:
+        Ob_shpe_list.insert(0, -1)
+        new_Fo_shape = tuple(Ob_shpe_list)
+        new_Fo = Fo.reshape(new_Fo_shape)
+        new_Fo_shape = new_Fo.shape
+        for line in range(new_Fo_shape[0]):
+            root_mean_sqrt_error = np.sqrt(np.mean(np.square(new_Fo[line, :] - Ob)))
+            si = root_mean_sqrt_error/mean_ob
+            si_list.append(si)
+        si_array = np.array(si_list)
+        shape = list(Fo_shape[:ind])
+        si_array = si_array.reshape(shape)
+        return si_array
+
 
 def bias_m(Ob, Fo):
     '''

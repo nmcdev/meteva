@@ -53,7 +53,7 @@ def merge_force(look_match, verbose=False):
     out["grd_fo_smooth"] = x["grd_fo_smooth"]
     #out['identifier_function'] = x['identifier_function']
     out['identifier_label'] = x['identifier_label']
-    out['match_type'] = ['MergeForce', x['match_type']]
+    out['match_type'] = x['match_type']
     out['match_message'] = ''.join((x['match_message'], " (merged) "))
     xdim = x['grd_ob'].values.squeeze().shape
     #print(xdim)
@@ -173,7 +173,7 @@ def merge_force(look_match, verbose=False):
                             xlabeled[xi, xj] = -1
                             '''
         else:
-            vxunmatched = 0
+            vxunmatched = [0]
 
         if nY2 > 0:
             if verbose:
@@ -209,7 +209,7 @@ def merge_force(look_match, verbose=False):
                             ylabeled[yi, yj] = -1
             '''
         else:
-            fcunmatched = 0
+            fcunmatched = [0]
         xfeats["label_count"] = nmatches +nX2
         yfeats["label_count"] = nmatches +nY2
         out['grd_ob_features'] = xfeats
@@ -224,6 +224,10 @@ def merge_force(look_match, verbose=False):
         out['MergeForced'] = True
         out["grid"] = x["grid"]
         out = reset_label_id_by_area(out)
+        out["label_list_ob"]=np.arange(1,out["grd_ob_features"]["label_count"]+1).tolist()
+        out["label_list_fo"]=np.arange(1,out["grd_fo_features"]["label_count"]+1).tolist()
+        out["label_list_matched"]=np.arange(1,nmatches+1).tolist()
+
     return out
 
 

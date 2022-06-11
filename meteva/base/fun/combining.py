@@ -3,6 +3,7 @@ import copy
 import meteva
 import datetime
 import math
+import numpy as np
 
 def concat(data_list):
     data1_list = []
@@ -211,8 +212,17 @@ def combine_on_level_time_dtime_id(sta, sta1,how = 'inner'):
             df = pd.merge(sta, sta2, on=columns, how=how)
         else:
             sta3 = sta.copy()
-            sta3.drop(["lon","lat"], axis=1, inplace=True)
+            #sta3.drop(["lon","lat"], axis=1, inplace=True)
             df = pd.merge(sta3, sta2, on=columns, how=how)
+            index = np.isnan(df.loc[:,"lon_x"])
+            if index.size >0:
+                df.loc[index,"lon_x"] = df.loc[index,"lon_y"]
+                df.loc[index,"lat_x"] = df.loc[index,"lat_y"]
+            df.drop(["lon_y","lat_y"], axis=1, inplace=True)
+            columns_Name = df.columns.values.tolist()
+            columns_Name[4] = "lon"
+            columns_Name[5] = "lat"
+            df.columns = columns_Name
             if(len(df.index) == 0):
                 print("no matched line")
                 return None
@@ -330,6 +340,8 @@ def combine_on_obTime_id(sta_ob,sta_fo_list,need_match_ob = False,how_fo = "inne
             if sta_combine is not None:
                 sta_combine = sta_combine.fillna(meteva.base.IV)
 
+        if sta_combine is None:
+            print("观测和预报数据未能实现匹配，请检查观测和预报的层次、时间、时效、站号是否有严格的匹配关系")
         meteva.base.set_stadata_attrs(sta_combine,dtime_units=dtime_units)
         sta_combine.attrs = copy.deepcopy(sta_ob.attrs)
         sta_combine.drop_duplicates(subset=["level", "time", "dtime", "id"], inplace=True)

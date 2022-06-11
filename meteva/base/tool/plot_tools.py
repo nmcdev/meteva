@@ -3888,9 +3888,9 @@ def mesh_time_dtime(sta,save_dir = None,save_path = None,
     if height is None:
         height = height0/rate
 
+
     x_plot, x_ticks = meteva.product.get_x_ticks(times_fo, width - 2,row = 3)
     y_plot, y_ticks = meteva.product.get_y_ticks(dhs_fo, height,sup_fontsize * 0.8)
-
 
     #sup_fontsize = sup_fontsize / (width0/width)
 
@@ -3906,6 +3906,7 @@ def mesh_time_dtime(sta,save_dir = None,save_path = None,
         x_plot = x_plot -0.5
     else:
         x_plot = x_plot
+
 
     nids = len(ids)
     nfo = len(data_names)
@@ -3991,7 +3992,7 @@ def mesh_time_dtime(sta,save_dir = None,save_path = None,
             ax2.set_ylabel('预报时效',fontsize = sup_fontsize * 0.9)
             ax2.set_xticks(x_plot)
             ax2.set_xticklabels(x_ticks,rotation=360, fontsize=sup_fontsize * 0.8)
-            if add_min_xticks:ax2.set_xticks(np.arange(max(x_plot)))
+            if add_min_xticks:ax2.set_xticks(np.arange(max(x_plot)+1))
 
             ax2.set_yticks(y_plot)
             ax2.set_yticklabels(y_ticks, rotation=360, fontsize=sup_fontsize * 0.8)

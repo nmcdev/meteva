@@ -12,8 +12,9 @@ def features_tran(features):
             "False alarms":[tabel["False alarms"]],"Correct negatives":[tabel["Correct negatives"]]
         })
         nmatch = features["match_count"]
+        label_list_matched = features["label_list_matched"]
         df_list = []
-        for i in range(1,nmatch+1):
+        for i in label_list_matched:
             fi = features[i]
             dict1 = {
                 "level": [0], "time": [time1], "dtime": [features["dtime"]], "id": [i],
@@ -66,7 +67,8 @@ def features_tran(features):
 def features_list_to_df(feature_list):
     df_list = []
     hmfc_list = []
-    for features in feature_list:
+    for i in range(len(feature_list)):
+        features = feature_list[i]
         hmfc,df = features_tran(features)
         df_list.append(df)
         hmfc_list.append(hmfc)

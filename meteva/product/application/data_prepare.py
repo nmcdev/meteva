@@ -15,6 +15,7 @@ para_example= {
     "defalut_value":0,
     "hdf_file_name":"last_week_data.h5",
     "interp": meteva.base.interp_gs_nearest,
+    "how_fo":"outer",
     "ob_data":{
         "dir_ob": r"Z:\data\surface\jiany_rr\r1\YYMMDDHH.000",
         "hour":None,
@@ -128,7 +129,10 @@ def prepare_dataset(para,recover = True):
         start = time.time()
         #print(sta_ob)
         #print(sta_fo_list)
-        sta_all = meteva.base.combine_on_obTime_id(sta_ob,sta_fo_list)
+        how_fo = "inner"
+        if "how_fo" in para.keys():
+            how_fo = para["how_fo"]
+        sta_all = meteva.base.combine_on_obTime_id(sta_ob,sta_fo_list,how_fo=how_fo)
         if "hdf_dir" in para["ob_data"].keys():
             output_file = para["output_dir"]  + "/" + para["hdf_file_name"]
         else:
