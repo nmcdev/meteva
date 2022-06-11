@@ -28,8 +28,9 @@ def interester(look, properties=None,
         properties = npy.array(properties)
     if show:
         begin_tiid = time.time()
+
     if (x['grd_ob_features'] is None or 1 not in x['grd_ob_features'].keys()) or \
-            (x['grd_fo_features'] is None or 1 not in x['grd_fo_features'].keys()):
+            (x['grd_fo_features'] is None):
         print("interester: No features in one or both of the fields.  Returning NULL.")
         return None
     zerow = (weights == 0)
@@ -162,19 +163,21 @@ def interester(look, properties=None,
         remove_list = ['Type', 'xrange', 'yrange', 'dim', 'xstep', 'ystep', 'warnings', 'xcol', 'yrow', 'area']
         xkeys = remove_key_from_list(list(bigX.keys()), remove_list)
         ykeys = remove_key_from_list(list(Xhat.keys()), remove_list)
-        Xtmp = {"m": bigX[xkeys[id[0]]]}
-        Ytmp = {"m": Xhat[ykeys[id[1]]]}
+        # Xtmp = {"m": bigX[xkeys[id[0]]]}
+        # Ytmp = {"m": Xhat[ykeys[id[1]]]}
+        Xtmp = {"m": bigX[id[0]]}
+        Ytmp = {"m": Xhat[id[1]]}
         Xtmp.update(XtmpAttributes)
         Ytmp.update(YtmpAttributes)
         #A = feature_comps(grd_fo=Ytmp, grd_ob=Xtmp, which_comps=p)
-        A = feature_comps(look,label_ob=id[0]+1,label_fo=id[1]+1, which_comps=p)
+        A = feature_comps(look,label_ob=id[0],label_fo=id[1], which_comps=p)
         nomen = A.keys()
         res = ipwlin(A, b1=b1, b2=b2, a0=a0, a1=a1, property=p)
         if "angle_diff" in p:
             #fax = feature_axis(Xtmp)
             #fay = feature_axis(Ytmp)
-            fax = feature_axis(look,label=id[0]+1,ob_or_fo="ob")
-            fay = feature_axis(look,label=id[1]+1,ob_or_fo="fo")
+            fax = feature_axis(look,label=id[0],ob_or_fo="ob")
+            fay = feature_axis(look,label=id[1],ob_or_fo="fo")
             if fax is None or fay is None:
                 con = 0
             else:
@@ -189,9 +192,14 @@ def interester(look, properties=None,
             res["cent_dist"] = res["cent_dist"] * res["area_ratio"]
         return res
 
-    N = len(x['grd_ob_features'].keys()) - 11
-    M = len(x['grd_fo_features'].keys()) - 11
-    ind = npy.stack((npy.tile(npy.arange(N), M), (npy.arange(M)).repeat(N)), axis=-1)
+    #N = len(x['grd_ob_features'].keys()) - 11
+    #M = len(x['grd_fo_features'].keys()) - 11
+    #ind = npy.stack((npy.tile(npy.arange(N), M), (npy.arange(M)).repeat(N)), axis=-1)
+    label_list_ob = npy.array(look["label_list_ob"])
+    label_list_fo = npy.array(look["label_list_fo"])
+    N = len(label_list_ob)
+    M = len(label_list_fo)
+    ind = npy.stack((npy.tile(label_list_ob, M),label_list_fo.repeat(N)), axis=-1)
     if show:
         print(
             "\n\nFinding interest between each pair of " + N + " observed features and " + M + " forecast features.\n\n")
@@ -215,7 +223,10 @@ def interester(look, properties=None,
            #'total_interest': npy.sum(res_array * npy.tile(weights, (N * M, 1)), axis=1).reshape((N, M))}
     out = {"properties":properties.tolist(),
           'interest': interest,
-           'total_interest': npy.array(npy.sum(npy.nan_to_num(res_array * npy.tile(weights, (N * M, 1))), axis=1).reshape((M, N)))}
+           'total_interest': npy.array(npy.sum(npy.nan_to_num(res_array * npy.tile(weights, (N * M, 1))), axis=1).reshape((M, N))),
+           "label_list_ob": label_list_ob,
+           "label_list_fo": label_list_fo,
+           }
     # a = attributes(x)
     # a['names'] = None
     # attributes(out) = a

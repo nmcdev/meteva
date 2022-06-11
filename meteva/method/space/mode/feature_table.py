@@ -1,14 +1,72 @@
 # -*-coding:utf-8-*-
 import math
 import copy
+import numpy as np
 from . import data_pre
+import meteva
 
 def estimate_negatives(look):
     #根据 目标间平均距离估算negative的数量
     pass
 
+def feature_table(look):
+    #x = copy.deepcopy(look)
+    out = {}
+    grid0 = look["grid"]
+    zeros = np.zeros((grid0.nlat,grid0.nlon))
+    label_list_ob = look["label_list_ob"]
+    for id in label_list_ob:
+        index = look["grd_ob_features"][id]
+        min_y = np.min(index[0])
+        max_y = np.max(index[0])+1
 
-def feature_table(look, fudge=1e-08, hits_random=None, correct_negatives=None, fA=0.05):
+        min_x = np.min(index[1])
+        max_x = np.max(index[1])+1
+
+        zeros[min_y:max_y,min_x:max_x] = 1
+
+    area = np.sum(zeros) + 1e-6
+    nob_all = int(len(label_list_ob) * grid0.nlat * grid0.nlon / area)+1
+
+    zeros = np.zeros((grid0.nlat,grid0.nlon))
+    label_list_fo = look["label_list_fo"]
+    for id in label_list_fo:
+        index = look["grd_fo_features"][id]
+        min_y = np.min(index[0])
+        max_y = np.max(index[0]) + 1
+
+        min_x = np.min(index[1])
+        max_x = np.max(index[1]) + 1
+
+        zeros[min_y:max_y, min_x:max_x] = 1
+
+    area = np.sum(zeros) + 1e-6
+    nfo_all = int(len(label_list_fo) * grid0.nlat * grid0.nlon / area) + 1
+
+    n_all = max(nob_all,nfo_all)
+    label_list_matched = look["label_list_matched"]
+    hit = len(label_list_matched)
+    unmatched = look['unmatched']
+    miss = len(unmatched["ob"])
+    false_alarm = len(unmatched["fo"])
+    correct_negetive = n_all - (hit + miss + false_alarm)
+    if correct_negetive<0: correct_negetive = 0
+
+    hfmc = np.array([hit,false_alarm,miss,correct_negetive])
+
+    ets = meteva.method.ets_hfmc(hfmc)
+    pod = meteva.method.pod_hfmc(hfmc)
+    pofd = meteva.method.pofd_hfmc(hfmc)
+    far = meteva.method.far_hfmc(hfmc)
+    hss = meteva.method.hss_yesorno_hfmc(hfmc)
+
+    theta = {'ets': ets, 'pod': pod, 'pofd': pofd, 'far': far, 'hss': hss}
+    tab = {'Hits': hit, 'Misses': miss, 'False alarms': false_alarm, 'Correct negatives': correct_negetive}
+    out['contingency_table_yesorno'] = tab
+    out['score'] = theta
+    return out
+
+def feature_table_old(look, fudge=1e-08, hits_random=None, correct_negatives=None, fA=0.05):
 
     x = copy.deepcopy(look)
     out = {}
@@ -18,7 +76,7 @@ def feature_table(look, fudge=1e-08, hits_random=None, correct_negatives=None, f
 
     #if (x['match_type'] == 'deltamm'):
     #    hits = m['ob'].shape[0]
-    if (x['match_type'] == 'centmatch' or x['match_type'] == 'deltamm'  or  x['match_type'] == 'minboundmatch') or x["match_type"][0] == "MergeForce":
+    if x['match_type'] in ['centmatch' ,'deltamm' ,'minboundmatch',"MergeForce","unimatch"]:
         hits = len(m[:, 0])
     miss = get_length(x['unmatched']['ob'])
     fa = get_length(x['unmatched']['fo'])
@@ -90,8 +148,5 @@ def get_length(x):
     else:
         print("传入类型错误")
         raise Exception("传入类型错误")
-'''
-#data = np.load(r'F:\Work\MODE\tra_test\FeatureFinder\deltammResult_PA3.npy', allow_pickle = True).tolist()
-data = look_deltamm.copy()
-look_feature_table = feature_table(data)
-'''
+
+

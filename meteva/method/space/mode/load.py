@@ -13,8 +13,13 @@ def load_feature_summary(filename):
     feature1["dtime"] = feature["dtime"]
     feature1["feature_table"] = feature["feature_table"]
     feature1["interester"] = feature["interester"]
-    for i in range(1,nmatch+1):
-        feature1[i] = feature[str(i)]
+
+    # for i in range(1,nmatch+1):
+    #     feature1[i] = feature[str(i)]
+    label_list_matched = feature["label_list_matched"]
+    feature1["label_list_matched"] = label_list_matched
+    for id in label_list_matched:
+        feature1[id] = feature[str(id)]
     return feature1
 
 def load_feature_summary_list(dir):

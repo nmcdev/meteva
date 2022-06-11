@@ -62,6 +62,12 @@ def caculate_cover_rate(pts1,pts2,near_dis):
 def combined_near_labels(labelsfeature,near_dis,near_rate):
     labels =[]
     label_count0 = labelsfeature["label_count"]
+    labelsfeature_new = copy.deepcopy(labelsfeature)
+    if label_count0 ==0:
+        return labelsfeature_new
+    for i in range(label_count0):
+        labelsfeature_new.pop(i+1)
+
     #print(labelsfeature.keys())
     for i in range(label_count0):
         label_ps1 = np.array([labelsfeature[i+1][1],labelsfeature[i+1][0]]).T
@@ -69,7 +75,6 @@ def combined_near_labels(labelsfeature,near_dis,near_rate):
 
     max_rate = 1
     while max_rate >= near_rate:
-        max_rate = 0
         nlabels = len(labels)
         rate_array = np.zeros((nlabels,nlabels))
         for i in range(0,nlabels):
@@ -84,14 +89,8 @@ def combined_near_labels(labelsfeature,near_dis,near_rate):
             labels[i] = np.append(labels[i],labels[j],axis=0)
             del labels[j]
 
-    labelsfeature_new = {}
-    labelsfeature_new["label_count"] = len(labels)
-    # labelsfeature_new["Type"] = labelsfeature["Type"]
-    # labelsfeature_new["xrange"] = labelsfeature["xrange"]
-    # labelsfeature_new["yrange"] = labelsfeature["yrange"]
-    # labelsfeature_new["dim"] = labelsfeature["dim"]
-    # labelsfeature_new["xrange"] = labelsfeature["xrange"]
-    # labelsfeature_new["yrange"] = labelsfeature["yrange"]
+
+
 
     #print(len(labels))
     area_list = []
@@ -106,15 +105,18 @@ def combined_near_labels(labelsfeature,near_dis,near_rate):
         j = sort_index[i]
         labelsfeature_new[j+1] = (labels[i][:,1],labels[i][:,0])
     area_array.sort()
-    labelsfeature_new["area"] =area_array[::-1]
-    #print(labelsfeature)
 
+    labelsfeature_new["area"] =area_array[::-1]
+    labelsfeature_new["label_count"] = len(labels)
+    #print(labelsfeature)
     return labelsfeature_new
 
 
-def unimatch(look_ob,look_fo,near_dis,cover_rate):
+def unimatch(look_ob,look_fo,cover_dis,cover_rate):
+    out = copy.deepcopy(look_fo)
+
     grid0= look_ob["grid"]
-    near_dis = near_dis/111/grid0.dlon
+    near_dis = cover_dis/111/grid0.dlon
     label_count_ob = look_ob["grd_features"]["label_count"]
     labels_ob = []
     for i in range(label_count_ob):
@@ -172,8 +174,11 @@ def unimatch(look_ob,look_fo,near_dis,cover_rate):
             used_fo[max_j_list] = 0
             used_ob[max_i] =0
 
-    nmatch = max(combined_fo_dict.keys())
 
+    id_list = list(combined_fo_dict.keys())
+    nmatch =0
+    if len(id_list)>0:
+        nmatch = max(combined_fo_dict.keys())
     #print(combined_fo_dict)
 
     kk = label_count_ob
@@ -181,6 +186,7 @@ def unimatch(look_ob,look_fo,near_dis,cover_rate):
         if used_fo[k] > 0:
             kk += 1
             combined_fo_dict[kk] = (labels_fo[k][:, 1], labels_fo[k][:, 0])
+            id_list.append(kk)
 
     grd_fo_labeled = look_fo["grd"].copy()
     grd_fo_labeled.attrs["var_name"] = "目标编号"
@@ -189,15 +195,52 @@ def unimatch(look_ob,look_fo,near_dis,cover_rate):
         label = combined_fo_dict[key]
         label_value[label] = key
     grd_fo_labeled.values[:] = label_value[:]
-
     combined_fo_dict["label_count"] = kk
-    out = {'grd': look_fo["grd"],
-           "grd_smooth": look_fo["grd_smooth"],
-           "grd_features": combined_fo_dict,
-           "grd_label": grd_fo_labeled,
-           "grid":grid0,
-           "match_count":nmatch,
-           "max_label" : kk}
+    for key in look_fo["grd_features"].keys():
+        if key not in combined_fo_dict.keys():
+            if isinstance(key,str):
+                combined_fo_dict[key] = copy.deepcopy(look_fo["grd_features"][key])
+    out["grd_features"]= combined_fo_dict
+    out["grd_label"]= grd_fo_labeled
+    out["match_count"] = nmatch
+    out["max_label"] = kk
+    out["id_list"] =id_list
+    out["match_type"] = "unimatch"
 
+
+    return out
+
+
+def unimerge(look_ob,look_fo):
+
+    label_list_ob = look_ob["id_list"]
+    label_list_fo = look_fo["id_list"]
+    label_list_matched = list(set(label_list_ob) & set(label_list_fo))
+    label_list_all = list(set(label_list_ob) | set(label_list_fo))
+    vxunmatched = copy.deepcopy(label_list_ob)
+    fcunmatched = copy.deepcopy(label_list_fo)
+    for id in label_list_matched:
+        vxunmatched.remove(id)
+        fcunmatched.remove(id)
+
+
+    out = {'grd_ob': look_ob["grd"],
+           "grd_ob_smooth": look_ob["grd_smooth"],
+           "grd_ob_features": look_ob["grd_features"],
+           "grd_ob_label": look_ob["grd_label"],
+           'grd_fo': look_fo["grd"],
+           "grd_fo_smooth": look_fo["grd_smooth"],
+           "grd_fo_features": look_fo["grd_features"],
+           "grd_fo_label": look_fo["grd_label"],
+           "grid":look_ob["grid"],
+           "match_count":len(label_list_matched),
+           "max_label" : np.max(np.array(label_list_all)),
+           "label_list_ob":label_list_ob,
+           "label_list_fo":label_list_fo,
+           "label_list_matched":label_list_matched,
+           "label_list_all":label_list_all,
+           "unmatched":{'ob': vxunmatched, 'fo': fcunmatched},
+           "matches":np.array([label_list_matched,label_list_matched]).T,
+           "match_type":look_fo["match_type"]}
 
     return out

@@ -108,7 +108,7 @@ def caculate_feature_axis(pts,fac = 1, twixt = False):
     out['sma_fit'] = axfit
     return out
 
-def feature_axis(look,label,ob_or_fo = "ob",fac = 1, flipit=False, twixt=False):
+def feature_axis(look,label,ob_or_fo = None,fac = 1, flipit=False, twixt=False):
 
     grid0 = look["grid"]
     if ob_or_fo =="ob":

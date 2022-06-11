@@ -14,7 +14,7 @@ def sma(data):
         slope, intercept, r_value, p_value, std_err = st.linregress(x, y)
     except:
         pass
-    while np.isnan(slope):
+    while np.isnan(slope) or slope==0:
         maxx = np.max(x) - np.min(x)
         maxy = np.max(y) - np.min(y)
         maxd = max(maxx,maxy)
@@ -22,7 +22,6 @@ def sma(data):
         y1 = np.random.randn(len(y))* 0.01 * maxd + y
         #coeff = regress2(x1, y1, _method_type_2="reduced major axis")
         slope, intercept, r_value, p_value, std_err = st.linregress(x1, y1)
-
 
     frome = (min(y + slope * x) - intercept) / (2 * slope)
     to = (max(y + slope * x) - intercept) / (2 * slope)

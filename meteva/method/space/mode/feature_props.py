@@ -3,11 +3,16 @@ import numpy as np
 from .feature_axis import feature_axis
 
 
-def feature_props(look,label,ob_or_fo = "ob",which_comps=None, q=None):
+def feature_props(look,label,ob_or_fo = None,which_comps=None, q=None):
     if ob_or_fo =="ob":
         tmp = look['grd_ob_features'][label]
-    else:
+    elif ob_or_fo == "fo":
         tmp = look['grd_fo_features'][label]
+    else:
+        if label in look["grd_features"].keys():
+            tmp = look['grd_features'][label]
+        else:
+            return None
     grid0 = look["grid"]
     #x = np.zeros((grid0.nlat,grid0.nlon))
     #print("****")
@@ -48,9 +53,12 @@ def feature_props(look,label,ob_or_fo = "ob",which_comps=None, q=None):
         if ob_or_fo == "ob":
             values = look['grd_ob'].values.squeeze()
             labels = look["grd_ob_label"].values.squeeze()
-        else:
+        elif ob_or_fo == "fo":
             values = look['grd_fo'].values.squeeze()
             labels = look["grd_fo_label"].values.squeeze()
+        else:
+            values = look['grd'].values.squeeze()
+            labels = look["grd_label"].values.squeeze()
         valid = values[labels == label]
         ivec = np.quantile(valid,q)
         out["intensity"] = ivec

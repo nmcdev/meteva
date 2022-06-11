@@ -624,6 +624,8 @@ def feature_finder(grd_ob0, grd_fo0, smooth, threshold, minsize,compare = ">=",m
             fo_area = (np.array(out['grd_fo_features']['area'])*S).tolist()
             out['grd_fo_features']['area'] = fo_area
     out["grid"] = grid0
+    out["label_list_ob"] = np.arange(1,Xlabelsfeature["label_count"] + 1).tolist()
+    out["label_list_fo"]=np.arange(1,Ylabelsfeature["label_count"] + 1).tolist()
 
     return out
 
@@ -684,6 +686,7 @@ def feature_finder_and_merge(grd_ob0,smooth, threshold, minsize,compare = ">=",n
         near_dis = near_dis/111/grid0.dlon
         Xlabelsfeature = meteva.method.mode.consistent.combined_near_labels(Xlabelsfeature,near_dis,near_rate)
 
+
     out = {'grd': grd_ob,
            "grd_smooth": grd_ob_smooth,
            "grd_label": None,
@@ -695,9 +698,12 @@ def feature_finder_and_merge(grd_ob0,smooth, threshold, minsize,compare = ">=",n
     grd_ob_labeled = grd_ob.copy()
     grd_ob_labeled.attrs["var_name"] = "目标编号"
     label_value = np.zeros((grid0.nlat, grid0.nlon))
+    id_list = []
     for i in range(Xlabelsfeature["label_count"]):
         label = Xlabelsfeature[i + 1]
         label_value[label] = i + 1
+        id_list.append(i+1)
+
     grd_ob_labeled.values[:] = label_value[:]
 
     out.update({"grd_label": grd_ob_labeled})
@@ -710,6 +716,9 @@ def feature_finder_and_merge(grd_ob0,smooth, threshold, minsize,compare = ">=",n
         ob_area = (np.array(out['grd_features']['area']) * S).tolist()
         out['grd_features']['area'] = ob_area
     out["grid"] = grid0
+    out["id_list"] = id_list
+
+
     return out
 
 def feature_finder_single(grd_fo0,smooth, threshold, minsize,compare = ">="):
@@ -780,9 +789,11 @@ def feature_finder_single(grd_fo0,smooth, threshold, minsize,compare = ">="):
     grd_fo_labeled = grd_fo.copy()
     grd_fo_labeled.attrs["var_name"] = "目标编号"
     label_value = np.zeros((grid0.nlat, grid0.nlon))
+    id_list = []
     for i in range(Xlabelsfeature["label_count"]):
         label = Xlabelsfeature[i + 1]
         label_value[label] = i + 1
+        id_list.append(i+1)
     grd_fo_labeled.values[:] = label_value[:]
 
     # grd_fo_labeled.values[:] = Ylabeled[:]
@@ -799,6 +810,7 @@ def feature_finder_single(grd_fo0,smooth, threshold, minsize,compare = ">="):
         out['grd_features']['area'] = ob_area
 
     out["grid"] = grid0
+    out["id_list"] = id_list
 
     return out
 

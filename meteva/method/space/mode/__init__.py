@@ -51,4 +51,4 @@ from .interester import interester
 from .operater import operate
 from .load import load_feature_summary,load_feature_summary_list
 from .tran_to_dataframe import features_list_to_df
-from .consistent import combined_near_labels,unimatch
+from .consistent import combined_near_labels,unimatch,unimerge

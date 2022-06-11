@@ -590,13 +590,21 @@ def plot_label(look,save_path = None,show = False,sup_fontsize=10,dpi = 300,mfg1
 
     nmatch = 1000
     matched = False
-    if "match_count" in look.keys():
-        nmatch = look["match_count"]
-        matched = True
     data_Xlabeled = look['grd_ob_label'].copy()
     data_Ylabeled = look['grd_fo_label'].copy()
-    data_Ylabeled.values[data_Ylabeled.values>nmatch] = -1
-    data_Xlabeled.values[data_Xlabeled.values > nmatch] = -1
+    if "match_count" in look.keys():
+        nmatch = 0
+        if len(look["label_list_matched"])>0:
+            nmatch = np.max(np.array(look["label_list_matched"]))
+        matched = True
+
+        unmatched = look["unmatched"]["ob"]
+        for id in unmatched:
+            data_Xlabeled.values[data_Xlabeled.values ==id] = -1
+        unmatched = look["unmatched"]["fo"]
+        for id in unmatched:
+            data_Ylabeled.values[data_Ylabeled.values ==id] = -1
+
     vmax = np.max((np.max(data_Xlabeled), np.max(data_Ylabeled))) + 1
     cmap2, clevs2 = meteva.base.tool.color_tools.def_cmap_clevs(cmap="mode", clevs=None, vmin=0, vmax=vmax)
 
@@ -614,12 +622,13 @@ def plot_label(look,save_path = None,show = False,sup_fontsize=10,dpi = 300,mfg1
         pts_dict[i+1] =pts
     add_pts(mfg1.ax_list[start_ax+0],look["grid"],pts_dict,nmatch)
 
-    nfo = look["grd_fo_features"]["label_count"]
+    #nfo = look["grd_fo_features"]["label_count"]
+    label_list_fo = look["label_list_fo"]
     pts_dict = {}
-    for i in range(nfo):
-        feature = meteva.method.feature_axis(look, i + 1, "fo")
+    for id in label_list_fo:
+        feature = meteva.method.feature_axis(look, id, "fo")
         pts = feature["pts"]
-        pts_dict[i+1] = pts
+        pts_dict[id] = pts
     add_pts(mfg1.ax_list[start_ax+1],look["grid"],pts_dict,nmatch)
     if mfg1_show:
         if save_path is None:
@@ -647,8 +656,8 @@ def plot_interest(interest,save_path = None,show = False):
     p_list = copy.deepcopy(interest["properties"])
     p_list.append("total interest")
     name_list_dict = {
-        "fo_label_id" : np.arange(shape[0])+1,
-        "ob_label_id" : np.arange(shape[1])+1,
+        "fo_label_id": interest["label_list_fo"],
+        "ob_label_id": interest["label_list_ob"],
         "properties":p_list
     }
     meteva.base.tool.plot_tools.mesh(dat, name_list_dict=name_list_dict, annot=2, axis_x="ob_label_id",
@@ -660,7 +669,8 @@ def plot_feature(feature,save_path = None,show = False,dpi = 100):
     sup_fontsize = 10
     row = 43
     col1 = 10
-    nmatch = feature["match_count"]
+    label_list_matched = feature["label_list_matched"]
+    nmatch = len(label_list_matched)
     col2 = 6 + nmatch
     col = max(col1,col2)
 
@@ -715,7 +725,8 @@ def plot_feature(feature,save_path = None,show = False,dpi = 100):
     plt.text(0, row1-5, "逐个目标属性检验", fontsize=sup_fontsize)
 
     for i in range(nmatch):
-        plt.text(6+i, row1-5, "目标"+str(i+1), fontsize=sup_fontsize)
+        id = label_list_matched[i]
+        plt.text(6+i, row1-5, "目标"+str(id), fontsize=sup_fontsize)
 
     plt.text(0, row1-6, "目标整体相似度", fontsize=sup_fontsize)
     for i in range(nmatch):
@@ -729,10 +740,12 @@ def plot_feature(feature,save_path = None,show = False,dpi = 100):
         plt.text(4, row1-(7+i*2), "观测", fontsize=sup_fontsize)
         plt.text(4, row1-(8+i*2), "预报", fontsize=sup_fontsize)
 
+
     for i in range(nmatch):
         keys1 = ["ob","fo"]
         for j in range(2):
-            values = feature[i+1]["feature_axis"][keys1[j]]
+            id = label_list_matched[i]
+            values = feature[id]["feature_axis"][keys1[j]]
 
             plt.text(6+i, row1-(7+j), "{:.3f}".format(values["lengths"]["MajorAxis"]), fontsize=sup_fontsize)
             plt.text(6+i, row1-(9+j), "{:.3f}".format(values["lengths"]["MinorAxis"]), fontsize=sup_fontsize)
@@ -742,11 +755,11 @@ def plot_feature(feature,save_path = None,show = False,dpi = 100):
             plt.text(6+i, row1-(17+j), "{:.3f}".format(values["window"]["x1"]), fontsize=sup_fontsize)
             plt.text(6+i, row1-(19+j), "{:.3f}".format(values["window"]["y1"]), fontsize=sup_fontsize)
 
-            values = feature[i + 1]["feature_props"][keys1[j]]
+            values = feature[id]["feature_props"][keys1[j]]
             plt.text(6+i, row1-(21+j), "{:.3f}".format(values["centroid"]["x"]), fontsize=sup_fontsize)
             plt.text(6+i, row1-(23+j), "{:.3f}".format(values["centroid"]["y"]), fontsize=sup_fontsize)
             plt.text(6+i, row1-(25+j), "{:.3f}".format(values["area"]), fontsize=sup_fontsize)
-            plt.text(6+i, row1-(27+j), "{:.3f}".format(values["intensity"][0]), fontsize=sup_fontsize)
+            plt.text(6+i, row1-(27+j), "{:.3f}".format(values["intensity"][4]), fontsize=sup_fontsize)
 
 
 
@@ -757,8 +770,10 @@ def plot_feature(feature,save_path = None,show = False,dpi = 100):
 
     for i in range(len(names)):
         plt.text(2, row1 - (29+i), names[i], fontsize=sup_fontsize)
+
         for j in range(nmatch):
-            plt.text(6+j,row1-(29+i), "{:.3f}".format(feature[j+1]["feature_comps"][keys[i]]), fontsize=sup_fontsize)
+            id = label_list_matched[j]
+            plt.text(6+j,row1-(29+i), "{:.3f}".format(feature[id]["feature_comps"][keys[i]]), fontsize=sup_fontsize)
 
     plt.text(0, row1-21, "目标面属性", fontsize=sup_fontsize)
     plt.text(0, row1-29, "目标属性对比", fontsize=sup_fontsize)

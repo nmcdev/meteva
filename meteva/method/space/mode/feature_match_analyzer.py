@@ -121,7 +121,9 @@ def get_summary(feature):
         index = np.arange(nmatch)
         dat = interest["total_interest"][index, index]
         out["interester"] = dat
-        for i in range(1, nmatch + 1):
+
+        label_list_matched = out["label_list_matched"]
+        for i in label_list_matched:
             del out[i]["feature_axis"]["ob"]["point"]
             del out[i]["feature_axis"]["ob"]["MajorAxis"]
             del out[i]["feature_axis"]["ob"]["MinorAxis"]
@@ -155,10 +157,12 @@ def feature_merged_analyzer(look_merge,summary =True):
     f_table = feature_table(look_merge)
     out["feature_table"] = f_table
     interest = interester(look_merge)
-
     out["interester"] = interest
 
-    for i in range(1, nmatch + 1):
+    label_list_matched = look_merge["label_list_matched"]
+    out["label_list_matched"] = label_list_matched
+
+    for i in label_list_matched:
         f_axis_ob = feature_axis(look_merge, i, "ob")
         f_axis_fo = feature_axis(look_merge, i, "fo")
         f_props_ob = feature_props(look_merge, i, "ob")
