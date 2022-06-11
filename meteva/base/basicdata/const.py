@@ -18,6 +18,7 @@ terrain_height_sta = pkg_resources.resource_filename('meteva', "resources/statio
 gds_ip_port = None
 customized_basemap_list = None
 beaufort_scale = [0.0,0.3,1.6,3.4,5.5,8.0,10.8,13.9,17.2,20.8,24.5,28.5,32.7,37,41.5,46.2,51,56.1]
+wave_grade = [0,0.01,0.1,0.5,1.3,2.5,4.0,6.0,9.0,14.0,100]
 cmadaas_set = None
 cimiss_set = None
 plot_color_dict = None
