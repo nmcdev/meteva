@@ -200,6 +200,12 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
                 u_fo = sta[data_name[2::2]].values.T
                 v_fo = sta[data_name[3::2]].values.T
                 result1 = method(u_ob,u_fo,v_ob,v_fo,**method_args)
+            elif method.__name__.find("distance")>=0:
+                x_ob = sta[data_name[0]].values
+                y_ob = sta[data_name[1]].values
+                x_fo = sta[data_name[2::2]].values.T
+                y_fo = sta[data_name[3::2]].values.T
+                result1 = method(x_ob,y_ob,x_fo,y_fo,**method_args)
             else:
                 ob = sta[data_name[0]].values
                 fo = sta[data_name[1:]].values.T
