@@ -550,3 +550,78 @@ def acz_uv(u_ob,u_fo,v_ob,v_fo):
     narg_array = na_ds(d_ob,d_fo,s_ob,s_fo)
     acz1 = acz_na(narg_array)
     return acz1
+
+
+def tdis(x_ob,y_ob,x_fo,y_fo,on_earth_surface = False):
+    '''
+
+    :param x_ob:
+    :param y_ob:
+    :param x_fo:
+    :param y_fo:
+    :return:
+    '''
+    Ob_shape = x_ob.shape
+    Fo_shape = x_fo.shape
+    Ob_shpe_list = list(Ob_shape)
+    size = len(Ob_shpe_list)
+    ind = -size
+    Fo_Ob_index = list(Fo_shape[ind:])
+    if Fo_Ob_index != Ob_shpe_list:
+        print('预报数据和观测数据维度不匹配')
+        return
+    Ob_shpe_list.insert(0, -1)
+    new_Fo_shape = tuple(Ob_shpe_list)
+    x_new_Fo = x_fo.reshape(new_Fo_shape)
+    y_new_Fo = y_fo.reshape(new_Fo_shape)
+    new_Fo_shape = x_new_Fo.shape
+
+    # print(ob0)
+    dis_list = []
+    total_count = x_ob.size
+    for line in range(new_Fo_shape[0]):
+        fox = x_new_Fo[line, :]
+        foy = y_new_Fo[line, :]
+        if on_earth_surface:
+            dis_array = meteva.base.math_tools.distance_on_earth_surface(x_ob,y_ob,fox,foy)
+        else:
+            dis2 = (fox - x_ob)*(fox - x_ob) + (foy - y_ob)*(foy - y_ob)
+            dis_array = np.sqrt(dis2)
+        dis_mean = np.mean(dis_array)
+        dis_list.append([total_count,dis_mean])
+
+    tdis_np = np.array(dis_list)
+    shape = list(Fo_shape[:ind])
+    shape.append(2)
+    tdis_array = tdis_np.reshape(shape)
+
+    return tdis_array
+
+
+def distance_tdis(tdis_array):
+    '''
+    me 求两组数据的误差平均值
+    :param tase_array:包含命中空报和漏报的多维数组，其中最后一维长度为4，分别记录了（total_count,e_sum,ae_sum,se_sum）
+    （样本数，误差和、绝对误差和，误差平方和），它由tase返回
+    :return: 负无穷到正无穷的实数，最优值为0
+    '''
+    mean_dis = tdis_array[..., 1] / tdis_array[..., 0]
+    return mean_dis
+
+
+def distance(x_ob,y_ob,x_fo,y_fo,on_earth_surface = False):
+    '''
+
+    :param x_ob:
+    :param y_ob:
+    :param x_fo:
+    :param y_fo:
+    :param on_earth:
+    :return:
+    '''
+    tdis_array = tdis(x_ob,y_ob,x_fo,y_fo,on_earth_surface= on_earth_surface)
+    mean_dis = distance_tdis(tdis_array)
+    return mean_dis
+
+
+
