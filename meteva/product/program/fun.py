@@ -522,7 +522,7 @@ def get_x_label(groupy_by):
 
 
 def get_x_ticks(ticks,width,row = 2):
-    w_one_tick = 0.5
+    w_one_tick = 0.4
     max_tick_num = max(int(width / w_one_tick),1)
     tick0 = ticks[0]
     if isinstance(tick0,datetime.datetime) or isinstance(tick0,np.datetime64):
