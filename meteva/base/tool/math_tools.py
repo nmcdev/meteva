@@ -28,21 +28,6 @@ def reset_max_min(vmax,vmin):
 def sigmoid(inputX):
     return 1.0/(1+np.exp(-inputX))
 
-#根据经纬度计算距离，然后开平方根
-def earth_surface_dis(ax,ay,bx,by):
-    sr=math.cos(0.5*(ay+by)*math.pi/180)
-    d1=(ax-bx)*sr
-    d2=ay-by
-    dis1=math.sqrt(d1*d1+d2*d2)
-    return dis1
-
-#根据经纬度计算距离
-def earth_surface_dis2(ax,ay,bx,by):
-    sr=math.cos(0.5*(ay+by)*math.pi/180)
-    d1=(ax-bx)*sr
-    d2=ay-by
-    dis2=d1*d1+d2*d2
-    return dis2
 
 def angle_of_line(ax,ay,bx,by):
     u = bx - ax
@@ -296,3 +281,38 @@ def isPoiWithinPoly(poi,poly):
 
     return True if sinsc%2==1 else  False
 
+
+def distance_in_a_straight_line(lon1,lat1,lon2,lat2):
+    '''
+    计算地球表面两个点之间的直线距离
+    :param lon1:
+    :param lat1:
+    :param lon2:
+    :param lat2:
+    :return:
+    '''
+    xyz1 = lon_lat_to_cartesian(lon1, lat1, R=meteva.base.ER)
+    xyz2 = lon_lat_to_cartesian(lon2,lat2,R = meteva.base.ER)
+    dxyz = xyz2 - xyz1
+    dis2 = np.sum(dxyz*dxyz,axis=1)
+    dis1 = np.sqrt(dis2)
+    return dis1
+
+
+def distance_on_earth_surface(lon1,lat1,lon2,lat2):
+    '''
+    计算地球表明两个点之间的球面距离
+    :param lon1:
+    :param lat1:
+    :param lon2:
+    :param lat2:
+    :return:
+    '''
+    a1 = lon1 * math.pi/180
+    b1 = lat1 * math.pi/180
+    a2 = lon2 * math.pi/180
+    b2 = lat2 * math.pi/180
+
+    dis = meteva.base.ER * np.arccos(np.cos(b1)*np.cos(b2)*np.cos(a1-a2) + np.sin(b1)*np.sin(b2))
+
+    return dis
