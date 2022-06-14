@@ -85,6 +85,12 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
             strs = data_name[i]
             strs = strs.replace("u_","")
             fo_name.append(strs)
+    elif method.__name__.find("distance")>=0:
+        fo_name = []
+        for i in range(2,len(data_name),2):
+            strs = data_name[i]
+            strs = strs.replace("lon_","")
+            fo_name.append(strs)
     else:
         ensemble_score_method = [meteva.method.cr,variance_divide_by_mse]
         if method in ensemble_score_method:
@@ -625,6 +631,12 @@ def score_tdt(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_lis
             for i in range(2,len(data_names),2):
                 strs = data_names[i]
                 strs = strs.replace("u_","")
+                fo_name.append(strs)
+        elif method.__name__.find("distance")>=0:
+            fo_name = []
+            for i in range(2,len(data_names),2):
+                strs = data_names[i]
+                strs = strs.replace("lon_","")
                 fo_name.append(strs)
         elif method.__name__ == "sample_count":
             fo_name = [data_names[0]]

@@ -18,7 +18,7 @@ def tran_typhoon_report(sta_all):
         sta0_ob.sort_values(by = ["time"],inplace = True)
         value = sta0_ob.iloc[:,-1]
         index = np.where(value>=17.2)
-        sta1_ob = sta0_ob.iloc[:,index[0][0]:]
+        sta1_ob = sta0_ob.iloc[index[0][0]:,:]
         sta1_fo = meteva.base.sele_by_para(sta0,dtime_range = [1,720])
         sta_all_s = meteva.base.combine_on_obTime_id(sta1_ob,[sta1_fo],need_match_ob=True)
         sta_list_speed.append(sta_all_s)
