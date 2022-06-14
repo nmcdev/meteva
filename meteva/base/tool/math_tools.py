@@ -308,11 +308,13 @@ def distance_on_earth_surface(lon1,lat1,lon2,lat2):
     :param lat2:
     :return:
     '''
+
     a1 = lon1 * math.pi/180
     b1 = lat1 * math.pi/180
     a2 = lon2 * math.pi/180
     b2 = lat2 * math.pi/180
 
     dis = meteva.base.ER * np.arccos(np.cos(b1)*np.cos(b2)*np.cos(a1-a2) + np.sin(b1)*np.sin(b2))
+    dis[np.isnan(dis)] =0
 
     return dis
