@@ -115,12 +115,15 @@ if __name__ == '__main__':
 
 def get_summary(feature):
     out = copy.deepcopy(feature)
-    if isinstance(out["interester"],dict):
-        nmatch = out["match_count"]
-        interest = out["interester"]
-        index = np.arange(nmatch)
-        dat = interest["total_interest"][index, index]
-        out["interester"] = dat
+    #print(out.keys())
+    if "is_summary" not in out.keys():
+        out["is_summary"] = True
+        if out["interester"] is not None:
+            nmatch = out["match_count"]
+            interest = out["interester"]
+            index = np.arange(nmatch)
+            dat = interest["total_interest"][index, index]
+            out["interester"] = dat
 
         label_list_matched = out["label_list_matched"]
         for i in label_list_matched:
@@ -146,6 +149,34 @@ def get_summary(feature):
 
             del out[i]["feature_props"]["ob"]["axis"]
             del out[i]["feature_props"]["fo"]["axis"]
+
+        miss_labels = out["unmatched"]['ob']
+        for i in miss_labels:
+            del out[i]["feature_axis"]["ob"]["point"]
+            del out[i]["feature_axis"]["ob"]["MajorAxis"]
+            del out[i]["feature_axis"]["ob"]["MinorAxis"]
+            del out[i]["feature_axis"]["ob"]["aspect_ratio"]
+            del out[i]["feature_axis"]["ob"]["OrientationAngle"]["MinorAxis"]
+            del out[i]["feature_axis"]["ob"]["pts"]
+            del out[i]["feature_axis"]["ob"]["MidPoint"]
+            del out[i]["feature_axis"]["ob"]["sma_fit"]
+            del out[i]["feature_axis"]["ob"]["phi"]
+            del out[i]["feature_props"]["ob"]["axis"]
+
+
+        false_alarm_labels = out["unmatched"]["fo"]
+        for i in false_alarm_labels:
+            del out[i]["feature_axis"]["fo"]["point"]
+            del out[i]["feature_axis"]["fo"]["MajorAxis"]
+            del out[i]["feature_axis"]["fo"]["MinorAxis"]
+            del out[i]["feature_axis"]["fo"]["aspect_ratio"]
+            del out[i]["feature_axis"]["fo"]["OrientationAngle"]["MinorAxis"]
+            del out[i]["feature_axis"]["fo"]["pts"]
+            del out[i]["feature_axis"]["fo"]["MidPoint"]
+            del out[i]["feature_axis"]["fo"]["sma_fit"]
+            del out[i]["feature_axis"]["fo"]["phi"]
+            del out[i]["feature_props"]["fo"]["axis"]
+
     return out
 
 def feature_merged_analyzer(look_merge,summary =True):
@@ -161,6 +192,7 @@ def feature_merged_analyzer(look_merge,summary =True):
 
     label_list_matched = look_merge["label_list_matched"]
     out["label_list_matched"] = label_list_matched
+    out["unmatched"] = look_merge["unmatched"]
 
     for i in label_list_matched:
         f_axis_ob = feature_axis(look_merge, i, "ob")
@@ -175,6 +207,25 @@ def feature_merged_analyzer(look_merge,summary =True):
         out1["feature_props"]= {"ob":f_props_ob,"fo":f_props_fo}
         out1["feature_comps"] = f_comps
 
+        out[i] = out1
+
+    miss_labels = look_merge["unmatched"]['ob']
+    for i in miss_labels:
+        f_axis_ob = feature_axis(look_merge, i, "ob")
+        f_props_ob = feature_props(look_merge, i, "ob")
+        out1 = {}
+        out1["feature_axis"] = {"ob":f_axis_ob}
+        out1["feature_props"]= {"ob":f_props_ob}
+        out[i] = out1
+
+
+    false_alarm_labels = look_merge["unmatched"]["fo"]
+    for i in false_alarm_labels:
+        f_axis_ob = feature_axis(look_merge, i, "fo")
+        f_props_ob = feature_props(look_merge, i, "fo")
+        out1 = {}
+        out1["feature_axis"] = {"fo":f_axis_ob}
+        out1["feature_props"]= {"fo":f_props_ob}
         out[i] = out1
 
     if summary:
