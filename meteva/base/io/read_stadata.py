@@ -650,7 +650,7 @@ def read_stadata_from_gds(filename,element_id = None,station = None, level=None,
                               ('level', 'f4'), ('levelDescription', 'S50'),
                               ('year', 'i4'), ('month', 'i4'), ('day', 'i4'),
                               ('hour', 'i4'), ('minute', 'i4'), ('second', 'i4'),
-                              ('Timezone', 'i4'), ('extent', 'S100')]
+                              ('Timezone', 'i4'),("id_type","i2"), ('extent', 'S98')]
 
                 # read head information
                 head_info = np.frombuffer(byteArray[0:288], dtype=head_dtype)
@@ -667,6 +667,7 @@ def read_stadata_from_gds(filename,element_id = None,station = None, level=None,
                 if dtime is None:
                     filename1 = os.path.split(filename)[1].split(".")
                     dtime = int(filename1[1])
+                id_type = head_info['id_type'][0]
                 ind = 288
                 # read the number of stations
                 station_number = np.frombuffer(
@@ -674,6 +675,7 @@ def read_stadata_from_gds(filename,element_id = None,station = None, level=None,
                 ind += 4
 
                 # read the number of elements
+
                 element_number = np.frombuffer(
                     byteArray[ind:(ind+2)], dtype='i2')[0]
 
@@ -711,18 +713,101 @@ def read_stadata_from_gds(filename,element_id = None,station = None, level=None,
 
 
                 # loop every station to retrieve record
-                record_head_dtype = [
-                    ('id', 'i4'), ('lon', 'f4'), ('lat', 'f4'), ('numb', 'i2')]
-                records = []
-                if station is None or len(station.index) * 100 > station_number:
+                if id_type ==0:
+                    record_head_dtype = [
+                        ('id', 'i4'), ('lon', 'f4'), ('lat', 'f4'), ('numb', 'i2')]
+                    records = []
+                    if station is None or len(station.index) * 100 > station_number:
+                        for i in range(station_number):
+                            record_head = np.frombuffer(
+                                byteArray[ind:(ind+14)], dtype=record_head_dtype)
+                            ind += 14
+                            record = {
+                                'id': record_head['id'][0], 'lon': record_head['lon'][0],
+                                'lat': record_head['lat'][0]}
+                            for j in range(record_head['numb'][0]):    # the record element number is not same, missing value is not included.
+                                element_id = str(np.frombuffer(byteArray[ind:(ind + 2)], dtype='i2')[0])
+                                ind += 2
+                                element_len = element_map_len[element_id]
+                                if element_id == element_id_str0:
+                                    record[data_name] = np.frombuffer(
+                                        byteArray[ind:(ind + element_len)],
+                                        dtype=dtype_str)[0]
+                                    records.append(record)
+                                ind += element_len
+                        records = pd.DataFrame(records)
+                        records.set_index('id')
+                        # get time
+
+                        records['time'] = time
+                        records['level'] = level
+                        records['dtime'] = dtime
+                        new_columns = ['level', 'time', 'dtime', 'id', 'lon', 'lat', data_name]
+                        records = records.reindex(columns=new_columns)
+
+                        if station is None:
+                            return records
+                        else:
+                            sta = meteva.base.put_stadata_on_station(records, station)
+                            return sta
+                    else:
+                        sta = copy.deepcopy(station)
+                        byte_num = len(byteArray)
+                        i4_num = (byte_num - ind -4) //4
+                        ids = np.zeros((i4_num,4),dtype=np.int32)
+
+                        ids[:, 0] = np.frombuffer(byteArray[ind:(ind + i4_num * 4)], dtype='i4')
+                        ids[:, 1] = np.frombuffer(byteArray[(ind +1):(ind + 1 + i4_num * 4)], dtype='i4')
+                        ids[:, 2] = np.frombuffer(byteArray[(ind + 2):(ind + 2 + i4_num * 4)], dtype='i4')
+                        ids[:, 3] = np.frombuffer(byteArray[(ind + 3):(ind + 3 + i4_num * 4)], dtype='i4')
+                        ids = ids.flatten()
+                        station_ids = station["id"].values
+                        dat = np.zeros(station_ids.size)
+
+                        for k in range(dat.size):
+                            id1 = station_ids[k]
+                            indexs = np.where(ids == id1)
+                            if len(indexs[0]) >=1:
+                                for n in range(len(indexs)):
+                                    ind1 =ind +  indexs[n][0]
+                                    record_head = np.frombuffer(byteArray[ind1:(ind1 + 14)], dtype=record_head_dtype)
+                                    if(record_head['lon'][0] >=-180 and record_head['lon'][0] <= 360 and
+                                            record_head['lat'][0] >= -90 and record_head['lat'][0] <= 90 and record_head["numb"][0] < 1000):
+                                        ind1 += 14
+                                        for j in range(record_head['numb'][0]):  # the record element number is not same, missing value is not included.
+                                            element_id = str(np.frombuffer(byteArray[ind1:(ind1 + 2)], dtype='i2')[0])
+                                            ind1 += 2
+                                            element_len = element_map_len[element_id]
+                                            if element_id == element_id_str0:
+                                                sta.iloc[k,-1] = np.frombuffer(byteArray[ind1:(ind1 + element_len)],dtype=dtype_str)[0]
+                                            ind1 += element_len
+                        meteva.base.set_stadata_names(sta,[data_name])
+                        sta['time'] = time
+                        sta['level'] = level
+                        sta['dtime'] = dtime
+                        if show:
+                            print("success read from " + filename)
+                        return sta
+                else:
+                    record_head_dtype = [
+                        ('lon', 'f4'), ('lat', 'f4'), ('numb', 'i2')]
+                    records = []
+                    # if station is None or len(station.index) * 100 > station_number:
                     for i in range(station_number):
+                        string_id_record_length = np.frombuffer(byteArray[ind:(ind + 2)], dtype="i2")[0]
+                        dtype1 = "S" + str(string_id_record_length)
+                        string_id = np.frombuffer(byteArray[ind + 2:(ind + 2 + string_id_record_length)], dtype=dtype1)[0]
+                        string_id = string_id.decode()
+                        ind += (2 + string_id_record_length)
                         record_head = np.frombuffer(
-                            byteArray[ind:(ind+14)], dtype=record_head_dtype)
-                        ind += 14
+                            byteArray[ind:(ind + 10)], dtype=record_head_dtype)
+                        ind += 10
                         record = {
-                            'id': record_head['id'][0], 'lon': record_head['lon'][0],
+                            'id': string_id, 'lon': record_head['lon'][0],
                             'lat': record_head['lat'][0]}
-                        for j in range(record_head['numb'][0]):    # the record element number is not same, missing value is not included.
+
+                        for j in range(record_head['numb'][
+                                           0]):  # the record element number is not same, missing value is not included.
                             element_id = str(np.frombuffer(byteArray[ind:(ind + 2)], dtype='i2')[0])
                             ind += 2
                             element_len = element_map_len[element_id]
@@ -741,50 +826,14 @@ def read_stadata_from_gds(filename,element_id = None,station = None, level=None,
                     records['dtime'] = dtime
                     new_columns = ['level', 'time', 'dtime', 'id', 'lon', 'lat', data_name]
                     records = records.reindex(columns=new_columns)
-
+                    meteva.base.reset_id(records)
                     if station is None:
                         return records
                     else:
                         sta = meteva.base.put_stadata_on_station(records, station)
+                        if show:
+                            print("success read from " + filename)
                         return sta
-                else:
-                    sta = copy.deepcopy(station)
-                    byte_num = len(byteArray)
-                    i4_num = (byte_num - ind -4) //4
-                    ids = np.zeros((i4_num,4),dtype=np.int32)
-
-                    ids[:, 0] = np.frombuffer(byteArray[ind:(ind + i4_num * 4)], dtype='i4')
-                    ids[:, 1] = np.frombuffer(byteArray[(ind +1):(ind + 1 + i4_num * 4)], dtype='i4')
-                    ids[:, 2] = np.frombuffer(byteArray[(ind + 2):(ind + 2 + i4_num * 4)], dtype='i4')
-                    ids[:, 3] = np.frombuffer(byteArray[(ind + 3):(ind + 3 + i4_num * 4)], dtype='i4')
-                    ids = ids.flatten()
-                    station_ids = station["id"].values
-                    dat = np.zeros(station_ids.size)
-
-                    for k in range(dat.size):
-                        id1 = station_ids[k]
-                        indexs = np.where(ids == id1)
-                        if len(indexs[0]) >=1:
-                            for n in range(len(indexs)):
-                                ind1 =ind +  indexs[n][0]
-                                record_head = np.frombuffer(byteArray[ind1:(ind1 + 14)], dtype=record_head_dtype)
-                                if(record_head['lon'][0] >=-180 and record_head['lon'][0] <= 360 and
-                                        record_head['lat'][0] >= -90 and record_head['lat'][0] <= 90 and record_head["numb"][0] < 1000):
-                                    ind1 += 14
-                                    for j in range(record_head['numb'][0]):  # the record element number is not same, missing value is not included.
-                                        element_id = str(np.frombuffer(byteArray[ind1:(ind1 + 2)], dtype='i2')[0])
-                                        ind1 += 2
-                                        element_len = element_map_len[element_id]
-                                        if element_id == element_id_str0:
-                                            sta.iloc[k,-1] = np.frombuffer(byteArray[ind1:(ind1 + element_len)],dtype=dtype_str)[0]
-                                        ind1 += element_len
-                    meteva.base.set_stadata_names(sta,[data_name])
-                    sta['time'] = time
-                    sta['level'] = level
-                    sta['dtime'] = dtime
-                    if show:
-                        print("success read from " + filename)
-                    return sta
             else:
                 print("连接服务状态正常，但返回的输入内容为空")
                 return None
@@ -797,6 +846,9 @@ def read_stadata_from_gds(filename,element_id = None,station = None, level=None,
             print(exstr)
         print(filename + "数据读取失败")
         return None
+
+
+
 
 def read_stadata_from_gdsfile(filename,element_id = None,station = None, level=None,time=None, dtime=None, data_name='data0',show = False):
 
@@ -815,7 +867,7 @@ def read_stadata_from_gdsfile(filename,element_id = None,station = None, level=N
                           ('level', 'f4'), ('levelDescription', 'S50'),
                           ('year', 'i4'), ('month', 'i4'), ('day', 'i4'),
                           ('hour', 'i4'), ('minute', 'i4'), ('second', 'i4'),
-                          ('Timezone', 'i4'), ('extent', 'S100')]
+                          ('Timezone', 'i4'),("id_type","i2"), ('extent', 'S98')]
 
             # read head information
             head_info = np.frombuffer(byteArray[0:288], dtype=head_dtype)
@@ -831,6 +883,7 @@ def read_stadata_from_gdsfile(filename,element_id = None,station = None, level=N
             if dtime is None:
                 filename1 = os.path.split(filename)[1].split(".")
                 dtime = int(filename1[1])
+            id_type = head_info['id_type'][0]
             ind = 288
             # read the number of stations
             station_number = np.frombuffer(
@@ -874,18 +927,102 @@ def read_stadata_from_gdsfile(filename,element_id = None,station = None, level=N
             dtype_str = element_map[element_id_str0]
 
             # loop every station to retrieve record
-            record_head_dtype = [
-                ('id', 'i4'), ('lon', 'f4'), ('lat', 'f4'), ('numb', 'i2')]
-            records = []
-            if station is None or len(station.index) * 100 > station_number:
+            if id_type ==0:
+                record_head_dtype = [
+                    ('id', 'i4'), ('lon', 'f4'), ('lat', 'f4'), ('numb', 'i2')]
+                records = []
+                if station is None or len(station.index) * 100 > station_number:
+                    for i in range(station_number):
+                        record_head = np.frombuffer(
+                            byteArray[ind:(ind+14)], dtype=record_head_dtype)
+                        ind += 14
+                        record = {
+                            'id': record_head['id'][0], 'lon': record_head['lon'][0],
+                            'lat': record_head['lat'][0]}
+                        for j in range(record_head['numb'][0]):    # the record element number is not same, missing value is not included.
+                            element_id = str(np.frombuffer(byteArray[ind:(ind + 2)], dtype='i2')[0])
+                            ind += 2
+                            element_len = element_map_len[element_id]
+                            if element_id == element_id_str0:
+                                record[data_name] = np.frombuffer(
+                                    byteArray[ind:(ind + element_len)],
+                                    dtype=dtype_str)[0]
+                                records.append(record)
+                            ind += element_len
+                    records = pd.DataFrame(records)
+                    records.set_index('id')
+                    # get time
+                    records['time'] = time
+                    records['level'] = level
+                    records['dtime'] = dtime
+                    new_columns = ['level', 'time', 'dtime', 'id', 'lon', 'lat', data_name]
+                    records = records.reindex(columns=new_columns)
+                    if station is None:
+                        return records
+                    else:
+                        sta = meteva.base.put_stadata_on_station(records, station)
+                        if show:
+                            print("success read from " + filename)
+                        return sta
+                else:
+                    sta = copy.deepcopy(station)
+                    byte_num = len(byteArray)
+                    i4_num = (byte_num - ind -4) //4
+                    ids = np.zeros((i4_num,4),dtype=np.int32)
+
+                    ids[:, 0] = np.frombuffer(byteArray[ind:(ind + i4_num * 4)], dtype='i4')
+                    ids[:, 1] = np.frombuffer(byteArray[(ind +1):(ind + 1 + i4_num * 4)], dtype='i4')
+                    ids[:, 2] = np.frombuffer(byteArray[(ind + 2):(ind + 2 + i4_num * 4)], dtype='i4')
+                    ids[:, 3] = np.frombuffer(byteArray[(ind + 3):(ind + 3 + i4_num * 4)], dtype='i4')
+                    ids = ids.flatten()
+                    station_ids = station["id"].values
+                    dat = np.zeros(station_ids.size)
+
+                    for k in range(dat.size):
+                        id1 = station_ids[k]
+                        indexs = np.where(ids == id1)
+                        if len(indexs[0]) >=1:
+                            for n in range(len(indexs)):
+                                ind1 =ind +  indexs[n][0]
+                                record_head = np.frombuffer(byteArray[ind1:(ind1 + 14)], dtype=record_head_dtype)
+                                if(record_head['lon'][0] >=-180 and record_head['lon'][0] <= 360 and
+                                        record_head['lat'][0] >= -90 and record_head['lat'][0] <= 90 and record_head["numb"][0] < 1000):
+                                    ind1 += 14
+                                    for j in range(record_head['numb'][0]):  # the record element number is not same, missing value is not included.
+                                        element_id = str(np.frombuffer(byteArray[ind1:(ind1 + 2)], dtype='i2')[0])
+                                        ind1 += 2
+                                        element_len = element_map_len[element_id]
+                                        if element_id == element_id_str0:
+                                            sta.iloc[k,-1] = np.frombuffer(byteArray[ind1:(ind1 + element_len)],dtype=dtype_str)[0]
+                                        ind1 += element_len
+                    meteva.base.set_stadata_names(sta,[data_name])
+                    sta['time'] = time
+                    sta['level'] = level
+                    sta['dtime'] = dtime
+                    if show:
+                        print("success read from " + filename)
+                    return sta
+
+            else:
+                record_head_dtype = [
+                   ('lon', 'f4'), ('lat', 'f4'), ('numb', 'i2')]
+                records = []
+                #if station is None or len(station.index) * 100 > station_number:
                 for i in range(station_number):
+                    string_id_record_length = np.frombuffer( byteArray[ind:(ind + 2)],dtype="i2")[0]
+                    dtype1 = "S" + str(string_id_record_length)
+                    string_id = np.frombuffer(byteArray[ind+2:(ind + 2+string_id_record_length)],dtype=dtype1)[0]
+                    string_id = string_id.decode()
+                    ind += (2+string_id_record_length)
                     record_head = np.frombuffer(
-                        byteArray[ind:(ind+14)], dtype=record_head_dtype)
-                    ind += 14
+                        byteArray[ind:(ind + 10)], dtype=record_head_dtype)
+                    ind += 10
                     record = {
-                        'id': record_head['id'][0], 'lon': record_head['lon'][0],
+                        'id': string_id, 'lon': record_head['lon'][0],
                         'lat': record_head['lat'][0]}
-                    for j in range(record_head['numb'][0]):    # the record element number is not same, missing value is not included.
+
+                    for j in range(record_head['numb'][
+                                       0]):  # the record element number is not same, missing value is not included.
                         element_id = str(np.frombuffer(byteArray[ind:(ind + 2)], dtype='i2')[0])
                         ind += 2
                         element_len = element_map_len[element_id]
@@ -904,6 +1041,7 @@ def read_stadata_from_gdsfile(filename,element_id = None,station = None, level=N
                 records['dtime'] = dtime
                 new_columns = ['level', 'time', 'dtime', 'id', 'lon', 'lat', data_name]
                 records = records.reindex(columns=new_columns)
+                meteva.base.reset_id(records)
                 if station is None:
                     return records
                 else:
@@ -911,44 +1049,6 @@ def read_stadata_from_gdsfile(filename,element_id = None,station = None, level=N
                     if show:
                         print("success read from " + filename)
                     return sta
-            else:
-                sta = copy.deepcopy(station)
-                byte_num = len(byteArray)
-                i4_num = (byte_num - ind -4) //4
-                ids = np.zeros((i4_num,4),dtype=np.int32)
-
-                ids[:, 0] = np.frombuffer(byteArray[ind:(ind + i4_num * 4)], dtype='i4')
-                ids[:, 1] = np.frombuffer(byteArray[(ind +1):(ind + 1 + i4_num * 4)], dtype='i4')
-                ids[:, 2] = np.frombuffer(byteArray[(ind + 2):(ind + 2 + i4_num * 4)], dtype='i4')
-                ids[:, 3] = np.frombuffer(byteArray[(ind + 3):(ind + 3 + i4_num * 4)], dtype='i4')
-                ids = ids.flatten()
-                station_ids = station["id"].values
-                dat = np.zeros(station_ids.size)
-
-                for k in range(dat.size):
-                    id1 = station_ids[k]
-                    indexs = np.where(ids == id1)
-                    if len(indexs[0]) >=1:
-                        for n in range(len(indexs)):
-                            ind1 =ind +  indexs[n][0]
-                            record_head = np.frombuffer(byteArray[ind1:(ind1 + 14)], dtype=record_head_dtype)
-                            if(record_head['lon'][0] >=-180 and record_head['lon'][0] <= 360 and
-                                    record_head['lat'][0] >= -90 and record_head['lat'][0] <= 90 and record_head["numb"][0] < 1000):
-                                ind1 += 14
-                                for j in range(record_head['numb'][0]):  # the record element number is not same, missing value is not included.
-                                    element_id = str(np.frombuffer(byteArray[ind1:(ind1 + 2)], dtype='i2')[0])
-                                    ind1 += 2
-                                    element_len = element_map_len[element_id]
-                                    if element_id == element_id_str0:
-                                        sta.iloc[k,-1] = np.frombuffer(byteArray[ind1:(ind1 + element_len)],dtype=dtype_str)[0]
-                                    ind1 += element_len
-                meteva.base.set_stadata_names(sta,[data_name])
-                sta['time'] = time
-                sta['level'] = level
-                sta['dtime'] = dtime
-                if show:
-                    print("success read from " + filename)
-                return sta
         except:
             if show:
                 exstr = traceback.format_exc()

@@ -50,7 +50,7 @@ def fss(grd_ob,grd_fo,grade_list=[1e-30],half_window_size_list=[1],compare = ">=
             ob_xy = grd_ob_one.values.squeeze()
             fo_xy = grd_fo_one.values.squeeze()
             fbs_pobfo_array = fbs_pobfo(ob_xy,fo_xy,grade_list = grade_list,half_window_size_list = half_window_size_list,
-                                              compare = compare,masker_xy = masker_xy)
+                                              compare = compare,masker = masker_xy)
 
             fss1 = 1 - fbs_pobfo_array[...,2]/(fbs_pobfo_array[...,0]+fbs_pobfo_array[...,1] + 1e-30)
             for j in range(nw):
@@ -69,7 +69,7 @@ def fss(grd_ob,grd_fo,grade_list=[1e-30],half_window_size_list=[1],compare = ">=
 
 
 
-def fbs_pobfo(ob_xy, fo_xy,grade_list=[1e-30],half_window_size_list=[1],compare = ">=", masker_xy=None):
+def fbs_pobfo(ob_xy, fo_xy,grade_list=[1e-30],half_window_size_list=[1],compare = ">=", masker=None):
     '''
     :param Ob: 实况数据 2维的numpy
     :param Fo: 实况数据 2维的numpy
@@ -91,10 +91,10 @@ def fbs_pobfo(ob_xy, fo_xy,grade_list=[1e-30],half_window_size_list=[1],compare 
     nw = len(half_window_size_list)
     nt = len(grade_list)
     result = np.zeros((nw,nt,3))
-    if masker_xy is None:
+    if masker is None:
         count = ob_xy.size
     else:
-        count = np.sum(masker_xy)
+        count = np.sum(masker)
 
     for j in range(nt):
         ob_01 = np.zeros(shape)
@@ -114,9 +114,9 @@ def fbs_pobfo(ob_xy, fo_xy,grade_list=[1e-30],half_window_size_list=[1],compare 
         for i in range(nw):
             ob_01_smooth = moving_ave(ob_01, half_window_size_list[i])
             fo_01_smooth = moving_ave(fo_01, half_window_size_list[i])
-            if masker_xy is not None:
-                ob_01_smooth *= masker_xy
-                fo_01_smooth *= masker_xy
+            if masker is not None:
+                ob_01_smooth *= masker
+                fo_01_smooth *= masker
             result[i,j,2] = np.sum(np.square(ob_01_smooth - fo_01_smooth))
             result[i,j,0]  = np.sum(np.square(ob_01_smooth))
             result[i,j,1]  = np.sum(np.square(fo_01_smooth))
@@ -138,7 +138,7 @@ def fss_time_base_on_mid(mid_array):
 
 
 
-def fss_time(Ob,Fo,grade_list = [1e-30],compare =">-",compair = ">=",window_size = None):
+def fss_time(Ob,Fo,grade_list = [1e-30],compare =">-",window_size = None):
     '''
     :param Ob: 二维numpy数组Ob[i,j]，其中i取值为0  - 站点数， j为取值为0 - 时效维度的size
     :param Fo: 二维numpy数组Fo[i,j]，其中i取值为0  - 站点数， j为取值为0 - 时效维度的size
@@ -146,12 +146,11 @@ def fss_time(Ob,Fo,grade_list = [1e-30],compare =">-",compair = ">=",window_size
     :param grade_list:
     :return:
     '''
-    mid_array = mid_fss_time(Ob,Fo,grade_list,window_size=window_size,compair = compair)
+    mid_array = mid_fss_time(Ob,Fo,grade_list,window_size=window_size,compair = compare)
     result = fss_time_base_on_mid(mid_array)
     return result
 
 #
-
 
 def merge_mid_fss_time(mid_array1,mid_array2):
     '''
