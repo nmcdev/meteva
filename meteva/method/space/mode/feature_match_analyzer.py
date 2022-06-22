@@ -151,6 +151,7 @@ def get_summary(feature):
             del out[i]["feature_props"]["fo"]["axis"]
 
         miss_labels = out["unmatched"]['ob']
+
         for i in miss_labels:
             del out[i]["feature_axis"]["ob"]["point"]
             del out[i]["feature_axis"]["ob"]["MajorAxis"]
@@ -221,11 +222,17 @@ def feature_merged_analyzer(look_merge,summary =True):
 
     false_alarm_labels = look_merge["unmatched"]["fo"]
     for i in false_alarm_labels:
-        f_axis_ob = feature_axis(look_merge, i, "fo")
-        f_props_ob = feature_props(look_merge, i, "fo")
-        out1 = {}
-        out1["feature_axis"] = {"fo":f_axis_ob}
-        out1["feature_props"]= {"fo":f_props_ob}
+        f_axis_fo = feature_axis(look_merge, i, "fo")
+        f_props_fo = feature_props(look_merge, i, "fo")
+        if i in out.keys():
+            out1 = out[i]
+            out1["feature_axis"]["fo"]= f_axis_fo
+            out1["feature_props"]["fo"]= f_props_fo
+        else:
+            out1 = {}
+            out1["feature_axis"] = {"fo": f_axis_fo}
+            out1["feature_props"] = {"fo": f_props_fo}
+
         out[i] = out1
 
     if summary:
