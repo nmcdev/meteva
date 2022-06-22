@@ -173,7 +173,7 @@ def merge_force(look_match, verbose=False):
                             xlabeled[xi, xj] = -1
                             '''
         else:
-            vxunmatched = [0]
+            vxunmatched = []
 
         if nY2 > 0:
             if verbose:
@@ -183,7 +183,7 @@ def merge_force(look_match, verbose=False):
             for i in range(nY2):
                 ytmp = yp[unY[i] + 1]
                 #ytmp[yp['labels_' + str(unY[i] + 1)]] = 1
-                yfeats[i + 1+nmatches] = ytmp
+                yfeats[i  + 1+nmatches] = ytmp
                 #yfeats[nmatches + i] = ytmp
                 ylabeled[ytmp] =i + 1+nmatches
                 '''
@@ -209,7 +209,7 @@ def merge_force(look_match, verbose=False):
                             ylabeled[yi, yj] = -1
             '''
         else:
-            fcunmatched = [0]
+            fcunmatched = []
         xfeats["label_count"] = nmatches +nX2
         yfeats["label_count"] = nmatches +nY2
         out['grd_ob_features'] = xfeats

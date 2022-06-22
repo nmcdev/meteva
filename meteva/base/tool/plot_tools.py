@@ -3461,11 +3461,13 @@ def mesh(array,name_list_dict = None,axis_x = None,axis_y = None,cmap = "rainbow
 
 
 
-def mesh_obtime_time(sta,save_dir = None,save_path = None,
+def mesh_obtime_time(sta0,save_dir = None,save_path = None,
                    clevs = None,cmap = None,show = False,xtimetype = "mid",dpi = 300,annot =None,
-                     sup_fontsize = 10,title = "预报准确性和稳定性对比图",width = None,height = None):
+                     sup_fontsize = 10,title = "预报准确性和稳定性对比图",width = None,height = None,multiple = 1):
 
 
+    sta = sta0.copy()
+    sta.iloc[:,6:] *= multiple
     ids = list(set(sta.loc[:, "id"]))
     data_names = meteva.base.get_stadata_names(sta)
     times_fo = sta.loc[:, "time"].values
@@ -3668,10 +3670,12 @@ def mesh_obtime_time(sta,save_dir = None,save_path = None,
     return
 
 
-def mesh_obtime_dtime(sta,save_dir = None,save_path = None,
+def mesh_obtime_dtime(sta0,save_dir = None,save_path = None,
                    clevs = None,cmap = None,show = False,xtimetype = "mid",dpi = 300,annot =None,title = "预报准确性和稳定性对比图",
-                      sup_fontsize = 10,width = None,height = None):
+                      sup_fontsize = 10,width = None,height = None,multiple = 1):
 
+    sta = sta0.copy()
+    sta.iloc[:,6:] *= multiple
     ids = list(set(sta.loc[:, "id"]))
     data_names = meteva.base.get_stadata_names(sta)
 
@@ -3839,9 +3843,12 @@ def mesh_obtime_dtime(sta,save_dir = None,save_path = None,
             kk += 1
     return
 
-def mesh_time_dtime(sta,save_dir = None,save_path = None,
+def mesh_time_dtime(sta0,save_dir = None,save_path = None,
                    clevs = None,cmap = None,show = False,xtimetype = "mid",dpi = 300,annot =None,sup_fontsize = 10,title = "预报准确性对比图",
-                    width = None,height = None,add_min_xticks = False):
+                    width = None,height = None,add_min_xticks = False,multiple = 1):
+
+    sta = sta0.copy()
+    sta.iloc[:,6:] *= multiple
     ids = list(set(sta.loc[:, "id"]))
     data_names = meteva.base.get_stadata_names(sta)
     times_fo = sta.loc[:, "time"].values

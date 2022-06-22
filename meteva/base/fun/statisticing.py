@@ -472,30 +472,64 @@ def mean_of_grd(grd,used_coords = ["member"],span = None):
         if len(dat.shape) > 2:
             dat = np.mean(dat,axis = 0)
         grd1 = meteva.base.basicdata.grid_data(grid1,dat)
+        return grd1
     elif used_coords == "dtime" or used_coords == ["dtime"]:
         if span == None:
             grid0 = meteva.base.get_grid_of_data(grd)
             dtimes = np.array(grid0.dtimes)
             dtimes_sum = [dtimes[-1]]
             grid1 = meteva.base.grid(grid0.glon, grid0.glat, grid0.gtime, dtimes_sum, grid0.levels, grid0.members)
-            grd_sum = meteva.base.grid_data(grid1)
-            grd_sum.values[:, :, :, 0, :, :] = np.mean(grd.values[:, :, :, :, :, :], axis=3)
-            return grd_sum
+            grd_mean = meteva.base.grid_data(grid1)
+            grd_mean.values[:, :, :, 0, :, :] = np.mean(grd.values[:, :, :, :, :, :], axis=3)
+            return grd_mean
         else:
             grid0 = meteva.base.get_grid_of_data(grd)
             dtimes = np.array(grid0.dtimes)
             dtimes_sum = dtimes[dtimes >= span]
             grid1 = meteva.base.grid(grid0.glon, grid0.glat, grid0.gtime, dtimes_sum, grid0.levels, grid0.members)
-            grd_sum = meteva.base.grid_data(grid1)
+            grd_mean = meteva.base.grid_data(grid1)
             for i in range(len(dtimes_sum)):
                 dtime_e = dtimes_sum[i]
                 dtime_s = dtimes_sum[i] - span
                 index = np.where((dtimes > dtime_s) & (dtimes <= dtime_e))[0]
 
-                grd_sum.values[:, :, :, i, :, :] = np.mean(grd.values[:, :, :, index, :, :], axis=3)
-            return grd_sum
+                grd_mean.values[:, :, :, i, :, :] = np.mean(grd.values[:, :, :, index, :, :], axis=3)
+            return grd_mean
+    elif used_coords =="time" or used_coords ==["time"]:
+        if span ==None:
+            grid0 = meteva.base.get_grid_of_data(grd)
+            times = np.array(grid0.times)
+            times_sum = [times[-1]]
+            grid1 = meteva.base.grid(grid0.glon, grid0.glat, [times_sum], grid0.dtimes, grid0.levels, grid0.members)
+            grd_mean = meteva.base.grid_data(grid1)
+            grd_mean.values[:, :, 0, :, :, :] = np.mean(grd.values[:, :, :, :, :, :], axis=3)
+            return grd_mean
+        else:
+            grid0 = meteva.base.get_grid_of_data(grd)
+            grd_mean = meteva.base.grid_data(grid0)
+            values = grd.values.copy()
+            step = grid0.dtime_int
+            half = int(span/step/2)
+            kernal = np.ones(half * 2 +1)
+            kernal[0] = 0.5
+            kernal[-1] = 0.5
+            shape = values.shape
+            ntime = values.shape[2]
+            for i in range(ntime):
+                sum_v = np.zeros((shape[0],shape[1],shape[3],shape[4],shape[5]))
+                sum_q = 0
+                for k in range(-half,half+1,1):
+                    i_k = i + k
+                    if i_k>=0 and i_k< values.shape[2]:
+                        q = kernal[k + half]
+                        sum_v += grd.values[:, :, i_k, :, :, :] * q
+                        sum_q+= q
+                sum_v /= sum_q
+                grd_mean.values[:, :, i, :, :, :] = sum_v
 
-    return grd1
+            return grd_mean
+
+
 
 #获取网格数据的方差
 def var_of_grd(grd,used_coords = ["member"]):
@@ -569,6 +603,37 @@ def sum_of_grd(grd,used_coords = ["member"],span = None):
 
                 grd_sum.values[:,:,:,i,:,:] = np.sum(grd.values[:,:,:,index,:,:],axis=3)
             return grd_sum
+    elif used_coords =="time" or used_coords ==["time"]:
+        if span ==None:
+            grid0 = meteva.base.get_grid_of_data(grd)
+            times = np.array(grid0.times)
+            times_sum = [times[-1]]
+            grid1 = meteva.base.grid(grid0.glon, grid0.glat, [times_sum], grid0.dtimes, grid0.levels, grid0.members)
+            grd_sum = meteva.base.grid_data(grid1)
+            grd_sum.values[:, :, 0, :, :, :] = np.sum(grd.values[:, :, :, :, :, :], axis=3)
+            return grd_sum
+        else:
+            grid0 = meteva.base.get_grid_of_data(grd)
+            grd_sum = meteva.base.grid_data(grid0)
+            values = grd.values.copy()
+            step = grid0.dtime_int
+            count = int(span/step)
+
+            shape = values.shape
+            ntime = values.shape[2]
+            for i in range(ntime):
+                sum_v = np.zeros((shape[0],shape[1],shape[3],shape[4],shape[5]))
+                for k in range(-count+1,1):
+                    i_k = i + k
+                    if i_k <0:continue
+                    sum_v += grd.values[:, :, i_k, :, :, :]
+
+                grd_sum.values[:, :, i, :, :, :] = sum_v
+
+            grd_sum = grd_sum.isel(time = slice(count-1,ntime))
+            return grd_sum
+
+
 
 def time_ceilling(sta,step = 1, time_unit = "h",begin_hour= 8):
     '''

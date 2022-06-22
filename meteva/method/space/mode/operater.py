@@ -80,7 +80,26 @@ def operate(grd_ob, grd_fo, smooth, threshold,minsize,compare = ">=",match_metho
                 features_list[i]["feature_props"]["ob"]["intensity_"+str(q[k])] =features[i]["feature_props"]["ob"]["intensity"][k].tolist()
                 features_list[i]["feature_props"]["fo"]["intensity_"+str(q[k])] = features[i]["feature_props"]["fo"]["intensity"][k].tolist()
 
+        miss_labels = look_merge["unmatched"]['ob']
+        for i in miss_labels:
+            features_list[i]["feature_props"]["ob"]["intensity"] =features[i]["feature_props"]["ob"]["intensity"][4].tolist()
+
+        for i in miss_labels:
+            q = [0,5,10,25,50, 75, 90, 95, 100]
+            for k in range(len(q)):
+                features_list[i]["feature_props"]["ob"]["intensity_"+str(q[k])] =features[i]["feature_props"]["ob"]["intensity"][k].tolist()
+
+        false_alarm_labels = look_merge["unmatched"]['fo']
+        for i in false_alarm_labels:
+            features_list[i]["feature_props"]["fo"]["intensity"] =features[i]["feature_props"]["fo"]["intensity"][4].tolist()
+
+        for i in false_alarm_labels:
+            q = [0,5,10,25,50, 75, 90, 95, 100]
+            for k in range(len(q)):
+                features_list[i]["feature_props"]["fo"]["intensity_"+str(q[k])] =features[i]["feature_props"]["fo"]["intensity"][k].tolist()
+
         json_str = json.dumps(features_list)
+
         br = open(json_save_path, 'w')
         br.write(json_str)
         br.close()

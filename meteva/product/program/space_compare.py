@@ -360,7 +360,7 @@ def rain_sg(sta_ob,grd_fo,grade_list,save_path=None,show  = False,dpi = 200,add_
                     if fo_time1 is None: continue
                 else:
                     dtime1 = int(dtimes_valid[pi])
-                    fo_time1 = fo_time_valid[0]
+                    fo_time1 = fo_time_valid[pi]
                     ob_time1 = fo_time1 + datetime.timedelta(hours = dtime1)
                     sta_ob_plot1 = meteva.base.sele_by_para(sta_ob_plot,time = ob_time1)
                     x_ob = sta_ob_plot1.loc[:, "lon"].values

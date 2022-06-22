@@ -433,4 +433,37 @@ def t_rh_p_to_q(temp,rh,pressure,rh_unit = "%"):
         return grd
 
 
+def t_rh_to_vp(temp,rh):
+    if isinstance(temp,pd.DataFrame):
+        sta = meteva.base.combine_on_all_coords(temp, rh)
+        meteva.base.set_stadata_names(sta, ["t", "rh"])
+        T = sta["t"].values
+        R = sta["rh"].values
+        if(T[0]>120):
+            T -= 273.16
+        #e0 = 6.11 * np.exp(17.15 * T/(235 + T))
+        e0 = 6.11 * np.exp(5420 * (1.0 / 273.15 - 1 / (T + 273.15))) * 622
+        max_rh = np.max(R)
+        if max_rh >1.1:
+            R /= 100
+        vp = e0 * R
+        sta["vp"] = vp
+        sta = sta.drop(["t", "rh"], axis=1)
+        return sta
+    else:
+        grid0 = meteva.base.get_grid_of_data(temp)
+        if temp.values[0,0,0,0,0,0] >120:
+            T = temp.values - 273.16
+        else:
+            T = temp.values
+        max_rh = np.max(rh.values)
+        if max_rh >1.1:
+            R = rh.values /100
+        else:
+            R = rh.values
+        #e0 = 6.11 * np.exp(17.15 * T / (235 + T))
+        e0 = 6.11 * np.exp(5420 * (1.0 / 273.15 - 1 / (T + 273.15))) * 622
+        vp = e0 * R
+        grd = meteva.base.grid_data(grid0,vp)
+        return grd
 
