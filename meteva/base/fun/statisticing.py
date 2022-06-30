@@ -498,11 +498,11 @@ def mean_of_grd(grd,used_coords = ["member"],span = None):
     elif used_coords =="time" or used_coords ==["time"]:
         if span ==None:
             grid0 = meteva.base.get_grid_of_data(grd)
-            times = np.array(grid0.times)
-            times_sum = [times[-1]]
-            grid1 = meteva.base.grid(grid0.glon, grid0.glat, [times_sum], grid0.dtimes, grid0.levels, grid0.members)
+            grid1 = meteva.base.grid(grid0.glon, grid0.glat, [grid0.gtime[1]], grid0.dtimes, grid0.levels,
+                                     grid0.members)
             grd_mean = meteva.base.grid_data(grid1)
-            grd_mean.values[:, :, 0, :, :, :] = np.mean(grd.values[:, :, :, :, :, :], axis=3)
+
+            grd_mean.values[:, :, 0, :, :, :] = np.mean(grd.values[:, :, :, :, :, :], axis=2)
             return grd_mean
         else:
             grid0 = meteva.base.get_grid_of_data(grd)
@@ -606,11 +606,9 @@ def sum_of_grd(grd,used_coords = ["member"],span = None):
     elif used_coords =="time" or used_coords ==["time"]:
         if span ==None:
             grid0 = meteva.base.get_grid_of_data(grd)
-            times = np.array(grid0.times)
-            times_sum = [times[-1]]
-            grid1 = meteva.base.grid(grid0.glon, grid0.glat, [times_sum], grid0.dtimes, grid0.levels, grid0.members)
+            grid1 = meteva.base.grid(grid0.glon, grid0.glat, [grid0.gtime[1]], grid0.dtimes, grid0.levels, grid0.members)
             grd_sum = meteva.base.grid_data(grid1)
-            grd_sum.values[:, :, 0, :, :, :] = np.sum(grd.values[:, :, :, :, :, :], axis=3)
+            grd_sum.values[:, :, 0, :, :, :] = np.sum(grd.values[:, :, :, :, :, :], axis=2)
             return grd_sum
         else:
             grid0 = meteva.base.get_grid_of_data(grd)

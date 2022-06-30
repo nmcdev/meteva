@@ -1895,10 +1895,27 @@ def read_stadata_from_cimiss(dataCode,element,time,station = None,level = 0,dtim
 
 def read_cyclone_trace(filename, id_cyclone,column=8,  data_name="data0",show = False):
     try:
-        sta1 = pd.read_csv(filename, skiprows=2, sep="\s+", header=None,
-                           usecols=[0, 1, 2, 3, 4, 5, 6, column])
+        column_all = [0, 1, 2, 3, 4, 5, 6]
+        if isinstance(column, list):
+            column_all.extend(column)
+        else:
+            column_all.append(column)
 
-        dat_dict = {"level": {}, "time": {}, "dtime": {}, "id": {}, "lon": {}, "lat": {}, data_name: {}}
+        sta1 = pd.read_csv(filename, skiprows=2, sep="\s+", header=None,
+                           usecols=column_all)
+
+        dict1 = meteva.base.m7_element_column_dict
+        dict2 = dict([val, key] for key, val in dict1.items())
+
+        if len(column_all) == 8:
+            dat_dict = {"level": {}, "time": {}, "dtime": {}, "id": {}, "lon": {}, "lat": {}, data_name: {} }
+        else:
+            dat_dict = {"level": {}, "time": {}, "dtime": {}, "id": {}, "lon": {}, "lat": {}}
+            for j in range(7, len(column_all)):
+                k = column_all[j]
+                name = dict2[k]
+                dat_dict[name] = {}
+
         for i in range(len(sta1.index)):
             dat_dict["level"][i] = 0
             dat_dict["time"][i] = datetime.datetime(sta1.iloc[i, 0], sta1.iloc[i, 1], sta1.iloc[i, 2], sta1.iloc[i, 3])
@@ -1906,7 +1923,14 @@ def read_cyclone_trace(filename, id_cyclone,column=8,  data_name="data0",show = 
             dat_dict["id"][i] = id_cyclone
             dat_dict["lon"][i] = sta1.iloc[i, 5]
             dat_dict["lat"][i] = sta1.iloc[i, 6]
-            dat_dict[data_name][i] = sta1.iloc[i, -1]
+            if len(column_all) == 8:
+                dat_dict[data_name][i] = sta1.iloc[i, -1]
+            else:
+                for j in range(7,len(column_all)):
+                    k = column_all[j]
+                    name = dict2[k]
+                    dat_dict[name][i] = sta1.iloc[i, j]
+
         sta2 = pd.DataFrame(dat_dict)
         # print(sta2)
         return sta2

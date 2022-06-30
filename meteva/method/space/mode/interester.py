@@ -187,9 +187,9 @@ def interester(look, properties=None,
                 conY = ((aspY - 1) ** 2 / (aspY ** 2 + 1)) ** 0.3
                 con = math.sqrt(conX * conY)
             res["angle_diff"] = res["angle_diff"] * con
-        if "cent_dist" in p and "area_ratio" in p:
-            # 子集 all( is.element(c("cent.dist", "area.ratio"), p))
-            res["cent_dist"] = res["cent_dist"] * res["area_ratio"]
+        # if "cent_dist" in p and "area_ratio" in p:
+        #     # 子集 all( is.element(c("cent.dist", "area.ratio"), p))
+        #     res["cent_dist"] = res["cent_dist"] * res["area_ratio"]
         return res
 
     #N = len(x['grd_ob_features'].keys()) - 11
