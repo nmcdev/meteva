@@ -7,7 +7,7 @@ import meteva
 def sta_data(df,columns = None,
              dtime_units="hour", data_source="", level_type="",
              var_name="", var_cn_name="",
-             var_units="", valid_time=0, data_start_columns=6):
+             var_units="", valid_time=0, data_start_columns=6,reset_ids = True):
     '''
     sta_data() 对数据进行格式化成为固定格式
     :param df: dataframe的站点数据
@@ -36,7 +36,7 @@ def sta_data(df,columns = None,
     sta.columns = columns
     if "id" not in columns:
         sta["id"] = meteva.base.IV
-    reset_id(sta)
+    if reset_ids :reset_id(sta)
     sta.reset_index(inplace=True)
 
     # 更改列名
