@@ -29,7 +29,7 @@ def features_tran(features):
                 "ob_centroid_y": [fi["feature_props"]["ob"]["centroid"]["y"]],
                 "ob_area": [fi["feature_props"]["ob"]["area"]],
                 "ob_intensity": [fi["feature_props"]["ob"]["intensity"]],
-
+                "ob_angle": [fi["feature_axis"]["ob"]["OrientationAngle"]["MajorAxis"]],
 
                 "fo_lenghts_MajorAxis": [fi["feature_axis"]["fo"]["lengths"]["MajorAxis"]],
                 "fo_lenghts_MinorAxis": [fi["feature_axis"]["fo"]["lengths"]["MinorAxis"]],
@@ -40,9 +40,9 @@ def features_tran(features):
                 "fo_centroid_x": [fi["feature_props"]["fo"]["centroid"]["x"]],
                 "fo_centroid_y": [fi["feature_props"]["fo"]["centroid"]["y"]],
                 "fo_area": [fi["feature_props"]["fo"]["area"]],
-                "fo_intensity": [fi["feature_props"]["fo"]["intensity"]]
+                "fo_intensity": [fi["feature_props"]["fo"]["intensity"]],
+                "fo_angle": [fi["feature_axis"]["fo"]["OrientationAngle"]["MajorAxis"]]
             }
-
             if "intensity_50" in fi["feature_props"]["ob"].keys():
                 q = [0,5,10,25,50, 75, 90, 95, 100]
                 for k in range(len(q)):
@@ -86,6 +86,7 @@ def features_tran_miss(features):
                 "ob_centroid_y": [fi["feature_props"]["ob"]["centroid"]["y"]],
                 "ob_area": [fi["feature_props"]["ob"]["area"]],
                 "ob_intensity": [fi["feature_props"]["ob"]["intensity"]],
+                "ob_angle": [fi["feature_axis"]["ob"]["OrientationAngle"]["MajorAxis"]],
             }
             if "intensity_50" in fi["feature_props"]["ob"].keys():
                 q = [0,5,10,25,50, 75, 90, 95, 100]
@@ -123,7 +124,8 @@ def features_tran_false_alarm(features):
                 "fo_centroid_x": [fi["feature_props"]["fo"]["centroid"]["x"]],
                 "fo_centroid_y": [fi["feature_props"]["fo"]["centroid"]["y"]],
                 "fo_area": [fi["feature_props"]["fo"]["area"]],
-                "fo_intensity": [fi["feature_props"]["fo"]["intensity"]]
+                "fo_intensity": [fi["feature_props"]["fo"]["intensity"]],
+                "fo_angle": [fi["feature_axis"]["fo"]["OrientationAngle"]["MajorAxis"]]
             }
             if "intensity_50" in fi["feature_props"]["fo"].keys():
                 q = [0,5,10,25,50, 75, 90, 95, 100]

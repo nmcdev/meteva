@@ -199,6 +199,8 @@ def interester(look, properties=None,
     label_list_fo = npy.array(look["label_list_fo"])
     N = len(label_list_ob)
     M = len(label_list_fo)
+    if N ==0 or M ==0:
+        return None
     ind = npy.stack((npy.tile(label_list_ob, M),label_list_fo.repeat(N)), axis=-1)
     if show:
         print(

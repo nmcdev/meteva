@@ -11,7 +11,7 @@ from .plot import plot_value_and_label,plot_feature
 
 def operate(grd_ob, grd_fo, smooth, threshold,minsize,compare = ">=",match_method = centmatch,near_dis =100,
             near_rate =0.3,cover_dis = 100,cover_rate =0.5,summary =True,
-            save_dir = None,cmap = "rain_24h",clevs = None,show = False):
+            save_dir = None,cmap = "rain_24h",clevs = None,show = False,dpi = 300):
     if match_method.__name__ == unimatch.__name__:
         if not isinstance(smooth,list):
             smooth = [smooth,smooth]
@@ -57,7 +57,7 @@ def operate(grd_ob, grd_fo, smooth, threshold,minsize,compare = ">=",match_metho
         png_save_path = save_dir +"/png/YYYYMMDDHH.TTT.png"
         png_save_path =  meteva.base.get_path(png_save_path,time1,dtime1)
         meteva.base.creat_path(png_save_path)
-        plot_value_and_label(look_merge,save_path=png_save_path,show=show,cmap = cmap,clevs = clevs)
+        plot_value_and_label(look_merge,save_path=png_save_path,show=show,cmap = cmap,clevs = clevs,dpi=dpi)
 
 
         json_save_path = save_dir +"/json/YYYYMMDDHH.TTT.txt"
@@ -108,7 +108,7 @@ def operate(grd_ob, grd_fo, smooth, threshold,minsize,compare = ">=",match_metho
         png_save_path = save_dir + "/table/YYYYMMDDHH.TTT.png"
         png_save_path = meteva.base.get_path(png_save_path, time1, dtime1)
         meteva.base.creat_path(png_save_path)
-        plot_feature(features, save_path=png_save_path, show=show)
+        plot_feature(features, save_path=png_save_path, show=show,dpi=dpi)
 
     return features
 
