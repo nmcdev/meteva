@@ -659,6 +659,8 @@ def get_outer_grid(grid0,grid1,used_coords = "xy"):
         levels.sort()
 
         members = copy.deepcopy(grid0.members)
+        if not isinstance(members,list):
+            members = members.tolist()
         for member in grid1.members:
             if member not in members:
                 members.append(member)
@@ -683,7 +685,7 @@ def expand_to_contain_another_grid(grd0,grid1,used_coords = "xy",outer_value = 0
     return grd1
 
 
-def combine_griddata(griddata_list,dtime_list  = None):
+def combine_griddata(griddata_list,dtime_list  = None,how = "inner"):
     '''
     :param griddata_list: 网格数据列表
     :return:
@@ -695,8 +697,12 @@ def combine_griddata(griddata_list,dtime_list  = None):
     for i in range(ngrd):
         if griddata_list[i] is None: continue
         grid1 = meteva.base.get_grid_of_data(griddata_list[i])
-        grid_combined = meteva.base.get_inner_grid(grid_combined,grid1,used_coords="all")
+        if how =="inner":
+            grid_combined = meteva.base.get_inner_grid(grid_combined,grid1,used_coords="all")
+        elif how == "outer":
+            grid_combined = meteva.base.get_outer_grid(grid_combined, grid1, used_coords="all")
 
+    #print(grid_combined)
     if grid_combined is None:
         print("没有可合并的格点数据")
     if dtime_list is not None:
@@ -705,7 +711,8 @@ def combine_griddata(griddata_list,dtime_list  = None):
     grd_all = meteva.base.grid_data(grid_combined)
     grid_xy = meteva.base.grid(grid_combined.glon,grid_combined.glat)
 
-    grd_all.values[:,:,:,:,:,:] = meteva.base.IV
+    #grd_all.values[:,:,:,:,:,:] = meteva.base.IV
+    grd_all.values[:, :, :, :, :, :] = np.nan
     levels_all = grd_all["level"].values
     times_all = grd_all["time"].values
     dtimes_all = grd_all["dtime"].values
