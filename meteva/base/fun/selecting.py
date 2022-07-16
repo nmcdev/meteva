@@ -242,6 +242,14 @@ def in_hour_list(sta,hour_list):
     sta1 = sta.loc[fo_times.index.hour.isin(hour_list)]
     return sta1
 
+#为拥有多hour的站点数据，依次增加hour所表示的list列表
+def in_minute_list(sta,minute_list):
+    if not isinstance(minute_list,list) and not isinstance(minute_list,np.ndarray):
+        minute_list = [minute_list]
+    fo_times = pd.Series(0, index=sta['time'])
+    sta1 = sta.loc[fo_times.index.minute.isin(minute_list)]
+    return sta1
+
 
 def between_time_range(data,start_time,end_time):
     if isinstance(data, pd.DataFrame):
@@ -354,6 +362,15 @@ def in_ob_hour_list(sta,hour_list):
     dtimes = sta["dtime"] * np.timedelta64(1, 'h')
     obtimes = pd.Series(0,index = sta['time'] + dtimes)
     sta1 = sta.loc[obtimes.index.hour.isin(hour_list)]
+    return sta1
+
+#为拥有多minute的站点数据，依次增加hour所表示的list列表
+def in_ob_minute_list(sta,minute_list):
+    if not isinstance(minute_list,list) and not isinstance(minute_list,np.ndarray):
+        minute_list = [minute_list]
+    dtimes = sta["dtime"] * np.timedelta64(1, 'h')
+    obtimes = pd.Series(0,index = sta['time'] + dtimes)
+    sta1 = sta.loc[obtimes.index.minute.isin(minute_list)]
     return sta1
 
 
@@ -737,6 +754,12 @@ def sele_by_dict(data,s):
     if "hour" in s.keys():
         hour = s["hour"]
 
+
+    minute = None
+    if "minute" in s.keys():
+        minute = s["minute"]
+
+
     ob_time = None
     if "ob_time" in s.keys():
         ob_time = s['ob_time']
@@ -764,6 +787,9 @@ def sele_by_dict(data,s):
     ob_hour = None
     if "ob_hour" in s.keys():
         ob_hour = s["ob_hour"]
+    ob_minute = None
+    if "ob_minute" in s.keys():
+        ob_minute = s["ob_minute"]
 
     dtime = None
     if "dtime" in s.keys():
@@ -837,13 +863,13 @@ def sele_by_dict(data,s):
     if "drop_last" in s.keys():
         drop_last = s["drop_last"]
 
-    sta1 = sele_by_para(data,member,level,time,time_range,year,month,day,dayofyear,hour,ob_time,ob_time_range,ob_year,ob_month,ob_day,ob_dayofyear,
-                 ob_hour,dtime,dtime_range,dday,dhour,lon,lat,id,grid,gxy,gxyz,stadata,value,drop_IV,last,last_range,province_name,drop_last,ob_stadata)
+    sta1 = sele_by_para(data,member,level,time,time_range,year,month,day,dayofyear,hour,minute,ob_time,ob_time_range,ob_year,ob_month,ob_day,ob_dayofyear,
+                 ob_hour,ob_minute,dtime,dtime_range,dday,dhour,lon,lat,id,grid,gxy,gxyz,stadata,value,drop_IV,last,last_range,province_name,drop_last,ob_stadata)
     return sta1
 
 
-def sele_by_para(data,member = None,level = None,time = None,time_range = None,year = None,month = None,day = None,dayofyear = None,hour = None,
-           ob_time=None, ob_time_range=None, ob_year=None, ob_month=None, ob_day=None, ob_dayofyear=None, ob_hour=None,
+def sele_by_para(data,member = None,level = None,time = None,time_range = None,year = None,month = None,day = None,dayofyear = None,hour = None,minute = None,
+           ob_time=None, ob_time_range=None, ob_year=None, ob_month=None, ob_day=None, ob_dayofyear=None, ob_hour=None,ob_minute = None,
            dtime = None,dtime_range = None,dday = None, dhour = None,lon = None,lat = None,id = None,grid = None,gxy = None,gxyz = None,stadata = None,
                  value = None,drop_IV = False,last = None,last_range = None,province_name = None,drop_last = True,ob_stadata = None,**kwargs):
     '''
@@ -921,6 +947,9 @@ def sele_by_para(data,member = None,level = None,time = None,time_range = None,y
         sta1 = in_dayofyear_list(sta1,dayofyear)
     if hour is not None:
         sta1 = in_hour_list(sta1, hour)
+    if minute is not None:
+        sta1 = in_minute_list(sta1, minute)
+
     if ob_time is not None:
         sta1 = in_ob_time_list(sta1, ob_time)
     if ob_time_range is not None:
@@ -937,6 +966,8 @@ def sele_by_para(data,member = None,level = None,time = None,time_range = None,y
         sta1 = in_ob_dayofyear_list(sta1,ob_dayofyear)
     if ob_hour is not None:
         sta1 = in_ob_hour_list(sta1, ob_hour)
+    if ob_minute is not None:
+        sta1 = in_ob_minute_list(sta1, ob_minute)
     if dtime is not None:
         sta1 = in_dtime_list(sta1,dtime)
     if dtime_range is not None:
@@ -990,14 +1021,14 @@ def sele_by_para(data,member = None,level = None,time = None,time_range = None,y
 
 
 
-def drop_by_para(data,member = None,level = None,time = None,time_range = None,year = None,month = None,day = None,dayofyear = None,hour = None,
-           ob_time=None, ob_time_range=None, ob_year=None, ob_month=None, ob_day=None, ob_dayofyear=None, ob_hour=None,
+def drop_by_para(data,member = None,level = None,time = None,time_range = None,year = None,month = None,day = None,dayofyear = None,hour = None,minute = None,
+           ob_time=None, ob_time_range=None, ob_year=None, ob_month=None, ob_day=None, ob_dayofyear=None, ob_hour=None,ob_minute = None,
            dtime = None,dtime_range = None,dday = None, dhour = None,lon = None,lat = None,id = None,grid = None,gxy = None,gxyz = None,stadata = None,
                  value = None,drop_IV = False,last = None,last_range = None,province_name = None,drop_last = True,ob_stadata = None,**kwargs):
 
     data.reset_index(drop=True, inplace=True)
-    data_drop =  sele_by_para(data,member,level,time,time_range,year,month,day,dayofyear,hour,ob_time,ob_time_range,ob_year,ob_month,ob_day,ob_dayofyear,
-                 ob_hour,dtime,dtime_range,dday,dhour,lon,lat,id,grid,gxy,gxyz,stadata,value,drop_IV,last,last_range,province_name,drop_last,ob_stadata
+    data_drop =  sele_by_para(data,member,level,time,time_range,year,month,day,dayofyear,hour,minute,ob_time,ob_time_range,ob_year,ob_month,ob_day,ob_dayofyear,
+                 ob_hour,ob_minute,dtime,dtime_range,dday,dhour,lon,lat,id,grid,gxy,gxyz,stadata,value,drop_IV,last,last_range,province_name,drop_last,ob_stadata
                            )
     data_left = data.drop(data_drop.index)
 
