@@ -10,7 +10,7 @@ from matplotlib.colors import BoundaryNorm
 from meteva.base import IV
 import meteva
 from matplotlib.collections import LineCollection
-
+import matplotlib.patches as patches
 import datetime
 import copy
 
@@ -3199,7 +3199,7 @@ def myheatmap(ax_one,data_0,cmap,clevs,annot=1,fontsize=10):
     fig.colorbar(im, ax=ax_one)
 
 def mesh(array,name_list_dict = None,axis_x = None,axis_y = None,cmap = "rainbow",clevs = None,ncol = None,annot =None,save_path = None,show = False,dpi = 300,
-         spasify_xticks = None,sup_fontsize = 10,title ="",width = None,height = None):
+         spasify_xticks = None,sup_fontsize = 10,title ="",width = None,height = None,rect = None,rect_color = "r"):
 
     shape = array.shape
     if len(array[array != meteva.base.IV]) == 0:
@@ -3317,10 +3317,13 @@ def mesh(array,name_list_dict = None,axis_x = None,axis_y = None,cmap = "rainbow
 
         y = np.arange(len(name_list_dict[axis_y])+1) -0.5
         yticks = np.arange(len(name_list_dict[axis_y]))
-        if isinstance(x_one, datetime.datetime):
-            yticks_labels = meteva.product.get_time_str_list(name_list_dict[axis_y], 1)
+        y_one = name_list_dict[axis_y][0]
+        yticks_labels =[]
+        if isinstance(y_one, datetime.datetime):
+            for time1 in  name_list_dict[axis_y]:
+                str1 = "%02d" % time1.day + "日" + "%02d" % time1.hour + "时"
+                yticks_labels.append(str1)
         else:
-            yticks_labels = []
             for local in name_list_dict[axis_y]:
                 yticks_labels.append(str(local))
 
@@ -3351,6 +3354,7 @@ def mesh(array,name_list_dict = None,axis_x = None,axis_y = None,cmap = "rainbow
 
         fig = plt.figure(figsize=(width_fig, height_fig), dpi=dpi)
         x = np.arange(data.shape[2]+1) -0.5
+        axes_list = []
         hspace = 0.1 * sup_fontsize * nrow/height_fig
         wspace = width_wspace / width_one_subplot
 
@@ -3386,34 +3390,8 @@ def mesh(array,name_list_dict = None,axis_x = None,axis_y = None,cmap = "rainbow
                 clevs0 = clevs
             cmap1,clevs1= meteva.base.color_tools.def_cmap_clevs(cmap = cmap0,clevs=clevs0,vmin=vmin,vmax = vmax)
             ax_one = plt.subplot(nrow, ncol, k + 1)
-
-
             myheatmap(ax_one,data_k,cmap1,clevs1,annot,sup_fontsize)
-            '''
-            im = ax_one.pcolormesh(x, y, data_k,cmap = cmap1,norm=norm)
-            im.update_scalarmappable()
-            if annot is not None:
-                facecolors = im.get_facecolors()
-                facecolors = facecolors.reshape(len(yticks),len(xticks),4)
-                fmt_tag = "%." + str(annot) + "f"
-                for i in range(len(xticks)):
-                    for j in range(len(yticks)):
-                        data_ijk = data_k[j,i]
-                        if not np.isnan(data_ijk):
-                            #获取网格的颜色
-                            color = facecolors[j,i,:]
-                            #计算亮度
-                            rgb = mpl.colors.colorConverter.to_rgba_array(color)[:, :3]
-                            rgb = np.where(rgb <= .03928, rgb / 12.92, ((rgb + .055) / 1.055) ** 2.4)
-                            lum = rgb.dot([.2126, .7152, .0722])
 
-                            text_color = ".15" if lum > .408 else "w"
-                            plt.text(i, j, fmt_tag % data_ijk, ha="center", va="center",
-                                        fontsize=sup_fontsize,c  = text_color)
-
-
-            fig.colorbar(im, ax=ax_one)
-            '''
             ki = k % ncol
             kj = int(k / ncol)
             knext_row = ki + (kj + 1) * ncol
@@ -3430,7 +3408,9 @@ def mesh(array,name_list_dict = None,axis_x = None,axis_y = None,cmap = "rainbow
             #ax_one.xaxis.set_minor_locator(xminorLocator)
             plt.yticks(yticks,yticks_labels,fontsize=sup_fontsize * 0.8)
             plt.ylabel(axis_y, fontsize=sup_fontsize * 0.9)
-
+            if rect is not None:
+                rect1 = patches.Rectangle((rect[0], rect[1]), rect[2], rect[3], linewidth=2, edgecolor=rect_color, facecolor='none')
+                ax_one.add_patch(rect1)
             #plt.ylabel(ylabel, fontsize=sup_fontsize * 0.9)
 
             if isinstance(title, list):
@@ -3458,6 +3438,7 @@ def mesh(array,name_list_dict = None,axis_x = None,axis_y = None,cmap = "rainbow
     if show:
         plt.show()
     plt.close()
+
 
 
 
