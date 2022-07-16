@@ -4,6 +4,163 @@ import meteva
 
 
 
+def tase_angle(d_ob, d_fo,s_ob = None,s_fo = None, ignore_breeze = False):
+    '''
+    计算平均误差、平均绝对误差、均方误差、均方根误差的中间结果
+    -----------------------------
+    :param Ob: 实况数据  任意维numpy数组
+    :param Fo: 预测数据 任意维numpy数组,Fo.shape 和Ob.shape一致
+    :return: 一维numpy数组，其内容依次为总样本数、误差总和、绝对误差总和、误差平方总和
+    '''
+
+    tase_list = []
+    Fo_shape = d_fo.shape
+    Ob_shape = d_ob.shape
+
+    Ob_shpe_list = list(Ob_shape)
+    size = len(Ob_shpe_list)
+    ind = -size
+    Fo_Ob_index = list(Fo_shape[ind:])
+    if Fo_Ob_index != Ob_shpe_list:
+        print('预报数据和观测数据维度不匹配')
+        return
+    Ob_shpe_list.insert(0, -1)
+    new_Fo_shape = tuple(Ob_shpe_list)
+    new_Fo = d_fo.reshape(new_Fo_shape)
+    new_Fo_shape = new_Fo.shape
+
+    new_Fo_s = None
+    if s_fo is not None:
+        new_Fo_s = s_fo.reshape(new_Fo_shape)
+
+    ob0 = d_ob
+    for line in range(new_Fo_shape[0]):
+        total_count = ob0.size
+        delta = new_Fo[line, :] - ob0
+        delta[delta>180] = delta[delta>180] - 360
+        delta[delta<-180] = 360 + delta[delta<-180]
+        if ignore_breeze:
+            if new_Fo_s is None or s_ob is None:
+                print("if need to ignore breeze, s_fo and s_ob must not be None")
+            fo_s = new_Fo_s[line,:]
+            index = np.where((s_ob < 5.5)&(fo_s < 5.5))
+            delta[index] = 0
+
+        e_sum = np.sum(delta)
+        ae_sum = np.sum(np.abs(delta))
+        se_sum = np.sum(np.square(delta))
+        tase_list.append(np.array([total_count, e_sum, ae_sum, se_sum]))
+    tase_np = np.array(tase_list)
+    shape = list(Fo_shape[:ind])
+    shape.append(4)
+
+    tase_array = tase_np.reshape(shape)
+    return tase_array
+
+
+
+
+def tase_angle_uv(u_ob, u_fo, v_ob, v_fo,ignore_breeze = False):
+    '''
+    计算平均误差、平均绝对误差、均方误差、均方根误差的中间结果
+    -----------------------------
+    :param Ob: 实况数据  任意维numpy数组
+    :param Fo: 预测数据 任意维numpy数组,Fo.shape 和Ob.shape一致
+    :return: 一维numpy数组，其内容依次为总样本数、误差总和、绝对误差总和、误差平方总和
+    '''
+
+    s_ob, d_ob = meteva.base.math_tools.u_v_to_s_d(u_ob, v_ob)
+    s_fo, d_fo = meteva.base.math_tools.u_v_to_s_d(u_fo, v_fo)
+
+    tase_array = tase_angle(d_ob, d_fo,s_ob = s_ob,s_fo = s_fo, ignore_breeze = ignore_breeze)
+    return tase_array
+
+
+def me_angle(d_ob,d_fo,s_ob = None,s_fo = None, ignore_breeze = False):
+    '''
+
+    :param d_ob:
+    :param d_fo:
+    :return:
+    '''
+    tase_angle_array = tase_angle(d_ob,d_fo,s_ob=s_ob,s_fo = s_fo,ignore_breeze = ignore_breeze)
+    mean_error = meteva.method.me_tase(tase_angle_array)
+    return mean_error
+
+
+def mae_angle(d_ob, d_fo,s_ob = None,s_fo = None, ignore_breeze = False):
+    '''
+
+    :param d_ob:
+    :param d_fo:
+    :return:
+    '''
+    tase_angle_array =  tase_angle(d_ob,d_fo,s_ob=s_ob,s_fo = s_fo,ignore_breeze = ignore_breeze)
+    mean_abs_error = meteva.method.mae_tase(tase_angle_array)
+    return mean_abs_error
+
+def rmse_angle(d_ob, d_fo,s_ob = None,s_fo = None, ignore_breeze = False):
+    '''
+
+    :param d_ob:
+    :param d_fo:
+    :return:
+    '''
+    tase_angle_array =  tase_angle(d_ob,d_fo,s_ob=s_ob,s_fo = s_fo,ignore_breeze = ignore_breeze)
+    root_mean_sqrt_error = meteva.method.rmse_tase(tase_angle_array)
+    return root_mean_sqrt_error
+
+
+def me_angle_uv(u_ob, u_fo, v_ob, v_fo,ignore_breeze = False):
+    '''
+    风速预报评分。
+    基于原始u，v风（m/s)数组，计算风速预报评分。计算的第一步是将预报和观测的风向都转换成14个离散的风速等级，
+    当一个样本的预报和观测风速等级正好相同时，得1分，等级差1级，得0.6分，等级差2级得0.4分,否则不得分。风速评分等于所有样本得分的平均。
+    :param u_ob: 观测的u分量，numpy数组
+    :param u_fo: 预报的u分量，numpy数组，shape和u_ob完全一致或比u_ob高一维（用于同时进行多家预报结果检验），u_fo.shape低维与u_ob.shape保持一致
+    :param v_ob: 观测的u分量，numpy数组，shape 和u_ob完全一致
+    :param v_fo: 预报的v分量，numpy数组，shape和u_ob完全一致或比u_ob高一维（用于同时进行多家预报结果检验），v_fo.shape低维与v_ob.shape保持一致
+    :return: 风速预报评分，如果d_fo和d_ob的shape一致，说明只有一家预报，则返回实数，否则说明是在同时检验多家预报，返回结果为一维数组。
+    '''
+    s_ob, d_ob = meteva.base.math_tools.u_v_to_s_d(u_ob, v_ob)
+    s_fo, d_fo = meteva.base.math_tools.u_v_to_s_d(u_fo, v_fo)
+    mean_error = me_angle(d_ob,d_fo,s_ob = s_ob,s_fo = s_fo,ignore_breeze = ignore_breeze)
+    return mean_error
+
+def mae_angle_uv(u_ob, u_fo, v_ob, v_fo,ignore_breeze = False):
+    '''
+    风速预报评分。
+    基于原始u，v风（m/s)数组，计算风速预报评分。计算的第一步是将预报和观测的风向都转换成14个离散的风速等级，
+    当一个样本的预报和观测风速等级正好相同时，得1分，等级差1级，得0.6分，等级差2级得0.4分,否则不得分。风速评分等于所有样本得分的平均。
+    :param u_ob: 观测的u分量，numpy数组
+    :param u_fo: 预报的u分量，numpy数组，shape和u_ob完全一致或比u_ob高一维（用于同时进行多家预报结果检验），u_fo.shape低维与u_ob.shape保持一致
+    :param v_ob: 观测的u分量，numpy数组，shape 和u_ob完全一致
+    :param v_fo: 预报的v分量，numpy数组，shape和u_ob完全一致或比u_ob高一维（用于同时进行多家预报结果检验），v_fo.shape低维与v_ob.shape保持一致
+    :return: 风速预报评分，如果d_fo和d_ob的shape一致，说明只有一家预报，则返回实数，否则说明是在同时检验多家预报，返回结果为一维数组。
+    '''
+    s_ob, d_ob = meteva.base.math_tools.u_v_to_s_d(u_ob, v_ob)
+    s_fo, d_fo = meteva.base.math_tools.u_v_to_s_d(u_fo, v_fo)
+    mean_abs_error = mae_angle(d_ob,d_fo,s_ob = s_ob,s_fo = s_fo,ignore_breeze = ignore_breeze)
+    return mean_abs_error
+
+
+def rmse_angle_uv(u_ob, u_fo, v_ob, v_fo,ignore_breeze = False):
+    '''
+    风速预报评分。
+    基于原始u，v风（m/s)数组，计算风速预报评分。计算的第一步是将预报和观测的风向都转换成14个离散的风速等级，
+    当一个样本的预报和观测风速等级正好相同时，得1分，等级差1级，得0.6分，等级差2级得0.4分,否则不得分。风速评分等于所有样本得分的平均。
+    :param u_ob: 观测的u分量，numpy数组
+    :param u_fo: 预报的u分量，numpy数组，shape和u_ob完全一致或比u_ob高一维（用于同时进行多家预报结果检验），u_fo.shape低维与u_ob.shape保持一致
+    :param v_ob: 观测的u分量，numpy数组，shape 和u_ob完全一致
+    :param v_fo: 预报的v分量，numpy数组，shape和u_ob完全一致或比u_ob高一维（用于同时进行多家预报结果检验），v_fo.shape低维与v_ob.shape保持一致
+    :return: 风速预报评分，如果d_fo和d_ob的shape一致，说明只有一家预报，则返回实数，否则说明是在同时检验多家预报，返回结果为一维数组。
+    '''
+    s_ob, d_ob = meteva.base.math_tools.u_v_to_s_d(u_ob, v_ob)
+    s_fo, d_fo = meteva.base.math_tools.u_v_to_s_d(u_fo, v_fo)
+    root_mean_abs_error = rmse_angle(d_ob,d_fo,s_ob = s_ob,s_fo = s_fo,ignore_breeze = ignore_breeze)
+    return root_mean_abs_error
+
+
 def scd_nasd(nasd_array):
     '''
     基于中间结果计算风向预报评分
