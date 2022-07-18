@@ -708,13 +708,34 @@ def sele_by_dict(data,s):
     if s is None:return data
 
 
-    p_set = {"member","level","time","time_range","year","month","day","dayofyear","hour", "ob_time","ob_time_range" ,"ob_year",
+
+
+    p_set = ["member","level","time","time_range","year","month","day","dayofyear","hour", "ob_time","ob_time_range" ,"ob_year",
               "ob_month", "ob_day","ob_dayofyear","ob_hour","dtime","dtime_range","dday","dhour" ,
-              "lon","lat", "id","grid","gxy", "gxyz" ,"stadata","ob_stadata","value","drop_IV","last" , "last_range","drop_last","province_name"}
+              "lon","lat", "id","grid","gxy", "gxyz" ,"stadata","ob_stadata","value","drop_IV","last" , "last_range","drop_last","province_name"]
+
+
+    sta1 = data
+    data_names = meteva.base.get_stadata_names(data)
+    p_set.extend(data_names)
+    data_names_range = []
+    for data_name in data_names:
+        data_names_range.append(str(data_name)+"_range")
+    p_set.extend(data_names_range)
+    for key in s.keys():
+        if key in data_names:
+            value_one = s[key]
+            if not isinstance(value_one,list):
+                value_one = [value_one]
+            sta1 = in_one_column_value_list(sta1,key, value_one)
+        elif key in data_names_range:
+            value_one = s[key]
+            data_name = key.split("_")[0]
+            sta1 = between_one_column_value_range(sta1,data_name,value_one[0],value_one[1])
 
 
     key_set = s.keys() #set(list(s.keys()))
-    if(not p_set >= key_set):
+    if(not set(p_set) >= key_set):
         print("参数s的字典中包含本程序不能识别的关键词")
         return None
 
@@ -863,7 +884,7 @@ def sele_by_dict(data,s):
     if "drop_last" in s.keys():
         drop_last = s["drop_last"]
 
-    sta1 = sele_by_para(data,member,level,time,time_range,year,month,day,dayofyear,hour,minute,ob_time,ob_time_range,ob_year,ob_month,ob_day,ob_dayofyear,
+    sta1 = sele_by_para(sta1,member,level,time,time_range,year,month,day,dayofyear,hour,minute,ob_time,ob_time_range,ob_year,ob_month,ob_day,ob_dayofyear,
                  ob_hour,ob_minute,dtime,dtime_range,dday,dhour,lon,lat,id,grid,gxy,gxyz,stadata,value,drop_IV,last,last_range,province_name,drop_last,ob_stadata)
     return sta1
 
