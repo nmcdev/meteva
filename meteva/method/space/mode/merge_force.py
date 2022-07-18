@@ -84,9 +84,13 @@ def merge_force(look_match, verbose=False):
         # if len(yp.keys())>0:
         #     fcunmatched = list(range(1, len(yp.keys()) + 1))
         #out['unmatched'] = {'ob': vxunmatched, 'fo': fcunmatched}
-        out["unmatched"] = x['unmatched']
+        out["label_list_ob"] = np.arange(1, xp["label_count"] + 1).tolist()
+        out["label_list_fo"] = np.arange(1, yp["label_count"] + 1).tolist()
+        out["label_list_matched"] = []
+        out["unmatched"] ={'ob': np.arange(1, xp["label_count"] + 1).tolist(), 'fo': np.arange(1, yp["label_count"] + 1).tolist()}
         out['MergeForced'] = True
         out["grid"] = copy.deepcopy(look_match["grid"])
+
     else:
 
         xfeats = {'Type': xp['Type'], 'xrange': xp['xrange'], 'yrange': xp['yrange'], 'dim': xp['dim'], 'warnings': xp['warnings'],

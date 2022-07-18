@@ -20,7 +20,7 @@ def group(sta_ob_and_fos,g = None,gll = None):
                 else:
                     group_list_list0.append([group_list])
             group_list_list = group_list_list0
-        valid_group = ["level","time","time_range","year","month","day","dayofyear","hour",
+        valid_group = ["level","time","time_range","year","month","day","dayofyear","hour","xun",
                        "ob_time","ob_time_range","ob_year","ob_month","ob_day","ob_dayofyear","ob_hour",
                        "dtime","dtime_range","dday","dhour","id","lon_range","lon_step","lat_range","lat_step","last_range","last_step","grid",
                        "province_name","member"]
@@ -195,6 +195,27 @@ def group(sta_ob_and_fos,g = None,gll = None):
             fo_times = pd.Series(0, index=sta_ob_and_fos['time'])
             if group_list_list is None:
                 grouped_dict = dict(list(sta_ob_and_fos.groupby(fo_times.index.hour)))
+                keys = grouped_dict.keys()
+                for key in keys:
+                    valid_group_list_list.append([key])
+                    sta_ob_and_fos_list.append(grouped_dict[key])
+            else:
+                for group_list in group_list_list:
+                    sta = sta_ob_and_fos.loc[fo_times.index.hour.isin(group_list)]
+                    if len(sta.index) !=0:
+                        valid_group_list_list.append(group_list)
+                        sta_ob_and_fos_list.append(sta)
+        elif g == "xun":
+            sta_ob_and_fos.reset_index(drop = True,inplace = True)
+            fo_times = pd.Series(0, index=sta_ob_and_fos['time'])
+            mons = fo_times.index.month.astype(np.int16)
+            days = fo_times.index.day.astype(np.int16)
+            xuns = np.ceil(days / 10).values.astype(np.int16)
+            xuns[xuns > 3] = 3
+            xuns += (mons - 1) * 3
+            xuns = pd.Series(xuns)
+            if group_list_list is None:
+                grouped_dict = dict(list(sta_ob_and_fos.groupby(xuns)))
                 keys = grouped_dict.keys()
                 for key in keys:
                     valid_group_list_list.append([key])
@@ -537,7 +558,6 @@ def group(sta_ob_and_fos,g = None,gll = None):
             else:
                 valid_group_list = valid_group_list_list
     #print(valid_group_list)
-
     return sta_ob_and_fos_list,valid_group_list
 
 

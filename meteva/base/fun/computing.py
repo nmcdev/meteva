@@ -7,35 +7,40 @@ import copy
 #将两个站点数据信息进行合并，并去重。
 
 def put_stadata_on_station(sta,station):
-    #删除重复行
-    sta1 = sta.drop_duplicates(['id'])
-    #先将数据合并
-    df = pd.merge(station,sta1, on='id', how='left')
-    #时间，时效和层次，采用sta的
-    df.iloc[:, 0] = sta1.iloc[0, 0]
-    df.iloc[:, 1] = sta1.iloc[0, 1]
-    df.iloc[:, 2] = sta1.iloc[0, 2]
+    sta_list = meteva.base.split(sta)
+    sta1_list = []
+    for sta0 in sta_list:
+        #删除重复行
+        sta1 = sta0.drop_duplicates(['id'])
+        #先将数据合并
+        df = pd.merge(station,sta1, on='id', how='left')
+        #时间，时效和层次，采用sta的
+        df.iloc[:, 0] = sta1.iloc[0, 0]
+        df.iloc[:, 1] = sta1.iloc[0, 1]
+        df.iloc[:, 2] = sta1.iloc[0, 2]
 
-    #如果合并后sta对应的数据是缺省，则用station里的data0列补充
-    columns = list(sta1.columns)
-    len_c1 = len(columns)
-    columns_m = list(df.columns)
-    len_m = len(columns_m)
-    for i in range(len_c1+5,len_m):
-        name1 = columns_m[i]
-        name2 = columns_m[6]
-        df.loc[df[name1].isnull(), name1] = df[df[name1].isnull()][name2]
+        #如果合并后sta对应的数据是缺省，则用station里的data0列补充
+        columns = list(sta1.columns)
+        len_c1 = len(columns)
+        columns_m = list(df.columns)
+        len_m = len(columns_m)
+        for i in range(len_c1+5,len_m):
+            name1 = columns_m[i]
+            name2 = columns_m[6]
+            df.loc[df[name1].isnull(), name1] = df[df[name1].isnull()][name2]
 
 
-    #删除合并后多余的时空信息列
-    len_s = len(list(station.columns))
-    drop_col = list(df.columns[6:len_s+5])
-    #print(drop_col)
-    df.drop(drop_col, axis=1, inplace=True)
-    #重新命名列名称
-    df.columns = sta1.columns
-    df.attrs = copy.deepcopy(sta.attrs)
-    return df
+        #删除合并后多余的时空信息列
+        len_s = len(list(station.columns))
+        drop_col = list(df.columns[6:len_s+5])
+        #print(drop_col)
+        df.drop(drop_col, axis=1, inplace=True)
+        #重新命名列名称
+        df.columns = sta1.columns
+        df.attrs = copy.deepcopy(sta.attrs)
+        sta1_list.append(df)
+    sta_new = pd.concat(sta1_list,axis=0)
+    return sta_new
 
 
 def smooth(grd,smooth_times = 1,used_coords = "xy"):

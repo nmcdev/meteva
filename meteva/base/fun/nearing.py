@@ -17,7 +17,10 @@ def sta_index_ensemble_near_by_sta(sta_to,nearNum = 100,sta_from = None,drop_fri
     sta_ensemble = sta_to[meteva.base.get_coord_names()]
     for i in range(nearNum):
         data_name = "data" + str(i)
-        sta_ensemble[data_name] = indexs[:,i]
+        if nearNum ==1:
+            sta_ensemble[data_name] = indexs[:]
+        else:
+            sta_ensemble[data_name] = indexs[:, i]
     if drop_frist:
         sta_ensemble = sta_ensemble.drop(columns=['data0'])
     return sta_ensemble
@@ -35,7 +38,10 @@ def sta_id_ensemble_near_by_sta(sta_to,nearNum = 100,sta_from = None,drop_frist 
     sta_ensemble = sta_to[meteva.base.get_coord_names()]
     for i in range(nearNum):
         data_name = "data" + str(i)
-        sta_ensemble[data_name] = input_dat[indexs[:,i]]
+        if nearNum ==1:
+            sta_ensemble[data_name] = input_dat[indexs[:]]
+        else:
+            sta_ensemble[data_name] = input_dat[indexs[:, i]]
     if drop_frist:
         sta_ensemble = sta_ensemble.drop(columns=['data0'])
     return sta_ensemble
@@ -54,7 +60,10 @@ def sta_value_ensemble_near_by_sta(sta_to,nearNum = 100,sta_from = None,drop_fri
     sta_ensemble = sta_to[meteva.base.get_coord_names()]
     for i in range(nearNum):
         data_name = "data" + str(i)
-        sta_ensemble[data_name] = input_dat[indexs[:,i]]
+        if nearNum ==1:
+            sta_ensemble[data_name] = input_dat[indexs[:]]
+        else:
+            sta_ensemble[data_name] = input_dat[indexs[:, i]]
     if drop_frist:
         sta_ensemble = sta_ensemble.drop(columns=['data0'])
     return sta_ensemble
@@ -71,7 +80,10 @@ def sta_dis_ensemble_near_by_sta(sta_to,nearNum = 100,sta_from = None,drop_frist
     sta_ensemble = sta_to[meteva.base.get_coord_names()]
     for i in range(nearNum):
         data_name = "data" + str(i)
-        sta_ensemble[data_name] = d[:,i]
+        if nearNum ==1:
+            sta_ensemble[data_name] = d[:]
+        else:
+            sta_ensemble[data_name] = d[:,i]
     if drop_frist:
         sta_ensemble = sta_ensemble.drop(columns=['data0'])
     return sta_ensemble
