@@ -631,7 +631,7 @@ def feature_finder(grd_ob0, grd_fo0, smooth, threshold, minsize,compare = ">=",m
 
 
 
-def feature_finder_and_merge(grd_ob0,smooth, threshold, minsize,compare = ">=",near_dis = 300,near_rate = 0.3):
+def feature_finder_and_merge(grd_ob0,smooth, threshold, minsize,compare = ">=",near_dis = 100,near_rate = 0.3):
     grd_ob = grd_ob0.copy()
     grd_ob.attrs["var_name"] = "原始场"
     X = np.squeeze(np.array(grd_ob)).astype(np.float32)
