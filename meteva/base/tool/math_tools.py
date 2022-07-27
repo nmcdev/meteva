@@ -134,6 +134,8 @@ def u_v_to_s_d(u,v):
     ag_n0 = 180 - np.arccos(vd_n0 / s_n0) * 180 / np.pi
     ag_n0[ud_n0 > 0] = 360 - ag_n0[ud_n0 > 0]
     d[index] = ag_n0
+    s[u==meteva.base.IV] = meteva.base.IV
+    d[u==meteva.base.IV] = meteva.base.IV
     return s,d
 
 
