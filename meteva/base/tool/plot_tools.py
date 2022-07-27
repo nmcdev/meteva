@@ -672,7 +672,7 @@ def scatter_sta(sta0,value_column=None,
                 save_path=None,show = False,dpi = 300,title=None,
                 sup_fontsize = 10,
                 height = None,width = None,
-                min_spot_value = 0,grid = False,subplot = None,ncol = None,point_size = None,sup_title = None,add_minmap = None):
+                min_spot_value = 0,grid = False,subplot = None,ncol = None,point_size = None,sup_title = None,add_minmap = None,title_in_ax = False):
 
     sta = sta0
     if save_path is None:
@@ -823,6 +823,7 @@ def scatter_sta(sta0,value_column=None,
         else:
             yticks_label.append(str(round(-yticks[y], 6)) +"°S")
 
+
     if subplot is None:
         nplot = len(plot_data_names)
         if isinstance(title, list):
@@ -835,6 +836,7 @@ def scatter_sta(sta0,value_column=None,
             if nplot != len(save_path):
                 print("手动设置的save_path数目和要绘制的图形数目不一致")
                 return
+
         for p in range(nplot):
             data_name = data_names[p]
             sta_one_member = meteva.base.sele_by_para(sta,member=[data_name],drop_IV=True)
@@ -1010,7 +1012,7 @@ def scatter_sta(sta0,value_column=None,
                              mean_value = mean_value,save_path = save_path1,show = show,dpi = dpi,
                             title = title1,sup_fontsize = sup_fontsize,
                              height=height,width= width,min_spot_value=min_spot_value,grid = grid,ncol = ncol,point_size=point_size,sup_title=sup_title[n],
-                             add_minmap = add_minmap,print_max = print_max,print_min = print_min)
+                             add_minmap = add_minmap,print_max = print_max,print_min = print_min,title_in_ax=title_in_ax)
 
 
 def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_worldmap = False,
@@ -1019,7 +1021,8 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
                 save_path=None,show = False,dpi = 300,title = None,
                 sup_fontsize = 10,
                 height = None,width = None,
-                min_spot_value = 0,grid = False,ncol = None,point_size = None,sup_title = None,add_minmap = None,print_max = None,print_min = None):
+                min_spot_value = 0,grid = False,ncol = None,point_size = None,sup_title = None,add_minmap = None,print_max = None,print_min = None,
+                     title_in_ax = False):
 
     sta0 = sta0_list[0]
     if isinstance(map_extend, list):
@@ -1208,7 +1211,7 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
 
         x = sta_one_member.loc[:, "lon"].values
         y = sta_one_member.loc[:, "lat"].values
-        value = sta_one_member.loc[:, data_name].values
+        value = sta_one_member.loc[:, data_name].values.squeeze()
 
         pi = p % ncol
         pj = int(p / ncol)
@@ -1236,7 +1239,14 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
             else:
                 title1 = title
 
-        plt.title(title1,fontsize = sup_fontsize,pad = 0)
+        if title_in_ax:
+            ix = slon + 0.02 * (elon - slon) * 5 / width_map
+            iy = elat - 0.035 * (elat - slat) * 5 / height_map
+            plt.text(ix, iy, title1, bbox=dict(fc='white', ec='white', pad=0), fontsize=sup_fontsize,
+                     zorder=100)
+        else:
+            plt.title(title1, fontsize=sup_fontsize, pad=0)
+
 
         if slon < 70 or elon > 140 or slat < 10 or elat > 60:
             add_worldmap = True
@@ -1316,17 +1326,17 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
             print("取值最大的" + str(print_max) + "个站点：")
             indexs = value.argsort()[-print_max:][::-1]
             for index in indexs:
-                print("id:" + str(sta_one_member.iloc[index, 3].values[0]) + "   lon:" + str(
-                    sta_one_member.iloc[index, 4].values[0]) + "  lat:" + str(sta_one_member.iloc[index, 5].values[0]) +
-                      " value:" + str(sta_one_member.iloc[index, 6].values[0]))
+                print("id:" + str(sta_one_member.iloc[index, 3]) + "   lon:" + str(
+                    sta_one_member.iloc[index, 4]) + "  lat:" + str(sta_one_member.iloc[index, 5]) +
+                      " value:" + str(sta_one_member.iloc[index, 6]))
 
         if print_min > 0:
             print("取值最小的" + str(print_min) + "个站点：")
             indexs = value.argsort()[:print_min]
             for index in indexs:
-                print("id:" + str(sta_one_member.iloc[index, 3].values[0]) + "   lon:" + str(
-                    sta_one_member.iloc[index, 4].values[0]) + "  lat:" + str(sta_one_member.iloc[index, 5].values[0]) +
-                      " value:" + str(sta_one_member.iloc[index, 6].values[0]))
+                print("id:" + str(sta_one_member.iloc[index, 3]) + "   lon:" + str(
+                    sta_one_member.iloc[index, 4]) + "  lat:" + str(sta_one_member.iloc[index, 5]) +
+                      " value:" + str(sta_one_member.iloc[index, 6]))
         if print_max > 0 or print_min > 0:
             print("______________")
 
@@ -2323,7 +2333,6 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
                                bbox_to_anchor=(0.52, by))
                 else:
                     plt.legend(fontsize=sup_fontsize * 0.8, ncol=legend_col, loc="upper center")
-
 
     else:
         print("array不能超过3维")

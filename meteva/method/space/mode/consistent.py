@@ -118,93 +118,95 @@ def unimatch(look_ob,look_fo,cover_dis,cover_rate):
     grid0= look_ob["grid"]
     near_dis = cover_dis/111/grid0.dlon
     label_count_ob = look_ob["grd_features"]["label_count"]
-    labels_ob = []
-    for i in range(label_count_ob):
-        label_ps1 = np.array([look_ob["grd_features"][i+1][1],look_ob["grd_features"][i+1][0]]).T
-        labels_ob.append(label_ps1)
     label_count_fo = look_fo["grd_features"]["label_count"]
-    labels_fo = []
-
-    for i in range(label_count_fo):
-        label_ps2 = np.array([look_fo["grd_features"][i+1][1],look_fo["grd_features"][i+1][0]]).T
-        labels_fo.append(label_ps2)
-
-    max_rate = 1
-
-    combined_fo_dict = {}
-    used_ob = np.ones(label_count_ob)
-    used_fo = np.ones(label_count_fo)
-    while max_rate >= cover_rate:
-        max_rate = 0
-        max_i = -1
-        max_j_list = None
-        max_pts_fo = None
+    if label_count_ob >0 and label_count_fo >0:
+        labels_ob = []
         for i in range(label_count_ob):
-            if used_ob[i] ==0:continue
-            rate_1row = np.zeros(label_count_fo)
-            for j in range(label_count_fo):
-                if used_fo[j] ==0:continue
-                rate_1row[j] = caculate_cover_rate(labels_ob[i],labels_fo[j],near_dis)
-            index = np.argsort(-rate_1row)
-            pts_fo = labels_fo[index[0]]
-            for j in range(0,label_count_fo):
-                if rate_1row[index[j]] > 0:
-                    if j > 0:
-                        pts_fo =  np.append(pts_fo,labels_fo[index[j]],axis=0)
-                        rate_c = caculate_cover_rate(labels_ob[i],pts_fo,near_dis)
-                        if rate_c > max_rate:
-                            max_rate = rate_c
-                            max_i = i
-                            max_j_list = index[0:j+1]
-                            max_pts_fo = pts_fo
+            label_ps1 = np.array([look_ob["grd_features"][i+1][1],look_ob["grd_features"][i+1][0]]).T
+            labels_ob.append(label_ps1)
+
+        labels_fo = []
+
+        for i in range(label_count_fo):
+            label_ps2 = np.array([look_fo["grd_features"][i+1][1],look_fo["grd_features"][i+1][0]]).T
+            labels_fo.append(label_ps2)
+
+        max_rate = 1
+
+        combined_fo_dict = {}
+        used_ob = np.ones(label_count_ob)
+        used_fo = np.ones(label_count_fo)
+        while max_rate >= cover_rate:
+            max_rate = 0
+            max_i = -1
+            max_j_list = None
+            max_pts_fo = None
+            for i in range(label_count_ob):
+                if used_ob[i] ==0:continue
+                rate_1row = np.zeros(label_count_fo)
+                for j in range(label_count_fo):
+                    if used_fo[j] ==0:continue
+                    rate_1row[j] = caculate_cover_rate(labels_ob[i],labels_fo[j],near_dis)
+                index = np.argsort(-rate_1row)
+                pts_fo = labels_fo[index[0]]
+                for j in range(0,label_count_fo):
+                    if rate_1row[index[j]] > 0:
+                        if j > 0:
+                            pts_fo =  np.append(pts_fo,labels_fo[index[j]],axis=0)
+                            rate_c = caculate_cover_rate(labels_ob[i],pts_fo,near_dis)
+                            if rate_c > max_rate:
+                                max_rate = rate_c
+                                max_i = i
+                                max_j_list = index[0:j+1]
+                                max_pts_fo = pts_fo
+                        else:
+                            rate_c = rate_1row[index[j]]
+                            if rate_c> max_rate:
+                                max_rate = rate_c
+                                max_i = i
+                                max_j_list = [index[0]]
+                                max_pts_fo = pts_fo
+
                     else:
-                        rate_c = rate_1row[index[j]]
-                        if rate_c> max_rate:
-                            max_rate = rate_c
-                            max_i = i
-                            max_j_list = [index[0]]
-                            max_pts_fo = pts_fo
-
-                else:
-                    break
+                        break
 
 
-        if max_rate > cover_rate:
-            combined_fo_dict[max_i+1] = (max_pts_fo[:,1],max_pts_fo[:,0])
-            used_fo[max_j_list] = 0
-            used_ob[max_i] =0
+            if max_rate > cover_rate:
+                combined_fo_dict[max_i+1] = (max_pts_fo[:,1],max_pts_fo[:,0])
+                used_fo[max_j_list] = 0
+                used_ob[max_i] =0
 
 
-    id_list = list(combined_fo_dict.keys())
-    nmatch =0
-    if len(id_list)>0:
-        nmatch = max(combined_fo_dict.keys())
-    #print(combined_fo_dict)
+        id_list = list(combined_fo_dict.keys())
+        nmatch =0
+        if len(id_list)>0:
+            nmatch = max(combined_fo_dict.keys())
+        #print(combined_fo_dict)
 
-    kk = label_count_ob
-    for k in range(len(labels_fo)):
-        if used_fo[k] > 0:
-            kk += 1
-            combined_fo_dict[kk] = (labels_fo[k][:, 1], labels_fo[k][:, 0])
-            id_list.append(kk)
+        kk = label_count_ob
+        for k in range(len(labels_fo)):
+            if used_fo[k] > 0:
+                kk += 1
+                combined_fo_dict[kk] = (labels_fo[k][:, 1], labels_fo[k][:, 0])
+                id_list.append(kk)
 
-    grd_fo_labeled = look_fo["grd"].copy()
-    grd_fo_labeled.attrs["var_name"] = "目标编号"
-    label_value = np.zeros((grid0.nlat, grid0.nlon))
-    for key in combined_fo_dict.keys():
-        label = combined_fo_dict[key]
-        label_value[label] = key
-    grd_fo_labeled.values[:] = label_value[:]
-    combined_fo_dict["label_count"] = kk
-    for key in look_fo["grd_features"].keys():
-        if key not in combined_fo_dict.keys():
-            if isinstance(key,str):
-                combined_fo_dict[key] = copy.deepcopy(look_fo["grd_features"][key])
-    out["grd_features"]= combined_fo_dict
-    out["grd_label"]= grd_fo_labeled
-    out["match_count"] = nmatch
-    out["max_label"] = kk
-    out["id_list"] =id_list
+        grd_fo_labeled = look_fo["grd"].copy()
+        grd_fo_labeled.attrs["var_name"] = "目标编号"
+        label_value = np.zeros((grid0.nlat, grid0.nlon))
+        for key in combined_fo_dict.keys():
+            label = combined_fo_dict[key]
+            label_value[label] = key
+        grd_fo_labeled.values[:] = label_value[:]
+        combined_fo_dict["label_count"] = kk
+        for key in look_fo["grd_features"].keys():
+            if key not in combined_fo_dict.keys():
+                if isinstance(key,str):
+                    combined_fo_dict[key] = copy.deepcopy(look_fo["grd_features"][key])
+        out["grd_features"]= combined_fo_dict
+        out["grd_label"]= grd_fo_labeled
+        out["match_count"] = nmatch
+        out["max_label"] = kk
+        out["id_list"] =id_list
     out["match_type"] = "unimatch"
 
 

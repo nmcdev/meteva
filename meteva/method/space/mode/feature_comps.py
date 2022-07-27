@@ -12,6 +12,7 @@ from .utils import get_attributes_for_feat,remove_key_from_list
 def feature_comps(look,label_ob,label_fo, which_comps=None,  alpha=0.1, k=1,
                   p=2, c=float('inf'), distfun='distmapfun',
                   deg=True, aty='compass'):
+
     XtmpAttributes = get_attributes_for_feat(look['grd_ob_features'])
     remove_list = ['Type', 'xrange', 'yrange', 'dim', 'xstep', 'ystep', 'warnings', 'xcol', 'yrow']  # 需要移除的属性列表
     xkeys = remove_key_from_list(list(look['grd_ob_features'].keys()), remove_list)

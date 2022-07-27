@@ -1894,3 +1894,90 @@ def read_griddata_from_swan_d131(filename,grid = None,level = None,time = None,d
 
         print(filename + "数据读取失败")
         return None
+
+
+
+
+
+def jd2ce(JDN):
+    import math
+    ## 儒略时间（julia_date）转为datetime.
+    JDN = JDN + 0.5
+    Z = int(JDN)
+    F = JDN - Z
+    if Z < 2299161:  # 儒略历
+        A = Z
+    else:  # 格里历
+        a = int((Z - 2305447.5) / 36524.25)
+        A = Z + 10 + a - int(a / 4)
+    B = A + 1524
+    C = int((B - 122.1) / 365.25)
+    D = int(365.25 * C)
+    E = int((B - D) / 30.6001)
+    day = B - D - int(30.6001 * E) + F
+    if E < 14:
+        month = E - 1
+    elif E < 16:
+        month = E - 13
+    if month > 2:
+        year = C - 4716
+    elif month in [1, 2]:
+        year = C - 4715
+    day = round(day, 4)
+    hour = (day - math.floor(day)) * 24
+    minute = (hour - math.floor(hour)) * 60
+    ## 结果输出
+    day = math.floor(day)
+    hour = math.floor(hour)
+    minute = math.floor(minute)
+    date = datetime.datetime(year, month, day, hour, minute)
+    print("儒略日{}对应的公历日期为{}年{}月{}日{}时{}分".format(JDN - 0.5, year, month, day, hour, minute), '\n')
+    return (date)
+
+def read_griddata_from_ensemble_sav(filename, dt=None, unit='mm', var=None):  ## 可改为使用meb.grid类
+    """
+    从集合团队IDL的sav数据中，读取meteva类型的xarray格点数据，并返回
+    dt: 预报数据起报时间，datetime.datetime类型
+    var: 如果多变量sav， 需要指定该参数， 解码具体单变量
+    unit: 预报量单位，默认为mm
+    """
+    import scipy.io
+    if not os.path.exists(filename):
+        print("Grads file not EXISTs")
+        return ()
+
+    sav = scipy.io.readsav(filename)
+    ## 读取各维度数据信息
+    if dt is None:
+        dim_time = [jd2ce(sav['datastruct']['inittime'][0])]
+    else:
+        dim_time = [dt]
+    data = np.squeeze(np.array(sav['datastruct']['DATA'][0]))
+    dim_lon = np.array(sav['datastruct']['LON'][0], dtype=np.float64)
+    dim_lat = np.array(sav['datastruct']['LAT'][0], dtype=np.float64)
+    dim_ens = [fn.decode('utf-8') for fn in sav['datastruct']['memname'][0]]  # 前缀为‘b’为btyes类型。用decode转为str类型
+    dim_dtime = np.array(sav['datastruct']['fhour'][0], dtype=np.int32)
+    dim_level = np.array(sav['datastruct']['lev'][0], dtype=np.float64)
+    nens = len(dim_ens)
+    ntime = len(dim_time)
+    ndtime = len(dim_dtime)
+    nlevel = len(dim_level)
+    nlon = len(dim_lon)
+    nlat = len(dim_lat)
+    if var is not None:
+        dim_var = [fn.decode('utf-8') for fn in np.squeeze(np.array(sav['datastruct']['varname'])).tolist().tolist()]
+        try:
+            index = dim_var.index(var)
+            data = data[:, :, index, :, :]
+        except Exception as err:
+            print(err)
+            return None
+            ## 转为meteva的xarray格式
+    data.shape = nens, ndtime, ntime, nlevel, nlat, nlon
+    grd_ens = xr.DataArray(data
+                           , coords=[dim_ens, dim_dtime, dim_time, dim_level, dim_lat, dim_lon]
+                           , dims=['member', 'dtime', 'time', 'level', 'lat', 'lon'])
+    grd_ens.attrs["units"] = unit
+    grd_ens.name = 'data0'
+    grd_ens1 = grd_ens.transpose('member', 'level', 'time', 'dtime', 'lat', 'lon')
+    return grd_ens1
