@@ -12,7 +12,7 @@ import numpy as np
 def center_distance(grd1,grd2):
     lon1,lat1 = center_of_mass(grd1)
     lon2,lat2 = center_of_mass(grd2)
-    dis  = meteva.base.math_tools.earth_surface_dis(lon1,lat1,lon2,lat2)
+    dis  = meteva.base.math_tools.distance_on_earth_surface(lon1,lat1,lon2,lat2)
     return dis
 
 def center_of_mass(grd):
@@ -94,11 +94,10 @@ def sal(look):
     DomR_fo = np.mean(grd_fo.values)   #计算整场降水的平均值
     DomR_ob = np.mean(grd_ob.values)   #计算整场降水的平均值
     A = 2 * (DomR_fo - DomR_ob)/(DomR_fo + DomR_ob)  #返回内容A
-
-    dmax = meteva.base.math_tools.earth_surface_dis(grid0.slon,grid0.slat,grid0.elon,grid0.elat)  #计算网格对角线的长度
+    dmax = meteva.base.math_tools.distance_on_earth_surface(grid0.slon,grid0.slat,grid0.elon,grid0.elat)  #计算网格对角线的长度
     cen_ob_lon,cen_ob_lat = center_of_mass(tmp['grd_ob'])   #计算观测场的整场质心
     cen_fo_lon,cen_fo_lat = center_of_mass(tmp['grd_fo'])   #计算预报场的整场质心
-    dis_between_centers = meteva.base.math_tools.earth_surface_dis(cen_ob_lon,cen_ob_lat,cen_fo_lon,cen_fo_lat)  # 计算观测预报整场质心间距离
+    dis_between_centers = meteva.base.math_tools.distance_on_earth_surface(cen_ob_lon,cen_ob_lat,cen_fo_lon,cen_fo_lat)  # 计算观测预报整场质心间距离
     L1 = dis_between_centers/dmax         #返回内容L1
 
     #计算各目标的质量，平均值，最大值，质心位置
@@ -108,13 +107,13 @@ def sal(look):
     #计算观测的目标质心距离观测的整场质心的距离
     center_distance_label_to_grd_ob = np.zeros(len(lon_c_ob))
     for i in range(len(lon_c_ob)):
-        dis1 = meteva.base.math_tools.earth_surface_dis(lon_c_ob[i], lat_c_ob[i],cen_ob_lon,cen_ob_lat)
+        dis1 = meteva.base.math_tools.distance_on_earth_surface(lon_c_ob[i], lat_c_ob[i],cen_ob_lon,cen_ob_lat)
         center_distance_label_to_grd_ob[i] = dis1
 
     #计算预报的目标质心距离观测的整场质心的距离
     center_distance_label_to_grd_fo  = np.zeros(len(lon_c_fo))
     for i in range(len(lon_c_fo)):
-        dis1 = meteva.base.math_tools.earth_surface_dis(lon_c_fo[i], lat_c_fo[i],cen_fo_lon,cen_fo_lat)
+        dis1 = meteva.base.math_tools.distance_on_earth_surface(lon_c_fo[i], lat_c_fo[i],cen_fo_lon,cen_fo_lat)
         center_distance_label_to_grd_fo[i] = dis1
 
     mass_sum_ob = np.sum(mass_ob)  # 观测目标的质量总和
