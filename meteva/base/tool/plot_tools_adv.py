@@ -797,3 +797,46 @@ def add_cyclone_trace(ax,sta_cyclone_trace,size = 0.2,linewidth = 1,title = None
             ax.fill(lon_list,lat_list,c = "white",zorder = 30)
     ax.set_title(title,fontsize =title_fontsize)
     return
+
+
+def add_lines(ax,graphy,cent = None,color = "k",linestyle = "-",linewidths = None,title = None,title_fontsize = 8):
+
+    slon = ax.transLimits._boxin.x0
+    elon = ax.transLimits._boxin.x1
+    slat = ax.transLimits._boxin.y0
+    elat = ax.transLimits._boxin.y1
+
+    rlon = elon - slon
+    rlat = elat - slat
+    fig = plt.gcf()
+    map_width = ax.bbox.width / fig.dpi
+
+    if linewidths is None:
+        linewidths = rlon *  0.015/ map_width
+
+    if isinstance(graphy,dict):
+        features = graphy["features"]
+        for value in features.values():
+            line = value["axes"]
+            point = np.array(line["point"])
+            ax.plot(point[:, 0], point[:, 1], color, linewidth=linewidths,linestyle=linestyle)
+    else:
+        df_list = meteva.base.split(graphy,used_coords=["level","time","dtime","id"])
+        for df in df_list:
+            lon = df["lon"].values
+            lat = df["lat"].values
+            ax.plot(lon,lat, color, linewidth=linewidths,linestyle = linestyle)
+
+            if cent is not None:
+                id = df["id"].values[0]
+                level = df["level"].values[0]
+                time = df["time"].values[0]
+                dtime = df["dtime"].values[0]
+                cent1 = meb.sele_by_para(cent,level = level,time = time,dtime = dtime,id = id)
+
+
+
+    ax.set_xlim(slon,elon)
+    ax.set_ylim(slat,elat)
+    ax.set_title(title,fontsize =title_fontsize)
+    return
