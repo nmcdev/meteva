@@ -1066,6 +1066,10 @@ def tmmsss_merge(tmmsss0, tmmsss1):
     :param tmmsss1: 长度6的一维数组，分别记录了（count,mx,my,sxx,syy,sxy）
     :return: 长度6的一维数组，分别记录了（count,mx,my,sxx,syy,sxy）
     '''
+    if np.isnan(tmmsss0[0]):
+        return tmmsss1
+    elif np.isnan(tmmsss1[0]):
+        return tmmsss0
     tmmsss_array_list = []
     tmmsss0_shape = list(tmmsss0.shape)
     tmmsss1_shape = list(tmmsss1.shape)
