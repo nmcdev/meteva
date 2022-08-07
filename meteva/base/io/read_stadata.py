@@ -27,6 +27,9 @@ def read_station(filename,keep_alt = False,show = False):
     if not os.path.exists(filename):
         print(filename+"文件不存在")
         return None
+    elif os.path.isdir(filename):
+        print(filename+"是文件夹而不是文件")
+        return None
     else:
         encoding,_ = meteva.base.io.get_encoding_of_file(filename,read_rows=1)
         if encoding is None:
@@ -83,6 +86,9 @@ def read_sta_alt_from_micaps3(filename, station=None, drop_same_id=True,show = F
     #print(os.path.exists(filename))
     if not os.path.exists(filename):
         print(filename+"文件不存在")
+        return None
+    elif os.path.isdir(filename):
+        print(filename+"是文件夹而不是文件")
         return None
     else:
         encoding, _ = meteva.base.io.get_encoding_of_file(filename,read_rows=1)
@@ -171,6 +177,12 @@ def read_stadata_from_micaps3(filename, station=None,  level=None,time=None, dti
     '''
     if not os.path.exists(filename):
         print(filename+"文件不存在")
+        return None
+    elif os.path.isdir(filename):
+        print(filename+"是文件夹而不是文件")
+        return None
+    elif os.path.isdir(filename):
+        print(filename+"是文件夹而不是文件")
         return None
     else:
         encoding, _ = meteva.base.io.get_encoding_of_file(filename,read_rows=1)
@@ -261,8 +273,13 @@ def read_stadata_from_csv(filename, columns, member_list,skiprows=0,level = None
     :param drop_same_id: 是否要删除相同id的行  默认为True
     :return:返回带有'level','time','dtime','id','lon','lat','alt','data0'列的dataframe站点信息。
     """
-
-    if os.path.exists(filename):
+    if not os.path.exists(filename):
+        print(filename+"文件不存在")
+        return None
+    elif os.path.isdir(filename):
+        print(filename+"是文件夹而不是文件")
+        return None
+    else:
         encoding,_ = meteva.base.io.get_encoding_of_file(filename,read_rows=skiprows)
         if encoding is None:
             print("文件编码格式不识别")
@@ -336,9 +353,7 @@ def read_stadata_from_csv(filename, columns, member_list,skiprows=0,level = None
                 print(exstr)
             print(filename+"文件格式不能识别。可能原因：文件未按pandas能够识别的csv格式存储")
             return None
-    else:
-        print(filename + " not exist")
-        return None
+
 
 
 def read_stadata_from_sevp(filename, element_id,level=None,time=None,data_name = "data0",show = False):
@@ -353,6 +368,9 @@ def read_stadata_from_sevp(filename, element_id,level=None,time=None,data_name =
 
     if not os.path.exists(filename):
         print(filename+"文件不存在")
+        return None
+    elif os.path.isdir(filename):
+        print(filename+"是文件夹而不是文件")
         return None
     else:
         encoding,lines = meteva.base.io.get_encoding_of_file(filename,read_rows=6)
@@ -381,10 +399,12 @@ def read_stadata_from_sevp(filename, element_id,level=None,time=None,data_name =
             while nline< num_all:
                 str1 = str_lines[nline][:-1] +" "
                 strs = str1.split()
-                if(len(strs)>5):
+                strs_len = len(strs)
+                if(strs_len>5):
                     next_num = int(strs[4])
+                    if strs_len > 6:
+                        str1 = strs[0]+" " + strs[1] +" "+ strs[2] +" "+ strs[3] +" "+ strs[4] +" "+ strs[5] + " "
                     for i in range(1,next_num+1):
-                        #print(len(str_lines[nline+i].split()))
                         e_str = str1 + str_lines[nline+i]
                         str_lines_list.append(e_str)
                     nline += next_num+1
@@ -418,6 +438,9 @@ def read_stadata_from_micaps1_2_8(filename, column, station=None, level=None,tim
     '''
     if not os.path.exists(filename):
         print(filename+"文件不存在")
+        return None
+    elif os.path.isdir(filename):
+        print(filename+"是文件夹而不是文件")
         return None
     else:
         encoding,heads = meteva.base.io.get_encoding_of_file(filename,read_rows=2)
@@ -491,7 +514,10 @@ def read_stadata_from_micaps41_lightning(filename, column, level=0,data_name='da
         :return:
         '''
     if not os.path.exists(filename):
-        print(filename + "文件不存在")
+        print(filename+"文件不存在")
+        return None
+    elif os.path.isdir(filename):
+        print(filename+"是文件夹而不是文件")
         return None
     else:
         encoding, heads = meteva.base.io.get_encoding_of_file(filename, read_rows=2)
@@ -856,7 +882,13 @@ def read_stadata_from_gdsfile(filename,element_id = None,station = None, level=N
     if element_id is not None:
         element_id_str0 = str(element_id)
 
-    if os.path.exists(filename):
+    if not os.path.exists(filename):
+        print(filename+"文件不存在")
+        return None
+    elif os.path.isdir(filename):
+        print(filename+"是文件夹而不是文件")
+        return None
+    else:
         try:
             element_id_str0 = str(element_id)
             file = open(filename,"rb")
@@ -1055,8 +1087,7 @@ def read_stadata_from_gdsfile(filename,element_id = None,station = None, level=N
                 print(exstr)
             print(filename + "数据读取失败")
             return None
-    else:
-        print(filename + " not exist")
+
 
 def read_stawind_from_gds(filename,station = None, level=None,time=None, dtime=None,data_name = "",show = True):
 
@@ -1259,7 +1290,13 @@ def read_stawind_from_gds(filename,station = None, level=None,time=None, dtime=N
         return None
 
 def read_stawind_from_gdsfile(filename,station = None, level=None,time=None, dtime=None,data_name = "",show = False):
-    if os.path.exists(filename):
+    if not os.path.exists(filename):
+        print(filename+"文件不存在")
+        return None
+    elif os.path.isdir(filename):
+        print(filename+"是文件夹而不是文件")
+        return None
+    else :
         try:
             file = open(filename,"rb")
             byteArray = file.read()
@@ -1433,9 +1470,7 @@ def read_stawind_from_gdsfile(filename,station = None, level=None,time=None, dti
                 print(exstr)
             print(filename + "数据读取失败")
             return None
-    else:
-        print(filename +" not exists")
-        return None
+
 
 def read_stadata_from_gds_griddata(filename,station,level = None,time =None,dtime = None,data_name = "data0",show = False):
     # ip 为字符串形式，示例 “10.20.30.40”
@@ -1603,6 +1638,9 @@ def read_stadata_from_micaps16(filename,level = None,time= None,dtime = None,dat
     if not os.path.exists(filename):
         print(filename+"文件不存在")
         return None
+    elif os.path.isdir(filename):
+        print(filename+"是文件夹而不是文件")
+        return None
     else:
         encoding,_ = meteva.base.io.get_encoding_of_file(filename,read_rows=1)
         if encoding is None:
@@ -1656,7 +1694,15 @@ def read_stadata_from_micaps16(filename,level = None,time= None,dtime = None,dat
 
 
 def read_stadata_from_gds_griddata_file(filename,station,level = None,time = None,dtime = None,data_name = "data0",show = False):
-    if os.path.exists(filename):
+
+    if not os.path.exists(filename):
+        print(filename+"文件不存在")
+        return None
+    elif os.path.isdir(filename):
+        print(filename+"是文件夹而不是文件")
+        return None
+
+    else:
         try:
             file = open(filename,"rb")
             position = file.seek(106)
@@ -1720,12 +1766,17 @@ def read_stadata_from_gds_griddata_file(filename,station,level = None,time = Non
                 print(exstr)
             print(filename+"文件格式不能识别")
             return None
-    else:
-        print(filename + " not exist")
-        return None
+
 
 def read_stawind_from_gds_gridwind_file(filename,station,level = None,time = None,dtime = None,data_name = "",show = False):
-    if os.path.exists(filename):
+
+    if not os.path.exists(filename):
+        print(filename+"文件不存在")
+        return None
+    elif os.path.isdir(filename):
+        print(filename+"是文件夹而不是文件")
+        return None
+    else:
         try:
             file = open(filename, "rb")
             position = file.seek(106)
@@ -1808,9 +1859,6 @@ def read_stawind_from_gds_gridwind_file(filename,station,level = None,time = Non
                 print(exstr)
             print(filename + "文件格式不能识别")
             return None
-    else:
-        print(filename + " not exist")
-        return None
 
 
 def read_stadata_from_cmadaas(dataCode,element,time,station = None,level=0,dtime=0,data_name= None,show = False):
