@@ -1021,7 +1021,7 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
                 save_path=None,show = False,dpi = 300,title = None,
                 sup_fontsize = 10,
                 height = None,width = None,
-                min_spot_value = 0,grid = False,ncol = None,point_size = None,sup_title = None,add_minmap = None,print_max = None,print_min = None,
+                min_spot_value = 0,grid = False,ncol = None,point_size = None,sup_title = None,add_minmap = None,print_max = 0,print_min = 0,
                      title_in_ax = False):
 
     sta0 = sta0_list[0]
