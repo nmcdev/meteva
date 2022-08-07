@@ -317,6 +317,10 @@ def distance_on_earth_surface(lon1,lat1,lon2,lat2):
     b2 = lat2 * math.pi/180
 
     dis = meteva.base.ER * np.arccos(np.cos(b1)*np.cos(b2)*np.cos(a1-a2) + np.sin(b1)*np.sin(b2))
-    dis[np.isnan(dis)] =0
 
+    if isinstance(dis,np.ndarray):
+        dis[np.isnan(dis)] =0
+    else:
+        if np.isnan(dis):
+            dis = 0
     return dis
