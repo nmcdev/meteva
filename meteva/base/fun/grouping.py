@@ -5,7 +5,7 @@ import numpy as np
 import copy
 
 
-def group(sta_ob_and_fos,g = None,gll = None):
+def group(sta_ob_and_fos,g = None,gll = None,drop_g_column = False):
     valid_group_list_list = []
     sta_ob_and_fos_list = []
     if g is None:
@@ -49,12 +49,17 @@ def group(sta_ob_and_fos,g = None,gll = None):
                 keys = grouped_dict.keys()
                 for key in keys:
                     valid_group_list_list.append([key])
-                    sta_ob_and_fos_list.append(grouped_dict[key])
+                    sta = grouped_dict[key]
+                    if drop_g_column:
+                        sta = sta.drop(labels=g, axis=1)
+                    sta_ob_and_fos_list.append(sta)
             else:
                 for group_list in group_list_list:
                     sta = meteva.base.in_one_column_value_list(sta_ob_and_fos,g, group_list)
                     if len(sta.index) != 0:
                         valid_group_list_list.append(group_list)
+                        if drop_g_column:
+                            sta = sta.drop(labels=g, axis=1)
                         sta_ob_and_fos_list.append(sta)
 
         elif g in data_names_range:
@@ -106,6 +111,7 @@ def group(sta_ob_and_fos,g = None,gll = None):
             if group_list_list is None:
                 grouped_dict = dict(list(sta_ob_and_fos.groupby(g)))
                 keys = grouped_dict.keys()
+
                 for key in keys:
                     valid_group_list_list.append([key])
                     sta_ob_and_fos_list.append(grouped_dict[key])
@@ -115,6 +121,7 @@ def group(sta_ob_and_fos,g = None,gll = None):
                     if len(sta.index) !=0:
                         valid_group_list_list.append(group_list)
                         sta_ob_and_fos_list.append(sta)
+
 
         elif g == "time_range":
             if group_list_list is None:
@@ -557,7 +564,7 @@ def group(sta_ob_and_fos,g = None,gll = None):
                 valid_group_list = valid_group_list_list[0]
             else:
                 valid_group_list = valid_group_list_list
-    #print(valid_group_list)
+
     return sta_ob_and_fos_list,valid_group_list
 
 
