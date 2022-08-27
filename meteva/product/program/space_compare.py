@@ -2713,9 +2713,11 @@ def temper_sg(sta_ob,grd_fo,save_path = None,show = False,dpi = 200,add_county_l
     #clevs_temp, cmap_temp = meteva.base.tool.color_tools.get_clev_and_cmap_by_element_name("temp")
 
     if ob_fo_max > 120:
-        cmap_temp,clevs_temp= meteva.base.tool.color_tools.clev_cmap_temper_2m_k()
+        cmap_temp,clevs_temp= meteva.base.tool.color_tools.def_cmap_clevs(cmap=meteva.base.cmaps.temp_2m)
     else:
-        cmap_temp,clevs_temp = meteva.base.tool.color_tools.get_cmap_and_clevs_by_element_name("temp")
+        cmap_temp, clevs_temp = meteva.base.tool.color_tools.def_cmap_clevs(cmap=meteva.base.cmaps.temp_2m)
+
+    #print(clevs_temp)
 
     cmap, clevs = meteva.base.tool.color_tools.get_part_cmap_and_clevs(cmap_temp,clevs_temp,ob_fo_max,ob_fo_min)
 
