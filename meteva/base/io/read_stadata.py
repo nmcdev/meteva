@@ -1861,15 +1861,16 @@ def read_stawind_from_gds_gridwind_file(filename,station,level = None,time = Non
             return None
 
 
-def read_stadata_from_cmadaas(dataCode,element,time,station = None,level=0,dtime=0,data_name= None,show = False):
+def read_stadata_from_cmadaas(dataCode,element,time,station = None,level=0,dtime=0,data_name= None,show = False,id_type = "Station_Id_D"):
     ## stations
     qparams = {'interfaceId': 'getSurfEleByTime',
                'dataCode': dataCode,
-               'elements': 'Datetime,Station_Id_D,Lat,Lon,'+element,
+               'elements': 'Datetime,' + id_type+',Lat,Lon,'+element,
                }  ##字典规定接口名称，数据代码，下载要素代码。
     # 数据部分： SURF_CHN_MUL_HOR_N 数据为全国基准站(2400多站点)逐小时地面要素
     # 接口部分： getSurfEleByTime 接口为按时间提取地面要素
     # 要素部分： PRE_24h 为地面降水，其他包括TEM、TEM_Max、RHU、WIN_D_Avg_10mi、WIN_S_Avg_10mi等，可自己选择
+    time = meteva.base.all_type_time_to_datetime(time)
     time_str = time.strftime("%Y%m%d%H%M")
     userID = meteva.base.cmadaas_set[2]
     pwd = meteva.base.cmadaas_set[3]
