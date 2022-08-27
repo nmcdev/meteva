@@ -254,6 +254,15 @@ def add_on_level_time_dtime_id(sta1,sta2,how = "left",default = None):
 
 
 #将两个站点dataframe相乘
+
+def divide_on_level_time_dtime_id(sta1,sta2,how = "left",default = None):
+
+    sta2_ = copy.deepcopy(sta2)
+    sta2_.iloc[:,6:] = 1/ sta2.iloc[:,6:]
+    sta_div = mutiply_on_level_time_dtime_id(sta1,sta2_)
+    return sta_div
+
+
 def mutiply_on_level_time_dtime_id(sta1,sta2,how = "left",default = None):
     if sta1 is None:
         return sta2
@@ -750,20 +759,6 @@ def reset_value_as_IV(sta,iv_value):
         sta1.loc[sta1.loc[:,name] == iv_value,name] = meteva.base.IV
     return sta1
 
-def move_fo_time(data,dtime,keep_minus_dtime = True):
-    if isinstance(data, pd.DataFrame):
-        sta1 = data.copy()
-        sta1["time"] = data["time"] + dtime* np.timedelta64(1, 'h')
-        sta1["dtime"] = data["dtime"] - dtime
-        if not keep_minus_dtime: sta1 = meteva.base.between_dtime_range(sta1,0,10000)
-        return sta1
-    else:
-        grd1 = data.copy()
-        grd1.coords["time"]= grd1.coords["time"].values[:] + dtime* np.timedelta64(1, 'h')
-
-        grd1.coords["dtime"] =grd1.coords["dtime"].values[:] -  dtime
-        if not keep_minus_dtime:grd1 = meteva.base.between_dtime_range(grd1,0,10000)
-        return grd1
 
 def get_ob_from_combined_data(sta_all):
     data_names = meteva.base.get_stadata_names(sta_all)
