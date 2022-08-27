@@ -15,7 +15,7 @@ import bz2
 from .CMADaasAccess import CMADaasAccess
 from .httpclient import get_http_result_cimiss
 import json
-
+import warnings
 
 def grid_ragular(slon,dlon,elon,slat,dlat,elat):
     """
@@ -460,7 +460,7 @@ def read_griddata_from_nc(filename,grid = None,
         return None
 
 
-def print_grib_file_info(filename):
+def print_grib_file_info_old1(filename):
     try:
         ds1 = xr.open_dataset(filename, engine="cfgrib", backend_kwargs={"indexpath": ""})
         print(filename + "中只有一种leve_type，\n请根据以下数据内容信息，确认其中的level维度名称")
@@ -491,6 +491,7 @@ def print_grib_file_info(filename):
 
 
 def print_grib_file_info_old(filename,level_type = None,level = None,filter_by_keys = {}):
+    warnings.filterwarnings("ignore")
     try:
         if level_type is None and len(filter_by_keys.keys()) ==0:
             try:
@@ -521,6 +522,7 @@ def print_grib_file_info_old(filename,level_type = None,level = None,filter_by_k
                 print(para_list +"后重试")
         else:
             #filter_by_keys = {}
+            print(filter_by_keys)
             if level_type is not None:
                 filter_by_keys['typeOfLevel'] = level_type.strip()
 
@@ -529,12 +531,14 @@ def print_grib_file_info_old(filename,level_type = None,level = None,filter_by_k
             ds0 = xr.open_dataset(filename, engine="cfgrib", backend_kwargs={'filter_by_keys': filter_by_keys,"indexpath": ""})
             print(ds0)
             ds0.close()
-    except:
-        import pygrib
-        grbs = pygrib.open(filename)
-        for grb in grbs:
-            print(str(grb))
-
+    except :
+        exstr = traceback.format_exc()
+        strs = exstr.split("\n")
+        print(exstr)
+        # import pygrib
+        # grbs = pygrib.open(filename)
+        # for grb in grbs:
+        #     print(str(grb))
 
 
 
@@ -1440,6 +1444,8 @@ def read_griddata_from_cmadaas(dataCode,element,level_type,level,time,dtime = No
 
 
     #print(qparams)
+    time = meteva.base.all_type_time_to_datetime(time)
+
     url = CMADaasAccess.combine_url_from_para(qparams,time=time, time_name='time',show_url = show)
     grd = None
     try:
@@ -1453,6 +1459,8 @@ def read_griddata_from_cmadaas(dataCode,element,level_type,level,time,dtime = No
             print(exstr)
 
     if grd is not None:
+        meteva.base.reset(grd)
+        meteva.base.set_griddata_coords(grd,level_list=[level])
         if data_name is None:
             meteva.base.set_griddata_coords(grd,member_list=[dataCode])
         else:
@@ -1897,8 +1905,6 @@ def read_griddata_from_swan_d131(filename,grid = None,level = None,time = None,d
 
 
 
-
-
 def jd2ce(JDN):
     import math
     ## 儒略时间（julia_date）转为datetime.
@@ -1981,3 +1987,6 @@ def read_griddata_from_ensemble_sav(filename, dt=None, unit='mm', var=None):  ##
     grd_ens.name = 'data0'
     grd_ens1 = grd_ens.transpose('member', 'level', 'time', 'dtime', 'lat', 'lon')
     return grd_ens1
+
+
+
