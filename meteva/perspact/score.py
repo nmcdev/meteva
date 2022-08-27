@@ -4,9 +4,11 @@ import pandas as pd
 import xarray as xr
 import datetime
 import collections
+import copy
+
 
 # 实现任意纬度分类的函数
-def score_df(df, method, s = None,g=None,gll_dict = None,plot = None,**kwargs):
+def score_df(df, method, s = None,g=None,gll_dict = None,plot = None,first = True,**kwargs):
     '''
 
     :param df:
@@ -15,6 +17,7 @@ def score_df(df, method, s = None,g=None,gll_dict = None,plot = None,**kwargs):
     :return:
     '''
     method_name = method.__name__
+
     method_mid = meteva.perspact.get_middle_method(method)
     column_list = meteva.perspact.get_middle_columns(method_mid)
     score_method_with_mid = meteva.perspact.get_score_method_with_mid(method)
@@ -25,7 +28,28 @@ def score_df(df, method, s = None,g=None,gll_dict = None,plot = None,**kwargs):
         print("input pandas.DataFrame must contains columns in list of "+ str(column_list) + " for mem." + method_name + " caculation")
         return None,None
 
+    if s is not None:
+        if "member" in s.keys():
+            df0  = df0.loc[df0['member'].isin(s["member"])]
+            s.pop("member")
     df1 = meteva.base.sele_by_dict(df0, s)
+
+    if method_name.find("ob_fo_") >= 0 and first:
+        df_ob = copy.deepcopy(df1)
+        df_ob["member"] = "OBS"
+        if method_mid.__name__ == "hfmc":
+            df_ob["H"] = df1["H"] + df1["M"]
+            df_ob["F"] = 0
+            df_ob["M"] = 0
+            df_ob["C"] = df1["F"] + df1["C"]
+        df_ob.drop_duplicates(subset=None, keep='first', inplace=True)
+        df1 = pd.concat([df_ob,df1],axis=0)
+        if g is None:
+            g = ["member"]
+
+        if "member" not in g:
+            print("统计"+method_name+"时，参数g中必须包含“member")
+            return
 
     if g is None:
         g = [g]
@@ -115,8 +139,10 @@ def score_df(df, method, s = None,g=None,gll_dict = None,plot = None,**kwargs):
                 else:
                     score2 = score1 * 0 + meteva.base.IV
                 score_list_with_iv.append(score2)
-
         score_array = np.array(score_list_with_iv)
+
+        if method_name.find("ob_fo_")>=0:
+             score_array = score_array[...,1,0]
 
         if plot is not None:meteva.base.plot_tools.plot_bar(plot,score_array,name_list_dict=gll_dict,**kwargs)
 
@@ -131,10 +157,13 @@ def score_df(df, method, s = None,g=None,gll_dict = None,plot = None,**kwargs):
         score_all_list = []
         score_array = None
         for i in range(len(gll)):
-            score_array,_ = score_df(df1_list[i], method,g = g_left, gll_dict = gll_dict,plot = None)
+            score_array,gll_dict_new = score_df(df1_list[i], method,g = g_left, gll_dict = gll_dict,plot = None,first = False)
             score_all_list.append(score_array)
             gll_str = str(gll[i])
             gll_i_dict[gll_str] = i
+            # if "member" in gll_dict.keys():
+            #     if "OBS" not in gll_dict["member"]:
+            #         gll_dict["member"] = gll_dict_new["member"]  # 为ob_fo_ 函数增加OBS列
 
         score_list_with_iv = []
         for j in range(len(gll0)):
@@ -565,22 +594,25 @@ def group(ds0,g = None,gll = None):
                 return ds_list, gll
 
 
-def score_ds(ds,method,s = None,g = None,gll_dict = None,plot = None,**kwargs):
-
+def score_ds(ds,method,s = None,g = None,gll_dict = None,plot = None,first = True,**kwargs):
     method_name = method.__name__
+    if method_name.find("ob_fo_") >= 0 and first:
+        df1 = meteva.perspact.tran_middle_ds_to_df(ds)
+        return score_df(df1,method,s = s,g = g,gll_dict=gll_dict,plot=plot,first = first,**kwargs)
+
     method_mid = meteva.perspact.get_middle_method(method)
     value_list = meteva.perspact.get_middle_columns(method_mid)
     score_method_with_mid = meteva.perspact.get_score_method_with_mid(method)
 
     for value in value_list:
         if not value in ds:
-
             print("input xarray.DataSet must contains columns in list of " + str(
             value_list) + " for mem." + method_name + " caculation")
             return None, None
 
 
     ds1 = sele_by_dict(ds, s)
+
     if g is None:
         g = [g]
         gll_dict = None
@@ -705,8 +737,91 @@ def score_ds(ds,method,s = None,g = None,gll_dict = None,plot = None,**kwargs):
 
 
 
-if __name__ =="__main__":
 
+def score_xy_df(df_mid,method,s = None,g = None,gll_dict = None,save_path = None,**kwargs):
+
+    g_list = []
+    if isinstance(g,list):
+        if len(g)>1:
+            print("score_xy_df函数暂时不支持多维分类功能")
+            return
+    else:
+        if g is not None:
+            g_list = [g]
+    g_list.append("id")
+
+    if s is not None:
+        if "member" in s.keys():
+            df_mid  = df_mid.loc[df_mid['member'].isin(s["member"])]
+            s.pop("member")
+    df_mid = meteva.base.sele_by_dict(df_mid, s)
+    score_array,g_dict =score_df(df_mid,method,g = g_list,gll_dict = gll_dict)
+    grd_list = []
+
+    region_ids = g_dict["id"]
+    max_id = np.max(region_ids)
+    min_id = np.min(region_ids)
+
+    max_ = max(max_id,abs(min_id))
+    if max_ <1000000:
+        lat = np.round(region_ids  / 1000)
+        lon = region_ids - lat * 1000
+    else:
+        lat = np.round(region_ids / 10000)
+        lon = region_ids - lat * 10000
+        lon /=10
+        lat /=10
+    score_grd = None
+    if len(g_list) == 1:
+        dict1 = {"level":df_mid["level"].values[0],"time":df_mid["time"].values[0],"dtime":df_mid["dtime"].values[0],
+            "id": region_ids, "lon": lon, "lat": lat,  "score": score_array}
+        df = pd.DataFrame(dict1)
+        score_sta = meteva.base.sta_data(df)
+        score_grd = meteva.base.trans_sta_to_grd(score_sta)
+        meteva.base.plot_tools.contourf_2d_grid(score_grd, save_path,**kwargs)
+    elif len(g_list) == 2:
+        gnames0 = g_dict[g_list[0]]
+        ng0 = len(gnames0)
+        for i in range(ng0):
+            name = gnames0[i]
+            value = score_array[i,:]
+            if g_list[0] =="member":
+                df = pd.DataFrame({"level":df_mid["level"].values[0],"time":df_mid["time"].values[0],"dtime":df_mid["dtime"].values[0],"id":region_ids,
+                                   "lon": lon, "lat": lat, name: value})
+            else:
+                dict1 = {"id":region_ids,"lon":lon,"lat":lat,g_list[0]:name,"score":value}
+                if "level" not in dict1:
+                    dict1["level"] = df_mid["level"].values[0]
+                if "time" not in dict1:
+                    dict1["time"] = df_mid["time"].values[0]
+                if "dtime" not in dict1:
+                    dict1["dtime"] = df_mid["dtime"].values[0]
+                df = pd.DataFrame(dict1)
+            score_sta = meteva.base.sta_data(df)
+            score_grd = meteva.base.trans_sta_to_grd(score_sta)
+            grd_list.append(score_grd)
+        score_grd = meteva.base.concat(grd_list)
+        title = score_grd.coords[g_list[0]].values.tolist()
+        kwargs["title"]  = title
+        meteva.base.plot_tools.contourf_2d_grid(score_grd,save_path,subplot=g_list[0],**kwargs)
+    return score_grd
+
+
+if __name__ =="__main__":
+    import pandas as pd
+    #path = r"O:\data\hdf\gongbao\wind3h_update12h_station2k\wind3h_update12h_station2k.h5"
+    path = r"H:/a.txt"
+    uv = pd.read_hdf(path)
+    uv = meteva.base.sele_by_para(uv,time_range = ["2022081408","2022081720"],dtime = [12,24,36,48])
+    uv = meteva.base.in_member_list(uv,member_list=[0,1,2,3,4,5],name_or_index="index")
+    #uv.to_hdf(r"H:\test_data\input\mps\wind.h5","df")
+
+    speed,_ = meteva.base.wind_to_speed_angle(uv)
+    df = meteva.perspact.middle_df_sta(speed,meteva.method.nasws_s)
+    score = meteva.perspact.score_df(df,meteva.method.acs,g = "member")
+    print(score)
+    score = meteva.product.score(speed,meteva.method.acs)
+    print(score)
     pass
 
 
