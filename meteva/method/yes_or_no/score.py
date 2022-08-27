@@ -4,6 +4,8 @@ from meteva.base import IV
 
 
 def ob_fo_hr_hfmc(hfmc_array):
+    if len(hfmc_array.shape) == 1:
+        hfmc_array = hfmc_array.reshape(1,1,4)
     hit = hfmc_array[...,0]
     fal = hfmc_array[...,1]
     mis = hfmc_array[...,2]
@@ -22,11 +24,11 @@ def ob_fo_hr_hfmc(hfmc_array):
 
 
 def ob_fo_hc_hfmc(hfmc_array):
+    if len(hfmc_array.shape) == 1:
+        hfmc_array = hfmc_array.reshape(1,1,4)
     hit = hfmc_array[...,0]
     fal = hfmc_array[...,1]
     mis = hfmc_array[...,2]
-    cn = hfmc_array[...,3]
-    total = hit+fal+mis+cn
     shape1 = list(hfmc_array.shape)
     if len(hfmc_array.shape) == 2:
         result = np.zeros((2,shape1[0]))
