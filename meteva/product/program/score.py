@@ -8,9 +8,7 @@ import numpy as np
 
 
 def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = None,plot = None,
-          vmax = None,vmin = None,bar_width = None,save_path = None,show = False,dpi = 300,title = "",excel_path = None,**kwargs):
-
-
+          vmax = None,vmin = None,bar_width = None,save_path = None,show = False,dpi = 300,title = "",excel_path = None,drop_g_column = False,**kwargs):
 
 
     if s is not None:
@@ -72,9 +70,12 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
             print(msg)
             return None,msg
 
-    sta_ob_and_fos_list,group_list_list1 = group(sta_ob_and_fos,g,gll)
+    sta_ob_and_fos_list,group_list_list1 = group(sta_ob_and_fos,g,gll,drop_g_column)
     group_num = len(sta_ob_and_fos_list)
-
+    if group_num ==0:
+        msg = "数据中不包含指定方式的分类结果"
+        print(msg)
+        return  None,msg
 
     data_name = meteva.base.get_stadata_names(sta_ob_and_fos_list[0])
     if method.__name__.find("ob_fo")>=0:
@@ -185,37 +186,48 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
         for i in range(group_num):
             sta = sta_ob_and_fos_list[i]
 
-            valid_index = [0]
             not_all_iv = [True]
+            if method.__name__.find("_uv") >= 0 or method.__name__.find("distance") >= 0:
+                col_step = 2
+                valid_index = [0,1]
+            else:
+                col_step = 1
+                valid_index = [0]
             if iv_in_fo:
                 len_ = len(sta.columns)
-                for nv in range(7,len_):
+                for nv in range(6+col_step,len_,col_step):
                     not_all_iv1 = np.any(sta.iloc[:,nv].values != meteva.base.IV)
                     not_all_iv.append(not_all_iv1)
                     if not_all_iv1:
                         valid_index.append(nv-6)
+                        if col_step == 2:valid_index.append(nv - 5)
+                #print(valid_index)
                 sta = meteva.base.in_member_list(sta,member_list=valid_index,name_or_index ="index")
                 sta = meteva.base.not_IV(sta)
+
             data_name = meteva.base.get_stadata_names(sta)
-            #if(len(sta.index) == 0):
-            #    result[i,:] = meteva.base.IV
-            #else:
-            if method.__name__.find("_uv")>=0:
-                u_ob = sta[data_name[0]].values
-                v_ob = sta[data_name[1]].values
-                u_fo = sta[data_name[2::2]].values.T
-                v_fo = sta[data_name[3::2]].values.T
-                result1 = method(u_ob,u_fo,v_ob,v_fo,**method_args)
-            elif method.__name__.find("distance")>=0:
-                x_ob = sta[data_name[0]].values
-                y_ob = sta[data_name[1]].values
-                x_fo = sta[data_name[2::2]].values.T
-                y_fo = sta[data_name[3::2]].values.T
-                result1 = method(x_ob,y_ob,x_fo,y_fo,**method_args)
+            if(len(sta.index) == 0):
+               result1 = np.zeros((fo_num,grade_num)).squeeze()
             else:
-                ob = sta[data_name[0]].values
-                fo = sta[data_name[1:]].values.T
-                result1 = method(ob,fo,**method_args)
+                if method.__name__.find("_uv")>=0:
+                    u_ob = sta[data_name[0]].values
+                    v_ob = sta[data_name[1]].values
+                    u_fo = sta[data_name[2::2]].values.T
+                    v_fo = sta[data_name[3::2]].values.T
+                    result1 = method(u_ob,u_fo,v_ob,v_fo,**method_args)
+                elif method.__name__.find("distance")>=0:
+                    x_ob = sta[data_name[0]].values
+                    y_ob = sta[data_name[1]].values
+                    x_fo = sta[data_name[2::2]].values.T
+                    y_fo = sta[data_name[3::2]].values.T
+                    result1 = method(x_ob,y_ob,x_fo,y_fo,**method_args)
+                else:
+                    ob = sta[data_name[0]].values
+                    fo = sta[data_name[1:]].values.T
+                    #if ob.size>0:
+                    result1 = method(ob,fo,**method_args)
+                    # else:
+                    #     result1= np.ones(fo_num) * meteva.base.IV
 
             #if len(result1.shape)==2: result1 = result1.squeeze()
             if iv_in_fo:
@@ -330,7 +342,7 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
 
 
 def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = None,plot = "scatter",save_dir = None,save_path = None,show = False,
-             add_county_line = False,map_extend= None,print_max=0,print_min=0,dpi = 300,title = None,sort_by = None,
+             add_county_line = False,map_extend= None,print_max=0,print_min=0,dpi = 300,title = None,sort_by = None,subplot = "member",ncol = None,
              **kwargs):
 
     if s is not None:
@@ -408,11 +420,10 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
     if save_path is not None:
         if isinstance(save_path, str):
             save_path = [save_path]
-        if "subplot" in kwargs.keys():
-            if kwargs["subplot"] == "member":
-                if g_num * grade_num != len(save_path):
-                    print("手动设置的save_path数目和要绘制的图形数目不一致")
-                    return
+        if "subplot" is not None:
+            if g_num * grade_num != len(save_path):
+                print("手动设置的save_path数目和要绘制的图形数目不一致")
+                return
         else:
             if fo_num * g_num * grade_num != len(save_path):
                 print("手动设置的save_path数目和要绘制的图形数目不一致")
@@ -429,7 +440,6 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
     plot_para_list = []
     if plot_mehod is not None:
         plot_para_list = plot_mehod.__code__.co_varnames
-
 
     for key in kwargs.keys():
         if key in method_para_list and key not in plot_para_list:
@@ -559,7 +569,7 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
                                                             title=title1_list, print_max=print_max,
                                                             print_min=print_min
                                                             , add_county_line=add_county_line,
-                                                             map_extend=map_extend, dpi=dpi,**plot_args)
+                                                             map_extend=map_extend, dpi=dpi,subplot = subplot,ncol = ncol,**plot_args)
                 if plot == "micaps":
                     meteva.base.put_stadata_to_micaps(sta_result1,layer_description=title1_list)
 
