@@ -2,6 +2,7 @@ import meteva
 import numpy as np
 import pandas as pd
 import copy
+import datetime
 #格点转换为站点
 def trans_grd_to_sta(grd):
     '''
@@ -146,3 +147,43 @@ def trans_contours_to_sta(m14,station,grade_list):
 
 
 
+def move_fo_time(data,dtime,keep_minus_dtime = True):
+    if isinstance(data, pd.DataFrame):
+        sta1 = data.copy()
+        sta1["time"] = data["time"] + dtime* np.timedelta64(1, 'h')
+        sta1["dtime"] = data["dtime"] - dtime
+        if not keep_minus_dtime: sta1 = meteva.base.between_dtime_range(sta1,0,10000)
+        return sta1
+    else:
+        grd1 = data.copy()
+        grd1.coords["time"]= grd1.coords["time"].values[:] + dtime* np.timedelta64(1, 'h')
+
+        grd1.coords["dtime"] =grd1.coords["dtime"].values[:] -  dtime
+        if not keep_minus_dtime:grd1 = meteva.base.between_dtime_range(grd1,0,10000)
+        return grd1
+
+def tran_ut_nature_local_time(sta):
+    '''
+    :param sta: 世界时站点数据
+    :return:  当地时站点数据
+    '''
+    sta_lt = copy.deepcopy(sta)
+    lon = copy.deepcopy(sta_lt["lon"].values)
+    lon[lon>180] -= 360
+    hour = np.round((lon/15)).astype(np.int)
+    sta_lt["time"] += hour * np.timedelta64(1, 'h')
+
+    return sta_lt
+
+def tran_ut_Administrative_local_time(sta,id_zone):
+    '''
+    :param sta: 世界时站点数据
+    :return:  当地时站点数据
+    '''
+
+    sta_zone = meteva.base.sta_data(id_zone)
+    sta_com = meteva.base.combine_expand_IV(sta,sta_zone)
+    sta_com["time"] += sta_com.iloc[:,-1] * np.timedelta64(1, 'h')
+    sta_com = sta_com.iloc[:,:-1]
+
+    return sta_com
