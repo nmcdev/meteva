@@ -530,6 +530,8 @@ def combine_on_bak_idandobTime1(sta_list):
     return intersection_of_data
 
 
+
+
 def combine_expand_IV(sta,sta_with_IV):
     '''
         将观测
@@ -538,6 +540,7 @@ def combine_expand_IV(sta,sta_with_IV):
         :return:
         '''
 
+    #sta_with_IV1 = meteva.base.sta_data(sta_with_IV)
     sta_with_IV1 = copy.deepcopy(sta_with_IV)
     columns = ["level","time","dtime","id"]
     for i in range(4):
@@ -555,6 +558,10 @@ def combine_expand_IV(sta,sta_with_IV):
     #sta_with_IV1 = sta_with_IV1.dropna()
     sta_combine = combine_on_level_time_dtime_id(sta, sta_with_IV1)
     return sta_combine
+
+def combine_expand(sta,sta_type):
+    sta_type1 = meteva.base.sta_data(sta_type)
+    return combine_expand_IV(sta,sta_type1)
 
 def get_inner_grid(grid0,grid1,used_coords = "xy"):
     if used_coords =="xy":
