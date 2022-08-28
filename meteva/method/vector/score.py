@@ -161,7 +161,7 @@ def rmse_angle_uv(u_ob, u_fo, v_ob, v_fo,ignore_breeze = False):
     return root_mean_abs_error
 
 
-def scd_nasd(nasd_array):
+def scd_nas(nasd_array):
     '''
     基于中间结果计算风向预报评分
     :param nasd_array: 输入nasd函数统计得到的样本数、风向正确样本数、风向评分（分子部分）
@@ -172,7 +172,7 @@ def scd_nasd(nasd_array):
     scd = sc/total
     return scd
 
-def acd_nasd(nasd_array,unit = 1):
+def acd_nas(nasd_array,unit = 1):
     '''
     基于中间结果计算风向预报准确率，
     :param nasd_array: 输入nasd函数统计得到的样本数、风向正确样本数、风向评分（分子部分）
@@ -259,7 +259,7 @@ def scd(d_ob,d_fo,s_ob = None,s_fo = None, ignore_breeze = False):
     :return: 风向预报评分，如果d_fo和d_ob的shape一致，说明只有一家预报，则返回实数，否则说明是在同时检验多家预报，返回结果为一维数组。
     '''
     nasd_array = nas_d(d_ob,d_fo,s_ob = s_ob,s_fo = s_fo,ignore_breeze= ignore_breeze)
-    scd0 = scd_nasd(nasd_array)
+    scd0 = scd_nas(nasd_array)
     return scd0
 
 def acd(d_ob,d_fo,s_ob = None,s_fo = None, ignore_breeze = False,unit = 1):
@@ -275,7 +275,7 @@ def acd(d_ob,d_fo,s_ob = None,s_fo = None, ignore_breeze = False,unit = 1):
     :return: 风向预报准确率，如果d_fo和d_ob的shape一致，说明只有一家预报，则返回实数，否则说明是在同时检验多家预报，返回结果为一维数组。
     '''
     nasd_array = nas_d(d_ob,d_fo,s_ob = s_ob,s_fo = s_fo,ignore_breeze= ignore_breeze)
-    acd0 = acd_nasd(nasd_array,unit=unit)
+    acd0 = acd_nas(nasd_array,unit=unit)
     return acd0
 
 def nas_uv(u_ob,u_fo,v_ob,v_fo, ignore_breeze = False):
@@ -311,7 +311,7 @@ def scd_uv(u_ob,u_fo,v_ob,v_fo, ignore_breeze = False):
     s_fo,d_fo = meteva.base.math_tools.u_v_to_s_d(u_fo,v_fo)
     #print(d_ob)
     nasd_array = nas_d(d_ob, d_fo, s_ob=s_ob, s_fo=s_fo, ignore_breeze=ignore_breeze)
-    scd0 = scd_nasd(nasd_array)
+    scd0 = scd_nas(nasd_array)
     return scd0
 
 def acd_uv(u_ob,u_fo,v_ob,v_fo, ignore_breeze = False,unit = 1):
@@ -329,7 +329,7 @@ def acd_uv(u_ob,u_fo,v_ob,v_fo, ignore_breeze = False,unit = 1):
     s_ob,d_ob = meteva.base.math_tools.u_v_to_s_d(u_ob,v_ob)
     s_fo,d_fo = meteva.base.math_tools.u_v_to_s_d(u_fo,v_fo)
     nasd_array = nas_d(d_ob, d_fo, s_ob=s_ob, s_fo=s_fo, ignore_breeze=ignore_breeze)
-    acd0 = acd_nasd(nasd_array,unit=unit)
+    acd0 = acd_nas(nasd_array,unit=unit)
     return acd0
 
 

@@ -424,7 +424,7 @@ def t_rh_p_to_q(temp,rh,pressure,rh_unit = "%"):
 
         e0 = 6.11 * np.exp(5420 * (1.0 / 273.15 - 1 / (T + 273.15))) * 622
 
-        if isinstance(pressure,float) or isinstance(pressure,float):
+        if isinstance(pressure,float) or isinstance(pressure,int):
             P = pressure
         else:
             P = pressure.values
@@ -466,4 +466,32 @@ def t_rh_to_vp(temp,rh):
         vp = e0 * R
         grd = meteva.base.grid_data(grid0,vp)
         return grd
+
+
+def t_q_p_to_rh(temp,q,pressure,unit = "%"):
+    '''
+    根据温度、比湿和气压计算相对湿度
+    :param temp:
+    :param q:
+    :param pressure:
+    :return:
+    '''
+    rh100 = copy.deepcopy(temp)
+    if isinstance(temp, pd.DataFrame):
+        rh100.iloc[:,-1] = 100
+    else:
+        rh100.values[...] = 100
+    q100 = t_rh_p_to_q(temp,rh100,pressure)
+    if isinstance(temp, pd.DataFrame):
+        rh = meteva.base.divide_on_level_time_dtime_id(q,q100)
+        if unit == "%":
+            rh.iloc[:,6:] *= 100
+    else:
+        rh = copy.deepcopy(temp)
+        rh.values = q.values/q100.values
+        #rh.values[rh.values>1] = 1
+        if unit=="%":
+            rh.values *= 100
+    return rh
+
 
