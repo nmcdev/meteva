@@ -12,7 +12,7 @@ def write_griddata_to_micaps4(da,save_path = "a.txt",creat_dir = False,effective
     输出micaps4格式文件
     :param da:xarray多维数据信息
     :param path:存储路径
-    :param effectiveNum 有效数字 默认：6
+    :param effectiveNum 有效数字 默认：2
     :return 最终按照需要保存的路径，将da数据保存为m4格式
     """
     try:
