@@ -7,7 +7,7 @@ import traceback
 import warnings
 warnings.filterwarnings("ignore")
 
-def write_griddata_to_micaps4(da,save_path = "a.txt",creat_dir = False,effectiveNum = 6,show = False,title = None):
+def write_griddata_to_micaps4(da,save_path = "a.txt",creat_dir = False,effectiveNum = 2,show = False,title = None):
     """
     输出micaps4格式文件
     :param da:xarray多维数据信息
@@ -62,8 +62,8 @@ def write_griddata_to_micaps4(da,save_path = "a.txt",creat_dir = False,effective
             inte = inte * 6
         elif r >= 7:
             inte = inte * 8
-        vmin = inte * ((int)(vmin / inte) - 1)
-        vmax = inte * ((int)(vmax / inte) + 1)
+        #vmin = inte * ((int)(vmin / inte) - 1)
+        #vmax = inte * ((int)(vmax / inte) + 1)
 
         end = len(save_path)
         start = max(0, end - 16)
@@ -86,7 +86,7 @@ def write_griddata_to_micaps4(da,save_path = "a.txt",creat_dir = False,effective
         format_str = "%." + str(effectiveNum) + "f "
 
         np.savetxt(save_path, grid_values, delimiter=' ',
-                   fmt=format_str, header=title, comments='')
+                   fmt=format_str, header=title, comments='',encoding='GBK')
         if show:
             print('成功输出至'+ save_path)
         return True
