@@ -4,6 +4,8 @@ from scipy.spatial import cKDTree
 from scipy.interpolate import LinearNDInterpolator
 import copy
 import pandas as pd
+import math
+
 
 def reset_global_griddata(grd):
     '''
@@ -100,6 +102,7 @@ def interp_gs_nearest(grd,sta,used_coords = "xy"):
         #sta_all = meteva.base.combine_join(sta_all,sta)
         sta_all = pd.concat(sta_list,axis = 0)
         sta_all = sta_all.reindex(columns=column_list2)
+        sta_all.attrs = copy.deepcopy(grd.attrs)
         return sta_all
 
 
@@ -147,6 +150,7 @@ def interp_gs_linear(grd,sta,used_coords = "xy"):
         #sta_all = meteva.base.combine_join(sta_all,sta)
         sta_all = pd.concat(sta_list, axis=0)
         sta_all = sta_all.reindex(columns=column_list2)
+        sta_all.attrs = copy.deepcopy(grd.attrs)
         return sta_all
 
     elif used_coords == "xyz":
@@ -180,6 +184,7 @@ def interp_gs_linear(grd,sta,used_coords = "xy"):
                     sta.loc[:,members[m]] = dat_sta
                 sta_all = meteva.base.combine_join(sta_all,sta)
         sta_all = sta_all.reindex(columns=column_list2)
+        sta_all.attrs = copy.deepcopy(grd.attrs)
         return sta_all
 
     elif used_coords =="xydt":
@@ -218,6 +223,7 @@ def interp_gs_linear(grd,sta,used_coords = "xy"):
                     sta.loc[:, members[m]] = dat_s
                 sta_all = meteva.base.combine_join(sta_all,sta)
         sta_all = sta_all.reindex(columns=column_list2)
+        sta_all.attrs = copy.deepcopy(grd.attrs)
         return sta_all
 
 
@@ -260,6 +266,7 @@ def interp_gs_cubic(grd,sta,used_coords = "xy"):
                         sta.loc[:, members[m]] =sum
                     sta_all = meteva.base.combine_join(sta_all,sta)
         sta_all = sta_all.reindex(columns=column_list2)
+        sta_all.attrs = copy.deepcopy(grd.attrs)
         return sta_all
 
 
@@ -284,135 +291,157 @@ def interp_gs_cubic(grd,sta,used_coords = "xy"):
     sta1['dtime'] = grid.dtimes[0]
     sta1['level'] = grid.levels[0]
     meteva.base.basicdata.set_stadata_names(sta1,grid.members)
+    sta_all.attrs = copy.deepcopy(grd.attrs)
     return sta1
 
 
 def interp_sg_idw(sta0, grid, background=None, effectR=1000, nearNum=8,decrease = 2):
-    sta = meteva.base.sele_by_para(sta0,drop_IV=True)
-    data_name = meteva.base.get_stadata_names(sta)
-    index0 = sta.index[0]
-    dtime = sta.loc[index0, 'dtime'].astype(int)
-    level = sta.loc[index0, 'level'].astype(int)
-    grid2 = meteva.base.basicdata.grid(grid.glon, grid.glat, [sta.loc[index0, 'time']],
-                                                       [dtime],
-                                                       [level], data_name)
-    xyz_sta = meteva.base.tool.math_tools.lon_lat_to_cartesian(sta['lon'].values,
-                                                                                sta['lat'].values,
-                                                                                R=meteva.base.basicdata.const.ER)
-    lon = np.arange(grid2.nlon) * grid2.dlon + grid2.slon
-    lat = np.arange(grid2.nlat) * grid2.dlat + grid2.slat
-    grid_lon, grid_lat = np.meshgrid(lon, lat)
-    xyz_grid = meteva.base.tool.math_tools.lon_lat_to_cartesian(grid_lon.flatten(),
-                                                                                 grid_lat.flatten(),
-                                                                                 R=meteva.base.basicdata.const.ER)
-    tree = cKDTree(xyz_sta)
-    # d,inds 分别是站点到格点的距离和id
-    if nearNum > len(sta.index):
-        nearNum = len(sta.index)
-    d, inds = tree.query(xyz_grid, k=nearNum)
-    if nearNum >1:
-        d += 1e-6
-        w = 1.0 / d ** decrease
-        input_dat = sta.values[:,-1]
-        dat = np.sum(w * input_dat[inds], axis=1) / np.sum(w, axis=1)
-        bg = meteva.base.basicdata.grid_data(grid2)
-        if (background is not None):
-            bg = interp_gg_linear(background, grid2)
-        bg_dat = bg.values.flatten()
-        dat = np.where(d[:, 0] > effectR, bg_dat, dat)
-    else:
-        input_dat = sta.iloc[:,-1].values
-        dat = input_dat[inds]
-        bg = meteva.base.basicdata.grid_data(grid2)
-        if (background is not None):
-            bg = interp_gg_linear(background, grid2)
-        bg_dat = bg.values.flatten()
-        dat = np.where(d[:] > effectR, bg_dat, dat)
-    dat = dat.astype(np.float32)
-    grd = meteva.base.basicdata.grid_data(grid2, dat)
-    grd.name = "data0"
-    return grd
+
+    sta1 = meteva.base.sele_by_para(sta0,drop_IV=True)
+    sta_list = meteva.base.split(sta1,["member","level","time","dtime"])
+    grd_list = []
+    for sta in sta_list:
+        data_name = meteva.base.get_stadata_names(sta)
+        index0 = sta.index[0]
+        dtime = sta.loc[index0, 'dtime'].astype(int)
+        level = sta.loc[index0, 'level'].astype(int)
+        grid2 = meteva.base.basicdata.grid(grid.glon, grid.glat, [sta.loc[index0, 'time']],
+                                                           [dtime],
+                                                           [level], data_name)
+        xyz_sta = meteva.base.tool.math_tools.lon_lat_to_cartesian(sta['lon'].values,
+                                                                                    sta['lat'].values,
+                                                                                    R=meteva.base.basicdata.const.ER)
+        lon = np.arange(grid2.nlon) * grid2.dlon + grid2.slon
+        lat = np.arange(grid2.nlat) * grid2.dlat + grid2.slat
+        grid_lon, grid_lat = np.meshgrid(lon, lat)
+        xyz_grid = meteva.base.tool.math_tools.lon_lat_to_cartesian(grid_lon.flatten(),
+                                                                                     grid_lat.flatten(),
+                                                                                     R=meteva.base.basicdata.const.ER)
+        tree = cKDTree(xyz_sta)
+        # d,inds 分别是站点到格点的距离和id
+        if nearNum > len(sta.index):
+            nearNum = len(sta.index)
+        d, inds = tree.query(xyz_grid, k=nearNum)
+        if nearNum >1:
+            d += 1e-6
+            w = 1.0 / d ** decrease
+            input_dat = sta.values[:,-1]
+            dat = np.sum(w * input_dat[inds], axis=1) / np.sum(w, axis=1)
+            bg = meteva.base.basicdata.grid_data(grid2)
+            if (background is not None):
+                bg = interp_gg_linear(background, grid2)
+            bg_dat = bg.values.flatten()
+            dat = np.where(d[:, 0] > effectR, bg_dat, dat)
+        else:
+            input_dat = sta.iloc[:,-1].values
+            dat = input_dat[inds]
+            bg = meteva.base.basicdata.grid_data(grid2)
+            if (background is not None):
+                bg = interp_gg_linear(background, grid2)
+            bg_dat = bg.values.flatten()
+            dat = np.where(d[:] > effectR, bg_dat, dat)
+        dat = dat.astype(np.float32)
+        grd = meteva.base.basicdata.grid_data(grid2, dat)
+        grd.name = data_name[0]
+        grd_list.append(grd)
+
+    grd_all = meteva.base.concat(grd_list)
+    grd_all.attrs = copy.deepcopy(sta0.attrs)
+    return grd_all
 
 
 def interp_sg_idw_delta(sta0, grid,  halfR=1000, nearNum=8,decrease = 2):
-    sta = meteva.base.sele_by_para(sta0,drop_IV=True)
-    data_name = meteva.base.get_stadata_names(sta)
-    index0 = sta.index[0]
-    grid2 = meteva.base.basicdata.grid(grid.glon, grid.glat, [sta.loc[index0, 'time']],
-                                                       [sta.loc[index0, 'dtime']],
-                                                       [sta.loc[index0, 'level']], data_name)
-    xyz_sta = meteva.base.tool.math_tools.lon_lat_to_cartesian(sta['lon'].values,
-                                                                                sta['lat'].values,
-                                                                                R=meteva.base.basicdata.const.ER)
-    lon = np.arange(grid2.nlon) * grid2.dlon + grid2.slon
-    lat = np.arange(grid2.nlat) * grid2.dlat + grid2.slat
-    grid_lon, grid_lat = np.meshgrid(lon, lat)
-    xyz_grid = meteva.base.tool.math_tools.lon_lat_to_cartesian(grid_lon.flatten(),
-                                                                                 grid_lat.flatten(),
-                                                                                 R=meteva.base.basicdata.const.ER)
-    tree = cKDTree(xyz_sta)
-    # d,inds 分别是站点到格点的距离和id
-    if nearNum > len(sta.index):
-        nearNum = len(sta.index)
-    d, inds = tree.query(xyz_grid, k=nearNum)
-    if nearNum >1:
-        d += 1e-6
-        w1 = 1.0 / d ** decrease
-        w2 = np.exp(-(d/halfR)**2)
-        input_dat = sta.values[:,-1]
-        dat = np.sum(w1 * w2 * input_dat[inds], axis=1) / np.sum(w1, axis=1)
-    else:
-        input_dat = sta0.iloc[:,-1].values
-        w2 = np.exp(-d/halfR)
-        dat = w2 * input_dat[inds]
-    dat = dat.astype(np.float32)
-    grd = meteva.base.basicdata.grid_data(grid2, dat)
-    grd.name = "data0"
-    return grd
+    sta1 = meteva.base.sele_by_para(sta0,drop_IV=True)
+    sta_list = meteva.base.split(sta1,["member","level","time","dtime"])
+    grd_list = []
+    for sta in sta_list:
+        data_name = meteva.base.get_stadata_names(sta)
+        index0 = sta.index[0]
+        grid2 = meteva.base.basicdata.grid(grid.glon, grid.glat, [sta.loc[index0, 'time']],
+                                                           [sta.loc[index0, 'dtime']],
+                                                           [sta.loc[index0, 'level']], data_name)
+        xyz_sta = meteva.base.tool.math_tools.lon_lat_to_cartesian(sta['lon'].values,
+                                                                                    sta['lat'].values,
+                                                                                    R=meteva.base.basicdata.const.ER)
+        lon = np.arange(grid2.nlon) * grid2.dlon + grid2.slon
+        lat = np.arange(grid2.nlat) * grid2.dlat + grid2.slat
+        grid_lon, grid_lat = np.meshgrid(lon, lat)
+        xyz_grid = meteva.base.tool.math_tools.lon_lat_to_cartesian(grid_lon.flatten(),
+                                                                                     grid_lat.flatten(),
+                                                                                     R=meteva.base.basicdata.const.ER)
+        tree = cKDTree(xyz_sta)
+        # d,inds 分别是站点到格点的距离和id
+        if nearNum > len(sta.index):
+            nearNum = len(sta.index)
+        d, inds = tree.query(xyz_grid, k=nearNum)
+        if nearNum >1:
+            d += 1e-6
+            w1 = 1.0 / d ** decrease
+            w2 = np.exp(-(d/halfR)**2)
+            input_dat = sta.values[:,-1]
+            dat = np.sum(w1 * w2 * input_dat[inds], axis=1) / np.sum(w1, axis=1)
+        else:
+            input_dat = sta0.iloc[:,-1].values
+            w2 = np.exp(-d/halfR)
+            dat = w2 * input_dat[inds]
+        dat = dat.astype(np.float32)
+        grd = meteva.base.basicdata.grid_data(grid2, dat)
+        grd.name = data_name[0]
+        grd_list.append(grd)
+    grd_all = meteva.base.concat(grd_list)
+    grd_all.attrs = copy.deepcopy(sta0.attrs)
+    return grd_all
+
 
 def interp_sg_cressman(sta0, grid, r_list,background=None , nearNum=100):
-    sta = meteva.base.sele_by_para(sta0,drop_IV=True)
-    data_name = meteva.base.get_stadata_names(sta)
-    index0 = sta.index[0]
-    grid2 = meteva.base.basicdata.grid(grid.glon, grid.glat, [sta.loc[index0, 'time']],
-                                                       [sta.loc[index0, 'dtime']],
-                                                       [sta.loc[index0, 'level']], data_name)
-    xyz_sta = meteva.base.tool.math_tools.lon_lat_to_cartesian(sta['lon'].values,
-                                                                                sta['lat'].values,
-                                                                                R=meteva.base.basicdata.const.ER)
-    lon = np.arange(grid2.nlon) * grid2.dlon + grid2.slon
-    lat = np.arange(grid2.nlat) * grid2.dlat + grid2.slat
-    grid_lon, grid_lat = np.meshgrid(lon, lat)
-    xyz_grid = meteva.base.tool.math_tools.lon_lat_to_cartesian(grid_lon.flatten(),
-                                                                                 grid_lat.flatten(),
-                                                                                 R=meteva.base.basicdata.const.ER)
-    tree = cKDTree(xyz_sta)
-    # d,inds 分别是站点到格点的距离和id
-    nsta = len(sta.index)
-    if nearNum > nsta:
-        nearNum = nsta
-    d, inds = tree.query(xyz_grid, k=nearNum)
-    d += 1e-6
-    bg = meteva.base.basicdata.grid_data(grid2)
-    if (background is not None):
-        bg = interp_gg_linear(background, grid2)
+    sta1 = meteva.base.sele_by_para(sta0,drop_IV=True)
+    sta_list = meteva.base.split(sta1,["member","level","time","dtime"])
+    grd_list = []
+    for sta in sta_list:
+        data_name = meteva.base.get_stadata_names(sta)
+        index0 = sta.index[0]
+        grid2 = meteva.base.basicdata.grid(grid.glon, grid.glat, [sta.loc[index0, 'time']],
+                                                           [sta.loc[index0, 'dtime']],
+                                                           [sta.loc[index0, 'level']], data_name)
+        xyz_sta = meteva.base.tool.math_tools.lon_lat_to_cartesian(sta['lon'].values,
+                                                                                    sta['lat'].values,
+                                                                                    R=meteva.base.basicdata.const.ER)
+        lon = np.arange(grid2.nlon) * grid2.dlon + grid2.slon
+        lat = np.arange(grid2.nlat) * grid2.dlat + grid2.slat
+        grid_lon, grid_lat = np.meshgrid(lon, lat)
+        xyz_grid = meteva.base.tool.math_tools.lon_lat_to_cartesian(grid_lon.flatten(),
+                                                                                     grid_lat.flatten(),
+                                                                                     R=meteva.base.basicdata.const.ER)
+        tree = cKDTree(xyz_sta)
+        # d,inds 分别是站点到格点的距离和id
+        nsta = len(sta.index)
+        if nearNum > nsta:
+            nearNum = nsta
+        d, inds = tree.query(xyz_grid, k=nearNum)
+        d += 1e-6
+        bg = meteva.base.basicdata.grid_data(grid2)
+        if (background is not None):
+            bg = interp_gg_linear(background, grid2)
 
-    bg_dat = bg.values.flatten()
-    input_dat = sta.values[:, -1]
+        bg_dat = bg.values.flatten()
+        input_dat = sta.values[:, -1]
 
-    d2 = d ** 2
-    for R in r_list:
-        index_in = np.where(d[:,0] < R)[0]
-        inds_in = inds[index_in,:]
-        r2 = R ** 2
-        d2_in = d2[index_in,:]
-        w = (r2 -  d2_in)/(r2 + d2_in)
-        w[w <0] = 0
-        dat = np.sum(w * input_dat[inds_in], axis=1) / np.sum(w, axis=1)
-        bg_dat[index_in] = dat[:]
-    grd = meteva.base.basicdata.grid_data(grid2, bg_dat)
-    grd.name = "data0"
-    return grd
+        d2 = d ** 2
+        for R in r_list:
+            index_in = np.where(d[:,0] < R)[0]
+            inds_in = inds[index_in,:]
+            r2 = R ** 2
+            d2_in = d2[index_in,:]
+            w = (r2 -  d2_in)/(r2 + d2_in)
+            w[w <0] = 0
+            dat = np.sum(w * input_dat[inds_in], axis=1) / np.sum(w, axis=1)
+            bg_dat[index_in] = dat[:]
+        grd = meteva.base.basicdata.grid_data(grid2, bg_dat)
+        grd.name = data_name[0]
+        grd_list.append(grd)
+    grd_all = meteva.base.concat(grd_list)
+    grd_all.attrs = copy.deepcopy(sta0.attrs)
+    return grd_all
 
 
 def interp_ss_idw(sta0, station, effectR=1000, nearNum=8,decrease = 2,defalut_value =0):
@@ -441,8 +470,61 @@ def interp_ss_idw(sta0, station, effectR=1000, nearNum=8,decrease = 2,defalut_va
         dat = input_dat[inds]
         dat[:] = np.where(d[:] > effectR,defalut_value,dat[:])
         sta1.iloc[:,-1] = dat[:]
+    sta1.attrs = copy.deepcopy(sta0.attrs)
     return sta1
 
+
+def interp_gg_nearest(grd, grid,used_coords = "xy",outer_value = None):
+    '''
+    格点到格点插值
+    :param grd:左边的网格数据信息
+    :param grid :右边的网格数据信息
+    :other_info:网格数据除了xy方向的数值之外，还有time,dtime，leve member 等维度的值，如果other_info= 'left’则返回结果中这些维度的值就采用grd里的值，
+    否则采用grid里的值，默认为：left
+    :return:双线性插值之后的结果
+    '''
+    if (grd is None):
+        return None
+    levels = grd["level"].values
+    times = grd["time"].values
+    dtimes = grd["dtime"].values
+    members = grd["member"].values
+    grid0 = meteva.base.basicdata.get_grid_of_data(grd)
+    iscycle = (grid0.dlon * grid0.nlon >= 360)
+    if used_coords == "xy":
+        is_out = False
+        if not iscycle:
+            if (grid.elon > grid0.elon or grid.slon < grid0.slon or grid.elat > grid0.elat or grid.slat < grid0.slat):
+                if outer_value is None:
+                    print("当目标网格超出数据网格时，outer_value参数必须赋值")
+                    return None
+                is_out = True
+
+        if is_out:
+            grid_new0 = meteva.base.get_inner_grid(grid,grid0)
+            grid_new = meteva.base.grid(grid_new0.glon, grid_new0.glat, grid0.gtime, grid0.dtimes, grid0.levels, grid0.members)
+        else:
+            grid_new = meteva.base.grid(grid.glon, grid.glat, grid0.gtime, grid0.dtimes, grid0.levels, grid0.members)
+        grd_new = meteva.base.grid_data(grid_new)
+        for i in range(len(levels)):
+            for j in range(len(times)):
+                for k in range(len(dtimes)):
+                    for m in range(len(members)):
+                        # 六维转换为二维的值
+                        dat = grd.values[m,i,j,k,:,:]
+                        #插值处理
+                        x = ((np.arange(grid_new.nlon) * grid_new.dlon + grid_new.slon - grid0.slon) / grid0.dlon)
+                        ig = np.around(x[:]).astype(dtype='int16')
+                        y = (np.arange(grid_new.nlat) * grid_new.dlat + grid_new.slat - grid0.slat) / grid0.dlat
+                        jg = np.around(y[:]).astype(dtype='int16')
+                        ii, jj = np.meshgrid(ig, jg)
+                        dat2 = dat[jj, ii]
+                        grd_new.values[m,i,j,k,:,:] = dat2
+        if is_out:
+            grid_new1 = meteva.base.grid(grid.glon, grid.glat, grid0.gtime, grid0.dtimes, grid0.levels, grid0.members)
+            grd_new = meteva.base.expand_to_contain_another_grid(grd_new,grid_new1,outer_value=outer_value)
+    grd_new.attrs = copy.deepcopy(grd.attrs)
+    return grd_new
 
 
 def interp_gg_linear(grd, grid,used_coords = "xy",outer_value = None):
@@ -509,8 +591,8 @@ def interp_gg_linear(grd, grid,used_coords = "xy",outer_value = None):
         if is_out:
             grid_new1 = meteva.base.grid(grid.glon, grid.glat, grid0.gtime, grid0.dtimes, grid0.levels, grid0.members)
             grd_new = meteva.base.expand_to_contain_another_grid(grd_new,grid_new1,outer_value=outer_value)
+    grd_new.attrs = copy.deepcopy(grd.attrs)
     return grd_new
-
 
 
 def interp_gg_cubic(grd, grid,used_coords = "xy",outer_value = None):
@@ -584,6 +666,7 @@ def interp_gg_cubic(grd, grid,used_coords = "xy",outer_value = None):
         if is_out:
             grid_new1 = meteva.base.grid(grid.glon, grid.glat, grid0.gtime, grid0.dtimes, grid0.levels, grid0.members)
             grd_new = meteva.base.expand_to_contain_another_grid(grd_new,grid_new1,outer_value=outer_value)
+    grd_new.attrs = copy.deepcopy(grd.attrs)
     return grd_new
 
 
@@ -651,3 +734,4 @@ def cubic_f(n, dx):
         return -(dx + 1) * dx * (dx - 2) / 2
     else:
         return (dx + 1) * dx * (dx - 1) / 6
+
