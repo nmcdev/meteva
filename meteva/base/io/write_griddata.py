@@ -8,13 +8,13 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-def write_griddata_to_micaps4(da,save_path = "a.txt",creat_dir = False,effectiveNum = 2,show = False,title = None,inte=None,vmin=None,vmax=None):
+def write_griddata_to_micaps4(da,save_path = "a.txt",creat_dir = False,effectiveNum = 3,show = False,title = None,inte=None,vmin=None,vmax=None):
     """
     输出micaps4格式文件
     :param da:xarray多维数据信息,需要用 meteva 的格式
     :param save_path:存储路径
     :param creat_dir:存储路径中的文件夹若不存在是否创建
-    :param effectiveNum：有效数字，默认 2
+    :param effectiveNum：有效数字，默认 3
     :param show:是否输出存储结果，默认否
     :param title:MICAPS4第四类格式的title，默认根据 save_path 自动生成
     :param inte:MICAPS4第四类格式的等值线间隔，默认根据数值自动生成
