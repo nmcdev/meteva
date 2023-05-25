@@ -3,7 +3,7 @@ import numpy as np
 import time
 
 
-def frprmn2(x,targe,grads,tol = 0.001,caculate_time = 60):
+def frprmn2(x,targe,grads,tol = 0.001,caculate_time = 60,show = False):
     x0 = x
     n = len(x0)
     x_min = math.sqrt(1.0/n)
@@ -33,7 +33,7 @@ def frprmn2(x,targe,grads,tol = 0.001,caculate_time = 60):
         if i%10 == 0:
             f_min_line0 = f_min_line1
             f_min_line1 = targe(x0)
-            print(str(i) + "  " + str(f_min_line1))
+            if show:print(str(i) + "  " + str(f_min_line1))
             delta = 2 * abs(f_min_line1 - f_min_line0) / (abs(f_min_line1) + abs(f_min_line0)) - tol
             if delta < 0:
                 return x0
