@@ -707,3 +707,7 @@ class shpfile:
     province = "Province"
     county = "BOUNT_poly"
     river = "hyd1_4p"
+
+class dtime_units:
+    hour = "hour"
+    minute = "minute"

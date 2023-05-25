@@ -248,7 +248,6 @@ def ob_fo_max(ob,fo, count = 1):
         return result
 
 def ob_fo_std(ob,fo):
-
     Fo_shape = fo.shape
     Ob_shape = ob.shape
 
@@ -268,6 +267,28 @@ def ob_fo_std(ob,fo):
             result.append(np.std(fo[i,:]))
     result = np.array(result)
     return result
+
+def ob_fo_cv(ob,fo):
+    Fo_shape = fo.shape
+    Ob_shape = ob.shape
+
+    Ob_shpe_list = list(Ob_shape)
+    size = len(Ob_shpe_list)
+    ind = -size
+    Fo_Ob_index = list(Fo_shape[ind:])
+    if Fo_Ob_index != Ob_shpe_list:
+        print('预报数据和观测数据维度不匹配')
+        return
+
+    if len(fo.shape) == len(ob.shape):
+        result = [np.std(ob)/np.mean(ob),np.std(fo)/np.mean(fo)]
+    else:
+        result = [np.std(ob)/np.mean(ob)]
+        for i in range(Fo_shape[0]):
+            result.append(np.std(fo[i,:])/np.mean(fo[i,:]))
+    result = np.array(result)
+    return result
+
 
 
 def ob_fo_precipitation_strenght(ob,fo):
@@ -812,6 +833,12 @@ def rmse_tase(tase_array):
     return root_mean_sqrt_error
 
 def si(Ob,Fo):
+    '''
+
+    :param Ob:
+    :param Fo:
+    :return: 均方根误差/观测平均
+    '''
     si_list = []
     Fo_shape = Fo.shape
     Ob_shape = Ob.shape
@@ -1016,6 +1043,48 @@ def corr_tmmsss(tmmsss_array):
     corr = sxy / sxxsyy
     return corr
 
+def ob_fo_sum_tmmsss(tmmsss_array):
+    '''
+    相关系数，求实况数据还和预测数据之间的相关系数
+    :param tmmsss_array: 包含命中空报和漏报的多维数组，其中最后一维长度为6，分别记录了（count,mx,my,sxx,syy,sxy）
+    :return:
+    '''
+    if len(tmmsss_array.shape) == 1:
+        tmmsss_array = tmmsss_array.reshape(1, 1, 6)
+    mx = tmmsss_array[..., 1]
+    my = tmmsss_array[..., 2]
+    shape1 = list(tmmsss_array.shape)
+    if len(tmmsss_array.shape) == 2:
+        result = np.zeros((2, shape1[0]))
+        result[0, :] = mx * tmmsss_array[..., 0]
+        result[1, :] = my * tmmsss_array[..., 0]
+    else:
+        result = np.zeros((1 + shape1[0], shape1[1]))
+        result[0, :] = mx * tmmsss_array[..., 0]
+        result[1:, :] = my * tmmsss_array[..., 0]
+    return result
+
+def ob_fo_mean_tmmsss(tmmsss_array):
+    '''
+    相关系数，求实况数据还和预测数据之间的相关系数
+    :param tmmsss_array: 包含命中空报和漏报的多维数组，其中最后一维长度为6，分别记录了（count,mx,my,sxx,syy,sxy）
+    :return:
+    '''
+
+    if len(tmmsss_array.shape) == 1:
+        tmmsss_array = tmmsss_array.reshape(1, 1, 6)
+    mx = tmmsss_array[..., 1]
+    my = tmmsss_array[..., 2]
+    shape1 = list(tmmsss_array.shape)
+    if len(tmmsss_array.shape) == 2:
+        result = np.zeros((2, shape1[0]))
+        result[0, :] = mx
+        result[1, :] = my
+    else:
+        result = np.zeros((1 + shape1[0], shape1[1]))
+        result[0, :] = mx
+        result[1:, :] = my
+    return result
 
 def tmmsss(Ob, Fo):
     '''
@@ -1066,9 +1135,9 @@ def tmmsss_merge(tmmsss0, tmmsss1):
     :param tmmsss1: 长度6的一维数组，分别记录了（count,mx,my,sxx,syy,sxy）
     :return: 长度6的一维数组，分别记录了（count,mx,my,sxx,syy,sxy）
     '''
-    if np.isnan(tmmsss0[0]):
+    if np.isnan(tmmsss0[0]).any():
         return tmmsss1
-    elif np.isnan(tmmsss1[0]):
+    elif np.isnan(tmmsss1[0]).any():
         return tmmsss0
     tmmsss_array_list = []
     tmmsss0_shape = list(tmmsss0.shape)
@@ -1279,3 +1348,237 @@ def nse_tase_tmmsss(tase_array, tmmsss_array):
         nse0[sxx == 0] = IV
     return nse0
 
+def nse_tmmsss(tmmsss_array):
+    '''
+    :param tase_array:
+    :param tmmsss_array:
+    :return:
+    '''
+
+    sxx = tmmsss_array[..., 3] + 0
+    syy = tmmsss_array[..., 4] + 0
+    sxy = tmmsss_array[..., 5] + 0
+    mx = tmmsss_array[..., 1] + 0
+    my = tmmsss_array[..., 2] + 0
+    exy = sxx + syy - 2 * sxy + (mx - my) * (mx - my)
+
+
+
+    if sxx.size == 1:
+        if sxx == 0:
+            nse0 = IV
+        else:
+            nse0 = 1 - exy / sxx
+    else:
+        sum = sxx + 0
+        sum[sxx == 0] = 1e-10
+        mse0 = exy
+        nse0 = 1 - mse0 / sum
+        nse0[sxx == 0] = IV
+    return nse0
+
+
+
+def pmse(ob,fo):
+    '''
+
+    :param ob: 一维numpy数组
+    :param fo:  一维或者两维numpy数组，当fo是两维时，表示有多种预报进行对比
+    :return:  实数
+    '''
+    #如果fo只包含一个预报成员
+    if len(ob.shape) == len(fo.shape):
+        fo = fo[np.newaxis,:]
+    nfo = fo.shape[0]
+    list1 = []
+    result_list = []
+    nsta = ob.size
+    #print("---")
+    #print(nsta)
+    #对多个预报进行循环
+    for i in range(nfo):
+        foi = fo[i,:]
+        #ob3 = np.power(ob,0.33333)
+        #fo3 = np.power(foi,0.333333)
+        e = ob - foi
+        e1 = e[e>=0]
+        mse1 = np.sum(0.91*0.91* np.power(e1,0.66666))
+        e2 = e[e<0]
+        mse2 = np.sum(np.power(-0.7+0.57*np.power(-e2,0.3333),2))
+        mse = mse1 + mse2
+        result_list.append(mse/nsta)
+    #result_mid = np.array(list1)
+    result = np.array(result_list)
+
+    return result
+
+
+
+def pas(ob0,fo,grade_list = [0.1]):
+    '''
+
+    :param ob: 一维numpy数组
+    :param fo:  一维或者两维numpy数组，当fo是两维时，表示有多种预报进行对比
+    :return:  实数,pas评分
+    '''
+    #如果fo只包含一个预报成员
+    if len(ob0.shape) == len(fo.shape):
+        fo = fo[np.newaxis,:]
+    nfo = fo.shape[0]
+    list1 = []
+    result_list = []
+    ob_0 = ob0.flatten()
+    #对多个预报进行循环
+    for i in range(nfo):
+        nsample = 0
+        score = 0
+        foi = fo[i,:].flatten()
+        # 情况1， 实况降水u=0mm，预报降水x>0mm
+        index0 = np.where((ob_0>=grade_list[0])|(foi>=grade_list[0]))
+        #print(index0[0].size)
+
+        ob  = ob_0[index0]
+        foi = foi[index0]
+        index1 = np.where((ob == 0)&(foi>0))
+        score1 = 0
+        if index1[0].size>0:
+            fo1 = foi[index1]
+            nsample += index1[0].size
+            fo11 = fo1[fo1<5]         # 预报 0<x<5mm的情况
+            score1  += 0.5* fo11.size
+            fo12 = fo1[fo1>=5]        #预报 x>=5mm的情况
+            if fo12.size>0:
+                score1 += 0.5 * np.sum(np.exp(-(fo12 - 5) ** 2 / 25))
+            # print("情况1：")
+            # print(index1[0].size)
+            #print(score1)
+
+        # 情况2， 实况降水u>0mm，预报降水x=0mm
+        index2 = np.where((ob > 0)&(ob<10)&(foi == 0))
+        score2 = 0
+        if index2[0].size>0:
+            ob2 = ob[index2]
+            nsample += index2[0].size
+            score2 += 0.5 * np.sum(np.sin(0.05 * np.pi * (10 + ob2)))
+            # print("情况2：")
+            # print(index2[0].size)
+            #print(score2)
+
+        # 情况3， 实况降水0<u<5mm，预报降水x>0mm
+        index3 = np.where((ob>0)&(ob<5)&(foi>0))
+        score3 =0
+        if index3[0].size >0:
+            nsample += index3[0].size
+            ob3 = ob[index3]
+            fo3 = foi[index3]
+            ob31 = ob3[fo3<ob3]   #情况3.1  0<x<u,0<u<5
+            if ob31.size>0:
+                fo31 = fo3[fo3 < ob3]
+                score3 += np.sum(np.sin(0.05*np.pi*(10+ob31-fo31)))
+            ob32 = ob3[np.where((fo3<5)&(ob3<=fo3))]   #情况3.2  0<x<5,0<u<x
+            score3 += ob32.size
+            ob33 = ob3[fo3>=5]  #情况3.3  x>=5,0<u<5
+            if ob33.size>0:
+                fo33 = fo3[fo3>=5]
+                score3 += np.sum(np.exp(-(fo33-5)**2/25))
+            # print("情况3：")
+            # print(index3[0].size)
+            #print(score3)
+
+        # 情况4， 实况降水5<u<10mm，预报降水x>0mm
+        index4 = np.where((ob>=5)&(ob<10)&(foi>0))
+        score4 = 0
+        if index4[0].size>0:
+            nsample+= index4[0].size
+            ob4 = ob[index4]
+            fo4 = foi[index4]
+            ob41 = ob4[fo4<ob4]  #情况4.1 0<x<u,5<u<10
+            if ob41.size>0:
+                fo41 = fo4[fo4<ob4]
+                score4 += np.sum(np.sin(0.05*np.pi*(10+ob41-fo41)))
+            ob42 = ob4[fo4>=ob4]  #情况4.2 u<x,5<u<10
+            if ob42.size>0:
+                fo42 = fo4[fo4>=ob4]
+                score4 += np.sum(np.exp(-(fo42-ob42)**2/ob42**2))
+            # print("情况4：")
+            # print(index4[0].size)
+            #print(score4)
+
+
+        # 情况5， 实况降水u>=10mm，预报降水x>0mm
+        index5 = np.where((ob >=10)  & (foi >= 0))
+        score5 = 0
+        if index5[0].size >0:
+            nsample += index5[0].size
+            ob5 = ob[index5]
+            fo5 = foi[index5]
+            ob51 = ob5[fo5<ob5]  #情况5.1, 0<=x<u,u>=10
+            if ob51.size>0:
+                fo51 = fo5[fo5<ob5]
+                score5 += np.sum(np.sin(0.5*np.pi*fo51/ob51))
+            ob52 = ob5[fo5>=ob5]  #情况5.2, u<=x,u>=10
+            if ob52.size>0:
+                fo52 = fo5[fo5>=ob5]
+                score5 += np.sum(np.exp(-(fo52-ob52)**2/ob52**2))
+            # print("情况5：")
+            # print(index5[0].size)
+            #print(score5)
+        score = score1 + score2+score3+score4+score5
+        #print(score)
+        #计算
+        if nsample==0:
+            result1 = IV
+        else:
+            result1 = score/nsample
+        list1.append([nsample,score])
+        result_list.append(result1)
+
+    #result_mid = np.array(list1)
+    result = np.array(result_list)
+
+
+    return result
+
+
+if __name__=="__main__":
+    import pandas as pd
+    import datetime
+    import meteva
+    import xarray as xr
+    # grid0 = meteva.base.grid([111.025, 122.975, 0.05], [28.025, 37.975, 0.05])
+    #
+    # grd0 = xr.open_dataset(r"H:\task\paper\word\w20-ElR\2020080312yb\WRF3.2020080312012.grb2",
+    #                        filter_by_keys={'typeOfLevel': 'surface'})
+    #
+    # sta = pd.DataFrame({"level": 0, "time": datetime.datetime(2022, 1, 1, 8), "dtime": 0,
+    #                     "lon": grd0.coords["longitude"].values.flatten(),
+    #                     "lat": grd0.coords["latitude"].values.flatten(),
+    #                     "id": np.arange(grd0.coords["latitude"].values.size),
+    #                     "tp": grd0.variables["tp"].values.flatten()
+    #                     })
+    #
+    # fo = meteva.base.interp_sg_idw(sta, grid=grid0, nearNum=1, effectR=200)  # 将站点数据插值到网格上
+    #
+    # ob = meteva.base.grid_data(grid0)
+    # for i in range(1, 13):
+    #     ob1 = meteva.base.read_griddata_from_nc(r"H:\task\paper\word\w20-ElR\2020080400sk\surfr" + str(i).zfill(2) + "h.nc",
+    #                                     grid=grid0)
+    #     ob.values += ob1
+    # #print(ob)
+    #
+    # value = meteva.method.pas(ob.values, fo.values, grade_list=[0.1])
+    # print("pas01_value=" + str(value[0]))
+    #meteva.base.read_stadata_from_csv()
+
+    sta = pd.read_csv(r"C:\Users\admin\Documents\WeChat Files\wxid_54saim7nonz321\FileStorage\File\2023-04\a.txt",
+                      skiprows = 0,header = None,sep="\s+")
+    ob = sta.iloc[:,0].values
+    fo = sta.iloc[:,1].values
+    value = meteva.method.pas(ob, fo, grade_list=[0.1])
+    print("pas01_value=" + str(value[0]))
+    value = meteva.method.pas(ob, fo, grade_list=[10])
+    print("pas10_value=" + str(value[0]))
+    value = meteva.method.pas(ob, fo, grade_list=[25])
+    print("pas25_value=" + str(value[0]))
+    value = meteva.method.pas(ob, fo, grade_list=[50])
+    print("pas50_value=" + str(value[0]))

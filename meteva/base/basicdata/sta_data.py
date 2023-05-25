@@ -189,15 +189,19 @@ def reset_id(sta):
             for i in range(len(values)):
                 if isinstance(values[i],str):
                     strs = values[i]
-                    strs_int = ""
-                    for s in strs:
-                        if s.isdigit():
-                            strs_int += s
-                        else:
-                            strs_int += str(ord(s))
+                    if strs =="":
+                        strs_int=999999
+                    else:
+                        strs_int = ""
+                        for s in strs:
+                            if s.isdigit():
+                                strs_int += s
+                            else:
+                                strs_int += str(ord(s))
                     int_id[i] = int(strs_int)
                 else:
                     int_id[i] = values[i]
+
             int_id = int_id.astype(np.int32)
             sta['id'] = int_id
     return

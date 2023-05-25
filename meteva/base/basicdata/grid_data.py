@@ -372,27 +372,32 @@ def xarray_to_griddata(xr0,
 
     if "member" not in dim_order.keys():
         #print(da)
-
         dim_order["member"] = "member"
         da = da.expand_dims("member")
+        da = da.copy()
     if "time" not in dim_order.keys():
         dim_order["time"] = "time"
         da = da.expand_dims("time")
+        da = da.copy()
     if "level" not in dim_order.keys():
         dim_order["level"] = "level"
         da = da.expand_dims("level")
+        da = da.copy()
     if "dtime" not in dim_order.keys():
         dim_order["dtime"] = "dtime"
         da = da.expand_dims("dtime")
+        da = da.copy()
     if "lat" not in dim_order.keys():
         dim_order["lat"] = "lat"
         da = da.expand_dims("lat")
+        da = da.copy()
     if "lon" not in dim_order.keys():
         dim_order["lon"] = "lon"
         da = da.expand_dims("lon")
-
+        da = da.copy()
     da = da.transpose(dim_order["member"], dim_order["level"], dim_order["time"],
                       dim_order["dtime"], dim_order["lat"], dim_order["lon"])
+
     #print(da)
     ds[name] = (("member", "level", "time", "dtime", "lat", "lon"), da.values)
     attrs_name = list(da.attrs)
@@ -877,11 +882,32 @@ def DataArray_to_grd(dataArray,member = None,level = None,time = None,dtime = No
 
 def reset(grd):
     lats = grd["lat"].values
-
     if lats[0]>lats[1]:
         lats = grd["lat"].values[::-1]
         grd['lat'] = lats
         dat = grd.values[:, :, :, :, ::-1, :]
         grd.values = dat
 
+    lons = grd["lon"].values
+    if lons[0]>lons[1]:
+        lons = grd["lon"].values[::-1]
+        grd['lon'] = lons
+        dat = grd.values[:, :, :, :, :, ::-1]
+        grd.values = dat
+
     return
+
+
+def set_griddata_attrs(grd, dtime_units = None,data_source = None,level_type =None,
+             var_name = None,var_cn_name = None,
+             var_units = None,valid_time = None,data_start_columns = None):
+
+    if grd.attrs is None: grd.attrs = {}
+    if dtime_units is not None:grd.attrs["dtime_units"] = dtime_units
+    if data_source is not None:grd.attrs["data_source"] = data_source
+    if level_type is not None: grd.attrs["data_type"] = level_type
+    if var_name is not None: grd.attrs["var_name"] = var_name
+    if var_cn_name is not None:grd.attrs["var_cn_name"] = var_cn_name
+    if var_units is not None:grd.attrs["var_units"] = var_units
+    if valid_time is not None:grd.attrs["valid_time"] = valid_time
+    if data_start_columns is not None:grd.attrs["data_start_columns"] = data_start_columns

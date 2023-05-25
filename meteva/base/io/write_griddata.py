@@ -7,6 +7,7 @@ import traceback
 import warnings
 warnings.filterwarnings("ignore")
 
+
 def write_griddata_to_micaps4(da,save_path = "a.txt",creat_dir = False,effectiveNum = 2,show = False,title = None,inte=None,vmin=None,vmax=None):
     """
     输出micaps4格式文件
@@ -96,6 +97,7 @@ def write_griddata_to_micaps4(da,save_path = "a.txt",creat_dir = False,effective
         format_str = "%." + str(effectiveNum) + "f "
 
         np.savetxt(save_path, grid_values, delimiter=' ',
+                   fmt=format_str, header=title, comments='',newline="\n")
                    fmt=format_str, header=title, comments='',encoding='GBK')
         if show:
             print('成功输出至'+ save_path)

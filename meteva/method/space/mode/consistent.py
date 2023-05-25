@@ -225,6 +225,10 @@ def unimerge(look_ob,look_fo):
         vxunmatched.remove(id)
         fcunmatched.remove(id)
 
+    if len(label_list_all)>0:
+        max_label = np.max(np.array(label_list_all))
+    else:
+        max_label = 0
 
     out = {'grd_ob': look_ob["grd"],
            "grd_ob_smooth": look_ob["grd_smooth"],
@@ -236,7 +240,7 @@ def unimerge(look_ob,look_fo):
            "grd_fo_label": look_fo["grd_label"],
            "grid":look_ob["grid"],
            "match_count":len(label_list_matched),
-           "max_label" : np.max(np.array(label_list_all)),
+           "max_label" : max_label,
            "label_list_ob":label_list_ob,
            "label_list_fo":label_list_fo,
            "label_list_matched":label_list_matched,

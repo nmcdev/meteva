@@ -5,10 +5,9 @@ import pandas as pd
 import numpy as np
 
 
-
-
 def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = None,plot = None,
-          vmax = None,vmin = None,bar_width = None,save_path = None,show = False,dpi = 300,title = "",excel_path = None,drop_g_column = False,**kwargs):
+          vmax = None,vmin = None,bar_width = None,save_path = None,show = False,dpi = 300,title = "",
+          excel_path = None,drop_g_column = False,spasify_xticks = None,keep_ob_IV = False,**kwargs):
 
 
     if s is not None:
@@ -18,8 +17,9 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
             else:
                 s["drop_last"] = True
     sta_ob_and_fos = sele_by_dict(sta_ob_and_fos0, s)
-    index = np.where(sta_ob_and_fos.iloc[:,6].values != meteva.base.IV)
-    sta_ob_and_fos = sta_ob_and_fos.iloc[index[0],:]
+    if not keep_ob_IV:
+        index = np.where(sta_ob_and_fos.iloc[:,6].values != meteva.base.IV)
+        sta_ob_and_fos = sta_ob_and_fos.iloc[index[0],:]
     if(len(sta_ob_and_fos.index) == 0):
         msg = "there is no data to verify"
         print(msg)
@@ -268,7 +268,7 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
             if not isinstance(group_list_list1,list):
                 group_list_list1 = [group_list_list1]
 
-            if (group_dict_name == "time" or group_dict_name == "ob_time")and gll is None:
+            if (group_dict_name == "time" or group_dict_name == "ob_time" or group_dict_name == "day" or group_dict_name == "ob_day")and gll is None:
                 name_list_dict[group_dict_name] = group_list_list1
             else:
                 name_list_dict[group_dict_name] = get_group_name(group_list_list1)
@@ -327,17 +327,15 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
 
         if plot is not None:
             if plot =="bar":
-                meteva.base.plot_tools.bar(result_plot,name_list_dict,legend=legend,axis = axis,vmin =vmin,vmax = vmax,bar_width=bar_width,save_path=save_path,show=show,dpi =dpi,title = title,**plot_args)
+                meteva.base.plot_tools.bar(result_plot,name_list_dict,legend=legend,axis = axis,vmin =vmin,vmax = vmax,bar_width=bar_width,save_path=save_path,show=show,dpi =dpi,title = title,spasify_xticks=spasify_xticks,**plot_args)
             else:
-                meteva.base.plot_tools.plot(result_plot,name_list_dict,legend=legend,axis = axis,vmin =vmin,vmax = vmax,save_path=save_path,show=show,dpi = dpi,title= title,**plot_args)
+                meteva.base.plot_tools.plot(result_plot,name_list_dict,legend=legend,axis = axis,vmin =vmin,vmax = vmax,save_path=save_path,show=show,dpi = dpi,title= title,spasify_xticks=spasify_xticks,**plot_args)
         if excel_path is not None:
             meteva.base.write_array_to_excel(result_plot,excel_path,name_list_dict,index= axis,columns=legend)
 
     if result.size != 1:
         result = result.squeeze()
     return result,group_list_list1
-
-
 
 
 
@@ -436,6 +434,8 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
     plot_mehod = None
     if plot == "scatter":
         plot_mehod = meteva.base.plot_tools.scatter_sta
+    elif plot == "contourf":
+        plot_mehod = meteva.base.plot_tools.contourf_2d_grid
 
     plot_para_list = []
     if plot_mehod is not None:
@@ -456,14 +456,13 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
     if "cmap" not in plot_args.keys() and "clevs" not in plot_args:
         if method == meteva.method.me:
             plot_args["cmap"] = meteva.base.cmaps.me
-    if "fix_size" not in plot_args.keys():
-        plot_args["fix_size"] = False
+
 
     result_all = []
     for k in range(g_num):
         g_id = "id"
         result,id_list= score(sta_ob_and_fos_list[k],method,g = g_id,**method_args)
-        station = sta_ob_and_fos1.drop_duplicates(['id'],inplace=False)
+        station = sta_ob_and_fos_list[k].drop_duplicates(['id'],inplace=False)
         station.iloc[:, 1] = station.iloc[0, 1]
         station.iloc[:, 2] = station.iloc[0, 2]
         station.iloc[:, 0] = station.iloc[0, 0]
@@ -473,7 +472,6 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
         sta_merge = pd.merge(id_s,station1, on='id', how='left')
         sta_merge = meteva.base.sta_data(sta_merge)
         coord_names = meteva.base.get_coord_names()
-
         if len(result.shape) == 1:
             #没有等级，只有一个预报成员
             coord_names.append(data_names[-1])
@@ -527,6 +525,10 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
                 sta_result1 = sta_merge.loc[:, coord_names]
                 sta_result1.iloc[:, -member_num:] = result[:,:,i]
                 sta_result.append(sta_result1)
+        sup_title = None
+        if "sup_title" in plot_args.keys():
+            sup_title = copy.deepcopy(plot_args["sup_title"])
+
         for i in range(len(sta_result)):
             sta_result1 = sta_result[i]
             if "var_name" in sta_ob_and_fos0.attrs.keys():
@@ -534,24 +536,33 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
             else:
                 sta_result1.attrs["var_name"] = ""
             sta_result1.attrs["data_source"] = "meteva." + method.__name__
-            if plot == "scatter" or plot == "micaps":
+            if plot is not None:
+
                 if isinstance(title, list):
                     kk = k * grade_num + i
                     title1_list = title[kk * fo_num: (kk + 1) * fo_num]
                 else:
                     title1_list = []
                     for ii in range(fo_num):
-                        if title is not None:
-                            title1 =meteva.product.program.get_title_from_dict(title, s, g, group_name_list[k],
-                                                                                 fo_name[ii])
+                        if g !="time":
+                            if title is not None:
+                                title1 =meteva.product.program.get_title_from_dict(title, s, g, group_name_list[k],
+                                                                                     fo_name[ii])
+                            else:
+                                title1 = meteva.product.program.get_title_from_dict("", s, g,
+                                                                                    group_name_list[k], fo_name[ii])
                         else:
-                            title1 = meteva.product.program.get_title_from_dict("", s, g,
-                                                                                group_name_list[k], fo_name[ii])
+                            title1 = ""
                         if grade_num>1:
                             title1 += "(grade_" + str(grade_names[i])+")"
                         title1_list.append(title1)
 
-                if plot == "scatter":
+
+                if plot == "scatter" or plot =="contourf":
+                    if "sup_title" not in plot_args.keys():
+                        plot_args["sup_title"] = ""
+                    elif isinstance(sup_title,list):
+                        plot_args["sup_title"] = sup_title[i]
                     save_path1 = None
                     if save_path is None:
                         if save_dir is None:
@@ -561,15 +572,47 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
                             for i in range(len(title1_list)):
                                 fileName = title1_list[i].replace("\n", "").replace(":", "")
                                 save_path1.append(save_dir + "/" + fileName + ".png")
+                    elif subplot=="member":
+                        save_path1 = save_path[i]
                     else:
                         save_path1 = save_path[k * fo_num: (k + 1) * fo_num]
 
-
-                    meteva.base.tool.plot_tools.scatter_sta(sta_result1, save_path=save_path1, show=show,
+                    if plot=="scatter":
+                        if "fix_size" not in plot_args.keys():
+                            plot_args["fix_size"] = False
+                        meteva.base.tool.plot_tools.scatter_sta(sta_result1, save_path=save_path1, show=show,
                                                             title=title1_list, print_max=print_max,
                                                             print_min=print_min
                                                             , add_county_line=add_county_line,
                                                              map_extend=map_extend, dpi=dpi,subplot = subplot,ncol = ncol,**plot_args)
+                    else:
+                        slon0 = np.min(sta_result1.loc[:, "lon"].values)
+                        slat0 = np.min(sta_result1.loc[:, "lat"].values)
+                        elon0 = np.max(sta_result1.loc[:, "lon"].values)
+                        elat0 = np.max(sta_result1.loc[:, "lat"].values)
+                        if elon0 > 180:
+                            sta = sta_result1.copy()
+                            sta.loc[sta_result1["lon"] > 180, "lon"] = sta_result1.loc[sta_result1["lon"] > 180, "lon"] - 360
+                            slon0 = np.min(sta.loc[:, "lon"].values)
+                            elon0 = np.max(sta.loc[:, "lon"].values)
+
+                        dlon0 = (elon0 - slon0) * 0.01
+                        if dlon0 > 1:
+                            dlon0 = 1
+                        dlat0 = (elon0 - slon0) * 0.01
+                        if dlat0 > 1:
+                            dlat0 = 1
+                        slon = slon0 - dlon0
+                        elon = elon0 + dlon0
+                        slat = slat0 - dlat0
+                        elat = elat0 + dlat0
+                        grid1 = meteva.base.grid([slon,elon,dlon0],[slat,elat,dlat0])
+
+                        grd = meteva.base.interp_sg_idw_delta(sta_result1,grid1,halfR=300,nearNum=8)
+                        meteva.base.tool.plot_tools.contourf_2d_grid(grd, save_path=save_path1, show=show,
+                                                            title=title1_list
+                                                            , add_county_line=add_county_line,
+                                                              dpi=dpi,subplot = subplot,ncol = ncol,**plot_args)
                 if plot == "micaps":
                     meteva.base.put_stadata_to_micaps(sta_result1,layer_description=title1_list)
 

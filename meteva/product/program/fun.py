@@ -309,7 +309,6 @@ def get_title_from_dict(method,s,g,group_list,model_name,title = None):
             model_name = str(model_name)
         else:
             model_name = ""
-        print()
         title1 = method_str + model_name + s_str +group_name
 
     return title1

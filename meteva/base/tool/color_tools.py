@@ -171,7 +171,7 @@ def cmap_clevs_bias(vmax):
         clev_list.append(2 + v * 0.2)
         cmap_list.append(yellow * (1 - v * 0.2) + red * v * 0.2)
 
-    for v in range(1,11):
+    for v in range(1,10):
         clev_list.append(3 + v * 0.5)
         cmap_list.append(red * (1 - v * 0.1) + pink * v * 0.1)
 
@@ -964,7 +964,7 @@ def coordinate_cmap_to_clevs(cmap,clevs):
         colors_list = []
         ncmap = len(colors0)
         nclev = len(clevs)
-        if nclev <2:
+        if nclev <3:
             print("clevs' size must bigger than 1")
         for i in range(nclev):
             if nclev>1:
@@ -1000,7 +1000,13 @@ def def_cmap_clevs(cmap = "rainbow",clevs = None,vmin = None,vmax = None,cut_col
             cmap,clevs1= get_cmap_and_clevs_by_name(cmap, vmin, vmax)
     if isinstance(cmap,list):
         if isinstance(cmap[0],list):
-            cmap_list = cmap
+            if isinstance(clevs,list):
+                if len(clevs)==len(cmap)+1:
+                    cmap.append(cmap[-1])
+            cmap_array= np.array(cmap)
+            if np.max(cmap_array)>1:
+                cmap_array =cmap_array / 256
+            cmap_list = cmap_array.tolist()
         else:
             cmap_list = []
             for c1 in cmap:

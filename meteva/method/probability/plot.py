@@ -212,7 +212,7 @@ def roc_hfmc(hfmc_array, member_list=None, save_path=None,show = False,dpi = 300
         return_dict["pod"][line] = pod
 
     plt.plot([0, 1], [0, 1], ":", color="k", linewidth=1, label="无技巧")
-    plt.xlabel("空报率(pofd)", fontsize=sup_fontsize * 0.9)
+    plt.xlabel("报空率(pofd)", fontsize=sup_fontsize * 0.9)
     plt.ylabel("命中率(pod)", fontsize=sup_fontsize * 0.9)
     plt.ylim(0.0, 1.0)
     plt.xlim(0.0, 1.0)
@@ -523,7 +523,7 @@ def comprehensive_hnh(hnh_array,  member_list=None,vmax = None,log_y = False, sa
     ax1.set_xlabel("预报概率",fontsize= sup_fontsize *0.9)
     ax1.set_ylabel("观测频率",fontsize= sup_fontsize *0.9)
     ax1.legend(loc=2,fontsize= sup_fontsize *0.9)
-    ax3.set_xlabel("空报率(pofd)",fontsize= sup_fontsize *0.9)
+    ax3.set_xlabel("报空率(pofd)",fontsize= sup_fontsize *0.9)
     ax3.set_ylabel("命中率(pod)",fontsize= sup_fontsize *0.9)
     ax3.set_ylim(0.0, 1.0)
     ax3.set_xlim(0.0, 1.0)

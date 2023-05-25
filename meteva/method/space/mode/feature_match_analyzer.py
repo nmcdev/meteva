@@ -185,6 +185,7 @@ def feature_merged_analyzer(look_merge,summary =True):
     out = {}
     out["time"] = meteva.base.all_type_time_to_str(look_merge["grd_fo"]["time"].values[0])
     out["dtime"] = int(look_merge["grd_fo"]["dtime"].values[0])
+    out["member"] = look_merge["grd_fo"]["member"].values[0]
     out["match_count"] = nmatch
     f_table = feature_table(look_merge)
     out["feature_table"] = f_table

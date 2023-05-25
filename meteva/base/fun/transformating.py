@@ -42,7 +42,7 @@ def trans_grd_to_sta(grd):
                     sta_all = sta
                 else:
                     sta_all = pd.concat([sta_all, sta])
-
+    sta_all.attrs = copy.deepcopy(grd.attrs)
     return sta_all
 
 def trans_sta_to_grd(sta):
@@ -108,6 +108,7 @@ def trans_sta_to_grd(sta):
                     dat = np.zeros((grid0.nlat, grid0.nlon))
                     dat[jg, ig] = sta3.loc[:, member_list[m]]
                     grd.values[m,i,j,k,:,:] = dat[:,:]
+    grd.attrs = copy.deepcopy(sta.attrs)
     return grd
 
 
@@ -162,6 +163,26 @@ def move_fo_time(data,dtime,keep_minus_dtime = True):
         if not keep_minus_dtime:grd1 = meteva.base.between_dtime_range(grd1,0,10000)
         return grd1
 
+
+def add_dtime_0(data):
+    if isinstance(data, pd.DataFrame):
+        sta1 = data.copy()
+        dtime_list = list(set(sta1["dtime"].values.tolist()))
+        dtime_list.sort()
+        sta1_0 = meteva.base.sele_by_para(sta1,dtime_list[0])
+        sta1_0["dtime"] = 0
+        sta1_0.iloc[:,6:] = 0
+        sta_add = meteva.base.concat([sta1_0,sta1])
+        return sta_add
+    else:
+        grd1 = data.copy()
+        dtime1 = grd1["dtime"].values[0]
+        grd1_0 = meteva.base.in_dtime_list(grd1,dtime1)
+        grd1_0.coords["dtime"] = [0]
+        grd1_0.values[...] = 0
+        grd_add = meteva.base.concat([grd1_0,grd1])
+        return grd_add
+
 def tran_ut_nature_local_time(sta):
     '''
     :param sta: 世界时站点数据
@@ -185,5 +206,5 @@ def tran_ut_Administrative_local_time(sta,id_zone):
     sta_com = meteva.base.combine_expand_IV(sta,sta_zone)
     sta_com["time"] += sta_com.iloc[:,-1] * np.timedelta64(1, 'h')
     sta_com = sta_com.iloc[:,:-1]
-
+    sta_com.attrs = copy.deepcopy(sta.attrs)
     return sta_com

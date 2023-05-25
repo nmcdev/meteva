@@ -18,11 +18,15 @@ def sta_index_ensemble_near_by_sta(sta_to,nearNum = 100,sta_from = None,drop_fri
     for i in range(nearNum):
         data_name = "data" + str(i)
         if nearNum ==1:
-            sta_ensemble[data_name] = indexs[:]
+            sta_ensemble.loc[:,data_name] = indexs[:]
         else:
-            sta_ensemble[data_name] = indexs[:, i]
+            sta_ensemble.loc[:,data_name] = indexs[:, i]
     if drop_frist:
         sta_ensemble = sta_ensemble.drop(columns=['data0'])
+    if sta_from is None:
+        sta_ensemble.attrs = copy.deepcopy(sta_to.attrs)
+    else:
+        sta_ensemble.attrs = copy.deepcopy(sta_from.attrs)
     return sta_ensemble
 
 def sta_id_ensemble_near_by_sta(sta_to,nearNum = 100,sta_from = None,drop_frist = False):
@@ -39,11 +43,15 @@ def sta_id_ensemble_near_by_sta(sta_to,nearNum = 100,sta_from = None,drop_frist 
     for i in range(nearNum):
         data_name = "data" + str(i)
         if nearNum ==1:
-            sta_ensemble[data_name] = input_dat[indexs[:]]
+            sta_ensemble.loc[:,data_name] = input_dat[indexs[:]]
         else:
-            sta_ensemble[data_name] = input_dat[indexs[:, i]]
+            sta_ensemble.loc[:,data_name] = input_dat[indexs[:, i]]
     if drop_frist:
         sta_ensemble = sta_ensemble.drop(columns=['data0'])
+    if sta_from is None:
+        sta_ensemble.attrs = copy.deepcopy(sta_to.attrs)
+    else:
+        sta_ensemble.attrs = copy.deepcopy(sta_from.attrs)
     return sta_ensemble
 
 def sta_value_ensemble_near_by_sta(sta_to,nearNum = 100,sta_from = None,drop_frist = False):
@@ -61,11 +69,15 @@ def sta_value_ensemble_near_by_sta(sta_to,nearNum = 100,sta_from = None,drop_fri
     for i in range(nearNum):
         data_name = "data" + str(i)
         if nearNum ==1:
-            sta_ensemble[data_name] = input_dat[indexs[:]]
+            sta_ensemble.loc[:,data_name] = input_dat[indexs[:]]
         else:
-            sta_ensemble[data_name] = input_dat[indexs[:, i]]
+            sta_ensemble.loc[:,data_name] = input_dat[indexs[:, i]]
     if drop_frist:
         sta_ensemble = sta_ensemble.drop(columns=['data0'])
+    if sta_from is None:
+        sta_ensemble.attrs = copy.deepcopy(sta_to.attrs)
+    else:
+        sta_ensemble.attrs = copy.deepcopy(sta_from.attrs)
     return sta_ensemble
 
 def sta_dis_ensemble_near_by_sta(sta_to,nearNum = 100,sta_from = None,drop_frist = False):
@@ -81,11 +93,15 @@ def sta_dis_ensemble_near_by_sta(sta_to,nearNum = 100,sta_from = None,drop_frist
     for i in range(nearNum):
         data_name = "data" + str(i)
         if nearNum ==1:
-            sta_ensemble[data_name] = d[:]
+            sta_ensemble.loc[:,data_name] = d[:]
         else:
-            sta_ensemble[data_name] = d[:,i]
+            sta_ensemble.loc[:,data_name] = d[:,i]
     if drop_frist:
         sta_ensemble = sta_ensemble.drop(columns=['data0'])
+    if sta_from is None:
+        sta_ensemble.attrs = copy.deepcopy(sta_to.attrs)
+    else:
+        sta_ensemble.attrs = copy.deepcopy(sta_from.attrs)
     return sta_ensemble
 
 def sta_index_ensemble_near_by_grid(sta, grid,nearNum = 1):
@@ -101,6 +117,7 @@ def sta_index_ensemble_near_by_grid(sta, grid,nearNum = 1):
     tree = cKDTree(xyz_sta)
     value, inds = tree.query(xyz_grid, k=nearNum)
     grd_en.values = inds.reshape((nearNum,1,1,1,grid1.nlat,grid1.nlon))
+    grd_en.attrs = copy.deepcopy(sta.attrs)
     return grd_en
 
 def sta_values_ensemble_near_by_grid(sta, grid,nearNum = 1):
@@ -116,7 +133,7 @@ def sta_values_ensemble_near_by_grid(sta, grid,nearNum = 1):
     tree = cKDTree(xyz_sta)
     value, inds = tree.query(xyz_grid, k=nearNum)
     data_name = meteva.base.get_stadata_names(sta)[0]
-    input_dat = sta[data_name].values
+    input_dat = sta.loc[:,data_name].values
 
     if nearNum ==1:
         values = input_dat[inds].reshape((grid1.nlat,grid1.nlon))
@@ -126,7 +143,7 @@ def sta_values_ensemble_near_by_grid(sta, grid,nearNum = 1):
             values = input_dat[inds[:,i]].reshape((grid1.nlat, grid1.nlon))
             grd_en.values[0, 0, 0, 0, :, :] = values[:, :]
             grd_en.values[i,0,0,0,:,:] = input_dat[inds[:,i]].reshape((grid1.nlat,grid1.nlon))
-
+    grd_en.attrs = copy.deepcopy(sta.attrs)
     return grd_en
 
 def sta_dis_ensemble_near_by_grid(sta, grid,nearNum = 1):
@@ -142,6 +159,7 @@ def sta_dis_ensemble_near_by_grid(sta, grid,nearNum = 1):
     tree = cKDTree(xyz_sta)
     dis, inds = tree.query(xyz_grid, k=nearNum)
     grd_en.values = dis.reshape((nearNum,1,1,1,grid1.nlat,grid1.nlon))
+    grd_en.attrs = copy.deepcopy(sta.attrs)
     return grd_en
 
 
@@ -298,12 +316,10 @@ def mean_in_r_of_sta(sta_to, r = 40, sta_from = None,drop_first = False):
 
 def add_stavalue_to_nearest_grid(sta,grid):
     '''
-
     :param sta:
     :param grid:
     :return:
     '''
-
     grd = meteva.base.grid_data(meteva.base.grid(grid.glon,grid.glat,gtime=[sta.iloc[0,1]],dtime_list=[sta.iloc[0,2]],level_list=[sta.iloc[0,0]]))
     sta1 = meteva.base.sele.in_grid_xy(sta, grid)
     data_names = meteva.base.get_stadata_names(sta1)
@@ -316,6 +332,7 @@ def add_stavalue_to_nearest_grid(sta,grid):
     value = duplicate_data_sum["value"].values
     grd.values[0, 0, 0, 0, jg_d, ig_d] = value[:]
     meteva.base.set_griddata_coords(grd, member_list=data_names)
+    grd.attrs = copy.deepcopy(sta.attrs)
     return grd
 
 def add_stacount_to_nearest_grid(sta,grid):

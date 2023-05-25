@@ -7,7 +7,9 @@ def plot(sta_ob_and_fos0,method,s = None,g = None,gll = None,save_dir = None,sav
                 s["drop_last"] = False
             else:
                 s["drop_last"] = True
-    sta_ob_and_fos = sele_by_dict(sta_ob_and_fos0, s)
+
+    sta_ob_and_fos = meteva.base.sele_by_para(sta_ob_and_fos0, drop_IV=True)
+    sta_ob_and_fos = sele_by_dict(sta_ob_and_fos, s)
     #discription_uni = get_unique_coods(sta_ob_and_fos)
     sta_ob_and_fos_list,gll1 = group(sta_ob_and_fos,g,gll)
     data_name = meteva.base.get_stadata_names(sta_ob_and_fos_list[0])

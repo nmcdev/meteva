@@ -189,10 +189,10 @@ def rain_sg(sta_ob,grd_fo,grade_list,save_path=None,show  = False,dpi = 200,add_
                     x = np.array([x])
                     y = np.array([y])
                     if (i > 0):
-                        ax.scatter(x, y, c=colors_sta[i],  s=3, label=clevs_name[i],
+                        ax.scatter(x, y, c=colors_sta[i],  s=3*point_size, label=clevs_name[i],
                                    linewidths=0.3, edgecolor='k')
                     else:
-                        ax.scatter(x, y, c=colors_sta[i], s=1, label=clevs_name[i],
+                        ax.scatter(x, y, c=colors_sta[i], s=1*point_size, label=clevs_name[i],
                                    linewidths=0.1, edgecolor="k")
         ax.legend(facecolor='whitesmoke', loc="lower center", ncol=4, edgecolor='whitesmoke',
                   prop={'size': sta_legend_size},
@@ -231,7 +231,13 @@ def rain_sg(sta_ob,grd_fo,grade_list,save_path=None,show  = False,dpi = 200,add_
                     break
         if len(set(ob_time_valid))>1 and len(set(fo_time_valid))>1:
             print("参数x_y=dtime_member时，暂时不能支持多个起报时间和多个观测时间对应情况下的检验")
+            return
 
+        if sup_title is None:
+            if len(set(ob_time_valid))==1:
+                sup_title = meteva.base.get_path("YY年MM月DD日HH时的观测和不同时效预报对比",ob_time_valid[0])
+            elif len(set(fo_time_valid))==1:
+                sup_title = meteva.base.get_path("YY年MM月DD日HH时的起报的不时效预报和观测对比", fo_time_valid[0])
         if x_y == "dtime_member":
             x = grd_fo['lon'].values
             slon = x[0]
@@ -345,6 +351,8 @@ def rain_sg(sta_ob,grd_fo,grade_list,save_path=None,show  = False,dpi = 200,add_
             ylabel_seted = 0
             #print(ncol)
             #print(nrow)
+
+
             for pi in range(ncol):
                 #print(str(pi) + " ---")
                 if len(ob_time_valid) == 1:
@@ -396,6 +404,7 @@ def rain_sg(sta_ob,grd_fo,grade_list,save_path=None,show  = False,dpi = 200,add_
                         add_china_map_2basemap(ax, name="county", edgecolor='k', lw=0.2, encoding='gbk', grid0=None)  # "县界"
                     ax.set_xlim((slon, elon))
                     ax.set_ylim((slat, elat))
+
                     if pj ==0:
                         if valid_time == 0:
                             ax.set_title(dtime1)
@@ -435,7 +444,6 @@ def rain_sg(sta_ob,grd_fo,grade_list,save_path=None,show  = False,dpi = 200,add_
 
             height_colorbar =0.95 * (ax_up_right.bbox.y1 - ax.bbox.y0) / fig.dpi / height/2
 
-
             location = [ax.bbox.x1 / fig.dpi / width + 0.005, ax.bbox.y0 / fig.dpi / height, 0.01,
                         height_colorbar]
 
@@ -445,9 +453,7 @@ def rain_sg(sta_ob,grd_fo,grade_list,save_path=None,show  = False,dpi = 200,add_
 
             #cb.ax.tick_params(labelsize=sup_fontsize * 0.8)  # 设置色标刻度字体大小。
 
-            y_sup_title = (height_bottem_xticsk + (nrow) * (height_map + height_hspace)) / height
-
-
+            y_sup_title = (height_bottem_xticsk + (nrow) * (height_map + height_hspace)+sup_fontsize*0.03) / height
 
             location = [ax.bbox.x1 / fig.dpi / width + 0.005, ax_up_right.bbox.y1 / fig.dpi / height - height_colorbar, 0.01,
                        height_colorbar]
@@ -455,8 +461,8 @@ def rain_sg(sta_ob,grd_fo,grade_list,save_path=None,show  = False,dpi = 200,add_
             colorbar_ob = plt.colorbar(im2, cax=colorbar_position)
             colorbar_ob.set_label('观测', fontsize=sup_fontsize * 0.9)
 
-            if sup_title is not None:
-                plt.suptitle(sup_title, y=y_sup_title, fontsize=sup_fontsize * 1.2)
+
+            plt.suptitle(sup_title, y=y_sup_title, fontsize=sup_fontsize * 1.2)
 
             if save_path is None:
                 show = True

@@ -273,4 +273,9 @@ def reset_grid(grid0):
         tran = grid0.slat
         grid0.slat = grid0.elat
         grid0.elat = tran
+    if grid0.dlon <0:
+        grid0.dlon = - grid0.dlon
+        tran = grid0.slon
+        grid0.slon = grid0.elon
+        grid0.elon = tran
     return

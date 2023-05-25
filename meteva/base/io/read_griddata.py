@@ -50,7 +50,7 @@ def grid_ragular(slon,dlon,elon,slat,dlat,elat):
     return slon1,dlon1,elon1,slat1,dlat1,elat1,nlon1,nlat1
 
 
-def read_griddata_from_micaps4(filename,grid=None,level = None,time = None,dtime = None,data_name = "data0",show = False):
+def read_griddata_from_micaps4(filename,grid=None,level = None,time = None,dtime = None,data_name = "data0",dtime_units = "hour",outer_value = None,show = False):
     '''
     读取micaps4格式的格点数据，并将其保存为xarray中DataArray结构的六维数据信息
     :param filename:Micaps4格式的文件路径和文件名
@@ -117,7 +117,7 @@ def read_griddata_from_micaps4(filename,grid=None,level = None,time = None,dtime
             da = xr.DataArray(dat, coords={'member': [data_name], 'level': [level], 'time': [time], 'dtime': [dtime],
                                            'lat': lat, 'lon': lon},
                               dims=['member', 'level', 'time', 'dtime', 'lat', 'lon'])
-            da.attrs["dtime_type"] = "hour"
+            da.attrs["dtime_units"] = dtime_units
             da.name = "data0"
             meteva.base.reset(da)
             if grid is None:
@@ -126,11 +126,13 @@ def read_griddata_from_micaps4(filename,grid=None,level = None,time = None,dtime
                 return da
             else:
                 #如果传入函数有grid信息，就需要进行一次双线性插值，按照grid信息进行提取网格信息。
-                da1 = meteva.base.interp_gg_linear(da, grid)
+                da1 = meteva.base.interp_gg_linear(da, grid,outer_value=outer_value)
                 if show:
                     print("success read from " + filename)
                 return da1
         else:
+            print("自描述信息中的网格数是：" +str(nlon1) + "*" + str(nlat1) +"="+ str(nlon1 * nlat1))
+            print("实际数据大小为："+str(len(strs) - 22))
             print("m4 文件式错误，文件自描述信息中网格数和实际数据大小不一致")
             return None
     except:
@@ -143,7 +145,7 @@ def read_griddata_from_micaps4(filename,grid=None,level = None,time = None,dtime
 #读取nc数据
 def read_griddata_from_nc(filename,grid = None,
             value_name = None,member_dim = None,level_dim = None,time_dim = None,dtime_dim = None,lat_dim = None,lon_dim = None,
-                         level=None, time=None, dtime=None, data_name="data0",show = False):
+                         level=None, time=None, dtime=None, data_name="data0",dtime_units = "hour",outer_value = None,show = False):
 
     """
     读取NC文件，并将其保存为xarray中DataArray结构的六维数据信息
@@ -440,7 +442,7 @@ def read_griddata_from_nc(filename,grid = None,
         if data_name is not None and len(da1.coords["member"])==1:
             meteva.base.set_griddata_coords(da1,member_list=[data_name])
 
-
+        da1.attrs["dtime_units"] = dtime_units
         if grid is None:
             #da1.name = "data0"
             if show:
@@ -448,7 +450,7 @@ def read_griddata_from_nc(filename,grid = None,
             return da1
         else:
             # 如果传入函数有grid信息，就需要进行一次双线性插值，按照grid信息进行提取网格信息。
-            da2 = meteva.base.interp_gg_linear(da1, grid)
+            da2 = meteva.base.interp_gg_linear(da1, grid,outer_value=outer_value)
             #da2.name = "data0"
             if show:
                 print("success read from " + filename)
@@ -541,11 +543,9 @@ def print_grib_file_info_old(filename,level_type = None,level = None,filter_by_k
         #     print(str(grb))
 
 
-
-
 def read_griddata_from_grib(filename,level_type= None,grid = None,
             value_name = None,member_dim = None,time_dim = None,dtime_dim = None,lat_dim = None,lon_dim = None,
-                         level=None, time=None, dtime=None, data_name="data0",filter_by_keys = {},show = False):
+                         level=None, time=None, dtime=None, data_name="data0",filter_by_keys = {},dtime_units = "hour",outer_value = None,show = False):
     try:
 
         if level_type is not None:filter_by_keys['typeOfLevel'] = level_type
@@ -566,7 +566,7 @@ def read_griddata_from_grib(filename,level_type= None,grid = None,
         if data_name is not None and len(da1.coords["member"])==1:
             meteva.base.set_griddata_coords(da1,member_list=[data_name])
 
-
+        da1.attrs["dtime_units"] = dtime_units
         if grid is None:
             #da1.name = "data0"
             if show:
@@ -574,7 +574,7 @@ def read_griddata_from_grib(filename,level_type= None,grid = None,
             return da1
         else:
             # 如果传入函数有grid信息，就需要进行一次双线性插值，按照grid信息进行提取网格信息。
-            da2 = meteva.base.interp_gg_linear(da1, grid)
+            da2 = meteva.base.interp_gg_linear(da1, grid,outer_value=outer_value)
             #da2.name = "data0"
             if show:
                 print("success read from " + filename)
@@ -586,7 +586,7 @@ def read_griddata_from_grib(filename,level_type= None,grid = None,
         return None
 
 
-def read_griddata_from_gds_file(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
+def read_griddata_from_gds_file(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",dtime_units = "hour",outer_value = None,show = False):
     try:
         if not os.path.exists(filename):
             print(filename + " does not exist")
@@ -596,6 +596,7 @@ def read_griddata_from_gds_file(filename,grid = None,level = None,time = None,dt
         grd = decode_griddata_from_gds_byteArray(byteArray,grid,level,time,dtime,data_name)
         if show:
             print("success read from " + filename)
+        grd.attrs["dtime_units"] = dtime_units
         return grd
     except Exception as e:
         print(e)
@@ -603,7 +604,7 @@ def read_griddata_from_gds_file(filename,grid = None,level = None,time = None,dt
 
 
 
-def read_griddata_from_gds(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
+def read_griddata_from_gds(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",dtime_units = "hour",outer_value = None,show = False):
     # ip 为字符串形式，示例 “10.20.30.40”
     # port 为整数形式
     # filename 为字符串形式 示例 "ECMWF_HR/TCDC/19083108.000"
@@ -630,6 +631,7 @@ def read_griddata_from_gds(filename,grid = None,level = None,time = None,dtime =
                 grd = decode_griddata_from_gds_byteArray(byteArray,grid,level,time,dtime,data_name)
                 if show:
                     print("success read from " + filename)
+                grd.attrs["dtime_units"] = dtime_units
                 return grd
             else:
                 print(filename + " not exist")
@@ -646,7 +648,7 @@ def read_griddata_from_gds(filename,grid = None,level = None,time = None,dtime =
         return None
 
 
-def read_gridwind_from_gds(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
+def read_gridwind_from_gds(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",dtime_units = "hour",outer_value = None,show = False):
     # ip 为字符串形式，示例 “10.20.30.40”
     # port 为整数形式
     # filename 为字符串形式 示例 "ECMWF_HR/TCDC/19083108.000"
@@ -671,6 +673,7 @@ def read_gridwind_from_gds(filename,grid = None,level = None,time = None,dtime =
                 grd = decode_gridwind_from_gds_byteArray(byteArray,grid,level,time,dtime,data_name)
                 if show:
                     print("success read from " + filename)
+                grd.attrs["dtime_units"] = dtime_units
                 return grd
             else:
                 print(filename + " not exist")
@@ -687,7 +690,7 @@ def read_gridwind_from_gds(filename,grid = None,level = None,time = None,dtime =
         return None
 
 
-def decode_griddata_from_gds_byteArray(byteArray,grid = None,level = None,time = None,dtime = None,data_name = "data0"):
+def decode_griddata_from_gds_byteArray(byteArray,grid = None,level = None,time = None,dtime = None,data_name = "data0",outer_value = None):
     #discriminator = struct.unpack("4s", byteArray[:4])[0].decode("gb2312")
     data_type = np.frombuffer(byteArray[4:6], dtype="i2")[0]
 
@@ -763,12 +766,12 @@ def decode_griddata_from_gds_byteArray(byteArray,grid = None,level = None,time =
         grd.name = "data0"
         return grd
     else:
-        da = meteva.base.interp_gg_linear(grd, grid)
+        da = meteva.base.interp_gg_linear(grd, grid,outer_value=outer_value)
         da.name = "data0"
         return da
 
 
-def decode_gridwind_from_gds_byteArray(byteArray,grid = None,level = None,time = None,dtime = None,data_name = "data0"):
+def decode_gridwind_from_gds_byteArray(byteArray,grid = None,level = None,time = None,dtime = None,data_name = "data0",outer_value = None):
     #discriminator = struct.unpack("4s", byteArray[:4])[0].decode("gb2312")
     data_type = np.frombuffer(byteArray[4:6], dtype="i2")[0]
 
@@ -829,7 +832,7 @@ def decode_gridwind_from_gds_byteArray(byteArray,grid = None,level = None,time =
             if (grid is None):
                 return wind
             else:
-                return meteva.base.interp_gg_linear(wind, grid)
+                return meteva.base.interp_gg_linear(wind, grid,outer_value=outer_value)
     else:
         member_list = []
         for im in range(nmem):
@@ -866,10 +869,10 @@ def decode_gridwind_from_gds_byteArray(byteArray,grid = None,level = None,time =
         if (grid is None):
             return wind_en
         else:
-            return meteva.base.interp_gg_linear(wind_en, grid)
+            return meteva.base.interp_gg_linear(wind_en, grid,outer_value=outer_value)
 
 
-def read_gridwind_from_gds_file(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
+def read_gridwind_from_gds_file(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",dtime_units = "hour",outer_value = None,show = False):
     try:
         if not os.path.exists(filename):
             print(filename + " does not exist")
@@ -888,7 +891,7 @@ def read_gridwind_from_gds_file(filename,grid = None,level = None,time = None,dt
         print(filename + "数据读取错误")
         return None
 
-def read_gridwind_from_micaps2(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show =False):
+def read_gridwind_from_micaps2(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",dtime_units = "hour",outer_value = None,show =False):
     if os.path.exists(filename):
         try:
             column = meteva.base.m2_element_column.风向
@@ -903,9 +906,10 @@ def read_gridwind_from_micaps2(filename,grid = None,level = None,time = None,dti
             if grid is None:
                 return wind
             else:
-                wind1 = meteva.base.interp_gg_linear(wind,grid=grid,level = level,time = time,dtime= dtime,data_name = data_name)
+                wind1 = meteva.base.interp_gg_linear(wind,grid=grid,level = level,time = time,dtime= dtime,data_name = data_name,outer_value=outer_value)
                 if show:
                     print("success read from " + filename)
+                wind1.attrs["dtime_units"] = dtime_units
                 return wind1
         except:
             if show:
@@ -918,7 +922,7 @@ def read_gridwind_from_micaps2(filename,grid = None,level = None,time = None,dti
         print(filename + " not exists")
         return None
 
-def read_gridwind_from_micaps11(filename,grid = None,level = None,time = None,dtime = None,data_name = "",show = False):
+def read_gridwind_from_micaps11(filename,grid = None,level = None,time = None,dtime = None,data_name = "",dtime_units = "hour",outer_value = None,show = False):
     if os.path.exists(filename):
         try:
             encoding,str1 = meteva.base.io.get_encoding_of_file(filename)
@@ -961,9 +965,10 @@ def read_gridwind_from_micaps11(filename,grid = None,level = None,time = None,dt
                 if grid is None:
                     return wind
                 else:
-                    wind1 = meteva.base.interp_gg_linear(wind, grid)
+                    wind1 = meteva.base.interp_gg_linear(wind, grid,outer_value=outer_value)
                     if show:
                         print("success read from " + filename)
+                    wind1.attrs["dtime_units"] = dtime_units
                     return wind1
             else:
 
@@ -981,7 +986,7 @@ def read_gridwind_from_micaps11(filename,grid = None,level = None,time = None,dt
         return None
 
 
-def read_AWX_from_gds(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
+def read_AWX_from_gds(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",dtime_units = "hour",outer_value = None,show = False):
     # ip 为字符串形式，示例 “10.20.30.40”
     # port 为整数形式
     # filename 为字符串形式 示例 "ECMWF_HR/TCDC/19083108.000"
@@ -1059,16 +1064,16 @@ def read_AWX_from_gds(filename,grid = None,level = None,time = None,dtime = None
                 grid0 = meteva.base.grid([slon, elon, dlon],[slat, elat, dlat])
                 grd = meteva.base.grid_data(grid0)
                 grd.values = real_data_awx.reshape(1,1,1,1,grid0.nlat, grid0.nlon)
-                grd.attrs["dtime_type"] = "hour"
                 meteva.base.reset(grd)
                 meteva.base.set_griddata_coords(grd,gtime=[time],dtime_list=[dtime],level_list=[level],member_list=[data_name])
+                grd.attrs["dtime_units"] = dtime_units
                 if (grid is None):
                     grd.name = "data0"
                     if show:
                         print("success read from " + filename)
                     return grd
                 else:
-                    da = meteva.base.interp_gg_linear(grd, grid)
+                    da = meteva.base.interp_gg_linear(grd, grid,outer_value=outer_value)
                     da.name = "data0"
                     if show:
                         print("success read from " + filename)
@@ -1088,7 +1093,7 @@ def read_AWX_from_gds(filename,grid = None,level = None,time = None,dtime = None
         return None
 
 
-def decode_griddata_from_AWX_byteArray(byteArray,grid = None,level = None,time = None,dtime = None,data_name = "data0"):
+def decode_griddata_from_AWX_byteArray(byteArray,grid = None,level = None,time = None,dtime = None,data_name = "data0",outer_value = None):
     sat96 = struct.unpack("12s", byteArray[:12])[0]
     levl = np.frombuffer(byteArray[12:30], dtype='int16').astype(dtype="int32")
     formatstr = struct.unpack("8s", byteArray[30:38])[0]
@@ -1145,18 +1150,17 @@ def decode_griddata_from_AWX_byteArray(byteArray,grid = None,level = None,time =
     grid0 = meteva.base.grid([slon, elon, dlon], [slat, elat, dlat])
     grd = meteva.base.grid_data(grid0)
     grd.values = real_data_awx.reshape(1, 1, 1, 1, grid0.nlat, grid0.nlon)
-    grd.attrs["dtime_type"] = "hour"
     meteva.base.reset(grd)
     meteva.base.set_griddata_coords(grd,gtime=[time],dtime_list=[dtime],level_list=[level],member_list=[data_name])
     if (grid is None):
         grd.name = "data0"
         return grd
     else:
-        da = meteva.base.interp_gg_linear(grd, grid)
+        da = meteva.base.interp_gg_linear(grd, grid,outer_value=outer_value)
         da.name = "data0"
         return da
 
-def read_griddata_from_AWX_file(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
+def read_griddata_from_AWX_file(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",dtime_units = "hour",outer_value = None,show = False):
     try:
         if not os.path.exists(filename):
             print(filename + " does not exist")
@@ -1164,6 +1168,7 @@ def read_griddata_from_AWX_file(filename,grid = None,level = None,time = None,dt
         file = open(filename, 'rb')
         byteArray = file.read()
         grd = decode_griddata_from_AWX_byteArray(byteArray,grid,level = level,time = time,dtime = dtime,data_name = data_name)
+        grd.attrs["dtime_units"] = dtime_units
         if show:
             print("success read from " + filename)
         return grd
@@ -1175,7 +1180,7 @@ def read_griddata_from_AWX_file(filename,grid = None,level = None,time = None,dt
         print(filename + "数据读取失败")
         return None
 
-def read_griddata_from_binary(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
+def read_griddata_from_binary(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",dtime_units = "hour",outer_value = None,show = False):
     try:
         if not os.path.exists(filename):
             print(filename + " does not exist")
@@ -1188,8 +1193,9 @@ def read_griddata_from_binary(filename,grid = None,level = None,time = None,dtim
         dat  = np.frombuffer(bytes[24:], dtype='float32')
         grd = meteva.base.grid_data(grid0,dat)
         if grid is not None:
-            grd = meteva.base.interp_gg_linear(grd,grid1=grid)
+            grd = meteva.base.interp_gg_linear(grd,grid1=grid,outer_value=outer_value)
         meteva.base.set_griddata_coords(grd,gtime=[time],dtime_list=[dtime],level_list=[level],member_list=[data_name])
+        grd.attrs["dtime_units"] = dtime_units
         if show:
             print("success read from " + filename)
         return grd
@@ -1205,7 +1211,7 @@ def read_griddata_from_binary(filename,grid = None,level = None,time = None,dtim
 
 
 
-def decode_griddata_from_radar_byteArray(byteArray,grid = None,level = None,time = None,dtime = None,data_name = "data0"):
+def decode_griddata_from_radar_byteArray(byteArray,grid = None,level = None,time = None,dtime = None,data_name = "data0",outer_value = None):
     CODE1 = 'B'
     CODE2 = 'H'
     INT1 = 'B'
@@ -1294,11 +1300,11 @@ def decode_griddata_from_radar_byteArray(byteArray,grid = None,level = None,time
         grd.name = "data0"
         return grd
     else:
-        da = meteva.base.interp_gg_linear(grd, grid)
+        da = meteva.base.interp_gg_linear(grd, grid,outer_value=outer_value)
         da.name = "data0"
         return da
 
-def read_griddata_from_radar_latlon_file(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
+def read_griddata_from_radar_latlon_file(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",dtime_units = "hour",outer_value = None,show = False):
     try:
         if not os.path.exists(filename):
             print(filename + " does not exist")
@@ -1306,6 +1312,7 @@ def read_griddata_from_radar_latlon_file(filename,grid = None,level = None,time 
         file = open(filename, 'rb')
         byteArray = file.read()
         grd = decode_griddata_from_radar_byteArray(byteArray,grid,level = level,time = time,dtime = dtime,data_name = data_name)
+        grd.attrs["dtime_units"] = dtime_units
         if show:
             print("success read from " + filename)
         return grd
@@ -1317,7 +1324,7 @@ def read_griddata_from_radar_latlon_file(filename,grid = None,level = None,time 
         print(filename + "数据读取失败")
         return None
 
-def read_griddata_from_bz2_file(filename,decode_method,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
+def read_griddata_from_bz2_file(filename,decode_method,grid = None,level = None,time = None,dtime = None,data_name = "data0",dtime_units = "hour",outer_value = None,show = False):
 
     if not os.path.exists(filename):
         print(filename + " not exist")
@@ -1327,6 +1334,7 @@ def read_griddata_from_bz2_file(filename,decode_method,grid = None,level = None,
         buf = f.read()
         f.close()
         grd = decode_method(buf,grid = grid,level = level,time = time,dtime = dtime,data_name = data_name)
+        grd.attrs["dtime_units"] = dtime_units
         if show:
             print("successed read griddata from "+ filename)
         return grd
@@ -1339,7 +1347,8 @@ def read_griddata_from_bz2_file(filename,decode_method,grid = None,level = None,
         return None
 
 
-def read_radar_latlon_from_gds(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
+
+def read_radar_latlon_from_gds(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",dtime_units = "hour",outer_value = None,show = False):
     # ip 为字符串形式，示例 “10.20.30.40”
     # port 为整数形式
     # filename 为字符串形式 示例 "ECMWF_HR/TCDC/19083108.000"
@@ -1363,6 +1372,7 @@ def read_radar_latlon_from_gds(filename,grid = None,level = None,time = None,dti
             if ByteArrayResult is not None:
                 byteArray = ByteArrayResult.byteArray
                 grd = decode_griddata_from_radar_byteArray(byteArray,grid = grid,level = level,time = time,dtime = dtime,data_name = data_name)
+                grd.attrs["dtime_units"] = dtime_units
                 return grd
             else:
                 print(filename + " not exist")
@@ -1379,12 +1389,12 @@ def read_radar_latlon_from_gds(filename,grid = None,level = None,time = None,dti
 
 
 
-def read_griddata_from_rasterData(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False):
+def read_griddata_from_rasterData(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",dtime_units = "hour",outer_value = None,show = False):
     if not os.path.exists(filename):
         print(filename + " not exists")
         return
     try:
-        filename = r"H:\resource\地形数据\rastert_as_dem_1.txt"
+        #filename = r"H:\resource\地形数据\rastert_as_dem_1.txt"
         encoding, str1 = meteva.base.io.get_encoding_of_file(filename)
         strs = str1.split()
         nlon1 = int(strs[1])
@@ -1404,11 +1414,12 @@ def read_griddata_from_rasterData(filename,grid = None,level = None,time = None,
         meteva.base.reset(grd)
         meteva.base.set_griddata_coords(grd, gtime=[time], dtime_list=[dtime], level_list=[level],
                                         member_list=[data_name])
+        grd.attrs["dtime_units"] = dtime_units
         if (grid is None):
             grd.name = "data0"
             return grd
         else:
-            da = meteva.base.interp_gg_linear(grd, grid)
+            da = meteva.base.interp_gg_linear(grd, grid,outer_value=outer_value)
             da.name = "data0"
             return da
     except:
@@ -1418,7 +1429,7 @@ def read_griddata_from_rasterData(filename,grid = None,level = None,time = None,
         print(filename + "数据读取失败")
         return None
 
-def read_griddata_from_cmadaas(dataCode,element,level_type,level,time,dtime = None,grid = None,data_name= None,show = False):
+def read_griddata_from_cmadaas(dataCode,element,level_type,level,time,dtime = None,grid = None,data_name= None,dtime_units = "hour",outer_value = None,show = False):
 
     if dataCode.find("SURF") >=0:
         qparams = { 'interfaceId':'getSurfEleGridByTime'
@@ -1462,17 +1473,17 @@ def read_griddata_from_cmadaas(dataCode,element,level_type,level,time,dtime = No
         meteva.base.reset(grd)
         meteva.base.set_griddata_coords(grd,level_list=[level])
         if data_name is None:
-            meteva.base.set_griddata_coords(grd,member_list=[dataCode])
+            meteva.base.set_griddata_coords(grd,member_list=[element])
         else:
              meteva.base.set_griddata_coords(grd,member_list=[data_name])
         grd.name = element
         if grid is not None:
-            grd = meteva.base.interp_gg_linear(grd, grid)
-
+            grd = meteva.base.interp_gg_linear(grd, grid,outer_value=outer_value)
+    grd.attrs["dtime_units"] = dtime_units
     return grd
 
 
-def read_griddata_from_cimiss(dataCode,element,level,time,dtime,grid = None,data_name=None, show = False):
+def read_griddata_from_cimiss(dataCode,element,level,time,dtime,grid = None,data_name=None,dtime_units = "hour",outer_value = None, show = False):
 
     time1 = meteva.base.all_type_time_to_datetime(time)
     time_str = time1.strftime("%Y%m%d%H%M%S")
@@ -1512,12 +1523,13 @@ def read_griddata_from_cimiss(dataCode,element,level,time,dtime,grid = None,data
     meteva.base.reset(grd)
     grd.name = element
     if grid is not None:
-        grd = meteva.base.interp_gg_linear(grd, grid)
+        grd = meteva.base.interp_gg_linear(grd, grid,outer_value=outer_value)
+    grd.attrs["dtime_units"] = dtime_units
     return grd
 
 
 def decode_griddata_from_radar_mosaic_v3_byteArray(byteArray, grid=None, level=None, time=None, dtime=None,
-                                             data_name="data0"):
+                                             data_name="data0",outer_value = None):
     if time is None:
         ts = np.frombuffer(byteArray[100:112], dtype='short')
         time = datetime.datetime(ts[0], ts[1], ts[2], ts[3], ts[4])
@@ -1552,14 +1564,14 @@ def decode_griddata_from_radar_mosaic_v3_byteArray(byteArray, grid=None, level=N
         meteva.base.reset(grd)
         meteva.base.set_griddata_coords(grd, gtime=[time], dtime_list=[dtime], level_list=[level])
         if grid is not None:
-            grd = meteva.base.interp_gg_linear(grd, grid)
+            grd = meteva.base.interp_gg_linear(grd, grid,outer_value=outer_value)
         meteva.base.set_griddata_coords(grd, member_list=[data_name])
         return grd
     else:
         return None
 
 
-def read_griddata_from_radar_mosaic_v3_file(filename, grid=None, level=None, time=None, dtime=None, data_name="data0",
+def read_griddata_from_radar_mosaic_v3_file(filename, grid=None, level=None, time=None, dtime=None, data_name="data0",dtime_units = "hour",outer_value = None,
                                       show=False):
     try:
         if not os.path.exists(filename):
@@ -1569,6 +1581,7 @@ def read_griddata_from_radar_mosaic_v3_file(filename, grid=None, level=None, tim
         byteArray = file.read()
         grd = decode_griddata_from_radar_mosaic_v3_byteArray(byteArray, grid, level=level, time=time, dtime=dtime,
                                                        data_name=data_name)
+        grd.attrs["dtime_units"] = dtime_units
         if show:
             print("success read from " + filename)
         return grd
@@ -1579,7 +1592,7 @@ def read_griddata_from_radar_mosaic_v3_file(filename, grid=None, level=None, tim
         print(filename + "数据读取失败")
         return None
 
-def read_griddata_from_radar_mosaic_v3_gds(filename, grid=None, level=None, time=None, dtime=None, data_name="data0",
+def read_griddata_from_radar_mosaic_v3_gds(filename, grid=None, level=None, time=None, dtime=None, data_name="data0",dtime_units = "hour",outer_value = None,
                                       show=False):
     # ip 为字符串形式，示例 “10.20.30.40”
     # port 为整数形式
@@ -1605,6 +1618,7 @@ def read_griddata_from_radar_mosaic_v3_gds(filename, grid=None, level=None, time
                 byteArray = ByteArrayResult.byteArray
 
                 grd = decode_griddata_from_radar_mosaic_v3_byteArray(byteArray,grid,level,time,dtime,data_name)
+                grd.attrs["dtime_units"] = dtime_units
                 if show:
                     print("success read from " + filename)
                 return grd
@@ -1623,8 +1637,8 @@ def read_griddata_from_radar_mosaic_v3_gds(filename, grid=None, level=None, time
         return None
 
 
-def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim = None,time = None,level = None, grid = None,endian = "<",
-                           data_name=None,
+def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim = None,dtime_start = 0,time = None,level = None, grid = None,endian = "<",
+                           data_name=None,dtime_units = "hour",outer_value = None,
                            show=False
                            ):
 
@@ -1732,20 +1746,28 @@ def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim
             grd = meteva.base.concat(grd_list)
             if data_name is not None:
                 meteva.base.set_griddata_coords(grd, member_list=[data_name])
+            if dtime_start != 0:
+                grd = meteva.base.move_fo_time(grd, -dtime_start)
             return grd
 
         else:
             grid0 = meteva.base.grid(ctl["glon"],ctl["glat"])
             blocksize_xy = grid0.nlon * grid0.nlat * 4
-            ensembel_size = 1
-            nlevel = ctl["vars"][value_index]["nlevel"]
-            blocksize_time_ensemble = blocksize_xy *  ctl["ntime"] * ctl["nensemble"]
-            start_index = ctl["vars"][value_index]["start_bolck_index"] * blocksize_time_ensemble
-            position = file.seek(start_index)
-            blocksize_one_value = blocksize_time_ensemble * nlevel
-            content = file.read(blocksize_one_value)
-            data = np.frombuffer(content, dtype=endian +"f")
 
+            data_list = []
+            blocksize_one_time = ctl["cumulate_levels"] *blocksize_xy
+            nlevel = ctl["vars"][value_index]["nlevel"]
+            for nn in range(ctl["nensemble"]):
+                for t in range(ctl["ntime"]):
+                    start_index =blocksize_one_time *ctl["ntime"] * nn +  t * blocksize_one_time + ctl["vars"][value_index][
+                        "start_bolck_index"] * blocksize_xy
+                    position = file.seek(start_index)
+                    blocksize_one_value = blocksize_xy * nlevel
+                    content = file.read(blocksize_one_value)
+                    data1 = np.frombuffer(content, dtype=endian + "f")
+                    data_list.append(data1)
+
+            data = np.array(data_list)
             data = data.reshape(ctl["nensemble"], ctl["ntime"], nlevel, ctl["nlat"], ctl["nlon"])
             data = data.transpose(0,2,1,3,4)
             if nlevel != len(ctl["zdef"]):
@@ -1759,13 +1781,17 @@ def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim
 
                 grid1 = meteva.base.grid(ctl["glon"], ctl["glat"], gtime=[ctl["gtime"][0]], dtime_list=ctl["dtime_list"] ,
                                          level_list=level_list, member_list=ctl["edef"])
+
             #print(grid1)
             grd_one_var = meteva.base.grid_data(grid1,data)
             if grid is not None:
-                grd_one_var = meteva.base.interp_gg_linear(grd_one_var,grid=grid)
+                grd_one_var = meteva.base.interp_gg_linear(grd_one_var,grid=grid,outer_value=outer_value)
             if data_name is not None:
                 meteva.base.set_griddata_coords(grd_one_var, member_list=[data_name])
             file.close()
+            grd_one_var.attrs["dtime_units"] = dtime_units
+            if dtime_start != 0:
+                grd_one_var = meteva.base.move_fo_time(grd_one_var, -dtime_start)
             return grd_one_var
     except:
         if show:
@@ -1776,7 +1802,7 @@ def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim
         return None
 
 
-def decode_griddata_from_swan_d131_byteArray(byteArray,grid = None,level = None,time = None,dtime = 0,data_name = "data0",scale_type=0):
+def decode_griddata_from_swan_d131_byteArray(byteArray,grid = None,level = None,time = None,dtime = 0,data_name = "data0",scale_type=0,outer_value = None):
     head_dtype_raw = [
         ('ZonName', 'S12'),
         ('DataName', 'S38'),
@@ -1868,7 +1894,7 @@ def decode_griddata_from_swan_d131_byteArray(byteArray,grid = None,level = None,
     grd = meteva.base.grid_data(grid_file,data)
     meteva.base.reset(grd)
     if grid is not None:
-        grd  = meteva.base.interp_gg_linear(grd,grid)
+        grd  = meteva.base.interp_gg_linear(grd,grid,outer_value=outer_value)
     if data_name is not None:
         grd.attrs['short_name'] = data_name
         grd.attrs['units'] = 'mm'
@@ -1877,7 +1903,7 @@ def decode_griddata_from_swan_d131_byteArray(byteArray,grid = None,level = None,
     return grd
 
 
-def read_griddata_from_swan_d131(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",show = False,scale_type = 0):
+def read_griddata_from_swan_d131(filename,grid = None,level = None,time = None,dtime = None,data_name = "data0",dtime_units = "hour",show = False,scale_type = 0,outer_value = None):
     try:
         if not os.path.exists(filename):
             print(filename + " does not exist")
@@ -1890,10 +1916,14 @@ def read_griddata_from_swan_d131(filename,grid = None,level = None,time = None,d
             except:
                 pass
         byteArray = file.read()
+        if filename[-4:].lower() == ".bz2":
+            byteArray = bz2.decompress(byteArray)
+
         grd = decode_griddata_from_swan_d131_byteArray(byteArray, grid, level=level, time=time, dtime=dtime,
                                                    data_name=data_name,scale_type=scale_type)
         if show:
             print("success read from " + filename)
+        grd.attrs["dtime_units"] = dtime_units
         return grd
     except:
         if show:
@@ -1940,7 +1970,7 @@ def jd2ce(JDN):
     print("儒略日{}对应的公历日期为{}年{}月{}日{}时{}分".format(JDN - 0.5, year, month, day, hour, minute), '\n')
     return (date)
 
-def read_griddata_from_ensemble_sav(filename, dt=None, unit='mm', var=None):  ## 可改为使用meb.grid类
+def read_griddata_from_ensemble_sav(filename, dt=None, unit='mm', var=None,dtime_units = "hour",outer_value = None):  ## 可改为使用meb.grid类
     """
     从集合团队IDL的sav数据中，读取meteva类型的xarray格点数据，并返回
     dt: 预报数据起报时间，datetime.datetime类型
@@ -1986,7 +2016,53 @@ def read_griddata_from_ensemble_sav(filename, dt=None, unit='mm', var=None):  ##
     grd_ens.attrs["units"] = unit
     grd_ens.name = 'data0'
     grd_ens1 = grd_ens.transpose('member', 'level', 'time', 'dtime', 'lat', 'lon')
+    grd_ens1.attrs["dtime_units"] = dtime_units
     return grd_ens1
 
+
+def read_griddata_from_swan_d131_gds(filename, grid=None, level=None, time=None, dtime=None, data_name="data0",dtime_units = "hour",
+                                     show=False, scale_type=0,outer_value = None):
+    # ip 为字符串形式，示例 “10.20.30.40”
+    # port 为整数形式
+    # filename 为字符串形式 示例 "ECMWF_HR/TCDC/19083108.000"
+    if meteva.base.gds_ip_port is None:
+        print("请先使用set_config 配置gds的ip和port")
+        return
+    ip, port = meteva.base.gds_ip_port
+    service = GDSDataService(ip, port)
+    try:
+        filename = filename.replace("mdfs:///", "")
+        filename = filename.replace("\\", "/")
+
+        if (service is None):
+            print("service is None")
+            return
+        directory, fileName = os.path.split(filename)
+        status, response = byteArrayResult = service.getData(directory, fileName)
+        ByteArrayResult = DataBlock_pb2.ByteArrayResult()
+        if status == 200:
+            ByteArrayResult.ParseFromString(response)
+            if ByteArrayResult is not None:
+                byteArray = ByteArrayResult.byteArray
+
+                if fileName[-4:].lower() == ".bz2":
+                    byteArray = bz2.decompress(byteArray)
+
+                grd = decode_griddata_from_swan_d131_byteArray(byteArray, grid, level=level, time=time, dtime=dtime,
+                                                               data_name=data_name, scale_type=scale_type)
+                grd.attrs["dtime_units"] = dtime_units
+                return grd
+            else:
+                print(filename + " not exist")
+                return None
+        else:
+            print("连接服务的状态异常，不能读取相应的文件,可能原因相应的文件不在允许读取的时段范围")
+            return None
+    except:
+        if show:
+            exstr = traceback.format_exc()
+            print(exstr)
+        print(filename + "数据读取失败")
+        return None
 
 

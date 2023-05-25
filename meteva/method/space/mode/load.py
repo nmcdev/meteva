@@ -10,6 +10,10 @@ def load_feature_summary(filename):
     feature1["match_count"] = feature["match_count"]
     feature1["time"] = feature["time"]
     feature1["dtime"] = feature["dtime"]
+    if "member" in feature.keys():
+        feature1["member"] = feature["member"]
+    else:
+        feature1["member"] = "data0"
     feature1["feature_table"] = feature["feature_table"]
     feature1["interester"] = feature["interester"]
 

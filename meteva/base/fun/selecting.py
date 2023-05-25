@@ -273,7 +273,17 @@ def in_ob_time_list(sta,time_list):
     time_list1 = []
     for time0 in time_list:
         time_list1.append(meteva.base.tool.time_tools.all_type_time_to_time64(time0))
-    dtimes = sta["dtime"] * np.timedelta64(1, 'h')
+
+    dtime_units ="hour"
+    if len(sta.attrs) >0:
+        if "dtime_units" in sta.attrs:
+            if sta.attrs["dtime_units"] != "hour":
+                dtime_units = "minute"
+    if dtime_units == "hour":
+        dtimes = sta["dtime"] * np.timedelta64(1, 'h')
+    else:
+        dtimes = sta["dtime"] * np.timedelta64(1, 'm')
+
     obtimes = sta['time'] + dtimes
     sta1 = sta.loc[obtimes.isin(time_list1)]
     return sta1
@@ -282,7 +292,15 @@ def in_ob_time_list(sta,time_list):
 def in_ob_year_list(sta,year_list):
     if not isinstance(year_list,list) and not isinstance(year_list,np.ndarray):
         year_list = [year_list]
-    dtimes = sta["dtime"] * np.timedelta64(1, 'h')
+    dtime_units ="hour"
+    if len(sta.attrs) >0:
+        if "dtime_units" in sta.attrs:
+            if sta.attrs["dtime_units"] != "hour":
+                dtime_units = "minute"
+    if dtime_units == "hour":
+        dtimes = sta["dtime"] * np.timedelta64(1, 'h')
+    else:
+        dtimes = sta["dtime"] * np.timedelta64(1, 'm')
     obtimes = pd.Series(0,index = sta['time'] + dtimes)
     sta1 = sta.loc[obtimes.index.year.isin(year_list)]
     return sta1
@@ -291,7 +309,15 @@ def in_ob_year_list(sta,year_list):
 def in_ob_month_list(sta,month_list):
     if not isinstance(month_list,list) and not isinstance(month_list,np.ndarray):
         month_list = [month_list]
-    dtimes = sta["dtime"] * np.timedelta64(1, 'h')
+    dtime_units ="hour"
+    if len(sta.attrs) >0:
+        if "dtime_units" in sta.attrs:
+            if sta.attrs["dtime_units"] != "hour":
+                dtime_units = "minute"
+    if dtime_units == "hour":
+        dtimes = sta["dtime"] * np.timedelta64(1, 'h')
+    else:
+        dtimes = sta["dtime"] * np.timedelta64(1, 'm')
     obtimes = pd.Series(0,index = sta['time'] + dtimes)
     sta1 = sta.loc[obtimes.index.month.isin(month_list)]
     return sta1
@@ -301,7 +327,15 @@ def in_ob_month_list(sta,month_list):
 def in_ob_xun_list(sta,xun_list):
     if not isinstance(xun_list,list) and not isinstance(xun_list,np.ndarray):
         xun_list = [xun_list]
-    dtimes = sta["dtime"] * np.timedelta64(1, 'h')
+    dtime_units ="hour"
+    if len(sta.attrs) >0:
+        if "dtime_units" in sta.attrs:
+            if sta.attrs["dtime_units"] != "hour":
+                dtime_units = "minute"
+    if dtime_units == "hour":
+        dtimes = sta["dtime"] * np.timedelta64(1, 'h')
+    else:
+        dtimes = sta["dtime"] * np.timedelta64(1, 'm')
     obtimes = pd.Series(0,index = sta['time'] + dtimes)
     mons = obtimes.index.month.astype(np.int16)
     days = obtimes.index.day.astype(np.int16)
@@ -316,7 +350,15 @@ def in_ob_xun_list(sta,xun_list):
 def in_ob_hou_list(sta,hou_list):
     if not isinstance(hou_list,list) and not isinstance(hou_list,np.ndarray):
         hou_list = [hou_list]
-    dtimes = sta["dtime"] * np.timedelta64(1, 'h')
+    dtime_units ="hour"
+    if len(sta.attrs) >0:
+        if "dtime_units" in sta.attrs:
+            if sta.attrs["dtime_units"] != "hour":
+                dtime_units = "minute"
+    if dtime_units == "hour":
+        dtimes = sta["dtime"] * np.timedelta64(1, 'h')
+    else:
+        dtimes = sta["dtime"] * np.timedelta64(1, 'm')
     obtimes = pd.Series(0,index = sta['time'] + dtimes)
     mons = obtimes.index.month.astype(np.int16)
     days = obtimes.index.day.astype(np.int16)
@@ -331,7 +373,15 @@ def in_ob_hou_list(sta,hou_list):
 def in_ob_dayofyear_list(sta,dayofyear_list):
     if not isinstance(dayofyear_list,list) and not isinstance(dayofyear_list,np.ndarray):
         dayofyear_list = [dayofyear_list]
-    dtimes = sta["dtime"] * np.timedelta64(1, 'h')
+    dtime_units ="hour"
+    if len(sta.attrs) >0:
+        if "dtime_units" in sta.attrs:
+            if sta.attrs["dtime_units"] != "hour":
+                dtime_units = "minute"
+    if dtime_units == "hour":
+        dtimes = sta["dtime"] * np.timedelta64(1, 'h')
+    else:
+        dtimes = sta["dtime"] * np.timedelta64(1, 'm')
     obtimes = pd.Series(0,index = sta['time'] + dtimes)
     sta1 = sta.loc[obtimes.index.dayofyear.isin(dayofyear_list)]
     return sta1
@@ -339,7 +389,15 @@ def in_ob_dayofyear_list(sta,dayofyear_list):
 def in_ob_day_list(sta,day_list):
     if not isinstance(day_list,list) and not isinstance(day_list,np.ndarray):
         day_list = [day_list]
-    dtimes = sta["dtime"] * np.timedelta64(1, 'h')
+    dtime_units ="hour"
+    if len(sta.attrs) >0:
+        if "dtime_units" in sta.attrs:
+            if sta.attrs["dtime_units"] != "hour":
+                dtime_units = "minute"
+    if dtime_units == "hour":
+        dtimes = sta["dtime"] * np.timedelta64(1, 'h')
+    else:
+        dtimes = sta["dtime"] * np.timedelta64(1, 'm')
     obtimes = sta['time'] + dtimes
     days_list = []
     time0 = datetime.datetime(1900, 1, 1, 0, 0)
@@ -359,7 +417,15 @@ def in_ob_day_list(sta,day_list):
 def in_ob_hour_list(sta,hour_list):
     if not isinstance(hour_list,list) and not isinstance(hour_list,np.ndarray):
         hour_list = [hour_list]
-    dtimes = sta["dtime"] * np.timedelta64(1, 'h')
+    dtime_units ="hour"
+    if len(sta.attrs) >0:
+        if "dtime_units" in sta.attrs:
+            if sta.attrs["dtime_units"] != "hour":
+                dtime_units = "minute"
+    if dtime_units == "hour":
+        dtimes = sta["dtime"] * np.timedelta64(1, 'h')
+    else:
+        dtimes = sta["dtime"] * np.timedelta64(1, 'm')
     obtimes = pd.Series(0,index = sta['time'] + dtimes)
     sta1 = sta.loc[obtimes.index.hour.isin(hour_list)]
     return sta1
@@ -368,7 +434,15 @@ def in_ob_hour_list(sta,hour_list):
 def in_ob_minute_list(sta,minute_list):
     if not isinstance(minute_list,list) and not isinstance(minute_list,np.ndarray):
         minute_list = [minute_list]
-    dtimes = sta["dtime"] * np.timedelta64(1, 'h')
+    dtime_units ="hour"
+    if len(sta.attrs) >0:
+        if "dtime_units" in sta.attrs:
+            if sta.attrs["dtime_units"] != "hour":
+                dtime_units = "minute"
+    if dtime_units == "hour":
+        dtimes = sta["dtime"] * np.timedelta64(1, 'h')
+    else:
+        dtimes = sta["dtime"] * np.timedelta64(1, 'm')
     obtimes = pd.Series(0,index = sta['time'] + dtimes)
     sta1 = sta.loc[obtimes.index.minute.isin(minute_list)]
     return sta1
@@ -378,7 +452,15 @@ def between_ob_time_range(sta,start_time,end_time):
     start_time = meteva.base.tool.time_tools.all_type_time_to_time64(start_time)
     end_time = meteva.base.tool.time_tools.all_type_time_to_time64(end_time)
 
-    dtimes = sta["dtime"] * np.timedelta64(1, 'h')
+    dtime_units ="hour"
+    if len(sta.attrs) >0:
+        if "dtime_units" in sta.attrs:
+            if sta.attrs["dtime_units"] != "hour":
+                dtime_units = "minute"
+    if dtime_units == "hour":
+        dtimes = sta["dtime"] * np.timedelta64(1, 'h')
+    else:
+        dtimes = sta["dtime"] * np.timedelta64(1, 'm')
     obtimes = sta['time'] + dtimes
     sta1 = sta.loc[(obtimes  >= start_time) & (obtimes  <= end_time)]
     return sta1
@@ -716,22 +798,24 @@ def sele_by_dict(data,s):
 
 
     sta1 = data
-    data_names = meteva.base.get_stadata_names(data)
-    p_set.extend(data_names)
-    data_names_range = []
-    for data_name in data_names:
-        data_names_range.append(str(data_name)+"_range")
-    p_set.extend(data_names_range)
-    for key in s.keys():
-        if key in data_names:
-            value_one = s[key]
-            if not isinstance(value_one,list):
-                value_one = [value_one]
-            sta1 = in_one_column_value_list(sta1,key, value_one)
-        elif key in data_names_range:
-            value_one = s[key]
-            data_name = key.split("_")[0]
-            sta1 = between_one_column_value_range(sta1,data_name,value_one[0],value_one[1])
+
+    if isinstance(data, pd.DataFrame):
+        data_names = meteva.base.get_stadata_names(data)
+        p_set.extend(data_names)
+        data_names_range = []
+        for data_name in data_names:
+            data_names_range.append(str(data_name)+"_range")
+        p_set.extend(data_names_range)
+        for key in s.keys():
+            if key in data_names:
+                value_one = s[key]
+                if not isinstance(value_one,list):
+                    value_one = [value_one]
+                sta1 = in_one_column_value_list(sta1,key, value_one)
+            elif key in data_names_range:
+                value_one = s[key]
+                data_name = key[0:-6]
+                sta1 = between_one_column_value_range(sta1,data_name,value_one[0],value_one[1])
 
 
     key_set = s.keys() #set(list(s.keys()))
@@ -929,24 +1013,23 @@ def sele_by_para(data,member = None,level = None,time = None,time_range = None,y
     :return:  [站点数据](https://www.showdoc.cc/nmc?page_id=3744334022014027)
     '''
     sta1 = data
-
-    data_names = meteva.base.get_stadata_names(data)
-    data_names_range = []
-    for data_name in data_names:
-        data_names_range.append(str(data_name)+"_range")
-    for key in kwargs.keys():
-        if key in data_names:
-            value_one = kwargs[key]
-            if not isinstance(value_one,list):
-                value_one = [value_one]
-            sta1 = in_one_column_value_list(sta1,key, value_one)
-        elif key in data_names_range:
-            value_one = kwargs[key]
-            data_name = key.split("_")[0]
-            sta1 = between_one_column_value_range(sta1,data_name,value_one[0],value_one[1])
-        else:
-            print("输入的参数"+key+"不是数据选取函数可接受的参数")
-
+    if isinstance(data, pd.DataFrame):
+        data_names = meteva.base.get_stadata_names(data)
+        data_names_range = []
+        for data_name in data_names:
+            data_names_range.append(str(data_name)+"_range")
+        for key in kwargs.keys():
+            if key in data_names:
+                value_one = kwargs[key]
+                if not isinstance(value_one,list):
+                    value_one = [value_one]
+                sta1 = in_one_column_value_list(sta1,key, value_one)
+            elif key in data_names_range:
+                value_one = kwargs[key]
+                data_name = key[0:-6]
+                sta1 = between_one_column_value_range(sta1,data_name,value_one[0],value_one[1])
+            else:
+                print("输入的参数"+key+"不是数据选取函数可接受的参数")
 
     if member is not None:
         sta1 = in_member_list(sta1,member)

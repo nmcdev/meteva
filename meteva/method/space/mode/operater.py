@@ -31,7 +31,6 @@ def operate(grd_ob, grd_fo, smooth, threshold,minsize,compare = ">=",match_metho
                                            near_rate=near_rate[1])
         matched_fo = unimatch(look_ob,look_fo,cover_dis,cover_rate)
         look_merge = unimerge(look_ob,matched_fo)
-
     else:
         look_ff = feature_finder(grd_ob,grd_fo,smooth=smooth,threshold=threshold,minsize=minsize,compare=compare)
         loof_match = match_method(look_ff)

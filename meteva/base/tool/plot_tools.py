@@ -204,6 +204,12 @@ def add_china_map_2basemap(ax,name ="province", facecolor='none',
                 ax.add_collection(lines)
 
 
+def contourf(grd,save_path = None,title = None,clevs= None,cmap ="rainbow",add_county_line = False,add_worldmap =False,show = False,dpi = 300,
+                     sup_fontsize = 10,height = None,width = None,subplot = None,ncol = None,sup_title = None,clip= None,add_minmap= None):
+    contourf_2d_grid(grd,save_path = save_path,title = title,clevs= clevs,cmap =cmap,add_county_line = add_county_line,
+                     add_worldmap =add_worldmap,show = show,dpi = dpi,
+                     sup_fontsize = sup_fontsize,height = height,width = width,subplot = subplot,ncol = ncol,
+                     sup_title = sup_title,clip= clip,add_minmap= add_minmap)
 
 def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap ="rainbow",add_county_line = False,add_worldmap =False,show = False,dpi = 300,
                      sup_fontsize = 10,height = None,width = None,subplot = None,ncol = None,sup_title = None,clip= None,add_minmap= None):
@@ -229,12 +235,30 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap ="rainbo
 
 
     for i in range(len(grd_list)):
-        if isinstance(sup_title,list):
-            sup_title1 = sup_title[i]
-        else:
-            sup_title1 = sup_title
-
         grd1 = grd_list[i]
+        if sup_title is None:
+            level_str = str(int(grd1["level"].values[0]))
+            data_name = grd1["member"].values[0]
+            time_str = meteva.base.tool.time_tools.all_type_time_to_str(grd1["time"].values[0])
+            dati_str = time_str[0:4] + "年" + time_str[4:6] + "月" + time_str[6:8] + "日" + time_str[8:10] + "时"
+            dtime_str = str(int(grd1["dtime"].values[0]))
+            if subplot == ["level"]:
+                sup_title1 = data_name + "_" + dati_str + dtime_str + "H时效"
+            elif subplot == ["time"]:
+                sup_title1 = data_name + "_Level" + level_str + "_" + dtime_str + "H时效"
+            elif subplot == ["dtime"]:
+                sup_title1 = data_name + "_Level" + level_str + "_" + dati_str
+            elif subplot == ["member"]:
+                sup_title1 = " Level" + level_str + "_" + dati_str + dtime_str + "H时效"
+            else:
+                sup_title1 =None
+        else:
+            if isinstance(sup_title,list):
+                sup_title1 = sup_title[i]
+            else:
+                sup_title1 = sup_title
+
+
         if subplot is None:
             grd_list1 = [grd1]
         else:
@@ -247,7 +271,30 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap ="rainbo
             else:
                 title1 = title
         else:
-            title1 = None
+            if subplot is not None:
+                grd_list1 = meteva.base.split_grd(grd1, used_coords=subplot)
+            else:
+                grd_list1 = [grd1]
+            ng = len(grd_list1)
+            title1 = []
+            for kk in range(len(grd_list1)):
+                grd2 = grd_list1[kk]
+                level_str = str(int(grd2["level"].values[0]))
+                data_name = grd2["member"].values[0]
+                time_str = meteva.base.tool.time_tools.all_type_time_to_str(grd2["time"].values[0])
+                dati_str = time_str[0:4] + "年" + time_str[4:6] + "月" + time_str[6:8] + "日" + time_str[8:10] + "时"
+                dtime_str = str(int(grd2["dtime"].values[0]))
+                if subplot == ["level"]:
+                    title00 =level_str
+                elif subplot == ["time"]:
+                    title00 = dati_str
+                elif subplot == ["dtime"]:
+                    title00 = dtime_str +  "H时效 "
+                elif subplot == ["member"]:
+                    title00 = data_name
+                else:
+                    title00 =data_name +"_L"+level_str+"_"+ dati_str+"_"+dtime_str+"H时效"
+                title1.append(title00)
 
         plot_2d_grid_list(grd_list1,type = "contour",save_path= save_path,title= title1,clevs=clevs,cmap=cmap,vmax = vmax,vmin = vmin,add_county_line= add_county_line,
                       add_worldmap = add_worldmap,show=show,dpi = dpi,sup_fontsize = sup_fontsize,height= height,width = width,ncol= ncol,
@@ -315,9 +362,17 @@ def plot_2d_grid_list(grd_list,type = "contour",save_path = None,title = None,cl
         height_all_plot = height_map * nrow + (nrow-1) * height_hspace
         height = height_all_plot + height_title + height_bottem_xticsk
 
-
+    if clevs is None and vmin is None and vmax is None:
+        vmax = -1e30
+        vmin = 1e30
+        for grd in grd_list:
+            vmax1 = np.max(grd.values)
+            if vmax < vmax1:
+                vmax = vmax1
+            vmin1 = np.min(grd.values)
+            if vmin > vmin1:
+                vmin = vmin1
     cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap, clevs=clevs, vmin=vmin, vmax=vmax)
-    #print(clevs1)
     norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
 
     vmax = elon
@@ -675,7 +730,7 @@ def scatter_sta(sta0,value_column=None,
                 min_spot_value = 0,grid = False,subplot = None,ncol = None,point_size = None,sup_title = None,add_minmap = None,title_in_ax = False):
 
     sta = sta0
-    if save_path is None:
+    if save_path is None and save_dir is None:
         show = True
     if isinstance(map_extend,list):
         slon = map_extend[0]
@@ -752,6 +807,8 @@ def scatter_sta(sta0,value_column=None,
 
     norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
 
+
+
     if point_size is None:
 
         sta_id1 = sta0.drop_duplicates(['id'])
@@ -825,7 +882,11 @@ def scatter_sta(sta0,value_column=None,
 
 
     if subplot is None:
-        nplot = len(plot_data_names)
+
+        split = ["level","time","dtime","member"]
+        sta_list = meteva.base.split(sta0,used_coords=split)
+        nplot = len(sta_list)
+        #nplot = len(plot_data_names)
         if isinstance(title, list):
             if nplot != len(title):
                 print("手动设置的title数目和要绘制的图形数目不一致")
@@ -838,9 +899,11 @@ def scatter_sta(sta0,value_column=None,
                 return
 
         for p in range(nplot):
-            data_name = data_names[p]
-            sta_one_member = meteva.base.sele_by_para(sta,member=[data_name],drop_IV=True)
-
+            #data_name = data_names[p]
+            #sta_one_member = meteva.base.sele_by_para(sta,member=[data_name],drop_IV=True)
+            sta_one_member = sta_list[p]
+            data_name = meteva.base.get_stadata_names(sta_one_member)[0]
+            #print(sta_one_member)
             x = sta_one_member.loc[:, "lon"].values
             y = sta_one_member.loc[:, "lat"].values
             value = sta_one_member.loc[:, data_name].values
@@ -852,9 +915,10 @@ def scatter_sta(sta0,value_column=None,
 
             if title is None:
                 try:
-                    time_str = meteva.base.tool.time_tools.time_to_str(sta.iloc[0, 1])
+                    time_str = meteva.base.tool.time_tools.time_to_str(sta_one_member.iloc[0, 1])
                     dati_str = time_str[0:4] + "年" + time_str[4:6] + "月" + time_str[6:8] + "日" + time_str[8:10] + "时"
-                    title1 = data_name + " " + dati_str + str(sta.iloc[0,2]) + "H时效 "
+                    level_str = str(int(sta_one_member.iloc[0, 0]))
+                    title1 = data_name + "_L"+level_str+"_" + dati_str + str(sta_one_member.iloc[0,2]) + "H时效"
                 except:
                     print("time or dtime or level 格式错误，请更改相应数据格式或直接指定title")
                     title1= ""
@@ -947,12 +1011,13 @@ def scatter_sta(sta0,value_column=None,
                 add_china_map_2basemap(ax_min, name="nation", edgecolor='k', lw=0.2, encoding='gbk', grid0=None)  # "省界"
 
 
+
             save_path1 = None
             if save_path is None:
                 if save_dir is None:
                     show = True
                 else:
-                    save_path1 = save_dir + "/" + data_name + ".png"
+                    save_path1 = save_dir + "/" + title1 + ".png"
             else:
                 save_path1 = save_path[p]
             if save_path1 is not None:
@@ -981,7 +1046,31 @@ def scatter_sta(sta0,value_column=None,
         if sup_title is None:
             sup_title = []
             for i in range(ng):
-                sup_title.append(None)
+                sta0 = sta_list[i]
+                if subplot==["level"]:
+                    data_names = meteva.base.get_stadata_names(sta0)
+                    time_str = meteva.base.tool.time_tools.time_to_str(sta0.iloc[0, 1])
+                    dati_str = time_str[0:4] + "年" + time_str[4:6] + "月" + time_str[6:8] + "日" + time_str[8:10] + "时"
+                    sup_title1 = data_names[0] + "_" + dati_str + str(sta0.iloc[0, 2]) + "H时效"
+                elif subplot==["time"]:
+                    data_names = meteva.base.get_stadata_names(sta0)
+                    level_str = str(int(sta0.iloc[0, 0]))
+                    sup_title1 = data_names[0] + "_Level" + level_str + "_"+ str(sta0.iloc[0, 2]) + "H时效"
+                elif subplot ==["dtime"]:
+                    data_names = meteva.base.get_stadata_names(sta0)
+                    time_str = meteva.base.tool.time_tools.time_to_str(sta0.iloc[0, 1])
+                    level_str = str(int(sta0.iloc[0, 0]))
+                    dati_str = time_str[0:4] + "年" + time_str[4:6] + "月" + time_str[6:8] + "日" + time_str[8:10] + "时"
+                    sup_title1 = data_names[0] + "_Level"+ level_str + "_" + dati_str
+                elif subplot ==["member"]:
+                    time_str = meteva.base.tool.time_tools.time_to_str(sta0.iloc[0, 1])
+                    level_str = str(int(sta0.iloc[0, 0]))
+                    dati_str = time_str[0:4] + "年" + time_str[4:6] + "月" + time_str[6:8] + "日" + time_str[8:10] + "时"
+                    sup_title1 = "Level" + level_str + "_"+ dati_str+ str(sta0.iloc[0, 2]) + "H时效"
+                else:
+                    sup_title1 = "none"
+
+                sup_title.append(sup_title1)
         else:
             if not isinstance(sup_title,list):
                 sup_title2 = []
@@ -999,13 +1088,36 @@ def scatter_sta(sta0,value_column=None,
             if isinstance(title,list):
                 title1 = title[(ng1 * n):(ng1 * (n+1))]
             else:
-                title1= title
+                title1 = []
+                for  kk in range(len(sta_g1)):
+                    sta0 = sta_g1[kk]
+                    if subplot==["level"]:
+                        title00 = str(int(sta0.iloc[0, 0]))
+                    elif subplot==["time"]:
+                        time_str = meteva.base.tool.time_tools.time_to_str(sta0.iloc[0, 1])
+                        title00 = time_str[0:4] + "年" + time_str[4:6] + "月" + time_str[6:8] + "日" + time_str[8:10] + "时"
+                    elif subplot ==["dtime"]:
+                        title00 =str(sta0.iloc[0, 2]) + "H时效 "
+                    elif subplot ==["member"]:
+                        data_names = meteva.base.get_stadata_names(sta0)
+                        title00 = data_names[0]
+                    else:
+                        title00 = "none"
+                    title1.append(title00)
+
 
 
             if isinstance(save_path,list):
                 save_path1 = save_path[n]
-            else:
+            elif save_path is not None:
                 save_path1 = save_path
+            elif save_dir is not None:
+                save_path1 = save_dir+"/"+sup_title[n]+".png"
+
+            else:
+                save_path1 = None
+
+
 
             scatter_sta_list(sta_g1,map_extend = map_extend,add_county_line = add_county_line,
             add_worldmap=add_worldmap,clevs = clevs,cmap = cmap,vmax=vmax_v,vmin = vmin_v,fix_size=fix_size,threshold=threshold,
@@ -1204,7 +1316,7 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
 
 
     fig = plt.figure(figsize=(width, height), dpi=dpi)
-
+    title1 = None
     for p in range(nplot):
         sta_one_member = meteva.base.sele_by_para(sta0_list[p],drop_IV=True)
         data_name = meteva.base.get_stadata_names(sta_one_member)
@@ -1320,8 +1432,8 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
             add_china_map_2basemap(ax_min, name="world", edgecolor='k', lw=0.2, encoding='gbk', grid0=None)  # "国界"
             add_china_map_2basemap(ax_min, name="nation", edgecolor='k', lw=0.2, encoding='gbk', grid0=None)  # "省界"
 
-        if print_max >0 or print_min >0:
-            print(title1)
+        #if print_max >0 or print_min >0:
+        #    print(title1)
         if print_max > 0:
             print("取值最大的" + str(print_max) + "个站点：")
             indexs = value.argsort()[-print_max:][::-1]
@@ -1346,7 +1458,13 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
     cb = plt.colorbar(im, cax=colorbar_position)
     cb.ax.tick_params(labelsize=sup_fontsize *0.8)  #设置色标刻度字体大小。
 
-    y_sup_title = (height_bottem_xticsk + (nrow) * (height_map + height_hspace)) / height
+
+    title1_list = [""]
+    if title1 is not None:
+        title1_list = title1.split("\n")
+
+
+    y_sup_title = (height_bottem_xticsk + (nrow) * (height_map + height_hspace)+(len(title1_list)-1)* sup_fontsize*0.015) / height
     if sup_title is not None:
         plt.suptitle(sup_title, y = y_sup_title,fontsize=sup_fontsize * 1.2)
 
@@ -1479,6 +1597,7 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
              ,height = None,width = None,log_y = False,sup_title = None,xlabel = None,legend_col = None,color_list = None,hline = None,marker = None):
     shape = array.shape
 
+    array = copy.deepcopy(array)
 
     if len(array[array!=meteva.base.IV]) ==0:
         print("所有的值都为缺失值")
@@ -1786,8 +1905,10 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
                 pass
                 vmin1 = vmin1 * (vmin1 / vmax1) ** 0.2
             else:
-                if vmin1 < 0 or plot_type == "plot":
-                    vmin1 = vmin1 - 0.1 * dmax
+                vmin1_new = vmin1 - 0.1 * dmax
+                if vmin1 >= 0 and vmin1_new <= 0:
+                    vmin1_new = 0
+                vmin1 = vmin1_new
 
         if vmax is None:
             if log_y:
@@ -2112,8 +2233,12 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
                     pass
                     vmin1 = vmin1 * (vmin1/vmax1) ** 0.2
                 else:
-                    if vmin1 < 0 or plot_type == "plot":
-                        vmin1 = vmin1 - 0.1 * dmax
+                    vmin1_new  = vmin1 - 0.1 * dmax
+                    if vmin1 >=0 and vmin1_new<=0:
+                        vmin1_new = 0
+                    vmin1 = vmin1_new
+
+
             if vmax is None:
                 if log_y:
                     vmax1 = vmax1 * (vmax1 / vmin1) ** 0.5
@@ -4024,6 +4149,22 @@ def mesh_time_dtime(sta0,save_dir = None,save_path = None,
             plt.close()
             kk += 1
     return
+
+
+def barbs_grid_wind(grid_wind,width = None,height = None,sup_fontsize = 12,dpi = 300,skip = None,save_path = None,show = False):
+    grid1 = meteva.base.get_grid_of_data(grid_wind)
+    axs = meteva.base.creat_axs(1, map_extend=grid1, add_minmap=False, ncol=2, width=width,height=height,sup_fontsize=sup_fontsize,dpi=dpi)
+    meteva.base.add_barbs(axs[0], grid_wind,skip=skip)
+
+    if save_path is None:
+        show = True
+    else:
+        meteva.base.creat_path(save_path)
+        plt.savefig(save_path,bbox_inches='tight')
+        print("检验结果已以图片形式保存至" + save_path)
+    if show:
+        plt.show()
+    plt.close()
 
 
 def add_scatter(ax,map_extend,sta0,cmap = None,clevs = None,point_size = None,fix_size = True,title = None,threshold = 2,min_spot_value = 0,mean_value = 2,

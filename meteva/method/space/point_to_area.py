@@ -1,6 +1,6 @@
 import meteva
 import pandas as pd
-
+import numpy as np
 
 def p2p_vto01(sta_all,threshold = 1e-30,compair = ">="):
     '''
@@ -18,19 +18,21 @@ def p2p_vto01(sta_all,threshold = 1e-30,compair = ">="):
 
     if isinstance(threshold,pd.DataFrame):
         sta_compair = meteva.base.combine_expand_IV(sta_happen_all,threshold)
+        print(sta_compair.iloc[-10:-1,:])
         for i in range(len(fo_names)):
             name = fo_names[i]
+            hap = np.zeros(len(sta_all.index))
             if compair == ">=":
-                sta_happen_all.loc[:,name] = 0 + (sta_compair.loc[:,name] >= sta_compair.iloc[:,-1])
+                hap[sta_compair.loc[:,name].values >= sta_compair.iloc[:,-1].values] = 1
             elif compair =="<=":
-                sta_happen_all.loc[:, name] = 0 + (sta_compair.loc[:, name] <= sta_compair.iloc[:, -1])
+                hap[sta_compair.loc[:,name].values <= sta_compair.iloc[:,-1].values] = 1
             elif compair ==">":
-                sta_happen_all.loc[:, name] = 0 + (sta_compair.loc[:, name] > sta_compair.iloc[:, -1])
+                hap[sta_compair.loc[:,name].values > sta_compair.iloc[:,-1].values] = 1
             else:
-                sta_happen_all.loc[:, name] = 0 + (sta_compair.loc[:, name] < sta_compair.iloc[:, -1])
+                hap[sta_compair.loc[:,name].values < sta_compair.iloc[:,-1].values] = 1
 
-
-            sta_happen_all.loc[sta_compair.loc[:,name] == meteva.base.IV, name] = meteva.base.IV
+            sta_happen_all.loc[:, name] =hap[:]
+            sta_happen_all.loc[sta_compair.loc[:,name].values == meteva.base.IV, name] = meteva.base.IV
     else:
         for i in range(len(fo_names)):
             name = fo_names[i]

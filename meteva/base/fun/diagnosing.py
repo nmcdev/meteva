@@ -386,7 +386,8 @@ def t_rh_p_to_q(temp,rh,pressure,rh_unit = "%"):
         e0 = 6.11 * np.exp(5420 * (1.0 / 273.15 - 1 / (T + 273.15))) * 622
 
         if rh_unit == "%":
-            R /= 100
+            R = R.astype(np.float)
+            R = R/100
         else:
             pass
 

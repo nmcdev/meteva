@@ -12,12 +12,15 @@ method_coluns_dict = {
     "hfmc" :  ["H","F","M","C"],
     "tase":["T", "E", "A", "S"],
     "tc_count":["T", "C"],
+    "tlfo":["T","LFO"],
+    "toar":["T","OAR"],
     "tmmsss": ["T", "MX","MY","SX","SY","SXY"],
     "tbask":["T","BASK"],
     "nasws_uv": ["T", "AC", "SCORE", "SEVERER", "WEAK"],
     "nas_uv": ["T", "AC", "SCORE"],
     "na_uv":["T","AC"],
-    "nasws_s": ["T", "AC", "SCORE", "SEVERER", "WEAK"]
+    "nasws_s": ["T", "AC", "SCORE", "SEVERER", "WEAK"],
+    "fss":["pob","pfo","fbs"]
 
 }
 
@@ -31,16 +34,20 @@ def get_score_method_with_mid(method):
     hfmc_of_sum_rain_list = [meteva.method.pc_of_sun_rain]
     tase_list = [meteva.method.me, meteva.method.mae, meteva.method.mse, meteva.method.rmse]
     tc_list = [meteva.method.correct_rate,meteva.method.wrong_rate]
-    tmmsss_list = [meteva.method.residual_error, meteva.method.residual_error_rate,meteva.method.corr]
+    tmmsss_list = [meteva.method.residual_error, meteva.method.residual_error_rate,meteva.method.corr,
+                    meteva.method.nse,meteva.method.ob_fo_mean,meteva.method.ob_fo_sum]
     tbask_list = [meteva.product.regulation.temperature.temp_forecaster_score]
     nasws_s_list = [meteva.method.acs, meteva.method.scs, meteva.method.wind_weaker_rate,
                      meteva.method.wind_severer_rate]
     nasws_uv_list = [meteva.method.acs_uv,meteva.method.scs_uv,meteva.method.wind_weaker_rate_uv,meteva.method.wind_severer_rate_uv]
     nas_uv_list = [meteva.method.acd_uv,meteva.method.scd_uv]
     na_uv_list = [meteva.method.acz_uv]
-
+    toar_list = [meteva.method.mre]
+    tlfo_list = [meteva.method.rmsf]
+    fss_list = [meteva.method.fss]
     method_mid = None
     method_name = method.__name__
+
     if method in hfmc_of_sum_rain_list:
         method_mid = getattr(meteva.method, method_name + "_hfmc")
     elif method in hfmc_list:
@@ -51,6 +58,10 @@ def get_score_method_with_mid(method):
         method_mid = getattr(meteva.method, method_name + "_tc")
     elif method in tmmsss_list:
         method_mid = getattr(meteva.method, method_name + "_tmmsss")
+    elif method in toar_list:
+        method_mid = getattr(meteva.method, method_name + "_toar")
+    elif method in tlfo_list:
+        method_mid = getattr(meteva.method, method_name + "_tlfo")
     elif method in tbask_list:
         method_mid = getattr(meteva.product, method_name + "_tbask")
     elif method in nasws_s_list:
@@ -64,7 +75,10 @@ def get_score_method_with_mid(method):
     elif method in na_uv_list:
         method_name1 = method_name.replace("_uv","_na")
         method_mid = getattr(meteva.method, method_name1)
+    elif method in fss_list:
+        method_mid = getattr(meteva.method, method_name + "_fof")
 
+    #print(method_mid)
     return method_mid
 
 def get_middle_method(method):
@@ -77,12 +91,16 @@ def get_middle_method(method):
     hfmc_of_sum_rain_list = [meteva.method.pc_of_sun_rain]
     tase_list = [meteva.method.me, meteva.method.mae, meteva.method.mse, meteva.method.rmse]
     tc_list = [meteva.method.correct_rate,meteva.method.wrong_rate]
-    tmmsss_list = [meteva.method.residual_error, meteva.method.residual_error_rate,meteva.method.corr]
+    tmmsss_list = [meteva.method.residual_error, meteva.method.residual_error_rate,meteva.method.corr,meteva.method.ob_fo_sum,meteva.method.ob_fo_mean,
+                   meteva.method.nse]
+    toar_list = [meteva.method.mre]
+    tlfo_list = [meteva.method.rmsf]
     tbask_list = [meteva.product.regulation.temperature.temp_forecaster_score]
     nasws_s_list = [meteva.method.acs,meteva.method.scs,meteva.method.wind_weaker_rate,meteva.method.wind_severer_rate]
     nasws_uv_list = [meteva.method.acs_uv,meteva.method.scs_uv,meteva.method.wind_weaker_rate_uv,meteva.method.wind_severer_rate_uv]
     nas_uv_list = [meteva.method.acd_uv,meteva.method.scd_uv]
     na_uv_list = [meteva.method.acz_uv]
+    fss_list = [meteva.method.fss]
 
     method_mid = None
     if method in hfmc_of_sum_rain_list:
@@ -95,6 +113,10 @@ def get_middle_method(method):
         method_mid = meteva.method.tc_count
     elif method in tmmsss_list:
         method_mid = meteva.method.tmmsss
+    elif method in toar_list:
+        method_mid = meteva.method.toar
+    elif method in tlfo_list:
+        method_mid = meteva.method.tlfo
     elif method in tbask_list:
         method_mid = meteva.product.regulation.temperature.tbask
     elif method in nasws_s_list:
@@ -105,7 +127,8 @@ def get_middle_method(method):
         method_mid = meteva.method.nas_uv
     elif method in na_uv_list:
         method_mid = meteva.method.na_uv
-
+    elif method in fss_list:
+        method_mid = meteva.method.fss
 
     return method_mid
 
@@ -532,6 +555,8 @@ def middle_df_grd(grd_ob, grd_fo, method, grade_list=None, compare=None, marker=
     time_fo = grd_fo["time"].values[0]
     dtime = grd_fo["dtime"].values[0]
     fo_name = grd_fo["member"].values[0]
+    if method.__name__.find("_uv") >= 0:
+        fo_name = fo_name[2:]
 
     method_args = {}
     if grade_list is not None:
@@ -569,8 +594,8 @@ def middle_df_grd(grd_ob, grd_fo, method, grade_list=None, compare=None, marker=
             for c in range(len(mid_columns)):
                 dict1[mid_columns[c]] = mid_array[..., c].flatten()
 
-            mid_df = pd.DataFrame(dict1)
-            df_list.append(mid_df)
+        mid_df = pd.DataFrame(dict1)
+        df_list.append(mid_df)
 
     else:
         mark_set = list(set(marker.values.flatten().tolist()))
@@ -622,6 +647,7 @@ def middle_df_grd(grd_ob, grd_fo, method, grade_list=None, compare=None, marker=
             else:
                 for c in range(len(mid_columns)):
                     dict1[mid_columns[c]] = mid_array[..., c].flatten()
+
 
             mid_df = pd.DataFrame(dict1)
             df_list.append(mid_df)

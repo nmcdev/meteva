@@ -259,7 +259,7 @@ class mfig:
 
         time_str = meteva.base.tool.time_tools.time_to_str(grd["time"].values[0])
         dati_str = time_str[0:4] + "年" + time_str[4:6] + "月" + time_str[6:8] + "日" + time_str[8:10] + "时"
-        title1 = grd["member"].values[0] + " " + dati_str + str(grd["dtime"].values[0]) + "H时效 "
+        title1 = str(grd["member"].values[0]) + " " + dati_str + str(grd["dtime"].values[0]) + "H时效 "
         if "var_name" in grd.attrs.keys():
             title1 = title1 + grd.attrs["var_name"]
         ax.set_title(title1, fontsize=self.sup_fontsize* 0.9, pad=0)
@@ -314,7 +314,7 @@ class mfig:
             cb.ax.tick_params(labelsize=self.sup_fontsize * 0.8)
         time_str = meteva.base.tool.time_tools.time_to_str(grd["time"].values[0])
         dati_str = time_str[0:4] + "年" + time_str[4:6] + "月" + time_str[6:8] + "日" + time_str[8:10] + "时"
-        title1 = grd["member"].values[0] + " " + dati_str + str(grd["dtime"].values[0]) + "H时效 "
+        title1 = str(grd["member"].values[0]) + " " + dati_str + str(grd["dtime"].values[0]) + "H时效 "
         if "var_name" in grd.attrs.keys():
             title1 = title1 + grd.attrs["var_name"]
         ax.set_title(title1, fontsize=self.sup_fontsize* 0.9, pad=0)

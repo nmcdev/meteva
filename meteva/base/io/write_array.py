@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import meteva
 def write_array_to_excel(array,save_path,name_list_dict,columns = None,index = None):
     shape = array.shape
     keys = list(name_list_dict.keys())
@@ -88,7 +89,13 @@ def write_array_to_excel(array,save_path,name_list_dict,columns = None,index = N
         cols= [[columns],name_list_dict[columns]]
         rows = [[index],name_list_dict[index]]
         sheet_list = name_list_dict[sheet]
-
+        if isinstance(sheet_list[0],pd._libs.tslibs.timestamps.Timestamp):
+            print(type(sheet_list[0]))
+            sheet_list1 = []
+            for name in sheet_list:
+                name1 = meteva.base.all_type_time_to_str(name)
+                sheet_list1.append(name1)
+            sheet_list = sheet_list1
         for s in range(len(sheet_list)):
             # table_data = pd.DataFrame(array[:,:,s])
             table_data = pd.DataFrame(data[s,:, :],
@@ -98,7 +105,7 @@ def write_array_to_excel(array,save_path,name_list_dict,columns = None,index = N
             table_data_list.append(table_data)
         with pd.ExcelWriter(save_path) as writer:
             for i in range(len(sheet_list)):
-                str1 = str(name_list_dict[sheet][i])
+                str1 = str(sheet_list[i])
                 str1 = str1.replace("[","【")
                 #print(str1)
                 table_data_list[i].to_excel(writer, sheet_name=sheet + '_' + str1)

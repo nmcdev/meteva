@@ -256,10 +256,74 @@ def put_stadata_to_micaps(sta,effective_num = 3,layer_description = None):
     return str_data'''
 
 
+def write_stadata_to_micaps2(sta_speed,sta_angle,save_path = "a.txt",creat_dir = False, type = 0,effectiveNum = 4,show = False,title = None):
+    """
+    生成micaps3格式的文件
+    :param sta0:站点数据信息
+    :param save_path 需要保存的文件路径和名称
+    :param type 类型：默认：1
+    :param effectiveNum 有效数字 默认为：4
+    :return:保存为micaps3格式的文件
+    """
+    try:
+
+        dir = os.path.split(os.path.abspath(save_path))[0]
+        if not os.path.isdir(dir):
+            if not creat_dir:
+                print("文件夹：" + dir + "不存在")
+                return False
+            else:
+                meteva.base.tool.path_tools.creat_path(save_path)
+
+        br = open(save_path,'w')
+        end = len(save_path)
+        start = max(0, end-16)
+        sta = meteva.base.combine_on_all_coords(sta_angle,sta_speed)
+        nsta =len(sta.index)
+        time = sta['time'].iloc[0]
+        if isinstance(time,np.datetime64) or isinstance(time,datetime.datetime):
+            time_str = meteva.base.tool.time_tools.time_to_str(time)
+            time_str = time_str[0:4] + " " +time_str[4:6] + " " + time_str[6:8] + " " + time_str[8:10] + " "
+        else:
+            time_str = "2099 01 01 0 "
+
+        if np.isnan(sta['level'].iloc[0]):
+            level = 0
+        else:
+            level = int(sta['level'].iloc[0])
+        if type<0 or level == np.NaN or level ==pd.NaT:
+            level = int(type)
+
+        if title is None:
+            str1=("diamond 2 " + save_path[start:end] + "\n"+ time_str + str(level) +" " + str(nsta) + "\n")
+        else:
+            str1 = ("diamond 2 " + title + "\n" + time_str + str(level) +" "  + str(nsta) + "\n")
+        br.write(str1)
+        br.close()
+
+        df = copy.deepcopy(sta[['id','lon','lat']])
+        df['alt'] = 0
+        df["d0"] = 1
+        df["d1"] = 9999
+        df["d2"] = 9999
+        df["d3"] = 9999
+        df["angle"] = sta.iloc[:,6]
+        df["speed"] = sta.iloc[:, 7]
+
+        effectiveNum_str = "%." + '%d'% effectiveNum + "f"
+        df.to_csv(save_path,mode='a',header=None,sep = "\t",float_format=effectiveNum_str,index = None)
+        if show:
+            print('成功输出至' + save_path)
+        return True
+    except:
+        exstr = traceback.format_exc()
+        print(exstr)
+        return False
+
+
 
 if __name__ == "__main__":
-    meteva.base.print_gds_file_values_names(r"H:\test_data\20210220160000.000")
-    sta = meteva.base.read_stadata_from_gdsfile(r"H:\test_data\20210220160000.000",element_id=603)
-    sta.attrs["description"] = "Temp"
-    print(sta)
-    write_stadata_to_gds_file(sta,save_path=r"H:\test_data\output\meb\m3_gds_test.000")
+    path = r"D:\book\test_data\charpter11\ob_with_noisy\22010102.000"
+    sta = pd.read_csv(path, parse_dates=["time"])
+    speed,angle = meteva.base.wind_to_speed_angle(sta)
+    write_stadata_to_micaps2(speed,angle,r"D:\book\test_data\charpter11\a.txt")
