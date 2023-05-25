@@ -4,6 +4,8 @@ import math
 import numpy as np
 import meteva
 from matplotlib.colors import BoundaryNorm
+import pandas as pd
+import datetime
 
 
 def scatter_uv_error(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量误差散点分布图"
@@ -80,6 +82,14 @@ def scatter_uv_error(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量�
         height = height_all_plot + height_title + height_bottem_xticsk + sup_height_title
 
 
+    if u_ob.size>10000:
+        step = 0.02
+    elif u_ob.size < 100:
+        step = 0.2
+    else:
+        step = 2/np.sqrt(u_ob.size)
+    grid_count = meteva.base.grid([-vmax,vmax,step*vmax],[-vmax,vmax,step*vmax])
+
     fig = plt.figure(figsize=(width, height), dpi=dpi)
     plt.subplots_adjust(hspace = 0.3,wspace = 0.3)
     u1 = u_ob.flatten()
@@ -90,7 +100,30 @@ def scatter_uv_error(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量�
         for line in range(new_Fo_shape[0]):
             member_list.append("预报" + str(line))
 
-    colors = meteva.base.color_tools.get_color_list(new_Fo_shape[0]+1)
+    #为统一色标，需要预先计算出所有误差场的密度场
+    sta_count_list = []
+    max_count = 0
+    for line in range(new_Fo_shape[0]):
+        u2 = new_u_Fo[line, :].flatten()
+        v2 = new_v_Fo[line, :].flatten()
+        markersize = 5 * width_axis * height_axis / np.sqrt(u_ob.size)
+        du = u2 - u1
+        dv = v2 - v1
+        df = pd.DataFrame({"lon": du, "lat": dv})
+        sta_xy = meteva.base.sta_data(df)
+        sta_xy["time"] = datetime.datetime(2020, 1, 1, 0)
+        sta_xy["data0"] = 1
+        grd_count = meteva.base.near.add_stavalue_to_nearest_grid(sta_xy, grid=grid_count)
+        grd_count = meteva.base.smooth(grd_count,1)
+        sta_count = meteva.base.interp_gs_linear(grd_count, sta_xy)
+        sta_count_list.append(sta_count)
+        count1 = np.max(sta_count["data0"].values)
+        if count1 > max_count:
+            max_count = count1
+
+    cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap="turbo", clevs=None, vmin=0, vmax=max_count)
+    norm = BoundaryNorm(clevs1, ncolors=cmap1.N - 1)
+
 
     for line in range(new_Fo_shape[0]):
         pi = line % ncol
@@ -101,20 +134,22 @@ def scatter_uv_error(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量�
                  height_axis / height]
         ax = plt.axes(rect1)
 
-        u2 = new_u_Fo[line, :].flatten()
-        v2 = new_v_Fo[line, :].flatten()
-
-
-        markersize = 5 * width_axis * height_axis / np.sqrt(u_ob.size)
-
         if markersize < 1:
             markersize = 1
         elif markersize > 20:
             markersize = 20
         #plt.subplot(nrows, ncols, line + 1)
 
-
-        plt.plot(u2-u1,v2-v1,'.',color = colors[line+1], markersize=markersize)
+        sta_count = sta_count_list[line]
+        sta_count = sta_count.sort_values(by=["data0"])
+        #print(sta_count)
+        colors = sta_count["data0"]
+        #sort_index = colors.argsort() #为了将高密度的点画在最上层
+        dv_s = sta_count["lat"]
+        du_s = sta_count["lon"]
+        #colors = colors[sort_index]
+        plt.scatter(du_s, dv_s, c=colors, s=markersize ,cmap=cmap1, norm=norm)
+        #plt.plot(u2-u1,v2-v1,'.',color = colors[line+1], markersize=markersize)
         #plt.plot(u1,v1,'.',color= 'b',  markersize=markersize)
         plt.xlabel("U分量",fontsize = sup_fontsize *0.9)
         plt.ylabel("V分量",fontsize = sup_fontsize *0.9)
@@ -158,6 +193,195 @@ def scatter_uv_error(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量�
 def scatter_uv(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量散点分布图"
                , vmax=None, ncol=None, save_path=None, show=False, dpi=300,
                sup_fontsize=10, width=None, height=None,add_randn_to_ob = 0.0):
+
+
+    if vmax is None:
+        speed_ob = np.sqrt(u_ob * u_ob + v_ob * v_ob)
+        speed_fo = np.sqrt(u_fo * u_fo + v_fo * v_fo)
+        vmax = max(np.max(speed_ob), np.max(speed_fo))
+        vmax = math.ceil(vmax)
+
+    Fo_shape = u_fo.shape
+    Ob_shape = u_ob.shape
+    Ob_shpe_list = list(Ob_shape)
+    size = len(Ob_shpe_list)
+    ind = -size
+    Fo_Ob_index = list(Fo_shape[ind:])
+    if Fo_Ob_index != Ob_shpe_list:
+        print('预报数据和观测数据维度不匹配')
+        return
+    Ob_shpe_list.insert(0, -1)
+    new_Fo_shape = tuple(Ob_shpe_list)
+    new_u_Fo = u_fo.reshape(new_Fo_shape)
+    new_v_Fo = v_fo.reshape(new_Fo_shape)
+    new_Fo_shape = new_u_Fo.shape
+    sub_plot_num = new_Fo_shape[0] + 1
+
+    height_title = sup_fontsize * 0.01
+    height_bottem_xticsk = sup_fontsize * 0.05
+    height_hspace = sup_fontsize * 0.07
+
+    width_wspace = height_hspace
+
+    width_colorbar = 0.5
+    width_left_yticks = sup_fontsize * 0.1
+
+
+    if ncol is None:
+        if sub_plot_num ==1:
+            ncol = 1
+        elif sub_plot_num %2 == 0:
+            ncol = 2
+        else:
+            ncol = 3
+
+
+    if title is None:
+        sup_height_title = 0
+    else:
+        sup_height_title = sup_fontsize * 0.12
+    nrow = math.ceil(new_Fo_shape[0] / ncol)
+    if width is None and height is None:
+        if sub_plot_num ==1:
+            width = 5
+        else:
+            width = 10
+
+
+    if width is None:
+        height_all_plot = height - height_title - height_bottem_xticsk - (nrow-1) * height_hspace + sup_height_title
+        height_axis = height_all_plot / nrow
+        width_axis = height_axis
+        width_all_plot = width_axis * ncol + (ncol-1) * width_wspace
+        width = width_all_plot + width_colorbar + width_left_yticks
+    else:
+        width_all_plot = width - width_colorbar - width_left_yticks - (ncol - 1) * width_wspace
+        width_axis = width_all_plot / ncol
+        height_axis = width_axis
+        height_all_plot = height_axis * nrow + (nrow-1) * height_hspace
+        height = height_all_plot + height_title + height_bottem_xticsk + sup_height_title
+
+
+    u1 = u_ob.flatten() + np.random.randn(len(u_ob))*add_randn_to_ob
+    v1 = v_ob.flatten() + np.random.randn(len(v_ob))*add_randn_to_ob
+
+    if member_list is None:
+        member_list = ["观测"]
+        for line in range(new_Fo_shape[0]):
+            member_list.append("预报" + str(line))
+    elif len(member_list) == new_Fo_shape[0]:
+        member_list.insert(0,"观测")
+
+    if u_ob.size>10000:
+        step = 0.02
+    elif u_ob.size < 100:
+        step = 0.2
+    else:
+        step = 2/np.sqrt(u_ob.size)
+    grid_count = meteva.base.grid([-vmax,vmax,step*vmax],[-vmax,vmax,step*vmax])
+
+    df = pd.DataFrame({"lon": u1, "lat": v1})
+    sta_xy = meteva.base.sta_data(df)
+    sta_xy["time"] = datetime.datetime(2020, 1, 1, 0)
+    sta_xy["data0"] = 1
+    grd_count = meteva.base.near.add_stavalue_to_nearest_grid(sta_xy, grid=grid_count)
+    grd_count = meteva.base.smooth(grd_count, 1)
+    sta_count_ob = meteva.base.interp_gs_linear(grd_count, sta_xy)
+    sta_count_ob = sta_count_ob.sort_values(by = ["data0"])
+    max_count = sta_count_ob.iloc[-1,-1]
+
+    sta_count_list = [sta_count_ob]
+    for line in range(new_Fo_shape[0]):
+        u2 = new_u_Fo[line, :].flatten()
+        v2 = new_v_Fo[line, :].flatten()
+        df = pd.DataFrame({"lon": u2, "lat": v2})
+        sta_xy = meteva.base.sta_data(df)
+        sta_xy["time"] = datetime.datetime(2020, 1, 1, 0)
+        sta_xy["data0"] = 1
+        grd_count = meteva.base.near.add_stavalue_to_nearest_grid(sta_xy, grid=grid_count)
+        grd_count = meteva.base.smooth(grd_count,1)
+        sta_count_fo = meteva.base.interp_gs_linear(grd_count, sta_xy)
+        sta_count_fo = sta_count_fo.sort_values(by=["data0"])
+        sta_count_list.append(sta_count_fo)
+        count1 = sta_count_fo.iloc[-1,-1]
+        if count1 > max_count:
+            max_count = count1
+    markersize = 10 * width_axis * height_axis / np.sqrt(u_ob.size)
+    if markersize < 1:
+        markersize = 1
+    elif markersize > 20:
+        markersize = 20
+
+    cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap="turbo", clevs=None, vmin=0, vmax=max_count)
+    norm = BoundaryNorm(clevs1, ncolors=cmap1.N - 1)
+
+    fig = plt.figure(figsize=(width, height), dpi=dpi)
+    colors = meteva.base.color_tools.get_color_list(new_Fo_shape[0]+1)
+
+    for k in range(len(sta_count_list)):
+        pi = k % ncol
+        pj = int(k / ncol)
+
+        rect1 = [(width_left_yticks + pi * (width_axis + width_wspace))/width,
+                 (height_bottem_xticsk + (nrow -1- pj) * (height_axis + height_hspace))/height,
+                 width_axis / width,
+                 height_axis / height]
+        ax = plt.axes(rect1)
+        sta_count = sta_count_list[k]
+
+        colors = sta_count["data0"]
+        #sort_index = colors.argsort() #为了将高密度的点画在最上层
+        dv_s = sta_count["lat"]
+        du_s = sta_count["lon"]
+        #colors = colors[sort_index]
+        plt.scatter(du_s, dv_s, c=colors, s=markersize ,cmap=cmap1, norm=norm)
+        #plt.subplot(nrow, ncols, line + 1)
+        #plt.plot(u1,v1,'.',color= "r", markeredgewidth = 0, markersize=markersize,alpha = 0.5,label = "OBS")
+        #plt.plot(u2,v2,'.', markeredgewidth = 0,  markersize=markersize,)
+
+        plt.xlabel("U分量",fontsize = sup_fontsize *0.9)
+        plt.ylabel("V分量",fontsize = sup_fontsize *0.9)
+        plt.title(member_list[k],fontsize = sup_fontsize)
+
+
+        plt.xlim(-vmax,vmax)
+        plt.ylim(-vmax,vmax)
+        #plt.legend(loc = 2,fontsize = sup_fontsize * 0.7)
+        angles = np.arange(0,360,45)
+        for i in range(len(angles)):
+            angle = angles[i] * 3.1415926 /180
+            r = np.arange(0,vmax+1,vmax * 0.1)
+            x = r * np.sin(angle)
+            y = r * np.cos(angle)
+            plt.plot(x,y,"--",color = "k",linewidth = 0.5)
+
+        rs = np.arange(0,vmax+1,1)
+        for i in range(len(rs)):
+            r = rs[i]
+            angle = np.arange(0,360) * 3.1415926 /180
+            x = r * np.sin(angle)
+            y = r * np.cos(angle)
+            plt.plot(x,y,"--",color = "k",linewidth = 0.5)
+        plt.xticks(fontsize = 0.8 * sup_fontsize)
+        plt.yticks(fontsize = 0.8 * sup_fontsize)
+
+    y_sup_title = (height_bottem_xticsk + (nrow) * (height_axis + height_hspace)) / height
+    if title is not None:
+        plt.suptitle(title, y = y_sup_title,fontsize=sup_fontsize * 1.2)
+
+    if(save_path is not None):
+        file1,extension = os.path.splitext(save_path)
+        extension = extension[1:]
+        plt.savefig(save_path,format = extension)
+    else:
+        show = True
+    if show:
+        plt.show()
+    plt.close()
+
+def probability_density_uv(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量概率密度分布图"
+               , vmax=None, ncol=None, save_path=None, show=False, dpi=300,
+               sup_fontsize=10, width=None, height=None,add_randn_to_ob = 0.0,smooth_times = 0,linewidths = 1):
 
 
     if vmax is None:
@@ -227,8 +451,37 @@ def scatter_uv(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量散点�
         height = height_all_plot + height_title + height_bottem_xticsk + sup_height_title
 
 
+    grid_count = meteva.base.grid([-vmax, vmax, 0.02 * vmax], [-vmax, vmax, 0.02 * vmax])
     u1 = u_ob.flatten() + np.random.randn(len(u_ob))*add_randn_to_ob
     v1 = v_ob.flatten() + np.random.randn(len(v_ob))*add_randn_to_ob
+    df = pd.DataFrame({"lon": u1, "lat": v1})
+    sta_xy = meteva.base.sta_data(df)
+    sta_xy["time"] = datetime.datetime(2020, 1, 1, 0)
+    sta_xy["data0"] = 1
+    grd_count = meteva.base.near.add_stavalue_to_nearest_grid(sta_xy, grid=grid_count)
+    grd_count_ob = meteva.base.smooth(grd_count,smooth_times=smooth_times)
+    gx = grd_count_ob['lon'].values
+    gy = grd_count_ob['lat'].values
+    max_count = np.max(grd_count_ob.values)
+    grid_count_fo_list = []
+
+    for line in range(new_Fo_shape[0]):
+
+        u2 = new_u_Fo[line, :].flatten()
+        v2 = new_v_Fo[line, :].flatten()
+        df = pd.DataFrame({"lon": u2, "lat": v2})
+        sta_xy = meteva.base.sta_data(df)
+        sta_xy["time"] = datetime.datetime(2020, 1, 1, 0)
+        sta_xy["data0"] = 1
+        grd_count = meteva.base.near.add_stavalue_to_nearest_grid(sta_xy, grid=grid_count)
+        grd_count_fo = meteva.base.smooth(grd_count, smooth_times=smooth_times)
+        grid_count_fo_list.append(grd_count_fo)
+        count1 = np.max(grd_count_fo.values)
+        if count1 > max_count:
+            max_count = count1
+
+    cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap="turbo", clevs=None, vmin=0, vmax=max_count)
+    norm = BoundaryNorm(clevs1, ncolors=cmap1.N - 1)
 
     if member_list is None:
         member_list = []
@@ -250,14 +503,24 @@ def scatter_uv(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量散点�
         ax = plt.axes(rect1)
         u2 = new_u_Fo[line, :].flatten()
         v2 = new_v_Fo[line, :].flatten()
-        markersize = 15 * width_axis * height_axis / np.sqrt(u_ob.size)
+        df = pd.DataFrame({"lon": u2, "lat": v2})
+        sta_xy = meteva.base.sta_data(df)
+        sta_xy["time"] = datetime.datetime(2020, 1, 1, 0)
+        sta_xy["data0"] = 1
+        grd_count = meteva.base.near.add_stavalue_to_nearest_grid(sta_xy, grid=grid_count)
+        grd_count_fo = meteva.base.smooth(grd_count, smooth_times=smooth_times)
+
+        markersize = 5 * width_axis * height_axis / np.sqrt(u_ob.size)
         if markersize < 1:
             markersize = 1
         elif markersize > 20:
             markersize = 20
         #plt.subplot(nrow, ncols, line + 1)
-        plt.plot(u1,v1,'.',color= "r", markeredgewidth = 0, markersize=markersize,alpha = 0.5,label = "OBS")
-        plt.plot(u2,v2,'.',color= "b", markeredgewidth = 0,  markersize=markersize,alpha = 0.5,label = "FCT")
+        #plt.plot(u1,v1,'.',color= "r", markeredgewidth = 0, markersize=markersize,alpha = 0.5,label = "OBS")
+        #plt.plot(u2,v2,'.',color= "b", markeredgewidth = 0,  markersize=markersize,alpha = 0.5,label = "FCT")
+
+        plt.contour(gx, gy, np.squeeze(grd_count_ob.values),linewidths=linewidths,cmap =cmap1,norm = norm)
+        plt.contour(gx, gy, np.squeeze(grd_count_fo.values),linestyles='--',linewidths=linewidths,cmap =cmap1,norm=norm)
 
         plt.xlabel("U分量",fontsize = sup_fontsize *0.9)
         plt.ylabel("V分量",fontsize = sup_fontsize *0.9)
@@ -266,7 +529,7 @@ def scatter_uv(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量散点�
 
         plt.xlim(-vmax,vmax)
         plt.ylim(-vmax,vmax)
-        plt.legend(loc = 2,fontsize = sup_fontsize * 0.7)
+        #plt.legend(loc = 2,fontsize = sup_fontsize * 0.7)
         angles = np.arange(0,360,45)
         for i in range(len(angles)):
             angle = angles[i] * 3.1415926 /180
@@ -471,7 +734,7 @@ def statisitic_uv(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量分�
     ax_ob = None
     ax_fo = None
     for line in range(new_Fo_shape[0]):
-        print(member_list[line])
+        #print(member_list[line])
         pi = line % ncol
         pj = int(line / ncol)
         rect1 = [(width_left_yticks + pi * (width_axis + width_wspace))/width,
