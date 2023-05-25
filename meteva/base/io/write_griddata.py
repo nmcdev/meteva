@@ -7,12 +7,19 @@ import traceback
 import warnings
 warnings.filterwarnings("ignore")
 
-def write_griddata_to_micaps4(da,save_path = "a.txt",creat_dir = False,effectiveNum = 3,show = False,title = None):
+
+def write_griddata_to_micaps4(da,save_path = "a.txt",creat_dir = False,effectiveNum = 2,show = False,title = None,inte=None,vmin=None,vmax=None):
     """
     输出micaps4格式文件
-    :param da:xarray多维数据信息
-    :param path:存储路径
-    :param effectiveNum 有效数字 默认：3
+    :param da:xarray多维数据信息,需要用 meteva 的格式
+    :param save_path:存储路径
+    :param creat_dir:存储路径中的文件夹若不存在是否创建
+    :param effectiveNum：有效数字，默认 2
+    :param show:是否输出存储结果，默认否
+    :param title:MICAPS4第四类格式的title，默认根据 save_path 自动生成
+    :param inte:MICAPS4第四类格式的等值线间隔，默认根据数值自动生成
+    :param vmin:MICAPS4第四类格式的等值线起始值，默认根据数值自动生成
+    :param vmax:MICAPS4第四类格式的等值线终止值，默认根据数值自动生成
     :return 最终按照需要保存的路径，将da数据保存为m4格式
     """
     try:
@@ -42,28 +49,32 @@ def write_griddata_to_micaps4(da,save_path = "a.txt",creat_dir = False,effective
         hour_range = str(grid.dtimes[0])
         values = da.values
         grid_values = np.squeeze(values)
-        vmax = math.ceil(max(grid_values.flatten()))
-        vmin = math.ceil(min(grid_values.flatten()))
-
-        dif = (vmax - vmin) / 10.0
-        if dif ==0:
-            inte = 1
-        else:
-            inte = math.pow(10, math.floor(math.log10(dif)))
-        # 用基本间隔，将最大最小值除于间隔后小数点部分去除，最后把间隔也整数化
-        r = dif / inte
-        if r < 3 and r >= 1.5:
-            inte = inte * 2
-        elif r < 4.5 and r >= 3:
-            inte = inte * 4
-        elif r < 5.5 and r >= 4.5:
-            inte = inte * 5
-        elif r < 7 and r >= 5.5:
-            inte = inte * 6
-        elif r >= 7:
-            inte = inte * 8
-        vmin = inte * ((int)(vmin / inte) - 1)
-        vmax = inte * ((int)(vmax / inte) + 1)
+        
+        if(vmax is None):
+            vmax = math.ceil(max(grid_values.flatten()))
+        if(vmin is None):
+            vmin = math.ceil(min(grid_values.flatten()))
+        
+        if(inte is None):
+            dif = (vmax - vmin) / 10.0
+            if dif ==0:
+                inte = 1
+            else:
+                inte = math.pow(10, math.floor(math.log10(dif)))
+            # 用基本间隔，将最大最小值除于间隔后小数点部分去除，最后把间隔也整数化
+            r = dif / inte
+            if r < 3 and r >= 1.5:
+                inte = inte * 2
+            elif r < 4.5 and r >= 3:
+                inte = inte * 4
+            elif r < 5.5 and r >= 4.5:
+                inte = inte * 5
+            elif r < 7 and r >= 5.5:
+                inte = inte * 6
+            elif r >= 7:
+                inte = inte * 8
+            vmin = inte * ((int)(vmin / inte) - 1)
+            vmax = inte * ((int)(vmax / inte) + 1)
 
         end = len(save_path)
         start = max(0, end - 16)
@@ -87,6 +98,7 @@ def write_griddata_to_micaps4(da,save_path = "a.txt",creat_dir = False,effective
 
         np.savetxt(save_path, grid_values, delimiter=' ',
                    fmt=format_str, header=title, comments='',newline="\n")
+                   fmt=format_str, header=title, comments='',encoding='GBK')
         if show:
             print('成功输出至'+ save_path)
         return True
@@ -94,7 +106,8 @@ def write_griddata_to_micaps4(da,save_path = "a.txt",creat_dir = False,effective
         exstr = traceback.format_exc()
         print(exstr)
         return False
-
+    
+    
 def write_griddata_to_nc(da,save_path = "a.txt",creat_dir = False,effectiveNum = 3,show = False):
     try:
         dir = os.path.split(os.path.abspath(save_path))[0]
