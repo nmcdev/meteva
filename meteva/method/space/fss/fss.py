@@ -67,8 +67,6 @@ def fss(grd_ob,grd_fo,grade_list=[1e-30],half_window_size_list=[1],compare = ">=
     return result_sta
 
 
-
-
 def fbs_pobfo(ob_xy, fo_xy,grade_list=[1e-30],half_window_size_list=[1],compare = ">=", masker=None):
     '''
     :param Ob: 实况数据 2维的numpy
@@ -123,8 +121,6 @@ def fbs_pobfo(ob_xy, fo_xy,grade_list=[1e-30],half_window_size_list=[1],compare 
 
     result /= count
     return result
-
-
 
 
 def fss_time_base_on_mid(mid_array):
@@ -209,3 +205,17 @@ def mid_fss_time(Ob,Fo,grade_list = [1e-30],compare =">-",compair = ">=",window_
                 result[g,i - 1, j,  0] = np.sum(np.power(ob_hap_p - fo_hap_p, 2))
                 result[g,i - 1, j,  1] = np.sum(np.power(ob_hap_p, 2)) + np.sum(np.power(fo_hap_p, 2))
     return result
+
+
+
+def fss_fof(fbs_pobfo_array):
+    '''
+    :param fbs_pobfo_array:
+    :return:
+    '''
+
+    if fbs_pobfo_array[..., 0].size == 1:
+        fss1 = 1 - fbs_pobfo_array[2] / (fbs_pobfo_array[0] + fbs_pobfo_array[1] + 1e-30)
+    else:
+        fss1 = 1 - fbs_pobfo_array[..., 2] / (fbs_pobfo_array[..., 0] + fbs_pobfo_array[..., 1] + 1e-30)
+    return fss1
