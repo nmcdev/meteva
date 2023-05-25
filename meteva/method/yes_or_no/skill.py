@@ -124,8 +124,8 @@ def sfa(far,far_base):
 def spo(pod,pod_base):
     '''
 
-    :param far: 省台空报率
-    :param far_base: 中央台空报率
+    :param pod: 省命中率
+    :param pod_base: 中央台命中率
     :return: 省台相对于中央台的预报技巧
     '''
     if pod_base == 1:
