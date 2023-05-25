@@ -275,7 +275,7 @@ def isPoiWithinPoly(poi,poly):
             e_poi=epoly[i+1]
             if isRayIntersectsSegment(poi,s_poi,e_poi):
                 sinsc+=1 #有交点就加1
-        if epoly[np-1][0] != epoly[0][0] or  epoly[np-1][0] != epoly[0][0]:
+        if epoly[np-1][0] != epoly[0][0] or  epoly[np-1][1] != epoly[0][1]:
             s_poi = epoly[np-1]
             e_poi = epoly[0]
             if isRayIntersectsSegment(poi, s_poi, e_poi):
