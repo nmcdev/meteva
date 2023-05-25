@@ -147,13 +147,14 @@ def diunal_max_hour(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_na
     gll_valid = []
     result_list =[]
     for i in range(len(gll1)):
-        result_all,hour_list = meteva.product.program.score(sta_ob_and_fos_list[i],method,g = "ob_hour",gll = ob_hours_list)
+        result_all,hour_list = meteva.product.program.score(sta_ob_and_fos_list[i],method,g = "ob_hour",gll = ob_hours_list,**method_args)
         hours = np.array(hour_list)
         if len(hour_list) == ob_hour_count:
             gll_valid.append(gll1[i])
             result_max_index = np.argmax(result_all,axis=0)
             result_max = hours[result_max_index]
             result_list.append(result_max)
+
     result = np.array(result_list)
     group_num = len(gll_valid)
 
@@ -186,6 +187,7 @@ def diunal_max_hour(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_na
             fo_num = 1
             name_list_dict["member"] = ["OBS"]
         result_plot = result.reshape((group_num,fo_num,grade_num))
+
         #设置等级名称
         name_list_dict["grade"] = grade_names
         keys = list(name_list_dict.keys())
