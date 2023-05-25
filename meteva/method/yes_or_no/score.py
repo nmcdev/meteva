@@ -677,7 +677,7 @@ def hfmc(Ob, Fo, grade_list=[1e-30],compare =">=",compair = None):
     :param Ob: 实况数据  任意维numpy数组
     :param Fo: 预测数据 任意维numpy数组,Fo.shape 和Ob.shape一致
     :param grade_list: 多个阈值同时检验时的等级参数
-    :return: python numpy数组，其中最后一维长度为4，分别记录了（命中数，漏报数，空报数，正确否定数）
+    :return: python numpy数组，其中最后一维长度为4，分别记录了（命中数，空报数，漏报数，正确否定数）
     '''
     if compair is not None:
         print("warning: the argument compair will be abolished, please use compare instead\n警告：参数compair 将被废除，以后请使用参数compare代替")
@@ -897,11 +897,9 @@ def fscore_hfmc(hfmc_array,belta = 1):
 
     return fscore_array
 
-def dts(Ob,Fo,grade_list= [1e-30],compare =">=",compair = None):
-    if compair is not None:
-        print("warning: the argument compair will be abolished, please use compare instead\n警告：参数compair 将被废除，以后请使用参数compare代替")
-        compare = compair
-    hfmc_array = hfmc(Ob, Fo, grade_list,compare= compare)
+def dts(Ob,Fo,grade_list= [1e-30]):
+
+    hfmc_array = hfmc(Ob, Fo, grade_list)
     return dts_hfmc(hfmc_array)
 
 def dts_hfmc(hfmc_array):
