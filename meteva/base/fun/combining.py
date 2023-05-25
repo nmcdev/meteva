@@ -60,8 +60,8 @@ def concat(data_list):
                         i_dtime = index_dtime[dtimes[k]]
                         for m in range(len(members)):
                             i_member = index_member[members[m]]
-                            grd_all.values[i_member, i_level, i_time, i_dtime, :, :] = grd_interp.values[m, i, j, k, :,
-                                                                                       :]
+                            grd_all.values[i_member, i_level, i_time, i_dtime, :, :] = grd_interp.values[m, i, j, k, :,:]
+        grd_all.attrs = copy.deepcopy(data1_list[0].attrs)
         return grd_all
 
 # 两个站点信息合并为一个，在原有的dataframe的基础上增加行数
@@ -100,6 +100,7 @@ def combine_on_id(sta, sta1,how = "inner"):
         columns_data = list(df.columns)[6:]
         columns = columns_dim + columns_data
         df.columns = columns
+        df.attrs = copy.deepcopy(sta.attrs)
         return df
 
 def that_the_name_exists(list, value):
@@ -177,6 +178,7 @@ def combine_on_leve_time_id(sta,sta1):
                 sta.rename(columns={ago_name: sta_value_column})
         sta2.drop(['dtime',"lon","lat"], axis=1, inplace=True)
         df = pd.merge(sta, sta2, on=columns, how='inner')
+        df.attrs = copy.deepcopy(sta.attrs)
         return df
 
 def combine_on_level_time_dtime_id(sta, sta1,how = 'inner'):
@@ -228,7 +230,6 @@ def combine_on_level_time_dtime_id(sta, sta1,how = 'inner'):
                 return None
             df = meteva.base.sta_data(df)
         df.attrs = copy.deepcopy(sta.attrs)
-
         return df
 
 
@@ -331,7 +332,6 @@ def combine_on_obTime_id(sta_ob,sta_fo_list,need_match_ob = False,how_fo = "inne
                 sta_combine.append(sta)
             sta_combine = concat(sta_combine)
 
-
         if need_match_ob:
             sta_combine = meteva.base.not_IV(sta_combine)
             sta_combine = combine_on_level_time_dtime_id(sta_combine, sta_combine_fo, how="inner")
@@ -346,7 +346,6 @@ def combine_on_obTime_id(sta_ob,sta_fo_list,need_match_ob = False,how_fo = "inne
         sta_combine.attrs = copy.deepcopy(sta_ob.attrs)
         sta_combine.drop_duplicates(subset=["level", "time", "dtime", "id"], inplace=True)
         sta_combine.sort_values(by=["level", "time", "dtime", "id"], inplace=True)
-
         return sta_combine
 
 
@@ -365,7 +364,6 @@ def combine_on_obTime_one_id(sta_ob,sta_fo_list,how = "inner",how_fo = "inner"):
         if "dtime_units" in sta_fo_list[0].attrs:
             if sta_fo_list[0].attrs["dtime_units"] != "hour":
                 dtime_units = "minute"
-
 
     sta_combine_fo = None
     for sta_fo in sta_fo_list:
@@ -405,6 +403,7 @@ def combine_on_obTime_id_bigData(sta_ob,sta_fo_list,need_match_ob = True,g = "id
         print("the second args shold be a list")
         return
     sta_all = None
+
     if g =="id":
         grouped_ob = dict(list(sta_ob.groupby("id")))
         nfo = len(sta_fo_list)
@@ -449,7 +448,6 @@ def combine_on_obTime_id_bigData(sta_ob,sta_fo_list,need_match_ob = True,g = "id
             grouped_fo_list.append(dict1)
             dtime_list.extend(list(dict1.keys()))
         dtime_list = list(set(dtime_list))
-        print(dtime_list)
         sys._clear_type_cache()
         gc.collect()
         sta_list = []
@@ -483,6 +481,12 @@ def combine_on_obTime_id_bigData(sta_ob,sta_fo_list,need_match_ob = True,g = "id
     sta_all.attrs = copy.deepcopy(sta_ob.attrs)
     sta_all.drop_duplicates(subset=["level","time","dtime","id"],inplace=True)
     sta_all.sort_values(by=["level", "time", "dtime", "id"], inplace=True)
+
+    names = meteva.base.get_stadata_names(sta_ob)
+    for i in range(len(sta_fo_list)):
+        names.extend(meteva.base.get_stadata_names(sta_fo_list[i]))
+    sta_all = meteva.base.in_member_list(sta_all,member_list=names)
+
     return sta_all
 
 
@@ -528,8 +532,6 @@ def combine_on_bak_idandobTime1(sta_list):
         intersection_of_data = combine_on_all_coords(intersection_of_data, sta)
     intersection_of_data.attrs = copy.deepcopy(sta_list[0].attrs)
     return intersection_of_data
-
-
 
 
 def combine_expand_IV(sta,sta_with_IV):
@@ -692,6 +694,7 @@ def expand_to_contain_another_grid(grd0,grid1,used_coords = "xy",outer_value = 0
     return grd1
 
 
+
 def combine_griddata(griddata_list,dtime_list  = None,how = "inner"):
     '''
     :param griddata_list: 网格数据列表
@@ -757,6 +760,7 @@ def combine_griddata(griddata_list,dtime_list  = None,how = "inner"):
                         if not members[m] in members_all:continue
                         i_member = index_member[members[m]]
                         grd_all.values[i_member,i_level,i_time,i_dtime,:,:] =  grd_interp.values[m, i, j, k, :, :]
+    grd_all.attrs = copy.deepcopy(griddata_list[0].attrs)
     return grd_all
 
 
