@@ -254,7 +254,7 @@ class CMADaasAccess():
             sta.lat = sta.lat.astype(np.float32)
             try:
                 sta.data0 = sta.data0.astype(np.float32)
-                sta.data0[sta.data0>=10000]=default
+                sta.data0[sta.data0>=990000]=default
             except:
                 pass
             return(sta)            
