@@ -191,7 +191,7 @@ def scatter_regress(ob, fo,member_list = None, rtype="linear",vmax = None,vmin =
 
 
 def pdf_plot(ob, fo,member_list = None,vmax = None,vmin = None, save_path=None,  show = False,dpi = 300,title="频率匹配检验图",
-             sup_fontsize = 10,width = None,height = None,yscale = None):
+             sup_fontsize = 10,width = None,height = None,yscale = None,grid = False):
     '''
     sorted_ob_fo 将传入的两组数据先进行排序
     然后画出折线图
@@ -290,7 +290,8 @@ def pdf_plot(ob, fo,member_list = None,vmax = None,vmin = None, save_path=None, 
 
 
         #plt.yscale('logit')
-
+    if grid:
+        plt.grid()
 
     plt.subplot(1, 2, 2)
     ob_line = np.arange(num_min, num_max, dmm / 30)
@@ -317,7 +318,8 @@ def pdf_plot(ob, fo,member_list = None,vmax = None,vmin = None, save_path=None, 
         plt.xticks(fontsize=0.8 * sup_fontsize)
     if title is not None:
         plt.suptitle(title + "\n", y=1.00, fontsize=sup_fontsize)
-
+    if grid:
+        plt.grid()
     if save_path is None:
         show = True
     else:
@@ -931,7 +933,11 @@ def frequency_histogram_error(ob, fo,grade_list=None, member_list=None,  vmax = 
 
 
 def accumulation_change_with_strenght(ob,fo,member_list = None,save_path=None,  show = False,dpi = 300,title="降水量随强度变化图",
-             sup_fontsize = 14,width = None,height = None,y_log = False):
+             sup_fontsize = 14,width = None,height = None,log_y = False,y_log = None,max_x = None):
+    if y_log is not None:
+        print(
+            "warning: the argument y_log will be abolished, please use log_y instead\n警告：为保持和其它函数的名称一致，参数log_y将被废除，以后请使用参数log_y代替")
+        log_y = y_log
 
     accu_stren = meteva.method.continuous.table.accumulation_strenght_table(ob,fo)
     min_not_zero = np.min(accu_stren[accu_stren>0])
@@ -958,7 +964,7 @@ def accumulation_change_with_strenght(ob,fo,member_list = None,save_path=None,  
         plt.xlabel("降水强度(毫米/小时)", fontsize=0.9 * sup_fontsize)
         plt.ylabel("累计降水量", fontsize=0.9 * sup_fontsize)
         plt.title(title, fontsize=0.9 * sup_fontsize)
-        if(y_log):
+        if(log_y):
             ax_one = plt.gca()
             for tick in ax_one.yaxis.get_major_ticks():
                 tick.label1.set_fontproperties('stixgeneral')
@@ -969,7 +975,10 @@ def accumulation_change_with_strenght(ob,fo,member_list = None,save_path=None,  
 
 
     # 设置次刻度间隔
-    maxx = len(grade)
+    if max_x is not None:
+        maxx = max_x
+    else:
+        maxx = len(grade)
     if(maxx <20):
         xmi = 1
         Xmi = 1
@@ -994,7 +1003,7 @@ def accumulation_change_with_strenght(ob,fo,member_list = None,save_path=None,  
     xminorLocator = mpl.ticker.MultipleLocator(xmi)  # 将x轴次刻度标签设置xmi
     ax1.xaxis.set_minor_locator(xminorLocator)
     plt.xlim(0,maxx)
-    if y_log:
+    if log_y:
         plt.ylim(min_not_zero,maxv * 3)
     else:
         plt.ylim(0,maxv * 1.1)
@@ -1008,8 +1017,13 @@ def accumulation_change_with_strenght(ob,fo,member_list = None,save_path=None,  
     plt.close()
     return accu_stren
 
-def frequency_change_with_strenght(ob,fo,member_list = None,save_path=None,  show = False,dpi = 300,title="降水量随强度变化图",
-             sup_fontsize = 14,width = None,height = None,y_log = False):
+def frequency_change_with_strenght(ob,fo,member_list = None,save_path=None,  show = False,dpi = 300,title="降水频次随强度变化图",
+             sup_fontsize = 14,width = None,height = None,log_y = False,y_log = None,max_x = None):
+
+    if y_log is not None:
+        print(
+            "warning: the argument y_log will be abolished, please use log_y instead\n警告：为保持和其它函数的名称一致，参数log_y将被废除，以后请使用参数log_y代替")
+        log_y = y_log
 
     accu_stren = meteva.method.continuous.table.frequency_strenght_table(ob,fo)
     min_not_zero = np.min(accu_stren[accu_stren>0])
@@ -1036,7 +1050,7 @@ def frequency_change_with_strenght(ob,fo,member_list = None,save_path=None,  sho
         plt.xlabel("降水强度(毫米/小时)", fontsize=0.9 * sup_fontsize)
         plt.ylabel("降水频次", fontsize=0.9 * sup_fontsize)
         plt.title(title, fontsize=0.9 * sup_fontsize)
-        if(y_log):
+        if(log_y):
             ax_one = plt.gca()
             for tick in ax_one.yaxis.get_major_ticks():
                 tick.label1.set_fontproperties('stixgeneral')
@@ -1047,7 +1061,10 @@ def frequency_change_with_strenght(ob,fo,member_list = None,save_path=None,  sho
 
 
     # 设置次刻度间隔
-    maxx = len(grade)
+    if max_x is not None:
+        maxx = max_x
+    else:
+        maxx = len(grade)
     if(maxx <20):
         xmi = 1
         Xmi = 1
@@ -1072,7 +1089,7 @@ def frequency_change_with_strenght(ob,fo,member_list = None,save_path=None,  sho
     xminorLocator = mpl.ticker.MultipleLocator(xmi)  # 将x轴次刻度标签设置xmi
     ax1.xaxis.set_minor_locator(xminorLocator)
     plt.xlim(0,maxx)
-    if y_log:
+    if log_y:
         plt.ylim(min_not_zero,maxv * 3)
     else:
         plt.ylim(0,maxv * 1.1)
