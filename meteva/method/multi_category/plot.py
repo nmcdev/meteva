@@ -6,7 +6,7 @@ import meteva
 
 
 def frequency_histogram(ob, fo,grade_list=None, member_list=None,  vmax = None,save_path=None,show = False,dpi = 300,plot = "bar", title="频率统计图",
-                        sup_fontsize = 10,width = None,height = None,log_y = False):
+                        sup_fontsize = 10,width = None,height = None,log_y = False,xlabel = "类别",ylabel = "样本占比"):
     '''
     frequency_histogram 对比测试数据和实况数据的发生的频率
     :param ob: 实况数据 任意维numpy数组
@@ -69,16 +69,16 @@ def frequency_histogram(ob, fo,grade_list=None, member_list=None,  vmax = None,s
 
     name_list_dict = {}
     name_list_dict["legend"] = legend
-    name_list_dict["类别"] = axis
+    name_list_dict[xlabel] = axis
     if log_y:
         vmin = None
     else:
         vmin = 0
     if plot == "bar":
-        meteva.base.plot_tools.bar(result_array,name_list_dict,ylabel= "样本占比",vmin = vmin,vmax = vmax,save_path = save_path,show = show,dpi = dpi,title=title,
+        meteva.base.plot_tools.bar(result_array,name_list_dict,ylabel=ylabel,vmin = vmin,vmax = vmax,save_path = save_path,show = show,dpi = dpi,title=title,
                                    width = width,height = height,sup_fontsize= sup_fontsize,log_y = log_y)
     else:
-        meteva.base.plot_tools.plot(result_array, name_list_dict, ylabel="样本占比", vmin=vmin, vmax=vmax, save_path=save_path,
+        meteva.base.plot_tools.plot(result_array, name_list_dict, ylabel=ylabel, vmin=vmin, vmax=vmax, save_path=save_path,
                                    show=show, dpi=dpi, title=title,
                                     width = width,height = height,sup_fontsize= sup_fontsize,log_y = log_y)
 
