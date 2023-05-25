@@ -425,7 +425,7 @@ def add_mesh(ax,grd,cmap ="rainbow",clevs= None,add_colorbar = True,title = None
         plt.colorbar(im,cax= colorbar_position)
     return im
 
-def add_barbs(ax,wind,color = "k",skip = None,title = None,title_fontsize = 8):
+def add_barbs(ax,wind,color = "k",skip = None,title = None,title_fontsize = 8,length = None):
 
     slon = ax.transLimits._boxin.x0
     elon = ax.transLimits._boxin.x1
@@ -446,9 +446,11 @@ def add_barbs(ax,wind,color = "k",skip = None,title = None,title_fontsize = 8):
     width = fig.bbox.width/fig.dpi
 
     if skip is  not None:
-        length = math.sqrt((width-1) * skip / x.size) * 8
+        if length is None:
+            length = math.sqrt((width-1) * skip / x.size) * 8
     else:
-        length = ax.bbox.width/fig.dpi
+        if length is None:
+            length = ax.bbox.width/fig.dpi
         skip =int((length /10)**2 * x.size / (width - 1))+1
     ax.set_title(title,fontsize =title_fontsize)
     im = ax.barbs(X[::skip,::skip],Y[::skip,::skip] , u[::skip,::skip], v[::skip,::skip],
@@ -549,7 +551,6 @@ def add_scatter_text(ax,sta0,color = "k",cmap = None,clevs = None,tag = 2,
     cmap1 = None
     if cmap is not None:
         cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap, clevs=clevs, vmin=vmin_v, vmax=vmax_v)
-
     fig = plt.gcf()
     fmt_tag = "%." + str(tag) + "f"
 
@@ -568,7 +569,7 @@ def add_scatter_text(ax,sta0,color = "k",cmap = None,clevs = None,tag = 2,
         y = sta_without_iv.iloc[:, 5].values
         v = sta_without_iv.iloc[:, -1].values
         for k in range(len(clevs1)-1):
-            index = np.where((v>clevs1[k])&(v<clevs1[k+1]))
+            index = np.where((v>=clevs1[k])&(v<clevs1[k+1]))
             if len(index[0])>0:
                 x1 = x[index]
                 y1 = y[index]
@@ -584,6 +585,8 @@ def add_scatter_text(ax,sta0,color = "k",cmap = None,clevs = None,tag = 2,
     return
 
 def add_closed_line(ax,graphy,color = "k",linewidth=2,fontsize = 10,title = None,title_fontsize = 8):
+    if graphy is None:
+        return
     x0 = ax.transLimits._boxin.x0
     x1 = ax.transLimits._boxin.x1
     y0 = ax.transLimits._boxin.y0
@@ -644,6 +647,8 @@ def add_closed_line(ax,graphy,color = "k",linewidth=2,fontsize = 10,title = None
 
 
 def add_shear_line(ax,graphy,linewidth = 1,title = None,title_fontsize = 8):
+    if graphy is None:
+        return
     slon = ax.transLimits._boxin.x0
     elon = ax.transLimits._boxin.x1
     slat = ax.transLimits._boxin.y0
@@ -681,6 +686,8 @@ def add_shear_line(ax,graphy,linewidth = 1,title = None,title_fontsize = 8):
     return
 
 def add_trough_axes(ax,graphy,linewidths = None,title = None,title_fontsize = 8):
+    if graphy is None:
+        return
     slon = ax.transLimits._boxin.x0
     elon = ax.transLimits._boxin.x1
     slat = ax.transLimits._boxin.y0
@@ -698,14 +705,17 @@ def add_trough_axes(ax,graphy,linewidths = None,title = None,title_fontsize = 8)
     for value in features.values():
         line = value["axes"]
         point = np.array(line["point"])
-        ax.plot(point[:, 0], point[:, 1], "r", linewidth=linewidths)
+        if point.size>2:
+            ax.plot(point[:, 0], point[:, 1], "r", linewidth=linewidths)
 
     ax.set_xlim(slon,elon)
     ax.set_ylim(slat,elat)
     ax.set_title(title,fontsize =title_fontsize)
     return
 
-def add_jet_axes(ax,graphy,title = None,title_fontsize = 8):
+def add_jet_axes(ax,graphy,title = None,title_fontsize = 8,color ="yellow" ):
+    if graphy is None:
+        return
     slon = ax.transLimits._boxin.x0
     elon = ax.transLimits._boxin.x1
     slat = ax.transLimits._boxin.y0
@@ -723,20 +733,20 @@ def add_jet_axes(ax,graphy,title = None,title_fontsize = 8):
         line = value["axes"]
         point = np.array(line["point"])
         npoint = len(line["point"])
+        if npoint>2:
+            ns = npoint -1
+            dx = 0
+            dy = 0
+            while ns >0:
+                ns -= 1
+                dx = point[npoint-1,0] - point[ns,0]
+                dy = point[npoint-1,1] - point[ns,1]
+                dis = (dx**2 + dy**2)**0.5
+                if dis > 0.3:
+                    break
 
-        ns = npoint -1
-        dx = 0
-        dy = 0
-        while ns >0:
-            ns -= 1
-            dx = point[npoint-1,0] - point[ns,0]
-            dy = point[npoint-1,1] - point[ns,1]
-            dis = (dx**2 + dy**2)**0.5
-            if dis > 0.3:
-                break
-
-        ax.arrow(point[ns,0],point[ns,1],dx*0.01,dy*0.01,head_width=0.3,head_length = 0.3,fc = "yellow",ec = "yellow")
-        ax.plot(point[:ns, 0], point[:ns, 1], "yellow", linewidth=2)
+            ax.arrow(point[ns-1,0],point[ns-1,1],dx*0.01,dy*0.01,head_width=1,head_length = 1,fc = color,ec = color)
+            ax.plot(point[:ns, 0], point[:ns, 1], color, linewidth=2.5)
 
     ax.set_xlim(slon,elon)
     ax.set_ylim(slat,elat)
@@ -800,7 +810,8 @@ def add_cyclone_trace(ax,sta_cyclone_trace,size = 0.2,linewidth = 1,title = None
 
 
 def add_lines(ax,graphy,cent = None,color = "k",linestyle = "-",linewidths = None,title = None,title_fontsize = 8):
-
+    if graphy is None:
+        return
     slon = ax.transLimits._boxin.x0
     elon = ax.transLimits._boxin.x1
     slat = ax.transLimits._boxin.y0
@@ -832,7 +843,7 @@ def add_lines(ax,graphy,cent = None,color = "k",linestyle = "-",linewidths = Non
                 level = df["level"].values[0]
                 time = df["time"].values[0]
                 dtime = df["dtime"].values[0]
-                cent1 = meb.sele_by_para(cent,level = level,time = time,dtime = dtime,id = id)
+                cent1 = meteva.base.sele_by_para(cent,level = level,time = time,dtime = dtime,id = id)
 
 
 
