@@ -156,6 +156,7 @@ def read_ctl(ctl_filename):
                         onev["start_bolck_index"] = cumulate
                         cumulate += nlevel
                         ctl["vars"].append(onev)
+                    ctl["cumulate_levels"] = cumulate
 
             line = file.readline()
         if "edef" not in ctl.keys():
