@@ -22,3 +22,6 @@ wave_grade = [0,0.01,0.1,0.5,1.3,2.5,4.0,6.0,9.0,14.0,100]
 cmadaas_set = None
 cimiss_set = None
 plot_color_dict = None
+ws_jar_path = None
+height_oy = None
+
