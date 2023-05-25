@@ -7,12 +7,12 @@ import traceback
 import warnings
 warnings.filterwarnings("ignore")
 
-def write_griddata_to_micaps4(da,save_path = "a.txt",creat_dir = False,effectiveNum = 6,show = False,title = None):
+def write_griddata_to_micaps4(da,save_path = "a.txt",creat_dir = False,effectiveNum = 3,show = False,title = None):
     """
     输出micaps4格式文件
     :param da:xarray多维数据信息
     :param path:存储路径
-    :param effectiveNum 有效数字 默认：6
+    :param effectiveNum 有效数字 默认：3
     :return 最终按照需要保存的路径，将da数据保存为m4格式
     """
     try:
@@ -86,7 +86,7 @@ def write_griddata_to_micaps4(da,save_path = "a.txt",creat_dir = False,effective
         format_str = "%." + str(effectiveNum) + "f "
 
         np.savetxt(save_path, grid_values, delimiter=' ',
-                   fmt=format_str, header=title, comments='')
+                   fmt=format_str, header=title, comments='',newline="\n")
         if show:
             print('成功输出至'+ save_path)
         return True
