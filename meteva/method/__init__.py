@@ -5,6 +5,7 @@ from . import ensemble
 from . import probability
 from . import space
 from . import vector
+from . import weather_system
 from .yes_or_no import *
 from .multi_category import *
 from .continuous import *
