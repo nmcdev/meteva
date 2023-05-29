@@ -55,7 +55,8 @@ def concat(data_list):
             for i in range(len(levels)):
                 i_level = index_level[levels[i]]
                 for j in range(len(times)):
-                    i_time = index_time[times[j]]
+                    time_64 = meteva.base.all_type_time_to_time64(times[j])
+                    i_time = index_time[time_64]
                     for k in range(len(dtimes)):
                         i_dtime = index_dtime[dtimes[k]]
                         for m in range(len(members)):
@@ -607,8 +608,14 @@ def get_inner_grid(grid0,grid1,used_coords = "xy"):
         elon = grid0.elon - ei * grid0.dlon
         elat = grid0.elat - ej * grid0.dlat
 
-        times0 = pd.date_range(grid0.gtime[0], grid0.gtime[1], freq=grid0.gtime[2])
-        times1 = pd.date_range(grid1.gtime[0], grid1.gtime[1], freq=grid1.gtime[2])
+        freq = grid0.gtime[2]
+        if freq.find("M")>=0 or freq.find("m")>=0:
+            freq = freq.replace("m","T").replace("M","T")
+        times0 = pd.date_range(grid0.gtime[0], grid0.gtime[1],freq=freq)
+        freq = grid1.gtime[2]
+        if freq.find("M")>=0 or freq.find("m")>=0:
+            freq = freq.replace("m","T").replace("M","T")
+        times1 = pd.date_range(grid1.gtime[0], grid1.gtime[1], freq=freq)
 
         times = list(set(times0) & set(times1))
         times.sort()
@@ -651,8 +658,14 @@ def get_outer_grid(grid0,grid1,used_coords = "xy"):
         elon = max(grid0.elon, grid1.elon)
         elat = max(grid0.elat, grid1.elat)
 
-        times0 = pd.date_range(grid0.gtime[0], grid0.gtime[1], freq=grid0.gtime[2])
-        times1 = pd.date_range(grid1.gtime[0], grid1.gtime[1], freq=grid1.gtime[2])
+        freq = grid0.gtime[2]
+        if freq.find("M")>=0 or freq.find("m")>=0:
+            freq = freq.replace("m","T").replace("M","T")
+        times0 = pd.date_range(grid0.gtime[0], grid0.gtime[1],freq=freq)
+        freq = grid1.gtime[2]
+        if freq.find("M")>=0 or freq.find("m")>=0:
+            freq = freq.replace("m","T").replace("M","T")
+        times1 = pd.date_range(grid1.gtime[0], grid1.gtime[1], freq=freq)
 
         times = list(set(times0)|set(times1))
         times.sort()
