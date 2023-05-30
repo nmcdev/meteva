@@ -177,6 +177,35 @@ def edtion_2020_1(lightning_ob,station,sta_ob_max_wind,sta_fo_list,pcapital_fo_l
     return edition_2020_1_skill_caculation(sta_ob01,sta_fo_list,pcapital_fo_list)
 
 
+def edition_2021_1_lightning_ob_to_count(lightning_ob, station, dlon_dlat = 0.5):
+    return edition_2020_1_lightning_ob_to_count(lightning_ob, station, dlon_dlat=dlon_dlat)
+
+
+def edition_2021_1_lightning_count_to_01(sta_ob_linghtning_count,station):
+    '''
+    该模块实现根据站点形式的闪电次数判断雷暴大风的第一个必要条件是否满足，满足就记为1，不满足就记为0.
+    不同的站点类型可以设置不同的阈值条件
+    :param sta_ob_linghtning_count:  sta_data形式的数据， 数据列为闪电次数，
+    :param station:    网格插值到站点用的站点列表， sta_data 数据格式，其中数据列名称为type, 国家站的取值为1，其它站为2
+    :return:  sta_data 形式数据。
+    '''
+    #创建一个站点形式的变量记录不同站点的阈值
+    id_threshold_sta = station.copy()
+
+    # 国家站阈值设置为1
+    id_threshold_sta.loc[station["type"] ==1, "type"] = 1
+
+    # 非国家站阈值设置4
+    id_threshold_sta.loc[station["type"] !=1, "type"] = 1
+
+    #不相干维度的坐标值设置为缺省值
+    id_threshold_sta[["level","time","dtime"]] = meteva.base.IV
+
+    #根据闪电判断雷暴大风的闪电观测必要条件
+    sta_ob_01 = meteva.method.point_to_area.p2p_vto01(sta_ob_linghtning_count,threshold= id_threshold_sta)
+
+    return  sta_ob_01
+
 if __name__ == "__main__":
     meteva.base.set_io_config(r"H:\test_data\ip_port.txt") #设置本地环境下数据服务器的账号信息
 

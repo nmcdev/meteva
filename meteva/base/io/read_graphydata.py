@@ -619,3 +619,15 @@ def read_micaps14(filename,time = None,dtime = 0,data_name = None):
             "plines_symbol": plines_symbol,
             "dtime":dtime,
             "data_name":data_name}
+
+
+if __name__=="__main__":
+    path = r"C:\Users\admin\Documents\WeChat Files\wxid_54saim7nonz321\FileStorage\File\2023-04\22112520.024"
+    import meteva
+    c = read_micaps14(path)
+    path1 = r"S:\data\sta\SURFACE\RAIN24_NATIONAL_20-20\20221126\20221126200000.000"
+    meteva.base.print_gds_file_values_names(path1)
+    sta = meteva.base.read_stadata_from_gdsfile(path1,element_id=1011)
+    meteva.product.rain_comprehensive_sl(sta,c,grade_list=[0.1,3.1,6.1,12.1,24.1,48.1],map_extend=[73,97,34,50],
+                    save_path=r"C:\Users\admin\Documents\WeChat Files\wxid_54saim7nonz321\FileStorage\File\2023-04\a.png")
+

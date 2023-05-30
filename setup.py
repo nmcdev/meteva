@@ -42,12 +42,14 @@ setup(
                       "netCDF4>=1.4.2",
                       'scipy>=0.19.0',
                       'xarray>=0.10.0',
+                      'scikit-learn>=0.21.2',
                       'matplotlib>=3.0.0',
                       "httplib2>=0.12.0",
-                      "protobuf>=3.6.1",
+                      "protobuf<3.20.0",
                       "pyshp>=2.1.0",
                       "tables>=3.4.4",
-                      "urllib3>=1.21.1",
+                      "urllib3>=1.21.1"
+                      #"JPype1>=1.4.0"
                       ]
 )
 

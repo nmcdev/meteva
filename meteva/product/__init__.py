@@ -5,5 +5,6 @@ from . import regulation
 from .program import *
 from .application import *
 from .presentation import *
-from .regulation import * 
+from .regulation import *
+
 

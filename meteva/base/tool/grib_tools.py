@@ -1,7 +1,5 @@
-import pkg_resources
 import os
 from meteva.base.tool.path_tools import creat_path
-#dir = pkg_resources.resource_filename('meteva', "resources/stations/grib_api/bin")
 
 def grib_to_nc1(grib_filename,output_dir = None):
     path_cd = grib_filename
