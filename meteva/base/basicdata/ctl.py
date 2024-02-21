@@ -26,7 +26,7 @@ def read_ctl(ctl_filename):
             ctl["data_path"] = os.path.dirname(ctl_filename) + "/" + strs[1][1:]
         else:
             ctl["data_path"] = strs[1]
-        print( ctl["data_path"])
+        #print( ctl["data_path"])
         index_zdef = 0
         while line:
             strs = line.split()
