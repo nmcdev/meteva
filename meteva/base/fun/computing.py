@@ -698,7 +698,6 @@ def minus_on_id(sta1_0, sta2_0, how="left", default=None):
     return df
 
 
-
 #两个dataframe相乘
 def multiply_on_id(sta1_0, sta2_0, how="left", default=None):
 
@@ -760,11 +759,12 @@ def reset_value_as_IV(sta,iv_value):
     return sta1
 
 
-def get_ob_from_combined_data(sta_all):
+def get_ob_from_combined_data(sta_all,ob_column = 1):
     data_names = meteva.base.get_stadata_names(sta_all)
-    sta_ob = meteva.base.sele_by_para(sta_all,member=[data_names[0]])
+    sta_ob = meteva.base.sele_by_para(sta_all,member=data_names[:ob_column])
     dtime = sta_ob["dtime"].values[:]
     sta_ob["time"] = sta_ob["time"] + dtime * np.timedelta64(1, 'h')
     sta_ob["dtime"] = 0
     sta_ob = sta_ob.drop_duplicates(keep="first")
     return sta_ob
+
