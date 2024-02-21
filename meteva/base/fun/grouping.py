@@ -23,7 +23,7 @@ def group(sta_ob_and_fos,g = None,gll = None,drop_g_column = False):
         valid_group = ["level","time","time_range","year","month","day","dayofyear","hour","xun",
                        "ob_time","ob_time_range","ob_year","ob_month","ob_day","ob_dayofyear","ob_hour",
                        "dtime","dtime_range","dday","dhour","id","lon_range","lon_step","lat_range","lat_step","last_range","last_step","grid",
-                       "province_name","member","day_hour","year_month"]
+                       "province_name","member","ob_day_hour","ob_year_month","day_hour","year_month"]
 
         data_names = meteva.base.get_stadata_names(sta_ob_and_fos)
 
