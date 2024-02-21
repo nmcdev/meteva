@@ -360,7 +360,7 @@ def t_dtp_to_rh(temp,dtp):
 
         return grd
 
-def t_rh_p_to_q(temp,rh,pressure,rh_unit = "%"):
+def t_rh_p_to_q(temp,rh,pressure,rh_unit = "%",check = False):
     '''
     根据温度、相对湿度和气压计算比湿
     :param temp: 温度，可以是摄氏度，也可以是绝对温度
@@ -391,13 +391,14 @@ def t_rh_p_to_q(temp,rh,pressure,rh_unit = "%"):
         else:
             pass
 
-        max_rh = np.max(R)
-        min_rh = np.min(R)
-        if max_rh>1 or min_rh <0:
-            print("相对湿度取值不能超过100%或小于0%")
-            return
-        if max_rh < 0.01:
-            print("警告：最大的相对湿度小于1%，请确认rh的单位是否为%，如果不是,请设置rh_unit = 1")
+        if check:
+            max_rh = np.max(R)
+            min_rh = np.min(R)
+            if max_rh>1 or min_rh <0:
+                print("相对湿度取值不能超过100%或小于0%")
+                return
+            if max_rh < 0.01:
+                print("警告：最大的相对湿度小于1%，请确认rh的单位是否为%，如果不是,请设置rh_unit = 1")
 
         q = e0 * R/P
         sta2["q"] = q
@@ -416,12 +417,14 @@ def t_rh_p_to_q(temp,rh,pressure,rh_unit = "%"):
             R /= 100
         else:
             pass
-
-        max_rh = np.max(R)
-        min_rh = np.min(R)
-        if max_rh>1 or min_rh <0:
-            print("相对湿度取值不能超过100%或小于0%")
-            return
+        if check:
+            max_rh = np.max(R)
+            min_rh = np.min(R)
+            if max_rh>2 or min_rh <0:
+                print("相对湿度最大值为"+str(max_rh))
+                print("相对湿度最小值为" + str(min_rh))
+                print("相对湿度取值不能超过100%或小于0%")
+                return None
 
         e0 = 6.11 * np.exp(5420 * (1.0 / 273.15 - 1 / (T + 273.15))) * 622
 
