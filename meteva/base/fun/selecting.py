@@ -124,7 +124,53 @@ def in_id_list(sta,id_list):
 
 
 #为拥有多time层的站点数据，依次增加time层所表示的list列表
+
+#为拥有多time层的站点数据，依次增加time层所表示的list列表
 def in_time_list(data,time_list):
+
+    if not isinstance(time_list,list) and not isinstance(time_list,np.ndarray):
+        time_list = [time_list]
+    time_list1 = []
+    for time0 in time_list:
+        time_list1.append(meteva.base.tool.time_tools.all_type_time_to_time64(time0))
+
+    if isinstance(data, pd.DataFrame):
+        sta1 = data.loc[data['time'].isin(time_list1)]
+        return sta1
+    else:
+        grid0 = meteva.base.basicdata.get_grid_of_data(data)
+        times_all = data["time"].values
+        index_time_dict = {}
+        for i in range(len(times_all)):
+            time_str = meteva.base.tool.time_tools.all_type_time_to_str(times_all[i])
+            index_time_dict[time_str] = i
+        time_list1_valid = []
+        index_time= []
+        for j in range(len(time_list1)):
+            time_str =  meteva.base.tool.time_tools.all_type_time_to_str(time_list1[j])
+            if time_str in index_time_dict.keys():
+                index_time.append(index_time_dict[time_str])
+                time_list1_valid.append(time_list1[j])
+        if len(index_time) == 0:return None
+        dat = data.values[:, :,index_time,  :, :, :]
+        times_fo = list(set(time_list1_valid))
+        times_fo.sort()
+        times_fo = np.array(times_fo)
+        if times_fo.size == 1:
+            gtime = [times_fo[0]]
+        else:
+
+            dhs_fo = times_fo[1] - times_fo[0]
+            gtime = [times_fo[0], times_fo[-1], dhs_fo]
+
+        grid1 = meteva.base.basicdata.grid(grid0.glon, grid0.glat,
+                    gtime= gtime,
+                    dtime_list=grid0.dtimes,level_list=grid0.levels,member_list=grid0.members)
+
+        grd1 = meteva.base.basicdata.grid_data(grid1, dat)
+        return grd1
+
+def in_time_list_old(data,time_list):
 
     if not isinstance(time_list,list) and not isinstance(time_list,np.ndarray):
         time_list = [time_list]
@@ -240,6 +286,36 @@ def in_hour_list(sta,hour_list):
         hour_list = [hour_list]
     fo_times = pd.Series(0, index=sta['time'])
     sta1 = sta.loc[fo_times.index.hour.isin(hour_list)]
+    return sta1
+
+#按照时间中的（日期+小时）进行数据提取，不区分分钟
+def in_day_hour_list(sta,day_hour_list):
+    if not isinstance(day_hour_list, list) and not isinstance(day_hour_list, np.ndarray):
+        day_hour_list = [day_hour_list]
+    day_hours_list = []
+    time0 = datetime.datetime(1900, 1, 1, 0, 0)
+    seconds = 3600
+    for day0 in day_hour_list:
+        if isinstance(day0, str):
+            day0 = meteva.base.tool.time_tools.all_type_time_to_datetime(day0)
+        day = (day0 - time0).total_seconds() // seconds
+        day_hours_list.append(day)
+    indexs = (sta['time'] - time0) // np.timedelta64(1, "H")
+    sta1 = sta.loc[indexs.isin(day_hours_list)]
+    return sta1
+
+#按照时间中的（年份+月份）进行数据提取
+#为拥有多month的站点数据，依次增加month所表示的list列表
+def in_year_month_list(sta,year_month_list):
+
+    if not isinstance(year_month_list,list) and not isinstance(year_month_list,np.ndarray):
+        ym_list = [year_month_list]
+    fo_times = pd.Series(0, index=sta['time'])
+    mons = fo_times.index.month.astype(np.int16)
+    years = fo_times.index.year.astype(np.int16)
+    yms = years * 100 + mons
+    yms = pd.Series(yms)
+    sta1 = sta.loc[yms.isin(ym_list)]
     return sta1
 
 #为拥有多hour的站点数据，依次增加hour所表示的list列表
@@ -445,6 +521,60 @@ def in_ob_minute_list(sta,minute_list):
         dtimes = sta["dtime"] * np.timedelta64(1, 'm')
     obtimes = pd.Series(0,index = sta['time'] + dtimes)
     sta1 = sta.loc[obtimes.index.minute.isin(minute_list)]
+    return sta1
+
+#按照时间中的（日期+小时）进行数据提取，不区分分钟
+def in_ob_day_hour_list(sta,day_hour_list):
+    if not isinstance(day_hour_list, list) and not isinstance(day_hour_list, np.ndarray):
+        day_hour_list = [day_hour_list]
+    day_hours_list = []
+    time0 = datetime.datetime(1900, 1, 1, 0, 0)
+    seconds = 3600
+    for day0 in day_hour_list:
+        if isinstance(day0, str):
+            day0 = meteva.base.tool.time_tools.all_type_time_to_datetime(day0)
+        day = (day0 - time0).total_seconds() // seconds
+        day_hours_list.append(day)
+
+    dtime_units ="hour"
+    if len(sta.attrs) >0:
+        if "dtime_units" in sta.attrs:
+            if sta.attrs["dtime_units"] != "hour":
+                dtime_units = "minute"
+    if dtime_units == "hour":
+        dtimes = sta["dtime"] * np.timedelta64(1, 'h')
+    else:
+        dtimes = sta["dtime"] * np.timedelta64(1, 'm')
+    obtimes = pd.Series(0,index = sta['time'] + dtimes)
+
+    indexs = (obtimes - time0) // np.timedelta64(1, "H")
+    sta1 = sta.loc[indexs.isin(day_hours_list)]
+    return sta1
+
+#按照时间中的（年份+月份）进行数据提取
+#为拥有多month的站点数据，依次增加month所表示的list列表
+def in_ob_year_month_list(sta,year_month_list):
+
+    if not isinstance(year_month_list,list) and not isinstance(year_month_list,np.ndarray):
+        ym_list = [year_month_list]
+
+    dtime_units ="hour"
+    if len(sta.attrs) >0:
+        if "dtime_units" in sta.attrs:
+            if sta.attrs["dtime_units"] != "hour":
+                dtime_units = "minute"
+    if dtime_units == "hour":
+        dtimes = sta["dtime"] * np.timedelta64(1, 'h')
+    else:
+        dtimes = sta["dtime"] * np.timedelta64(1, 'm')
+    obtimes = pd.Series(0,index = sta['time'] + dtimes)
+
+    #fo_times = pd.Series(0, index=sta['time'])
+    mons = obtimes.index.month.astype(np.int16)
+    years = obtimes.index.year.astype(np.int16)
+    yms = years * 100 + mons
+    yms = pd.Series(yms)
+    sta1 = sta.loc[yms.isin(ym_list)]
     return sta1
 
 
@@ -794,7 +924,8 @@ def sele_by_dict(data,s):
 
     p_set = ["member","level","time","time_range","year","month","day","dayofyear","hour", "ob_time","ob_time_range" ,"ob_year",
               "ob_month", "ob_day","ob_dayofyear","ob_hour","dtime","dtime_range","dday","dhour" ,
-              "lon","lat", "id","grid","gxy", "gxyz" ,"stadata","ob_stadata","value","drop_IV","last" , "last_range","drop_last","province_name"]
+              "lon","lat", "id","grid","gxy", "gxyz" ,"stadata","ob_stadata","value","drop_IV","last" , "last_range","drop_last","province_name",
+             "day_hour","year_month","ob_day_hour","ob_year_month"]
 
 
     sta1 = data
@@ -964,19 +1095,38 @@ def sele_by_dict(data,s):
     if "province_name" in s.keys():
         province_name = s["province_name"]
 
+    day_hour = None
+    if "day_hour" in s.keys():
+        day_hour = s["day_hour"]
+
+    year_month = None
+    if "year_month" in s.keys():
+        year_month = s["year_month"]
+
+    ob_day_hour = None
+    if "ob_day_hour" in s.keys():
+        ob_day_hour = s["ob_day_hour"]
+
+    ob_year_month = None
+    if "ob_year_month" in s.keys():
+        ob_year_month = s["ob_year_month"]
+
     drop_last = True
     if "drop_last" in s.keys():
         drop_last = s["drop_last"]
 
+
     sta1 = sele_by_para(sta1,member,level,time,time_range,year,month,day,dayofyear,hour,minute,ob_time,ob_time_range,ob_year,ob_month,ob_day,ob_dayofyear,
-                 ob_hour,ob_minute,dtime,dtime_range,dday,dhour,lon,lat,id,grid,gxy,gxyz,stadata,value,drop_IV,last,last_range,province_name,drop_last,ob_stadata)
+                 ob_hour,ob_minute,dtime,dtime_range,dday,dhour,lon,lat,id,grid,gxy,gxyz,stadata,value,drop_IV,last,last_range,province_name,drop_last,ob_stadata,
+                        day_hour,year_month,ob_day_hour,ob_year_month)
     return sta1
 
 
 def sele_by_para(data,member = None,level = None,time = None,time_range = None,year = None,month = None,day = None,dayofyear = None,hour = None,minute = None,
            ob_time=None, ob_time_range=None, ob_year=None, ob_month=None, ob_day=None, ob_dayofyear=None, ob_hour=None,ob_minute = None,
            dtime = None,dtime_range = None,dday = None, dhour = None,lon = None,lat = None,id = None,grid = None,gxy = None,gxyz = None,stadata = None,
-                 value = None,drop_IV = False,last = None,last_range = None,province_name = None,drop_last = True,ob_stadata = None,**kwargs):
+                 value = None,drop_IV = False,last = None,last_range = None,province_name = None,drop_last = True,ob_stadata = None,day_hour=None,year_month=None,
+                 ob_day_hour=None,ob_year_month=None,**kwargs):
     '''
     :param data: [站点数据](https://www.showdoc.cc/nmc?page_id=3744334022014027)
     :param member:成员的名称，同时提取多个时采用列表形式
@@ -1120,6 +1270,14 @@ def sele_by_para(data,member = None,level = None,time = None,time_range = None,y
     if province_name is not None:
         sta1 = in_province_list(sta1,province_name)
 
+    if day_hour is not None:
+        sta1 = in_day_hour_list(sta1,day_hour)
+    if year_month is not None:
+        sta1 = in_year_month_list(sta1,year_month)
+    if ob_day_hour is not None:
+        sta1 = in_ob_day_hour_list(sta1,ob_day_hour)
+    if ob_year_month is not None:
+        sta1 = in_ob_year_month_list(sta1,ob_year_month)
 
     return sta1
 
@@ -1128,12 +1286,13 @@ def sele_by_para(data,member = None,level = None,time = None,time_range = None,y
 def drop_by_para(data,member = None,level = None,time = None,time_range = None,year = None,month = None,day = None,dayofyear = None,hour = None,minute = None,
            ob_time=None, ob_time_range=None, ob_year=None, ob_month=None, ob_day=None, ob_dayofyear=None, ob_hour=None,ob_minute = None,
            dtime = None,dtime_range = None,dday = None, dhour = None,lon = None,lat = None,id = None,grid = None,gxy = None,gxyz = None,stadata = None,
-                 value = None,drop_IV = False,last = None,last_range = None,province_name = None,drop_last = True,ob_stadata = None,**kwargs):
+                 value = None,drop_IV = False,last = None,last_range = None,province_name = None,drop_last = True,ob_stadata = None,
+                 day_hour = None,year_month = None,ob_day_hour = None,ob_year_month = None,**kwargs):
 
     data.reset_index(drop=True, inplace=True)
     data_drop =  sele_by_para(data,member,level,time,time_range,year,month,day,dayofyear,hour,minute,ob_time,ob_time_range,ob_year,ob_month,ob_day,ob_dayofyear,
                  ob_hour,ob_minute,dtime,dtime_range,dday,dhour,lon,lat,id,grid,gxy,gxyz,stadata,value,drop_IV,last,last_range,province_name,drop_last,ob_stadata
-                           )
+                ,day_hour,year_month,ob_day_hour,ob_year_month)
     data_left = data.drop(data_drop.index)
 
     return data_left
