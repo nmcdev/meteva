@@ -24,4 +24,5 @@ cimiss_set = None
 plot_color_dict = None
 ws_jar_path = None
 height_oy = None
-
+z500_cli =  pkg_resources.resource_filename('meteva', "resources/z500_cli.nc")
+language = "ch"
