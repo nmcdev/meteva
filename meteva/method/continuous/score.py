@@ -269,6 +269,12 @@ def ob_fo_std(ob,fo):
     return result
 
 def ob_fo_cv(ob,fo):
+    '''
+    观测和预报的离差
+    :param ob:
+    :param fo:
+    :return:
+    '''
     Fo_shape = fo.shape
     Ob_shape = ob.shape
 
