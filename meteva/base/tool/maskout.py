@@ -72,6 +72,7 @@ def shp2clip(originfig, ax, shpfile, region):
 
 
 def shp2clip_pro_id(originfig, ax, shpfile, num_list):
+
     sf = shapefile.Reader(shpfile)
     vertices = []  # 这块是已经修改的地方
     codes = []  # 这块是已经修改的地方
@@ -99,7 +100,6 @@ def shp2clip_pro_id(originfig, ax, shpfile, num_list):
     for contour in originfig.collections:
         contour.set_clip_path(patch)
     return path, patch
-
 
 
 
