@@ -10,7 +10,7 @@ import datetime
 
 def scatter_uv_error(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量误差散点分布图"
               , vmax=None, ncol=None, save_path=None, show=False, dpi=300,
-               sup_fontsize=10, width=None, height=None):
+               sup_fontsize=10, width=None, height=None,x_label ="U分量",y_label = "v_分量"):
 
 
     if vmax is None:
@@ -88,7 +88,8 @@ def scatter_uv_error(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量�
         step = 0.2
     else:
         step = 2/np.sqrt(u_ob.size)
-    grid_count = meteva.base.grid([-vmax,vmax,step*vmax],[-vmax,vmax,step*vmax])
+    step = step * vmax
+    grid_count = meteva.base.grid([-vmax,vmax,step],[-vmax,vmax,step])
 
     fig = plt.figure(figsize=(width, height), dpi=dpi)
     plt.subplots_adjust(hspace = 0.3,wspace = 0.3)
@@ -103,6 +104,7 @@ def scatter_uv_error(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量�
     #为统一色标，需要预先计算出所有误差场的密度场
     sta_count_list = []
     max_count = 0
+    nsample = u_ob.size
     for line in range(new_Fo_shape[0]):
         u2 = new_u_Fo[line, :].flatten()
         v2 = new_v_Fo[line, :].flatten()
@@ -114,6 +116,7 @@ def scatter_uv_error(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量�
         sta_xy["time"] = datetime.datetime(2020, 1, 1, 0)
         sta_xy["data0"] = 1
         grd_count = meteva.base.near.add_stavalue_to_nearest_grid(sta_xy, grid=grid_count)
+        grd_count.values /=(nsample*step*step) #转换为概率密度
         grd_count = meteva.base.smooth(grd_count,1)
         sta_count = meteva.base.interp_gs_linear(grd_count, sta_xy)
         sta_count_list.append(sta_count)
@@ -148,11 +151,11 @@ def scatter_uv_error(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量�
         dv_s = sta_count["lat"]
         du_s = sta_count["lon"]
         #colors = colors[sort_index]
-        plt.scatter(du_s, dv_s, c=colors, s=markersize ,cmap=cmap1, norm=norm)
+        im = plt.scatter(du_s, dv_s, c=colors, s=markersize ,cmap=cmap1, norm=norm)
         #plt.plot(u2-u1,v2-v1,'.',color = colors[line+1], markersize=markersize)
         #plt.plot(u1,v1,'.',color= 'b',  markersize=markersize)
-        plt.xlabel("U分量",fontsize = sup_fontsize *0.9)
-        plt.ylabel("V分量",fontsize = sup_fontsize *0.9)
+        plt.xlabel(x_label,fontsize = sup_fontsize *0.9)
+        plt.ylabel(y_label,fontsize = sup_fontsize *0.9)
         plt.title(member_list[line],fontsize = sup_fontsize)
 
         #print(maxs)
@@ -175,6 +178,15 @@ def scatter_uv_error(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量�
             y = r * np.cos(angle)
             plt.plot(x,y,"--",color = "k",linewidth = 0.5)
 
+    left_low = (width_left_yticks + ncol * width_axis + (ncol - 1) * width_wspace + 0.1) / width
+    # print(left_low)
+    colorbar_position_grid = fig.add_axes(
+        [left_low, height_bottem_xticsk / height, 0.01, height_all_plot / height])  # 位置[左,下,宽,高]
+
+    # colorbar_position_grid = fig.add_axes([0.92, 0.50, 0.02, 0.32])  # 位置[左,下,宽,高]
+    colorbar_ob = plt.colorbar(im, cax=colorbar_position_grid)
+    colorbar_ob.ax.tick_params(labelsize=sup_fontsize * 0.5)  # 改变bar标签字体大小
+
     y_sup_title = (height_bottem_xticsk + (nrow) * (height_axis + height_hspace)) / height
     if title is not None:
         plt.suptitle(title, y = y_sup_title,fontsize=sup_fontsize * 1.2)
@@ -192,7 +204,7 @@ def scatter_uv_error(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量�
 
 def scatter_uv(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量散点分布图"
                , vmax=None, ncol=None, save_path=None, show=False, dpi=300,
-               sup_fontsize=10, width=None, height=None,add_randn_to_ob = 0.0):
+               sup_fontsize=10, width=None, height=None,add_randn_to_ob = 0.0,x_label ="U分量",y_label = "v_分量"):
 
 
     if vmax is None:
@@ -278,13 +290,15 @@ def scatter_uv(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量散点�
         step = 0.2
     else:
         step = 2/np.sqrt(u_ob.size)
-    grid_count = meteva.base.grid([-vmax,vmax,step*vmax],[-vmax,vmax,step*vmax])
-
+    step = step * vmax
+    grid_count = meteva.base.grid([-vmax,vmax,step],[-vmax,vmax,step])
+    nsample = u_ob.size
     df = pd.DataFrame({"lon": u1, "lat": v1})
     sta_xy = meteva.base.sta_data(df)
     sta_xy["time"] = datetime.datetime(2020, 1, 1, 0)
     sta_xy["data0"] = 1
     grd_count = meteva.base.near.add_stavalue_to_nearest_grid(sta_xy, grid=grid_count)
+    grd_count.values /= (nsample * step * step)  # 转换为概率密度
     grd_count = meteva.base.smooth(grd_count, 1)
     sta_count_ob = meteva.base.interp_gs_linear(grd_count, sta_xy)
     sta_count_ob = sta_count_ob.sort_values(by = ["data0"])
@@ -299,6 +313,7 @@ def scatter_uv(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量散点�
         sta_xy["time"] = datetime.datetime(2020, 1, 1, 0)
         sta_xy["data0"] = 1
         grd_count = meteva.base.near.add_stavalue_to_nearest_grid(sta_xy, grid=grid_count)
+        grd_count.values /=(nsample*step*step) #转换为概率密度
         grd_count = meteva.base.smooth(grd_count,1)
         sta_count_fo = meteva.base.interp_gs_linear(grd_count, sta_xy)
         sta_count_fo = sta_count_fo.sort_values(by=["data0"])
@@ -314,6 +329,7 @@ def scatter_uv(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量散点�
 
     cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap="turbo", clevs=None, vmin=0, vmax=max_count)
     norm = BoundaryNorm(clevs1, ncolors=cmap1.N - 1)
+
 
     fig = plt.figure(figsize=(width, height), dpi=dpi)
     colors = meteva.base.color_tools.get_color_list(new_Fo_shape[0]+1)
@@ -334,13 +350,13 @@ def scatter_uv(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量散点�
         dv_s = sta_count["lat"]
         du_s = sta_count["lon"]
         #colors = colors[sort_index]
-        plt.scatter(du_s, dv_s, c=colors, s=markersize ,cmap=cmap1, norm=norm)
+        im = plt.scatter(du_s, dv_s, c=colors, s=markersize ,cmap=cmap1, norm=norm)
         #plt.subplot(nrow, ncols, line + 1)
         #plt.plot(u1,v1,'.',color= "r", markeredgewidth = 0, markersize=markersize,alpha = 0.5,label = "OBS")
         #plt.plot(u2,v2,'.', markeredgewidth = 0,  markersize=markersize,)
 
-        plt.xlabel("U分量",fontsize = sup_fontsize *0.9)
-        plt.ylabel("V分量",fontsize = sup_fontsize *0.9)
+        plt.xlabel(x_label,fontsize = sup_fontsize *0.9)
+        plt.ylabel(y_label,fontsize = sup_fontsize *0.9)
         plt.title(member_list[k],fontsize = sup_fontsize)
 
 
@@ -365,6 +381,16 @@ def scatter_uv(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量散点�
         plt.xticks(fontsize = 0.8 * sup_fontsize)
         plt.yticks(fontsize = 0.8 * sup_fontsize)
 
+
+    left_low = (width_left_yticks + ncol * width_axis  + (ncol-1)*width_wspace+0.1)/width
+    #print(left_low)
+    colorbar_position_grid = fig.add_axes([left_low, height_bottem_xticsk / height,0.01, height_all_plot/height])  # 位置[左,下,宽,高]
+
+    #colorbar_position_grid = fig.add_axes([0.92, 0.50, 0.02, 0.32])  # 位置[左,下,宽,高]
+    colorbar_ob = plt.colorbar(im, cax=colorbar_position_grid)
+    colorbar_ob.ax.tick_params(labelsize=sup_fontsize * 0.5)  # 改变bar标签字体大小
+
+
     y_sup_title = (height_bottem_xticsk + (nrow) * (height_axis + height_hspace)) / height
     if title is not None:
         plt.suptitle(title, y = y_sup_title,fontsize=sup_fontsize * 1.2)
@@ -381,7 +407,8 @@ def scatter_uv(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量散点�
 
 def probability_density_uv(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量概率密度分布图"
                , vmax=None, ncol=None, save_path=None, show=False, dpi=300,
-               sup_fontsize=10, width=None, height=None,add_randn_to_ob = 0.0,smooth_times = 0,linewidths = 1):
+               sup_fontsize=10, width=None, height=None,add_randn_to_ob = 0.0,smooth_times = 0,linewidths = 1
+                           ,x_label ="U分量",y_label = "v_分量",label_fontsize = 5):
 
 
     if vmax is None:
@@ -450,8 +477,8 @@ def probability_density_uv(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风�
         height_all_plot = height_axis * nrow + (nrow-1) * height_hspace
         height = height_all_plot + height_title + height_bottem_xticsk + sup_height_title
 
-
-    grid_count = meteva.base.grid([-vmax, vmax, 0.02 * vmax], [-vmax, vmax, 0.02 * vmax])
+    step = 0.02 * vmax
+    grid_count = meteva.base.grid([-vmax, vmax, step], [-vmax, vmax, step])
     u1 = u_ob.flatten() + np.random.randn(len(u_ob))*add_randn_to_ob
     v1 = v_ob.flatten() + np.random.randn(len(v_ob))*add_randn_to_ob
     df = pd.DataFrame({"lon": u1, "lat": v1})
@@ -459,12 +486,13 @@ def probability_density_uv(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风�
     sta_xy["time"] = datetime.datetime(2020, 1, 1, 0)
     sta_xy["data0"] = 1
     grd_count = meteva.base.near.add_stavalue_to_nearest_grid(sta_xy, grid=grid_count)
+    nsample = u_ob.size
+    grd_count.values /=(nsample *step*step)
     grd_count_ob = meteva.base.smooth(grd_count,smooth_times=smooth_times)
     gx = grd_count_ob['lon'].values
     gy = grd_count_ob['lat'].values
     max_count = np.max(grd_count_ob.values)
     grid_count_fo_list = []
-
     for line in range(new_Fo_shape[0]):
 
         u2 = new_u_Fo[line, :].flatten()
@@ -474,14 +502,32 @@ def probability_density_uv(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风�
         sta_xy["time"] = datetime.datetime(2020, 1, 1, 0)
         sta_xy["data0"] = 1
         grd_count = meteva.base.near.add_stavalue_to_nearest_grid(sta_xy, grid=grid_count)
+        grd_count.values /=(nsample*step*step) #转换为概率密度
         grd_count_fo = meteva.base.smooth(grd_count, smooth_times=smooth_times)
         grid_count_fo_list.append(grd_count_fo)
         count1 = np.max(grd_count_fo.values)
         if count1 > max_count:
             max_count = count1
-
     cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap="turbo", clevs=None, vmin=0, vmax=max_count)
     norm = BoundaryNorm(clevs1, ncolors=cmap1.N - 1)
+
+    mm = clevs1[-1]
+    if mm!=0:
+        mmi = math.ceil(math.log10(mm))
+        if mmi >=2:
+            f1 = mmi
+            f2 = 0
+        elif mmi == 1:
+            f1 = 2
+            f2 = 1
+        else:
+            mmi = math.floor(math.log10(mm))
+            f1 = 1+abs(mmi)
+            f2 = f1
+    else:
+        f1 = 1
+        f2 = 0
+    fmt = "%"+str(f1)+"."+str(f2)+"f"
 
     if member_list is None:
         member_list = []
@@ -508,6 +554,7 @@ def probability_density_uv(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风�
         sta_xy["time"] = datetime.datetime(2020, 1, 1, 0)
         sta_xy["data0"] = 1
         grd_count = meteva.base.near.add_stavalue_to_nearest_grid(sta_xy, grid=grid_count)
+        grd_count.values /= (nsample * step * step)  # 转换为概率密度
         grd_count_fo = meteva.base.smooth(grd_count, smooth_times=smooth_times)
 
         markersize = 5 * width_axis * height_axis / np.sqrt(u_ob.size)
@@ -519,11 +566,12 @@ def probability_density_uv(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风�
         #plt.plot(u1,v1,'.',color= "r", markeredgewidth = 0, markersize=markersize,alpha = 0.5,label = "OBS")
         #plt.plot(u2,v2,'.',color= "b", markeredgewidth = 0,  markersize=markersize,alpha = 0.5,label = "FCT")
 
-        plt.contour(gx, gy, np.squeeze(grd_count_ob.values),linewidths=linewidths,cmap =cmap1,norm = norm)
-        plt.contour(gx, gy, np.squeeze(grd_count_fo.values),linestyles='--',linewidths=linewidths,cmap =cmap1,norm=norm)
-
-        plt.xlabel("U分量",fontsize = sup_fontsize *0.9)
-        plt.ylabel("V分量",fontsize = sup_fontsize *0.9)
+        im1 = plt.contour(gx, gy, np.squeeze(grd_count_ob.values),linewidths=linewidths,cmap =cmap1,norm = norm)
+        ax.clabel(im1, inline=1, fontsize=label_fontsize, fmt=fmt)
+        im2 = plt.contour(gx, gy, np.squeeze(grd_count_fo.values),linestyles='--',linewidths=linewidths,cmap =cmap1,norm=norm)
+        ax.clabel(im2, inline=1, fontsize=label_fontsize, fmt=fmt)
+        plt.xlabel(x_label,fontsize = sup_fontsize *0.9)
+        plt.ylabel(y_label,fontsize = sup_fontsize *0.9)
         plt.title(member_list[line],fontsize = sup_fontsize)
 
 
@@ -547,6 +595,17 @@ def probability_density_uv(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风�
             plt.plot(x,y,"--",color = "k",linewidth = 0.5)
         plt.xticks(fontsize = 0.8 * sup_fontsize)
         plt.yticks(fontsize = 0.8 * sup_fontsize)
+
+    # left_low = (width_left_yticks + ncol * width_axis + (ncol - 1) * width_wspace + 0.1) / width
+    # # print(left_low)
+    # colorbar_position_grid = fig.add_axes(
+    #     [left_low, height_bottem_xticsk / height, 0.02, height_all_plot / height])  # 位置[左,下,宽,高]
+    #
+    # colorbar_ob = plt.colorbar(im, cax=colorbar_position_grid)
+    # #colorbar_ob = plt.colorbar(ax, cax=colorbar_position_grid)
+    # colorbar_ob.ax.tick_params(labelsize=sup_fontsize * 0.5)  # 改变bar标签字体大小
+    # colorbar_ob.set_label('风矢量概率密度', fontsize=sup_fontsize * 0.7)
+
 
     y_sup_title = (height_bottem_xticsk + (nrow) * (height_axis + height_hspace)) / height
     if title is not None:
@@ -624,9 +683,11 @@ def uv_frequent_statistic(u,v,ngrade = 16,half_span = 22.5,rate = 20,smtime = 50
     mf2 = 10 * (360/half_span) * (mf2/u.size)
     return mu2,mv2,mf2,mstd2
 
-def statisitic_uv(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量分布统计图"
+
+
+def statistic_uv(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量分布统计图"
                ,vmax=None, ncol=None, save_path=None, show=False, dpi=300,
-               sup_fontsize=10, width=None, height=None):
+               sup_fontsize=10, width=None, height=None,x_label ="U分量",y_label = "v_分量"):
 
 
     Fo_shape = u_fo.shape
@@ -746,8 +807,8 @@ def statisitic_uv(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量分�
         ax_ob = plt.scatter(mu1, mv1, c=gray1,s = mf1,cmap = cmap1,norm=norm1)
         ax_fo = plt.scatter(mu2_list[line], mv2_list[line], c=mgray2_list[line],s = mf2_list[line],cmap = cmap2,norm = norm2)
 
-        plt.xlabel("U分量",fontsize = sup_fontsize *0.9)
-        plt.ylabel("V分量",fontsize = sup_fontsize *0.9)
+        plt.xlabel(x_label,fontsize = sup_fontsize *0.9)
+        plt.ylabel(y_label,fontsize = sup_fontsize *0.9)
         plt.title(member_list[line],fontsize = sup_fontsize)
 
         #print(maxs)
@@ -775,8 +836,6 @@ def statisitic_uv(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量分�
     #print(left_low)
     colorbar_position_grid = fig.add_axes([left_low, height_bottem_xticsk / height,0.02, 0.455*height_all_plot/height])  # 位置[左,下,宽,高]
 
-
-
     #colorbar_position_grid = fig.add_axes([0.92, 0.50, 0.02, 0.32])  # 位置[左,下,宽,高]
     colorbar_ob = plt.colorbar(ax_ob, cax=colorbar_position_grid)
     colorbar_ob.ax.tick_params(labelsize=sup_fontsize * 0.5)  # 改变bar标签字体大小
@@ -803,6 +862,12 @@ def statisitic_uv(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量分�
         plt.show()
     plt.close()
 
+def statisitic_uv(u_ob,u_fo,v_ob,v_fo,member_list = None,title = "风矢量分布统计图"
+               ,vmax=None, ncol=None, save_path=None, show=False, dpi=300,
+               sup_fontsize=10, width=None, height=None):
+
+   statistic_uv(u_ob,u_fo,v_ob,v_fo,member_list=member_list,title=title,vmax=vmax,ncol=ncol,
+                save_path=save_path,show=show,dpi=dpi,sup_fontsize=sup_fontsize,width=width,height = height)
 
 def frequent_distribution_uv():
     pass
