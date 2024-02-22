@@ -169,10 +169,11 @@ def add_china_map_2basemap(ax,name ="province", facecolor='none',
         #     # get shape file and information
         names = {'world':"worldmap",'nation': "NationalBorder", 'province': "Province",
                  'county': "BOUL_X", 'river': "hyd1_4p",
-                 'river_high': "hyd2_4p"}
+                 'river_high': "hyd2_4p",'world360':"worldmap360"}
         shpfile = pkg_resources.resource_filename(
             'meteva', "resources/maps/" + names[name])
         #print(shpfile)
+
         shp1 = readshapefile(shpfile, default_encoding=encoding)
         lines = LineCollection(shp1,antialiaseds=(1,),zorder=zorder)
         lines.set_color(edgecolor)
@@ -212,7 +213,7 @@ def contourf(grd,save_path = None,title = None,clevs= None,cmap ="rainbow",add_c
                      sup_title = sup_title,clip= clip,add_minmap= add_minmap)
 
 def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap ="rainbow",add_county_line = False,add_worldmap =False,show = False,dpi = 300,
-                     sup_fontsize = 10,height = None,width = None,subplot = None,ncol = None,sup_title = None,clip= None,add_minmap= None):
+                     sup_fontsize = 10,height = None,width = None,subplot = None,ncol = None,sup_title = None,clip= None,add_minmap= None,extend = None):
 
     vmin = 10e30
     vmax = -10e30
@@ -298,12 +299,12 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap ="rainbo
 
         plot_2d_grid_list(grd_list1,type = "contour",save_path= save_path,title= title1,clevs=clevs,cmap=cmap,vmax = vmax,vmin = vmin,add_county_line= add_county_line,
                       add_worldmap = add_worldmap,show=show,dpi = dpi,sup_fontsize = sup_fontsize,height= height,width = width,ncol= ncol,
-                      sup_title = sup_title1,clip= clip,add_minmap=add_minmap)
+                      sup_title = sup_title1,clip= clip,add_minmap=add_minmap,extend=extend)
 
 
 
 def plot_2d_grid_list(grd_list,type = "contour",save_path = None,title = None,clevs= None,cmap ="rainbow",add_county_line = False,add_worldmap =False,show = False,dpi = 300,
-                     sup_fontsize = 10,height = None,width = None,ncol = None,vmax = None,vmin = None, sup_title = None,clip= None,add_minmap = None):
+                     sup_fontsize = 10,height = None,width = None,ncol = None,vmax = None,vmin = None, sup_title = None,clip= None,add_minmap = None,extend = None):
 
 
     if save_path is None:
@@ -372,8 +373,17 @@ def plot_2d_grid_list(grd_list,type = "contour",save_path = None,title = None,cl
             vmin1 = np.min(grd.values)
             if vmin > vmin1:
                 vmin = vmin1
-    cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap, clevs=clevs, vmin=vmin, vmax=vmax)
-    norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
+    cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap, clevs=clevs, vmin=vmin, vmax=vmax,extend=extend)
+    # norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
+    if extend is None:
+        norm = BoundaryNorm(clevs1, ncolors=cmap1.N - 1)
+    elif extend == "both":
+        if type=="contour":
+            norm = BoundaryNorm(clevs1, ncolors=cmap1.N + 1)
+        else:
+            norm = BoundaryNorm(clevs1, ncolors=cmap1.N + 1,extend=extend)
+    else:
+        norm = BoundaryNorm(clevs1, ncolors=cmap1.N)
 
     vmax = elon
     vmin = slon
@@ -478,8 +488,12 @@ def plot_2d_grid_list(grd_list,type = "contour",save_path = None,title = None,cl
 
         if slon < 70 or elon > 140 or slat < 10 or elat > 60:
             add_worldmap = True
+
         if add_worldmap:
             add_china_map_2basemap(ax, name="world", edgecolor='k', lw=0.3, encoding='gbk', grid0=None)  # "国界"
+            if elon >180:
+                add_china_map_2basemap(ax, name= "world360", edgecolor='k', lw=0.3, encoding='gbk', grid0=None)  # "国界"
+
 
         add_china_map_2basemap(ax, name="nation", edgecolor='k', lw=0.3, encoding='gbk',grid0 = None)  # "省界"
         add_china_map_2basemap(ax, edgecolor='k', lw=0.3, encoding='gbk')  # "省界"
@@ -505,7 +519,9 @@ def plot_2d_grid_list(grd_list,type = "contour",save_path = None,title = None,cl
             ax.set_yticks(yticks)
             ax.set_yticklabels(yticks_label_None, fontsize=sup_fontsize * 0.8, family='Times New Roman')
         if type == "contour":
-            im = ax.contourf(x, y, np.squeeze(grd_list[p].values), levels=clevs1, cmap=cmap1, norm=norm)
+
+            #im = ax.contourf(x, y, np.squeeze(grd_list[p].values), levels=clevs1, cmap=cmap1, norm=norm)
+            im = ax.contourf(x, y, np.squeeze(grd_list[p].values), levels=clevs1, cmap=cmap1, norm=norm, extend = extend)
             if clip is not None:
                 try:
                     meteva.base.tool.maskout.shp2clip_by_shpfile(im, ax, clip)
@@ -518,7 +534,7 @@ def plot_2d_grid_list(grd_list,type = "contour",save_path = None,title = None,cl
 
         else:
             im = ax.pcolormesh(x, y, np.squeeze(grd_list[p].values), cmap=cmap1, norm=norm)
-
+            #im = ax.pcolormesh(x, y, np.squeeze(grd_list[p].values),  cmap=cmap1, norm=norm, extend=extend)
 
         if add_minmap is not None:
             minmap_lon_lat = [103, 123, 0, 25]
@@ -544,11 +560,15 @@ def plot_2d_grid_list(grd_list,type = "contour",save_path = None,title = None,cl
             ax_min.spines["bottom"].set_linewidth(0.3)
             ax_min.spines["right"].set_linewidth(0.3)
             ax_min.spines["left"].set_linewidth(0.3)
-            add_china_map_2basemap(ax_min, name="world", edgecolor='k', lw=0.2, encoding='gbk', grid0=None)  # "国界"
+            if elon >180:
+                add_china_map_2basemap(ax, name= "world360", edgecolor='k', lw=0.3, encoding='gbk', grid0=None)  # "国界"
+            add_china_map_2basemap(ax, name="world", edgecolor='k', lw=0.3, encoding='gbk', grid0=None)  # "国界"
             add_china_map_2basemap(ax_min, name="nation", edgecolor='k', lw=0.2, encoding='gbk', grid0=None)  # "省界"
-            #ax_min.pcolormesh(x, y, np.squeeze(grd_list[p].values), cmap=cmap1, norm=norm)
 
-
+            if type == "contour":
+                ax_min.contourf(x, y, np.squeeze(grd_list[p].values), levels=clevs1, cmap=cmap1, norm=norm)
+            else:
+                ax_min.pcolormesh(x, y, np.squeeze(grd_list[p].values), levels=clevs1, cmap=cmap1, norm=norm)
 
     left_low = (width_left_yticks - 0.2 + ncol * (width_map  + width_wspace))/width
 
@@ -622,6 +642,8 @@ def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = "rai
         add_worldmap = True
     if add_worldmap:
         add_china_map_2basemap(ax, name="world", edgecolor='k', lw=0.3, encoding='gbk', grid0=None)  # "国界"
+        if grid0.elon > 180:
+            add_china_map_2basemap(ax, name="world360", edgecolor='k', lw=0.3, encoding='gbk', grid0=None)  # "国界"
 
     add_china_map_2basemap(ax, name="nation", edgecolor='k', lw=0.3, encoding='gbk')  # "国界"
     add_china_map_2basemap(ax,  edgecolor='k', lw=0.3, encoding='gbk')   # "省界"
@@ -635,6 +657,7 @@ def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = "rai
 
     vmax = np.max(grd.values)
     vmin = np.min(grd.values)
+
     cmap1,clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap,clevs=clevs,vmin=vmin,vmax = vmax)
 
     norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
@@ -643,8 +666,6 @@ def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = "rai
     left_low = (width + 0.1 - right_plots_width) / width
     colorbar_position = fig.add_axes([left_low, legend_hight / height, 0.02, 1-title_hight/height])  # 位置[左,下,宽,高]
     plt.colorbar(im,cax= colorbar_position)
-
-
 
 
     vmax = x[-1]
@@ -727,7 +748,8 @@ def scatter_sta(sta0,value_column=None,
                 save_path=None,show = False,dpi = 300,title=None,
                 sup_fontsize = 10,
                 height = None,width = None,
-                min_spot_value = 0,grid = False,subplot = None,ncol = None,point_size = None,sup_title = None,add_minmap = None,title_in_ax = False):
+                min_spot_value = 0,grid = False,subplot = None,ncol = None,point_size = None,sup_title = None,add_minmap = None,
+                extend = None,title_in_ax = False):
 
     sta = sta0
     if save_path is None and save_dir is None:
@@ -801,12 +823,16 @@ def scatter_sta(sta0,value_column=None,
     vmax_v = np.max(sta_without_iv[plot_data_names].values)
     vmin_v = np.min(sta_without_iv[plot_data_names].values)
 
-    cmap1,clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap,clevs=clevs,vmin=vmin_v,vmax = vmax_v)
+    cmap1,clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap,clevs=clevs,vmin=vmin_v,vmax = vmax_v,extend=extend)
     #clevs1, cmap1 = meteva.base.tool.color_tools.def_cmap_clevs(clevs=clevs, cmap=cmap, vmin = None, vmax=None)
     #meteva.base.tool.color_tools.show_cmap_clev(cmap1,clevs1)
 
-    norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
-
+    if extend is None:
+        norm = BoundaryNorm(clevs1, ncolors=cmap1.N - 1)
+    elif extend == "both":
+        norm = BoundaryNorm(clevs1, ncolors=cmap1.N + 2, extend=extend)
+    else:
+        norm = BoundaryNorm(clevs1, ncolors=cmap1.N+1, extend=extend)
 
 
     if point_size is None:
@@ -935,6 +961,9 @@ def scatter_sta(sta0,value_column=None,
                 add_worldmap = True
             if add_worldmap:
                 add_china_map_2basemap(ax, name="world", edgecolor='k', lw=0.3, encoding='gbk', grid0=None)  # "国界"
+                if elon > 180:
+                    add_china_map_2basemap(ax, name="world360", edgecolor='k', lw=0.3, encoding='gbk',
+                                           grid0=None)  # "国界"
 
 
             add_china_map_2basemap(ax, name="nation", edgecolor='k', lw=0.3, encoding='gbk',grid0 = None)  # "省界"
@@ -1007,7 +1036,12 @@ def scatter_sta(sta0,value_column=None,
                 ax_min.spines["bottom"].set_linewidth(0.3)
                 ax_min.spines["right"].set_linewidth(0.3)
                 ax_min.spines["left"].set_linewidth(0.3)
-                add_china_map_2basemap(ax_min, name="world", edgecolor='k', lw=0.2, encoding='gbk', grid0=None)  # "国界"
+                if elon > 180:
+                    add_china_map_2basemap(ax, name="world360", edgecolor='k', lw=0.3, encoding='gbk',
+                                           grid0=None)  # "国界"
+
+                add_china_map_2basemap(ax, name="world", edgecolor='k', lw=0.3, encoding='gbk',
+                                       grid0=None)  # "国界"
                 add_china_map_2basemap(ax_min, name="nation", edgecolor='k', lw=0.2, encoding='gbk', grid0=None)  # "省界"
 
 
@@ -1124,7 +1158,7 @@ def scatter_sta(sta0,value_column=None,
                              mean_value = mean_value,save_path = save_path1,show = show,dpi = dpi,
                             title = title1,sup_fontsize = sup_fontsize,
                              height=height,width= width,min_spot_value=min_spot_value,grid = grid,ncol = ncol,point_size=point_size,sup_title=sup_title[n],
-                             add_minmap = add_minmap,print_max = print_max,print_min = print_min,title_in_ax=title_in_ax)
+                             add_minmap = add_minmap,print_max = print_max,print_min = print_min,title_in_ax=title_in_ax,extend=extend)
 
 
 def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_worldmap = False,
@@ -1134,7 +1168,7 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
                 sup_fontsize = 10,
                 height = None,width = None,
                 min_spot_value = 0,grid = False,ncol = None,point_size = None,sup_title = None,add_minmap = None,print_max = 0,print_min = 0,
-                     title_in_ax = False):
+                    extend = None, title_in_ax = False):
 
     sta0 = sta0_list[0]
     if isinstance(map_extend, list):
@@ -1225,9 +1259,13 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
 
     map_area = height_map *width_map
 
-    cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap, clevs=clevs, vmin=vmin, vmax=vmax)
-
-    norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
+    cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap, clevs=clevs, vmin=vmin, vmax=vmax,extend=extend)
+    if extend is None:
+        norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
+    elif extend == "both":
+        norm = BoundaryNorm(clevs1, ncolors=cmap1.N + 2, extend=extend)
+    else:
+        norm = BoundaryNorm(clevs1, ncolors=cmap1.N + 1, extend=extend)
     #print(sta0_list[0])
     if point_size is None:
 
@@ -1364,6 +1402,8 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
             add_worldmap = True
         if add_worldmap:
             add_china_map_2basemap(ax, name="world", edgecolor='k', lw=0.3, encoding='gbk', grid0=None)  # "国界"
+            if elon >180:
+                add_china_map_2basemap(ax, name= "world360", edgecolor='k', lw=0.3, encoding='gbk', grid0=None)  # "国界"
 
 
         add_china_map_2basemap(ax, name="nation", edgecolor='k', lw=0.3, encoding='gbk',grid0 = None)  # "省界"
@@ -1429,7 +1469,9 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
             ax_min.spines["bottom"].set_linewidth(0.3)
             ax_min.spines["right"].set_linewidth(0.3)
             ax_min.spines["left"].set_linewidth(0.3)
-            add_china_map_2basemap(ax_min, name="world", edgecolor='k', lw=0.2, encoding='gbk', grid0=None)  # "国界"
+            if elon >180:
+                add_china_map_2basemap(ax, name="world360", edgecolor='k', lw=0.3, encoding='gbk', grid0=None)  # "国界"
+            add_china_map_2basemap(ax, name="world", edgecolor='k', lw=0.3, encoding='gbk', grid0=None)  # "国界"
             add_china_map_2basemap(ax_min, name="nation", edgecolor='k', lw=0.2, encoding='gbk', grid0=None)  # "省界"
 
         #if print_max >0 or print_min >0:
@@ -1593,9 +1635,15 @@ def caculate_axis_width(xticks,fontsize,legend_num = 1):
     return width
 
 def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",vmin = None,vmax = None,ncol = None,grid = None,tag = -1,save_path = None,show = False
-        ,dpi = 300,bar_width = None,spasify_xticks = None,sup_fontsize = 10,title = ""
-             ,height = None,width = None,log_y = False,sup_title = None,xlabel = None,legend_col = None,color_list = None,hline = None,marker = None):
+        ,dpi = 300,bar_width = None,spasify_xticks = None,sparsify_xticks = None,sup_fontsize = 10,title = ""
+             ,height = None,width = None,log_y = False,sup_title = None,xlabel = None,legend_col = None,color_list = None,hline = None,marker = None,
+             legend_loc =  "upper center",linestyle = None,return_axs = False):
     shape = array.shape
+
+
+    if spasify_xticks is not None:
+        print("warning: the argument spasify_xticks will be abolished, please use sparsify_xticks instead\n警告：参数spasify_xticks 将被废除，以后请使用参数sparsify_xticks代替")
+        sparsify_xticks = spasify_xticks
 
     array = copy.deepcopy(array)
 
@@ -1641,9 +1689,9 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
             spasify = int(math.ceil(width_axis / (width - width_wspace)))
 
 
-        if spasify_xticks is not None:
-            xticks_font = sup_fontsize * 1.0 * spasify_xticks * (width - width_wspace) / width_axis
-            spasify = spasify_xticks
+        if sparsify_xticks is not None:
+            xticks_font = sup_fontsize * 1.0 * sparsify_xticks * (width - width_wspace) / width_axis
+            spasify = sparsify_xticks
         else:
             xticks_font = sup_fontsize * 0.8
 
@@ -1658,11 +1706,11 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
             print("坐标的size和数据的size不匹配")
             return
 
-        xticks = x[::spasify]
+        xticks = x[spasify-1::spasify]
         if isinstance(x_one,datetime.datetime):
-            xticks_labels = meteva.product.get_time_str_list(name_list_dict[axis][::spasify],3)
+            xticks_labels = meteva.product.get_time_str_list(name_list_dict[axis][spasify-1::spasify],3)
         else:
-            xticks_labels = xticks_labels[::spasify]
+            xticks_labels = xticks_labels[spasify-1::spasify]
 
 
 
@@ -1824,6 +1872,10 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
 
         legend_list = name_list_dict[legend]
         legend_num = len(legend_list)
+        if linestyle is None:
+            linestyle = []
+            for i in range(legend_num):
+                linestyle.append("-")
         x_one = name_list_dict[axis][0]
 
         if isinstance(x_one,datetime.datetime):
@@ -1850,9 +1902,9 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
             spasify = int(math.ceil(width_axis_labels / (width - width_wspace)))
             #width_one_subplot = 10
 
-        if spasify_xticks is not None:
-            xticks_font = sup_fontsize * 1.0 * spasify_xticks * (width - width_wspace) / width_axis_labels
-            spasify = spasify_xticks
+        if sparsify_xticks is not None:
+            xticks_font = sup_fontsize * 1.0 * sparsify_xticks * (width - width_wspace) / width_axis_labels
+            spasify = sparsify_xticks
         else:
             xticks_font = sup_fontsize * 0.8
 
@@ -1879,11 +1931,11 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
             print("坐标的size和数据的size不匹配")
             return
 
-        xticks = x[::spasify]
+        xticks = x[spasify-1::spasify]
         if isinstance(x_one,datetime.datetime):
-            xticks_labels = meteva.product.get_time_str_list(name_list_dict[axis][::spasify],3)
+            xticks_labels = meteva.product.get_time_str_list(name_list_dict[axis][spasify-1::spasify],3)
         else:
-            xticks_labels = xticks_labels[::spasify]
+            xticks_labels = xticks_labels[spasify-1::spasify]
 
         if log_y:
             array[array == 0] = meteva.base.IV
@@ -1960,11 +2012,11 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
                     if color_list is None:
                         if meteva.base.plot_color_dict is not None and legend_list[i] in meteva.base.plot_color_dict.keys():
                             color_set1 = meteva.base.plot_color_dict[legend_list[i]]
-                            plt.plot(x, dat0, label=legend_list[i],color=color_set1)
+                            plt.plot(x, dat0, label=legend_list[i],color=color_set1,linestyle = linestyle[i])
                         else:
-                            plt.plot(x, dat0, label=legend_list[i])
+                            plt.plot(x, dat0, label=legend_list[i],linestyle = linestyle[i])
                     else:
-                        plt.plot(x, dat0, label=legend_list[i],color = color_list[i])
+                        plt.plot(x, dat0, label=legend_list[i],color = color_list[i],linestyle = linestyle[i])
                 else:
                     dat0_all = set_plot_IV_with_out_start_end(dat0)
                     plt.plot(x, dat0_all, "--", linewidth=0.5, color="k")
@@ -1976,11 +2028,11 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
                     if color_list is None:
                         if meteva.base.plot_color_dict is not None and legend_list[i] in meteva.base.plot_color_dict.keys():
                             color_set1 = meteva.base.plot_color_dict[legend_list[i]]
-                            plt.plot(x, dat0_notiv, label=name_list_dict[legend][i],color = color_set1,marker = marker)
+                            plt.plot(x, dat0_notiv, label=name_list_dict[legend][i],color = color_set1,marker = marker,linestyle = linestyle[i])
                         else:
-                            plt.plot(x, dat0_notiv, label=name_list_dict[legend][i],marker = marker)
+                            plt.plot(x, dat0_notiv, label=name_list_dict[legend][i],marker = marker,linestyle = linestyle[i])
                     else:
-                        plt.plot(x, dat0_notiv, label=name_list_dict[legend][i],color = color_list[i],marker = marker)
+                        plt.plot(x, dat0_notiv, label=name_list_dict[legend][i],color = color_list[i],marker = marker,linestyle = linestyle[i])
                 if tag >= 0:
                     for ii in range(len(dat0)):
                         a = x[ii]
@@ -1996,7 +2048,7 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
                         plt.text(a, b, fmt_tag % b, ha="center", va=va,
                                  fontsize=sup_fontsize * 0.6)
 
-        plt.legend(fontsize =sup_fontsize * 0.8,ncol = legend_col,loc = "upper center")
+        plt.legend(fontsize =sup_fontsize * 0.8,ncol = legend_col,loc =legend_loc)
         plt.xticks(xticks, xticks_labels, fontsize=xticks_font)
         plt.yticks(fontsize=sup_fontsize * 0.8)
         if xlabel is None:xlabel = axis
@@ -2081,7 +2133,10 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
         newshape = (keys.index(subplot),keys.index(legend),keys.index(axis))
         data = array.transpose(newshape)
         legend_num = len(name_list_dict[legend])
-
+        if linestyle is None:
+            linestyle = []
+            for i in range(legend_num):
+                linestyle.append("-")
         x_one = name_list_dict[axis][0]
         if isinstance(x_one,datetime.datetime):
             xticks_labels = meteva.product.get_time_str_list(name_list_dict[axis],3)
@@ -2107,7 +2162,10 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
 
         if ncol is not None:
             if width_one_subplot >8/ncol:
-                spasify = int(math.ceil(width_axis_labels/(8/ncol - width_wspace)))
+                if 8/ncol - width_wspace>0:
+                    spasify = int(math.ceil(width_axis_labels/(8/ncol - width_wspace)))
+                else:
+                    spasify = 10
                 width_one_subplot = 8/ncol
         else:
             if width_one_subplot >8:
@@ -2133,14 +2191,14 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
             return
 
 
-        xticks = x[::spasify]
+        xticks = x[spasify-1::spasify]
 
         if isinstance(x_one,datetime.datetime):
-            xticks_labels = meteva.product.get_time_str_list(name_list_dict[axis][::spasify],3)
+            xticks_labels = meteva.product.get_time_str_list(name_list_dict[axis][spasify-1::spasify],3)
         elif axis.find("dayofyear")>=0:
-            xticks_labels = meteva.product.get_dayofyear_str_list(name_list_dict[axis][::spasify])
+            xticks_labels = meteva.product.get_dayofyear_str_list(name_list_dict[axis][spasify-1::spasify])
         else:
-            xticks_labels = xticks_labels[::spasify]
+            xticks_labels = xticks_labels[spasify-1::spasify]
 
         xticks_labels_None = []
         for i in range(len(xticks_labels)):
@@ -2295,19 +2353,19 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
                             if meteva.base.plot_color_dict is not None and name_list_dict[legend][i] in meteva.base.plot_color_dict.keys():
                                 color_set1 = meteva.base.plot_color_dict[name_list_dict[legend][i]]
                                 if k == 0:
-                                    plt.plot(x, data[k, i, :], label=name_list_dict[legend][i],color = color_set1,marker = marker)
+                                    plt.plot(x, data[k, i, :], label=name_list_dict[legend][i],color = color_set1,marker = marker,linestyle = linestyle[i])
                                 else:
-                                    plt.plot(x, data[k, i, :],color = color_set1,marker = marker)
+                                    plt.plot(x, data[k, i, :],color = color_set1,marker = marker,linestyle = linestyle[i])
                             else:
                                 if k == 0:
-                                    plt.plot(x, data[k, i, :], label=name_list_dict[legend][i],marker = marker)
+                                    plt.plot(x, data[k, i, :], label=name_list_dict[legend][i],marker = marker,linestyle = linestyle[i])
                                 else:
-                                    plt.plot(x, data[k, i, :],marker = marker)
+                                    plt.plot(x, data[k, i, :],marker = marker,linestyle = linestyle[i])
                         else:
                             if k == 0:
-                                plt.plot(x, data[k, i, :], label=name_list_dict[legend][i],color = color_list[i],marker = marker)
+                                plt.plot(x, data[k, i, :], label=name_list_dict[legend][i],color = color_list[i],marker = marker,linestyle = linestyle[i])
                             else:
-                                plt.plot(x, data[k, i, :],color = color_list[i],marker = marker)
+                                plt.plot(x, data[k, i, :],color = color_list[i],marker = marker,linestyle = linestyle[i])
                     else:
                         dat0_all = set_plot_IV_with_out_start_end(dat0)
                         plt.plot(x, dat0_all, "--", linewidth=0.5, color="k")
@@ -2320,19 +2378,19 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
                             if meteva.base.plot_color_dict is not None and name_list_dict[legend][i] in meteva.base.plot_color_dict.keys():
                                 color_set1 = meteva.base.plot_color_dict[name_list_dict[legend][i]]
                                 if k == 0:
-                                    plt.plot(x, dat0_notiv, label=name_list_dict[legend][i], color=color_set1,marker = marker)
+                                    plt.plot(x, dat0_notiv, label=name_list_dict[legend][i], color=color_set1,marker = marker,linestyle = linestyle[i])
                                 else:
-                                    plt.plot(x, dat0_notiv, color=color_set1,marker = marker)
+                                    plt.plot(x, dat0_notiv, color=color_set1,marker = marker,linestyle = linestyle[i])
                             else:
                                 if k == 0:
-                                    plt.plot(x, dat0_notiv, label=name_list_dict[legend][i],marker = marker)
+                                    plt.plot(x, dat0_notiv, label=name_list_dict[legend][i],marker = marker,linestyle = linestyle[i])
                                 else:
-                                    plt.plot(x, dat0_notiv,marker = marker)
+                                    plt.plot(x, dat0_notiv,marker = marker,linestyle = linestyle[i])
                         else:
                             if k == 0:
-                                plt.plot(x, dat0_notiv, label=name_list_dict[legend][i],color = color_list[i],marker = marker)
+                                plt.plot(x, dat0_notiv, label=name_list_dict[legend][i],color = color_list[i],marker = marker,linestyle = linestyle[i])
                             else:
-                                plt.plot(x, dat0_notiv,color = color_list[i],marker = marker)
+                                plt.plot(x, dat0_notiv,color = color_list[i],marker = marker,linestyle = linestyle[i])
 
                     if tag >= 0:
                         for ii in range(len(dat0)):
@@ -2454,10 +2512,10 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
                 #print(by)
 
                 if subplot_num > 1:
-                    fig.legend(fontsize=sup_fontsize * 0.8, ncol=legend_col, loc="upper center",
+                    fig.legend(fontsize=sup_fontsize * 0.8, ncol=legend_col, loc=legend_loc,
                                bbox_to_anchor=(0.52, by))
                 else:
-                    plt.legend(fontsize=sup_fontsize * 0.8, ncol=legend_col, loc="upper center")
+                    plt.legend(fontsize=sup_fontsize * 0.8, ncol=legend_col, loc=legend_loc)
 
     else:
         print("array不能超过3维")
@@ -2467,6 +2525,9 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
             if not type(index) == str:
                 index = str(index)
             xticks.append(index)
+
+    if return_axs:
+        return plt.gca()
     if save_path is None:
         show = True
     else:
@@ -2481,11 +2542,15 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
 
 def bar_line(array,type_list,name_list_dict = None,legend = None,axis = None,vmin_bar = None,vmax_bar = None,
             vmin_line = None,vmax_line = None ,ncol = None,grid = None,tag = -1,save_path = None,show = False
-        ,dpi = 300,bar_width = None,spasify_xticks = None,sup_fontsize = 10,title = ""
+        ,dpi = 300,bar_width = None,spasify_xticks = None,sparsify_xticks = None,sup_fontsize = 10,title = ""
              ,height = None,width = None,log_y_bar = False,log_y_line = False,sup_title = None,
              xlabel = None,ylabel_bar = "Value",ylabel_line = "Value",legend_col = None,color_list = None,hline = None):
     shape = array.shape
 
+
+    if spasify_xticks is not None:
+        print("warning: the argument spasify_xticks will be abolished, please use sparsify_xticks instead\n警告：spasify_xticks 将被废除，以后请使用参数sparsify_xticks代替")
+        sparsify_xticks = spasify_xticks
 
     if len(array[array!=meteva.base.IV]) ==0:
         print("所有的值都为缺失值")
@@ -2550,9 +2615,9 @@ def bar_line(array,type_list,name_list_dict = None,legend = None,axis = None,vmi
             spasify = int(math.ceil(width_axis_labels / (width - width_wspace)))
             #width_one_subplot = 10
 
-        if spasify_xticks is not None:
-            xticks_font = sup_fontsize * 1.0 * spasify_xticks * (width - width_wspace) / width_axis_labels
-            spasify = spasify_xticks
+        if sparsify_xticks is not None:
+            xticks_font = sup_fontsize * 1.0 * sparsify_xticks * (width - width_wspace) / width_axis_labels
+            spasify = sparsify_xticks
         else:
             xticks_font = sup_fontsize * 0.8
 
@@ -2580,11 +2645,11 @@ def bar_line(array,type_list,name_list_dict = None,legend = None,axis = None,vmi
             print("坐标的size和数据的size不匹配")
             return
 
-        xticks = x[::spasify]
+        xticks = x[spasify-1::spasify]
         if isinstance(x_one,datetime.datetime):
-            xticks_labels = meteva.product.get_time_str_list(name_list_dict[axis][::spasify],3)
+            xticks_labels = meteva.product.get_time_str_list(name_list_dict[axis][spasify-1::spasify],3)
         else:
-            xticks_labels = xticks_labels[::spasify]
+            xticks_labels = xticks_labels[spasify-1::spasify]
 
 
         dat_bar_list = []
@@ -2863,9 +2928,9 @@ def bar_line(array,type_list,name_list_dict = None,legend = None,axis = None,vmi
                 spasify = int(math.ceil(width_axis_labels / (8 - width_wspace)))
                 width_one_subplot = 8
 
-        if spasify_xticks is not None:
-            xticks_font = sup_fontsize * 1.0 * spasify_xticks * (width_one_subplot - width_wspace) / width_axis_labels
-            spasify = spasify_xticks
+        if sparsify_xticks is not None:
+            xticks_font = sup_fontsize * 1.0 * sparsify_xticks * (width_one_subplot - width_wspace) / width_axis_labels
+            spasify = sparsify_xticks
         else:
             xticks_font = sup_fontsize * 0.8
 
@@ -2880,14 +2945,14 @@ def bar_line(array,type_list,name_list_dict = None,legend = None,axis = None,vmi
             print("坐标的size和数据的size不匹配")
             return
 
-        xticks = x[::spasify]
+        xticks = x[spasify-1::spasify]
 
         if isinstance(x_one, datetime.datetime):
-            xticks_labels = meteva.product.get_time_str_list(name_list_dict[axis][::spasify], 3)
+            xticks_labels = meteva.product.get_time_str_list(name_list_dict[axis][spasify-1::spasify], 3)
         elif axis.find("dayofyear") >= 0:
-            xticks_labels = meteva.product.get_dayofyear_str_list(name_list_dict[axis][::spasify])
+            xticks_labels = meteva.product.get_dayofyear_str_list(name_list_dict[axis][spasify-1::spasify])
         else:
-            xticks_labels = xticks_labels[::spasify]
+            xticks_labels = xticks_labels[spasify-1::spasify]
 
         xticks_labels_None = []
         for i in range(len(xticks_labels)):
@@ -3278,25 +3343,27 @@ def bar_line(array,type_list,name_list_dict = None,legend = None,axis = None,vmi
 
 
 
+
 def bar(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",vmin = None,vmax = None,ncol = None,grid = None,tag = -1,save_path = None,show = False
-        ,dpi = 300,bar_width = None,title = "",spasify_xticks = None,sup_fontsize = 10,width = None,height = None,log_y = False,sup_title = None,xlabel = None,
-        legend_col = None,color_list = None,hline = None,marker = None):
+        ,dpi = 300,bar_width = None,title = "",spasify_xticks = None,sparsify_xticks = None,sup_fontsize = 10,width = None,height = None,log_y = False,sup_title = None,xlabel = None,
+        legend_col = None,color_list = None,hline = None,marker = None,return_axs=False):
 
-    plot_bar("bar",array = array,name_list_dict=name_list_dict,legend = legend,axis = axis,ylabel = ylabel,vmin= vmin,vmax = vmax,ncol =ncol,grid = grid,tag = tag,
-             spasify_xticks = spasify_xticks,save_path = save_path,show = show,
+    axs = plot_bar("bar",array = array,name_list_dict=name_list_dict,legend = legend,axis = axis,ylabel = ylabel,vmin= vmin,vmax = vmax,ncol =ncol,grid = grid,tag = tag,
+             spasify_xticks = spasify_xticks,sparsify_xticks =sparsify_xticks,save_path = save_path,show = show,
              dpi = dpi,bar_width=bar_width,sup_fontsize= sup_fontsize,title=title,width = width,height = height,log_y = log_y,sup_title= sup_title,xlabel = xlabel,
-             legend_col = legend_col,color_list=color_list,hline = hline,marker=marker)
-
+             legend_col = legend_col,color_list=color_list,hline = hline,marker=marker,return_axs=return_axs)
+    return axs
 
 
 def plot(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",vmin = None,vmax = None,ncol = None,grid = None,tag = -1,save_path = None,show = False,dpi = 300
-         ,title ="",spasify_xticks = None,sup_fontsize = 10,width = None,height = None,log_y = False,sup_title = None,xlabel = None,legend_col = None,color_list = None,hline = None,
-         marker = None):
+         ,title ="",spasify_xticks = None,sparsify_xticks = None,sup_fontsize = 10,width = None,height = None,log_y = False,sup_title = None,xlabel = None,legend_col = None,color_list = None,hline = None,
+         marker = None,legend_loc ="upper center",linestyle = None,return_axs = False):
 
-    plot_bar("line",array,name_list_dict=name_list_dict,legend = legend,axis = axis,ylabel = ylabel,vmin= vmin,vmax = vmax,ncol =ncol,grid = grid,tag=tag ,
-             spasify_xticks = spasify_xticks,save_path = save_path,show = show,
+    axs = plot_bar("line",array,name_list_dict=name_list_dict,legend = legend,axis = axis,ylabel = ylabel,vmin= vmin,vmax = vmax,ncol =ncol,grid = grid,tag=tag ,
+             spasify_xticks = spasify_xticks,sparsify_xticks = sparsify_xticks,save_path = save_path,show = show,
              dpi = dpi,sup_fontsize= sup_fontsize,title=title,width = width,height = height,log_y = log_y,sup_title = sup_title,xlabel = xlabel,
-             legend_col =legend_col,color_list=color_list,hline = hline,marker = marker)
+             legend_col =legend_col,color_list=color_list,hline = hline,marker = marker,legend_loc =legend_loc,linestyle=linestyle,return_axs = return_axs)
+    return  axs
 
 
 def myheatmap(ax_one,data_0,cmap,clevs,annot=1,fontsize=10):
@@ -3439,11 +3506,11 @@ def mesh(array,name_list_dict = None,axis_x = None,axis_y = None,cmap = "rainbow
             xticks_font = sup_fontsize * 0.8
 
         x = np.arange(len(name_list_dict[axis_x]))
-        xticks = x[::spasify]
+        xticks = x[spasify-1::spasify]
         if isinstance(x_one, datetime.datetime):
             xticks_labels = meteva.product.get_time_str_list(name_list_dict[axis_x][::spasify], 3)
         else:
-            xticks_labels = xticks_labels[::spasify]
+            xticks_labels = xticks_labels[spasify-1::spasify]
 
         xticks_labels_None = []
         for i in range(len(xticks_labels)):
@@ -3579,7 +3646,6 @@ def mesh(array,name_list_dict = None,axis_x = None,axis_y = None,cmap = "rainbow
 def mesh_obtime_time(sta0,save_dir = None,save_path = None,
                    clevs = None,cmap = None,show = False,xtimetype = "mid",dpi = 300,annot =None,
                      sup_fontsize = 10,title = "预报准确性和稳定性对比图",width = None,height = None,multiple = 1):
-
 
     sta = sta0.copy()
     sta.iloc[:,6:] *= multiple
