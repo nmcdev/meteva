@@ -128,7 +128,7 @@ def scatter_regress(ob, fo,member_list = None, rtype="linear",vmax = None,vmin =
             rate = np.mean(ob) / np.mean(fo)
             fo_rg = ob_line * np.mean(ob) / np.mean(fo)
             plt.plot(ob_line, fo_rg, color="k")
-            rg_text2 = "Y = " + '%.2f' % rate + "* X"
+            rg_text2 = "Y = " + '%.2f' % rate + "X"
             plt.text(num_min + 0.05 * dmm, num_min + 0.92 * dmm, rg_text2, fontsize=0.8 * sup_fontsize, color="r")
         elif rtype == "linear":
             #X = np.zeros((len(fo), 1))
@@ -191,7 +191,7 @@ def scatter_regress(ob, fo,member_list = None, rtype="linear",vmax = None,vmin =
 
 
 def pdf_plot(ob, fo,member_list = None,vmax = None,vmin = None, save_path=None,  show = False,dpi = 300,title="频率匹配检验图",
-             sup_fontsize = 10,width = None,height = None,yscale = None,grid = False):
+             sup_fontsize = 10,width = None,height = None,yscale = None,grid = False,percent = [0,1]):
     '''
     sorted_ob_fo 将传入的两组数据先进行排序
     然后画出折线图
@@ -233,11 +233,14 @@ def pdf_plot(ob, fo,member_list = None,vmax = None,vmin = None, save_path=None, 
         num_min = vmin
     dmm = num_max - num_min
     ob= ob.flatten()
+    start_index = int(ob.size * percent[0])
+    end_index= int(ob.size * percent[1])
 
     ob_sorted = np.sort(ob.flatten())
 
     ob_sorted_smooth = ob_sorted
     ob_sorted_smooth[1:-1] = 0.5 * ob_sorted[1:-1] + 0.25 * (ob_sorted[0:-2] + ob_sorted[2:])
+    ob_sorted_smooth = ob_sorted_smooth[start_index:end_index]
     ax = plt.subplot(1, 2, 1)
     y = np.arange(len(ob_sorted_smooth)) / (len(ob_sorted_smooth))
     plt.plot(ob_sorted_smooth, y, label="观测")
@@ -256,6 +259,8 @@ def pdf_plot(ob, fo,member_list = None,vmax = None,vmin = None, save_path=None, 
         fo_sorted = np.sort(new_Fo[line, :].flatten())
         fo_sorted_smooth = fo_sorted
         fo_sorted_smooth[1:-1] = 0.5 * fo_sorted[1:-1] + 0.25 * (fo_sorted[0:-2] + fo_sorted[2:])
+        fo_sorted_smooth = fo_sorted_smooth[start_index:end_index]
+
         plt.plot(fo_sorted_smooth, y, label=label)
         plt.xlabel("变量值", fontsize=0.9 * sup_fontsize)
         #plt.xlim(num_min, num_max)
@@ -307,6 +312,7 @@ def pdf_plot(ob, fo,member_list = None,vmax = None,vmin = None, save_path=None, 
         fo_sorted = np.sort(new_Fo[line, :].flatten())
         fo_sorted_smooth = fo_sorted
         fo_sorted_smooth[1:-1] = 0.5 * fo_sorted[1:-1] + 0.25 * (fo_sorted[0:-2] + fo_sorted[2:])
+        fo_sorted_smooth = fo_sorted_smooth[start_index:end_index]
         plt.plot(fo_sorted_smooth, ob_sorted_smooth, linewidth=2, label=label)
         plt.xlim(num_min, num_max)
         plt.ylim(num_min, num_max)
@@ -850,7 +856,7 @@ def taylor_diagram_(ob, fo,member_list=None, save_path=None,show = False,dpi = 3
 
 
 def frequency_histogram_error(ob, fo,grade_list=None, member_list=None,  vmax = None,save_path=None,show = False,dpi = 300,plot = "bar", title="误差频率统计图",
-                        sup_fontsize = 10,width = None,height = None,log_y = False):
+                        sup_fontsize = 10,width = None,height = None,log_y = False,color_list = None,linestyle = None):
     '''
     frequency_histogram 对比测试数据和实况数据的发生的频率
     :param ob: 实况数据 任意维numpy数组
@@ -922,24 +928,22 @@ def frequency_histogram_error(ob, fo,grade_list=None, member_list=None,  vmax = 
         vmin = 0
     if plot == "bar":
         meteva.base.plot_tools.bar(result_array,name_list_dict,ylabel= "样本占比",vmin = vmin,vmax = vmax,save_path = save_path,show = show,dpi = dpi,title=title,
-                                   width = width,height = height,sup_fontsize= sup_fontsize,log_y = log_y)
+                                   width = width,height = height,sup_fontsize= sup_fontsize,log_y = log_y,color_list=color_list)
     else:
         meteva.base.plot_tools.plot(result_array, name_list_dict, ylabel="样本占比", vmin=vmin, vmax=vmax, save_path=save_path,
                                    show=show, dpi=dpi, title=title,
-                                    width = width,height = height,sup_fontsize= sup_fontsize,log_y = log_y)
+                                    width = width,height = height,sup_fontsize= sup_fontsize,log_y = log_y,color_list=color_list,linestyle=linestyle)
 
 
 
-
-
-def accumulation_change_with_strenght(ob,fo,member_list = None,save_path=None,  show = False,dpi = 300,title="降水量随强度变化图",
+def accumulation_change_with_strength(ob,fo,member_list = None,save_path=None,  show = False,dpi = 300,title="降水量随强度变化图",
              sup_fontsize = 14,width = None,height = None,log_y = False,y_log = None,max_x = None):
     if y_log is not None:
         print(
             "warning: the argument y_log will be abolished, please use log_y instead\n警告：为保持和其它函数的名称一致，参数log_y将被废除，以后请使用参数log_y代替")
         log_y = y_log
 
-    accu_stren = meteva.method.continuous.table.accumulation_strenght_table(ob,fo)
+    accu_stren = meteva.method.continuous.table.accumulation_strength_table(ob,fo)
     min_not_zero = np.min(accu_stren[accu_stren>0])
     maxv = np.max(accu_stren)
     shape = accu_stren.shape
@@ -1017,16 +1021,25 @@ def accumulation_change_with_strenght(ob,fo,member_list = None,save_path=None,  
     plt.close()
     return accu_stren
 
-def frequency_change_with_strenght(ob,fo,member_list = None,save_path=None,  show = False,dpi = 300,title="降水频次随强度变化图",
-             sup_fontsize = 14,width = None,height = None,log_y = False,y_log = None,max_x = None):
+def frequency_change_with_strength(ob,fo,member_list = None,save_path=None,  show = False,dpi = 300,title="降水频次随强度变化图",
+             sup_fontsize = 14,width = None,height = None,log_y = False,y_log = None,max_x = None,color_list = None,linestyle = None,smooth = None):
 
     if y_log is not None:
         print(
             "warning: the argument y_log will be abolished, please use log_y instead\n警告：为保持和其它函数的名称一致，参数log_y将被废除，以后请使用参数log_y代替")
         log_y = y_log
 
-    accu_stren = meteva.method.continuous.table.frequency_strenght_table(ob,fo)
-    min_not_zero = np.min(accu_stren[accu_stren>0])
+    accu_stren = meteva.method.continuous.table.frequency_strength_table(ob,fo)
+    if smooth is not None:
+        for i in range(accu_stren.shape[0]):
+            accu_stren1 = accu_stren[i,:]
+            accu_stren_sm = accu_stren[i,:]
+            for k in range(smooth):
+                accu_stren_sm[10:-1] = 0.25 * accu_stren1[11:] + 0.25 * accu_stren1[9:-2] + 0.5 * accu_stren1[10:-1]
+                accu_stren1[:] = accu_stren_sm[:]
+            accu_stren[i, :]  = accu_stren_sm[:]
+
+    min_not_zero = np.min(accu_stren[accu_stren>=1])
     maxv = np.max(accu_stren)
     shape = accu_stren.shape
     grade = np.arange(1,shape[1]+1,1)
@@ -1043,20 +1056,33 @@ def frequency_change_with_strenght(ob,fo,member_list = None,save_path=None,  sho
         for i in range(1,nfo+1):
             labels.append("预报"+str(i))
     else:
-        labels = ["观测"]
-        labels.extend(member_list)
+        if len(member_list) == shape[0]:
+            labels = member_list
+        else:
+            labels = ["观测"]
+            labels.extend(member_list)
+
     for line in range(len(labels)):
-        plt.plot(grade,accu_stren[line], label=labels[line],marker = ".")
-        plt.xlabel("降水强度(毫米/小时)", fontsize=0.9 * sup_fontsize)
-        plt.ylabel("降水频次", fontsize=0.9 * sup_fontsize)
-        plt.title(title, fontsize=0.9 * sup_fontsize)
-        if(log_y):
-            ax_one = plt.gca()
-            for tick in ax_one.yaxis.get_major_ticks():
-                tick.label1.set_fontproperties('stixgeneral')
-            plt.yscale('log')
-        plt.xticks(fontsize=0.8 * sup_fontsize)
-        plt.legend(loc="upper right")
+        if linestyle is None:
+            style = "-"
+        else:
+            style = linestyle[line]
+        if color_list is None:
+            plt.plot(grade,accu_stren[line], label=labels[line],marker = ".",linestyle=style)
+        else:
+            plt.plot(grade, accu_stren[line], label=labels[line], marker=".",color = color_list[line],linestyle = style)
+
+    plt.xlabel("降水强度(毫米/小时)", fontsize=0.9 * sup_fontsize)
+    plt.ylabel("降水频次", fontsize=0.9 * sup_fontsize)
+    plt.title(title, fontsize=0.9 * sup_fontsize)
+    if(log_y):
+        ax_one = plt.gca()
+        for tick in ax_one.yaxis.get_major_ticks():
+            tick.label1.set_fontproperties('stixgeneral')
+        plt.yscale('log')
+    plt.xticks(fontsize=0.8 * sup_fontsize)
+    plt.legend(loc="upper right")
+
 
 
 
@@ -1104,3 +1130,13 @@ def frequency_change_with_strenght(ob,fo,member_list = None,save_path=None,  sho
     return accu_stren
 
 
+
+def accumulation_change_with_strenght(ob,fo,member_list = None,save_path=None,  show = False,dpi = 300,title="降水量随强度变化图",
+             sup_fontsize = 14,width = None,height = None,log_y = False,y_log = None,max_x = None):
+    return accumulation_change_with_strength(ob,fo,member_list=member_list,save_path=save_path,show=show,dpi=dpi,title=title,
+                                      sup_fontsize=sup_fontsize,width = width,height=height,log_y=log_y,y_log=y_log,max_x=max_x)
+
+def frequency_change_with_strenght(ob,fo,member_list = None,save_path=None,  show = False,dpi = 300,title="降水频次随强度变化图",
+             sup_fontsize = 14,width = None,height = None,log_y = False,y_log = None,max_x = None,color_list = None,linestyle = None,smooth = None):
+    return  frequency_change_with_strength(ob,fo,member_list=member_list,save_path=save_path,show=show,dpi=dpi,title=title,sup_fontsize=sup_fontsize,width=width,height=height,
+                                   log_y=log_y,y_log=y_log,max_x=max_x,color_list=color_list,linestyle=linestyle,smooth=smooth)
