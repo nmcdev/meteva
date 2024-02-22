@@ -274,7 +274,7 @@ class mfig:
             cb = plt.colorbar(im,cax= colorbar_position)
             cb.ax.tick_params(labelsize=self.sup_fontsize * 0.8)
 
-    def add_mesh(self,i,grd,cmap = "rainbow",clevs = None,add_colorbar = True,matched = True):
+    def add_mesh(self,i,grd,cmap = "rainbow",clevs = None,add_colorbar = True,matched = True,title = None):
         ax = self.ax_list[i]
         x = grd['lon'].values
         y = grd['lat'].values
@@ -312,11 +312,15 @@ class mfig:
                     clabels.append(str(int(clevs1[i]+0.5)))
                 cb.set_ticklabels(clabels)
             cb.ax.tick_params(labelsize=self.sup_fontsize * 0.8)
-        time_str = meteva.base.tool.time_tools.time_to_str(grd["time"].values[0])
-        dati_str = time_str[0:4] + "年" + time_str[4:6] + "月" + time_str[6:8] + "日" + time_str[8:10] + "时"
-        title1 = str(grd["member"].values[0]) + " " + dati_str + str(grd["dtime"].values[0]) + "H时效 "
-        if "var_name" in grd.attrs.keys():
-            title1 = title1 + grd.attrs["var_name"]
+
+        if title is not None:
+            title1 = title
+        else:
+            time_str = meteva.base.tool.time_tools.time_to_str(grd["time"].values[0])
+            dati_str = time_str[0:4] + "年" + time_str[4:6] + "月" + time_str[6:8] + "日" + time_str[8:10] + "时"
+            title1 = str(grd["member"].values[0]) + " " + dati_str + str(grd["dtime"].values[0]) + "H时效 "
+            if "var_name" in grd.attrs.keys():
+                title1 = title1 + grd.attrs["var_name"]
         ax.set_title(title1, fontsize=self.sup_fontsize* 0.9, pad=0)
 
 
@@ -507,7 +511,8 @@ def add_pts(ax,map_extend,line_dict,nmatched,line_width = None,sup_fontsize=10,d
 
 
 
-def plot_label_list(look_list,ncol = None,save_path = None,show = False,sup_fontsize=10,dpi = 300,mfg1 = None):
+def plot_label_list(look_list,ncol = None,save_path = None,show = False,sup_fontsize=10,dpi = 300,mfg1 = None,
+                    title_list = None):
 
     nlook = len(look_list)
     grid1 = look_list[0]["grid"]
@@ -548,16 +553,21 @@ def plot_label_list(look_list,ncol = None,save_path = None,show = False,sup_font
             nmatch = look["match_count"]
         else:
             matched = False
-
-        mfg1.add_mesh(start_ax+i,label_list[i],cmap=cmap2,clevs=clevs2,add_colorbar=((i+1)%ncol==0),matched = matched)
+        title1 = None
+        if title_list is not None:
+            title1= title_list[i]
+        mfg1.add_mesh(start_ax+i,label_list[i],cmap=cmap2,clevs=clevs2,add_colorbar=((i+1)%ncol==0),matched = matched,
+                      title = title1)
 
         label_count = look["grd_features"]["label_count"]
+        id_list = look["id_list"]
         pts_dict = {}
-        for j in range(label_count):
-            feature = meteva.method.feature_axis(look, j + 1, None)
+        for j in range(len(id_list)):
+            id1 = id_list[j]
+            feature = meteva.method.feature_axis(look,id1, None)
             if feature is not None:
                 pts = feature["pts"]
-                pts_dict[j+1] =pts
+                pts_dict[id1] =pts
         add_pts(mfg1.ax_list[start_ax + i],look["grid"],pts_dict,nmatch)
 
     if mfg1_show:
