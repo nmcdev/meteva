@@ -257,12 +257,10 @@ def read_stadata_from_micaps3(filename, station=None,  level=None,time=None, dti
             if show:
                 print("success read from " + filename)
             return sta
-
         except:
             if show:
                 exstr = traceback.format_exc()
                 print(exstr)
-
             print(filename+"文件格式不能识别。可能原因：文件未按micaps3格式存储")
             return None
 
@@ -304,7 +302,6 @@ def read_stadata_from_csv(filename, columns, member_list,skiprows=0,level = None
                     station_column.append(column)
             if not isinstance(member_list,list):
                 member_list = [member_list]
-
             sta0.drop_duplicates(keep='first', inplace=True)
             station_column.extend(member_list)
             sta1 = sta0[station_column]
@@ -1920,10 +1917,11 @@ def read_stadata_from_cmadaas(dataCode,element,time,station = None,level=0,dtime
         sta['dtime'] = dtime
         if (station is not None):
             sta = meteva.base.put_stadata_on_station(sta, station)
+        sta.attrs = {}
+        sta.attrs["dtime_units"] = dtime_units
     else:
         print("数据读取失败")
-    sta.attrs = {}
-    sta.attrs["dtime_units"] = dtime_units
+
     return sta
 
 
@@ -1976,6 +1974,10 @@ def read_stadata_from_cimiss(dataCode,element,time,station = None,level = 0,dtim
 
 
 def read_cyclone_trace(filename, id_cyclone,column=8,  data_name="data0",dtime_units = "hour",show = False):
+    if not os.path.exists(filename):
+        print(filename+"文件不存在")
+        return None
+
     try:
         column_all = [0, 1, 2, 3, 4, 5, 6]
         if isinstance(column, list):
