@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib
 import matplotlib.image as image
 from matplotlib import cm
 import matplotlib.pyplot as plt
@@ -372,7 +373,8 @@ def cmap_clevs_me_new(vmin,vmax):
 def cmap_clevs_mae(vmax):
 
     dif = (vmax) / 10.0
-    inte = math.pow(10, math.floor(math.log10(dif)));
+    if dif <=0:dif = 1
+    inte = math.pow(10, math.floor(math.log10(dif)))
     # 用基本间隔，将最大最小值除于间隔后小数点部分去除，最后把间隔也整数化
     r = dif / inte
     if r < 3 and r >= 1.5:
@@ -472,7 +474,7 @@ def cmap_clevs_mode(vmax):
     :return:
     '''
     if vmax <12:
-        cmap1,clevs1 = def_cmap_clevs(cmap="Paired",clevs=np.arange(1,vmax+1))
+        cmap1,clevs1 = def_cmap_clevs(cmap="Paired",clevs=np.arange(1,vmax+2))
     elif vmax <20:
         cmap1, clevs1 = def_cmap_clevs(cmap="tab20b", clevs=np.arange(1, vmax+1))
     else:
@@ -847,13 +849,16 @@ def show_cmap_clev(cmap,clev = None):
     """
     n_colors = len(cmap.colors)
     width = 8
-    heigh = 2
-    n_h = int(heigh * n_colors/width)
+    heigh = 1
+    n_h = int(math.ceil(heigh * n_colors/width))
     im = np.outer(np.ones(n_h), np.arange(n_colors))
-
 
     fig, ax = plt.subplots(1, figsize=(width, heigh),
                            subplot_kw=dict(xticks=[], yticks=[]))
+    ax.spines['bottom'].set_linewidth(1)
+    ax.spines['left'].set_linewidth(1)
+    ax.spines['top'].set_linewidth(1)
+    ax.spines['right'].set_linewidth(1)
     if clev is not None:
         max_tick = 10
         step = int(math.ceil(n_colors/max_tick))
@@ -964,7 +969,9 @@ def coordinate_cmap_to_clevs(cmap,clevs):
         colors_list = []
         ncmap = len(colors0)
         nclev = len(clevs)
-        if nclev <3:
+        if(ncmap == nclev + 1 or ncmap== nclev-1):
+            return cmap,clevs
+        if nclev <2:
             print("clevs' size must bigger than 1")
         for i in range(nclev):
             if nclev>1:
@@ -984,7 +991,7 @@ def coordinate_cmap_to_clevs(cmap,clevs):
 
 
 
-def def_cmap_clevs(cmap = "rainbow",clevs = None,vmin = None,vmax = None,cut_colorbar = True):
+def def_cmap_clevs(cmap = "rainbow",clevs = None,vmin = None,vmax = None,cut_colorbar = True,extend = None):
     #  # 判断是meteva自定义的颜色类型，这从meteva资源文件或函数里生成cmap1 和clevs1
     clevs1 = None
     cmap1 = None
@@ -1054,6 +1061,8 @@ def def_cmap_clevs(cmap = "rainbow",clevs = None,vmin = None,vmax = None,cut_col
     if cmap1 is None:
         if isinstance(cmap,str):
             nclev = len(clevs2)
+            if extend =="both":
+                nclev += 1
             colors0 = cm.get_cmap(cmap, nclev)
             colors_list = []
             for i in range(nclev):
@@ -1075,7 +1084,22 @@ def def_cmap_clevs(cmap = "rainbow",clevs = None,vmin = None,vmax = None,cut_col
     else:
         cmap4,clevs4  = cmap3,clevs3
 
-    return cmap4,clevs4
+
+    colors_list = cmap4.colors
+    if extend == "both":
+        cmap5 = colors.ListedColormap(colors_list[1:-1])
+        cmap5.set_under(colors_list[0])
+        cmap5.set_over(colors_list[-1])
+    elif extend == "min":
+        cmap5 = colors.ListedColormap(colors_list[1:])
+        cmap5.set_under(colors_list[0])
+    elif extend == "max":
+        cmap5 = colors.ListedColormap(colors_list[:-1])
+        cmap5.set_over(colors_list[-1])
+    else:
+        cmap5 = cmap4
+
+    return cmap5,clevs4
 
 
 def merge_cmap_clevs(cmap0,clevs0,cmap1,clevs2):
@@ -1220,3 +1244,283 @@ def set_plot_color_dict_method2(member_list):
         plot_color_dict[member_list[i]] = color_list0[i]
     meteva.base.plot_color_dict = plot_color_dict
     return
+
+
+def get_black_part(im_array):
+    # 获取图形中的黑色部分，其中包含了colorbar的两条平行边框线
+    # 没有黑色边框线包围的colorbar无法通过本算法识别
+    r = im_array[:, :, 0]
+    g = im_array[:, :, 1]
+    b = im_array[:, :, 2]
+    delta = np.abs(r - g) + np.abs(r - b) + np.abs(g - b)
+    gray = r + g + b
+    black = np.zeros(r.shape)
+    black[delta < 100] = 1  # 容许有一定的噪音，不一定要纯黑
+    black[gray > 100] = 0
+    return black
+
+
+def get_line_start_end_point(line):
+    # 获取黑色线段的起止点，它容许因为噪音的缘故在line上出现少量的断点
+    num = len(line)
+    max_nstep = 0
+
+    # 首先获得line中各段的起始坐标和长度
+    start_list = []
+    end_list = []
+
+    # 记录每个黑色线段的起止点
+    for k in range(1, num):
+        if line[k - 1] == 0 and line[k] == 1:
+            start_list.append(k)
+        if line[k - 1] == 1 and line[k] == 0 and len(start_list) > 0:  # 如果线段一开始就是黑色，也就找不到起点，那终点也不记录
+            end_list.append(k)
+
+    # 如果线段最后是以黑色结尾，那就只有开始，没有结束，那最后一个开始点也不记录
+    if len(start_list) > len(end_list):
+        start_list = start_list[:-1]
+
+    # 如果线段的终点和下一个起点很近，就把它们拼接起来
+    start_list1 = [start_list[0]]
+    end_list1 = []
+    for i in range(1, len(start_list)):
+        e0 = end_list[i - 1]
+        s1 = start_list[i]
+        if s1 - e0 > 4:  # 间隔2个点
+            start_list1.append(start_list[i])
+            end_list1.append(end_list[i - 1])
+    end_list1.append(end_list[-1])
+
+    # 保留长度大于 num * 0.05的线段
+    se_list = []
+    for i in range(len(start_list1)):
+        if end_list1[i] - start_list1[i] > num * 0.05:
+            se_list.append([start_list1[i], end_list1[i]])
+
+    return se_list
+
+
+def is_colorbar(array):
+    nx = array.shape[0]
+    ny = array.shape[1]
+    mean = np.mean(array, axis=0)
+
+    # j计算总亮度
+    mean_sum = np.sum(mean, axis=1)
+    mean_sum.sort()
+    k = int(len(mean_sum) * 0.66)
+    p66 = mean_sum[k]
+
+    if p66 < 750:
+        # 如果矩形区域内超过1/3的面积是不是白色
+        mean = mean.reshape(1, ny, 3)
+        delta = np.sum(np.abs(array - mean), axis=2)  # 在矩形区域内，垂直colorbar的方向的颜色变化幅度
+        max_delta = np.max(delta)  # 变化幅度的最大值
+        if max_delta < 30:
+            # 如果变化幅度普遍很小，则说明是colorbar，理论上max_delta = 0,但有些图片可能不够清晰，有噪音存在
+            return True
+        else:
+            return False
+    else:
+        # 如果矩形区域内超过2/3的面积是白色，则它应该不是colorbar
+        return False
+
+
+def get_cb_list(black, im3):
+    nx = black.shape[0]
+    ny = black.shape[1]
+    thre = ny * 0.1
+    # 查询横向长线段
+    line_list = []
+    for i in range(1, nx - 1):
+        sumy = np.sum(black[i, :])
+        if sumy > thre:
+            line = black[i, :]
+            se_list = get_line_start_end_point(line)
+            for se in se_list:
+                len1 = se[1] - se[0] + 1
+                if np.sum(black[i - 1, se[0]:se[1]]) <= len1 / 2 or np.sum(black[i + 1, se[0]:se[1]]) <= len1 / 2:
+                    line_list.append([i, se[0], i, se[1]])
+
+    # 查询成对的横向线段
+    nline = len(line_list)
+    para_line_list = []
+    for i in range(nline):
+        line_i = line_list[i]
+        for j in range(i + 1, nline):
+            line_j = line_list[j]
+            #             print(line_i)
+            #             print(line_j)
+            if np.abs(line_i[1] - line_j[1]) + np.abs(line_i[3] - line_j[3]) < 6:
+                if line_j[0] - line_i[0] > 5:
+                    para_line_list.append([line_i, line_j])
+                break
+
+    # 判断平行的线段是否构成长方形
+    npara = len(para_line_list)
+    re_list = []
+    for i in range(npara):
+        line0 = para_line_list[i][0]
+        line1 = para_line_list[i][1]
+        # 如果高比宽还大，就不考虑它是colorbar
+        if line1[0] - line0[0] < line0[3] - line0[1]:
+            re_list.append(para_line_list[i])
+
+    nr = len(re_list)
+    cb_list = []
+    # 判断平行线内是否为colorbar
+    for i in range(nr):
+        line0 = re_list[i][0]
+        line1 = re_list[i][1]
+        xs = line0[0] + 2
+        ys = max(line0[1], line1[1]) + 1
+        xe = line1[0] - 2
+        ye = min(line0[3], line1[3]) - 1
+
+        array = im3[xs:xe, ys:ye, :]
+        is_c = is_colorbar(array)
+        if is_c:
+            cb_list.append([xs, xe, ys, ye])
+    return cb_list
+
+
+def get_cmap_from_line(line_array):
+    # 从扣除的colorbar的中间一条矩形图像平均得到的一条线中提取颜色等级
+
+    len1 = line_array.shape[0]  # 线的长度
+    delta = np.zeros(len1)
+    for i in range(1, len1):
+        delta[i] = np.sum(np.abs(line_array[i, :-1] - line_array[i - 1, :-1]))  # 计算线段上相邻相似点在不同颜色分量（rgb）的变化
+
+    # 判断colorbar是突变的还是渐变的
+    mean_delta = np.mean(delta)
+    delta_index = np.zeros(len1)
+    delta_index[0] = 1
+    delta_index[delta > mean_delta] = 1  # 大于平均值的记为1，否则记为0
+    color_list = []
+    if np.mean(delta_index) < 0.1:
+        # 如果只有少量的点的变化幅度大于平均值，说明颜色是突变形式的
+        for i in range(len1 - 5):
+            if delta_index[i - 1] == 1 and np.sum(delta_index[i:i + 5]) == 0:
+                # 取颜色突变，且之后维持5像素不变的位置的颜色
+                color_list.append(line_array[i, :])
+    else:
+        # 均匀选取颜色
+        step = int(math.ceil(len1 / 100))
+        for i in range(2, len1 - 2, step):
+            color_list.append(line_array[i, :])
+    cmap = colors.ListedColormap(color_list, 'indexed')
+
+    return cmap
+
+
+def get_cmap_from_im(im):
+    im255 = im[:, :, :3] * 255
+    black = get_black_part(im255)
+    cb_list = get_cb_list(black, im255)
+    nt = len(cb_list)
+    cmap_list = []
+    for i in range(nt):
+        cb = cb_list[i]
+
+        w = cb[1] - cb[0]  # colorbar的宽度
+        mid = int((cb[1] + cb[0]) / 2)  # colorbar中线的x坐标
+
+        si = int(mid - w / 4)  # 取colorbar的中间1/2 的一条进入颜色提取环节
+        ei = int(mid + w / 4) + 1
+
+        sj = cb[2]  # 默认colorbar的长度和两条平行黑线的长度一致
+        ej = cb[3]
+        ###################################################
+        # 为colorbar两段可能出现的三角形扩展 y坐标的起止点
+        # 扩展起点
+        for q in range(cb[2], -1, -1):
+            if black[mid, q] == 0:
+                break
+        if cb[2] - q > 20:
+            p = q
+        else:
+            for p in range(q, -1, -1):
+                if black[mid, p] == 1:
+                    break
+
+        if cb[2] - p > 5 and p > 0:
+            sum_b = 0
+            sum_w = 0
+            for k in range(p, cb[2]):
+                h = 0.5 * (k - p) * w / (cb[2] - p)
+                hu = int(h + mid)
+                sum_b += np.max(black[hu - 2:hu + 5, k])
+                sum_w += np.max(black[hu + 5:hu + 6, k])
+            if sum_b / (cb[2] - p) > 0.95 and sum_w / (cb[2] - p) < 0.05:
+                sj = p
+
+                # 扩展终点
+        for q in range(cb[3], black.shape[1]):
+            if black[mid, q] == 0:
+                break
+        if q - cb[3] > 20:
+            p = q
+        else:
+            for p in range(q, black.shape[1]):
+                if black[mid, p] == 1:
+                    break
+
+        if p - cb[3] > 5 and p < black.shape[1] - 1:
+            sum_b = 0
+            sum_w = 0
+            for k in range(p, cb[3], -1):
+                h = 0.5 * (p - k) * w / (p - cb[3])
+                hu = int(h + mid)
+                sum_b += np.max(black[hu - 2:hu + 5, k])
+                sum_w += np.max(black[hu + 5:hu + 6, k])
+            if sum_b / (p - cb[3]) > 0.95 and sum_w / (p - cb[3]) < 0.05:
+                ej = p
+
+                # 为colorbar两段可能出现的三角形扩展 y坐标的起止点
+        ################################################3
+        line = np.mean(im[si:ei, sj:ej, :], axis=0)  # 提取一条图形数据，并取平均，得到一条线
+        cmap = get_cmap_from_line(line)  # 从图形数据中识别颜色等级
+        cmap_list.append(cmap)
+
+    return cmap_list
+
+
+def get_cmap_from_picture(path, show=False):
+    im = image.imread(path)
+    cmap_list = get_cmap_from_im(im)  # 获取横向colorbar
+
+    # 将图片顺时针旋转90度，将图片中的中旬colorbar转换成横向，再识别
+    im_t = np.zeros((im.shape[1], im.shape[0], 4))
+    im_t[:, :, 0] = im[::-1, :, 0].T
+    im_t[:, :, 1] = im[::-1, :, 1].T
+    im_t[:, :, 2] = im[::-1, :, 2].T
+    im_t[:, :, 3] = im[::-1, :, 3].T
+    cmap_list_t = get_cmap_from_im(im_t)
+
+    cmap_list.extend(cmap_list_t)  # 将两种可能得colorbar都归集在一起
+    if show:
+        for cmap in cmap_list:
+            meteva.base.tool.color_tools.show_cmap_clev(cmap, clev=np.arange(len(cmap.colors)))
+    return cmap_list
+
+
+def creat_cmap_from_rgb(rgb_list_list,extend = None):
+    if isinstance(rgb_list_list[0],list):
+        colors_list = np.array(rgb_list_list)/256
+    else:
+        colors_list =rgb_list_list
+    if extend == 'min':
+        cmap = colors.ListedColormap(colors_list[1:])
+        cmap.set_under(colors_list[0])
+    elif extend == 'max':
+        cmap = colors.ListedColormap(colors_list[:-1])
+        cmap.set_over(colors_list[-1])
+    elif extend == 'both':
+        cmap = colors.ListedColormap(colors_list[1:-1])
+        cmap.set_under(colors_list[0])
+        cmap.set_over(colors_list[-1])
+    else:
+        cmap = colors.ListedColormap(colors_list)
+
+    return cmap
