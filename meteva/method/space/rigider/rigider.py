@@ -4,7 +4,7 @@ import math
 from scipy import optimize as optimize
 from . import imomenter, fint2d, rigid_transform, q_loss_rigid
 import meteva
-
+import copy
 
 def rigid_optimal(grd_ob,grd_fo, translate=True, rotate=True,stages=True, show=False):
     x = grd_fo.values.squeeze()
@@ -16,8 +16,13 @@ def rigid_optimal(grd_ob,grd_fo, translate=True, rotate=True,stages=True, show=F
     rire = {}
     rire["grd_fo"] = grd_fo
     rire["grd_ob"] = grd_ob
-    rire["grd_fo_transformed"] = meteva.base.grid_data(grid0,result["grd_fo_transformed"])
-    meteva.base.set_griddata_coords(rire["grd_fo_transformed"],member_list=["变换后"])
+    rire["grd_fo_shift"] = meteva.base.grid_data(grid0,result["grd_fo_translated"])
+    rire["grd_fo_shift_rotate"] = meteva.base.grid_data(grid0,result["grd_fo_transformed"])
+
+    meteva.base.set_griddata_coords(rire["grd_ob"],member_list=["OBS"])
+    meteva.base.set_griddata_coords(rire["grd_fo"],member_list=["FST"])
+    meteva.base.set_griddata_coords(rire["grd_fo_shift"],member_list=["FST_SHIFT"])
+    meteva.base.set_griddata_coords(rire["grd_fo_shift_rotate"],member_list=["FST_SHIFT_ROTATE"])
     if "y" in result["par"].keys():
         rire["delta_lon"] = result["par"]["y"] * grid0.dlon
     else:
@@ -31,7 +36,7 @@ def rigid_optimal(grd_ob,grd_fo, translate=True, rotate=True,stages=True, show=F
     else:
         rire["delta_angle"] = 0
     rire["rmse_before"] = np.sqrt(np.mean(np.power(grd_fo.values - grd_ob.values,2)))
-    rire["rmse_after"] = np.sqrt(np.mean(np.power(rire["grd_fo_transformed"].values - grd_ob.values, 2)))
+    rire["rmse_after"] = np.sqrt(np.mean(np.power(rire["grd_fo_shift_rotate"].values - grd_ob.values, 2)))
 
     return rire
 
@@ -45,8 +50,14 @@ def rigid_simple(grd_ob,grd_fo):
     rire = {}
     rire["grd_fo"] = grd_fo
     rire["grd_ob"] = grd_ob
-    rire["grd_fo_transformed"] = meteva.base.grid_data(grid0,result["grd_fo_transformed"])
-    meteva.base.set_griddata_coords(rire["grd_fo_transformed"],member_list=["变换后"])
+    #rire["grd_fo_shift"] = meteva.base.grid_data(grid0,result["grd_fo_translated"])
+    rire["grd_fo_shift_rotate"] = meteva.base.grid_data(grid0,result["grd_fo_transformed"])
+
+    meteva.base.set_griddata_coords(rire["grd_ob"],member_list=["OBS"])
+    meteva.base.set_griddata_coords(rire["grd_fo"],member_list=["FST"])
+    #meteva.base.set_griddata_coords(rire["grd_fo_shift"],member_list=["FST_SHIFT"])
+    meteva.base.set_griddata_coords(rire["grd_fo_shift_rotate"],member_list=["FST_SHIFT_ROTATE"])
+
     if "y" in result["par"].keys():
         rire["delta_lon"] = result["par"]["y"] * grid0.dlon
     else:
@@ -60,17 +71,17 @@ def rigid_simple(grd_ob,grd_fo):
     else:
         rire["delta_angle"] = 0
     rire["rmse_before"] = np.sqrt(np.mean(np.power(grd_fo.values - grd_ob.values,2)))
-    rire["rmse_after"] = np.sqrt(np.mean(np.power(rire["grd_fo_transformed"].values - grd_ob.values, 2)))
+    rire["rmse_after"] = np.sqrt(np.mean(np.power(rire["grd_fo_shift_rotate"].values - grd_ob.values, 2)))
 
     return rire
 
 
 def plot_value(rire,cmap = "rain_1h",clevs = None):
-    grd_list = [rire["grd_ob"],rire["grd_fo"],rire["grd_fo_transformed"]]
+    grd_list = [rire["grd_ob"],rire["grd_fo"],rire["grd_fo_shift_rotate"]]
     vmax = max(np.max(grd_list[0].values),np.max(grd_list[0].values))
     vmin = min(np.min(grd_list[0].values),np.min(grd_list[0].values))
     cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap, clevs=clevs, vmin=vmin, vmax=vmax)
-    meteva.base.plot_tools.plot_2d_grid_list(grd_list,cmap=cmap1,clevs = clevs1,ncol= 3)
+    meteva.base.plot_tools.plot_2d_grid_list(grd_list,cmap=cmap1,clevs = clevs1,ncol= 3,sup_fontsize=8)
     return
 
 def rigider(grd_fo, grd_ob, init=None, func_type="regular", translate=True, rotate=True,
@@ -140,6 +151,8 @@ def rigider(grd_fo, grd_ob, init=None, func_type="regular", translate=True, rota
                 out["grd_fo_translated"] = y1
                 outpar = res["x"]
                 outval = res["fun"]
+            else:
+                out["grd_fo_translated"] = copy.deepcopy(grd_fo)
             if rotate:
                 if translate:
                     init2 = np.append(res["x"], init[2])
@@ -166,6 +179,7 @@ def rigider(grd_fo, grd_ob, init=None, func_type="regular", translate=True, rota
                 y1 = fint2d.fint2d(x=grd_fo, ws=p1, s=p0, method=interp)
                 outpar = np.append(outpar, res2["x"])
                 outval = res2["fun"]
+
         else:
             if show:
                 print("Optimizing rigid transformation.\n")
@@ -179,6 +193,13 @@ def rigider(grd_fo, grd_ob, init=None, func_type="regular", translate=True, rota
 
             outpar = res["x"]
             outval = res["fun"]
+
+            temp_theta2 = np.array([outpar[0],outpar[1], 0])
+            p2 = rigid_transform.rigid_transform(theta=temp_theta2, p0=p0, n=big_n, cen=r_center)
+            y2 = fint2d.fint2d(x=grd_fo, ws=p2, s=p0, method=interp)
+            out["grd_fo_translated"] = y2
+
+
 
         if translate and (not rotate):
             outpar = {"x": outpar[0], "y": outpar[1]}
