@@ -552,24 +552,134 @@ def std_of_grd(grd,used_coords = ["member"]):
     return grd1
 
 #获取网格数据的最小值
-def min_of_grd(grd,used_coords = ["member"]):
-    grid0 = meteva.base.basicdata.get_grid_of_data(grd)
-    grid1 = meteva.base.basicdata.grid(grid0.glon,grid0.glat,grid0.gtime,grid0.dtimes,grid0.levels,member_list=["min"])
-    dat = np.squeeze(grd.values)
-    if len(dat.shape)>2:
-        dat = np.min(dat,axis = 0)
-    grd1 = meteva.base.basicdata.grid_data(grid1,dat)
-    return grd1
+def min_of_grd(grd,used_coords = ["member"],span = None):
+    if used_coords == ["member"]:
+        grid0 = meteva.base.basicdata.get_grid_of_data(grd)
+        grid1 = meteva.base.basicdata.grid(grid0.glon,grid0.glat,grid0.gtime,grid0.dtimes,grid0.levels,member_list=["min"])
+        dat = np.squeeze(grd.values)
+        if len(dat.shape)>2:
+            dat = np.min(dat,axis = 0)
+        grd1 = meteva.base.basicdata.grid_data(grid1,dat)
+        return grd1
+    elif used_coords == "dtime" or used_coords ==["dtime"]:
+        if span == None:
+            grid0 = meteva.base.get_grid_of_data(grd)
+            dtimes = np.array(grid0.dtimes)
+            dtimes_sum = [dtimes[-1]]
+            grid1 = meteva.base.grid(grid0.glon, grid0.glat, grid0.gtime, dtimes_sum, grid0.levels, grid0.members)
+            grd_min = meteva.base.grid_data(grid1)
+            grd_min.values[:, :, :, 0, :, :] = np.min(grd.values[:, :, :, :, :, :], axis=3)
+            return grd_min
+        else:
+            grid0 = meteva.base.get_grid_of_data(grd)
+            dtimes = np.array(grid0.dtimes)
+            dtimes_min = dtimes[dtimes>=span]
+            grid1 = meteva.base.grid(grid0.glon,grid0.glat,grid0.gtime,dtimes_min,grid0.levels,grid0.members)
+            grd_min = meteva.base.grid_data(grid1)
+            for i in range(len(dtimes_min)):
+                dtime_e = dtimes_min[i]
+                dtime_s = dtimes_min[i] - span
+                index = np.where((dtimes > dtime_s) & (dtimes <= dtime_e))[0]
+
+                grd_min.values[:,:,:,i,:,:] = np.min(grd.values[:,:,:,index,:,:],axis=3)
+            return grd_min
+    elif used_coords =="time" or used_coords ==["time"]:
+        if span ==None:
+            grid0 = meteva.base.get_grid_of_data(grd)
+            grid1 = meteva.base.grid(grid0.glon, grid0.glat, [grid0.gtime[1]], grid0.dtimes, grid0.levels, grid0.members)
+            grd_min = meteva.base.grid_data(grid1)
+            grd_min.values[:, :, 0, :, :, :] = np.min(grd.values[:, :, :, :, :, :], axis=2)
+            return grd_min
+        else:
+            grid0 = meteva.base.get_grid_of_data(grd)
+            grd_min = meteva.base.grid_data(grid0)
+            values = grd.values.copy()
+            step = grid0.dtime_int
+            count = int(span/step)
+
+            shape = values.shape
+            ntime = values.shape[2]
+            for i in range(ntime):
+                #min_v = np.zeros((shape[0],shape[1],shape[3],shape[4],shape[5]))
+                i_k_list = []
+                for k in range(-count+1,1):
+                    i_k = i + k
+                    if i_k <0:continue
+                    i_k_list.append(i_k)
+
+                iks = np.array(i_k_list)
+                min_v = np.min(grd.values[:, :, iks, :, :, :],axis=2)
+
+                grd_min.values[:, :, i, :, :, :] = min_v
+
+            grd_min = grd_min.isel(time = slice(count-1,ntime))
+            return grd_min
+
 
 #获取网格数据的最大值
-def max_of_grd(grd,used_coords = ["member"]):
-    grid0 = meteva.base.basicdata.get_grid_of_data(grd)
-    grid1 = meteva.base.basicdata.grid(grid0.glon,grid0.glat,grid0.gtime,grid0.dtimes,grid0.levels,member_list=["max"])
-    dat = np.squeeze(grd.values)
-    if len(dat.shape)>2:
-        dat = np.max(dat,axis = 0)
-    grd1 = meteva.base.basicdata.grid_data(grid1,dat)
-    return grd1
+def max_of_grd(grd,used_coords = ["member"],span = None):
+    if used_coords == ["member"]:
+        grid0 = meteva.base.basicdata.get_grid_of_data(grd)
+        grid1 = meteva.base.basicdata.grid(grid0.glon,grid0.glat,grid0.gtime,grid0.dtimes,grid0.levels,member_list=["max"])
+        dat = np.squeeze(grd.values)
+        if len(dat.shape)>2:
+            dat = np.max(dat,axis = 0)
+        grd1 = meteva.base.basicdata.grid_data(grid1,dat)
+        return grd1
+    elif used_coords == "dtime" or used_coords ==["dtime"]:
+        if span == None:
+            grid0 = meteva.base.get_grid_of_data(grd)
+            dtimes = np.array(grid0.dtimes)
+            dtimes_sum = [dtimes[-1]]
+            grid1 = meteva.base.grid(grid0.glon, grid0.glat, grid0.gtime, dtimes_sum, grid0.levels, grid0.members)
+            grd_max = meteva.base.grid_data(grid1)
+            grd_max.values[:, :, :, 0, :, :] = np.max(grd.values[:, :, :, :, :, :], axis=3)
+            return grd_max
+        else:
+            grid0 = meteva.base.get_grid_of_data(grd)
+            dtimes = np.array(grid0.dtimes)
+            dtimes_max = dtimes[dtimes>=span]
+            grid1 = meteva.base.grid(grid0.glon,grid0.glat,grid0.gtime,dtimes_max,grid0.levels,grid0.members)
+            grd_max = meteva.base.grid_data(grid1)
+            for i in range(len(dtimes_max)):
+                dtime_e = dtimes_max[i]
+                dtime_s = dtimes_max[i] - span
+                index = np.where((dtimes > dtime_s) & (dtimes <= dtime_e))[0]
+
+                grd_max.values[:,:,:,i,:,:] = np.max(grd.values[:,:,:,index,:,:],axis=3)
+            return grd_max
+    elif used_coords =="time" or used_coords ==["time"]:
+        if span ==None:
+            grid0 = meteva.base.get_grid_of_data(grd)
+            grid1 = meteva.base.grid(grid0.glon, grid0.glat, [grid0.gtime[1]], grid0.dtimes, grid0.levels, grid0.members)
+            grd_max = meteva.base.grid_data(grid1)
+            grd_max.values[:, :, 0, :, :, :] = np.max(grd.values[:, :, :, :, :, :], axis=2)
+            return grd_max
+        else:
+            grid0 = meteva.base.get_grid_of_data(grd)
+            grd_max = meteva.base.grid_data(grid0)
+            values = grd.values.copy()
+            step = grid0.dtime_int
+            count = int(span/step)
+
+            shape = values.shape
+            ntime = values.shape[2]
+            for i in range(ntime):
+                #max_v = np.zeros((shape[0],shape[1],shape[3],shape[4],shape[5]))
+                i_k_list = []
+                for k in range(-count+1,1):
+                    i_k = i + k
+                    if i_k <0:continue
+                    i_k_list.append(i_k)
+
+                iks = np.array(i_k_list)
+                max_v = np.max(grd.values[:, :, iks, :, :, :],axis=2)
+
+                grd_max.values[:, :, i, :, :, :] = max_v
+
+            grd_max = grd_max.isel(time = slice(count-1,ntime))
+            return grd_max
+
 
 #获取网格数据的求和
 def sum_of_grd(grd,used_coords = ["member"],span = None):
