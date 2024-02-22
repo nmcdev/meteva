@@ -290,8 +290,74 @@ def ob_fo_cv(ob,fo):
     return result
 
 
+def cscs(Ob,Fo):
+    '''
+       :param ob: 观测降水序列
+       :param fo: 预报降水序列
+       :return: 观测和预报各自的平均降水强度计算相关的中间量
+       '''
+    cscs_list = []
+    Fo_shape = Fo.shape
+    Ob_shape = Ob.shape
 
-def ob_fo_precipitation_strenght(ob,fo):
+    Ob_shpe_list = list(Ob_shape)
+    size = len(Ob_shpe_list)
+    ind = -size
+    Fo_Ob_index = list(Fo_shape[ind:])
+    if Fo_Ob_index != Ob_shpe_list:
+        print('预报数据和观测数据维度不匹配')
+        return
+    Ob_shpe_list.insert(0, -1)
+    new_Fo_shape = tuple(Ob_shpe_list)
+    new_Fo = Fo.reshape(new_Fo_shape)
+    new_Fo_shape = new_Fo.shape
+
+    ob_not_0 = Ob[Ob >= 0.1]
+    cob = ob_not_0.size
+    sob = np.sum(ob_not_0)
+
+    for line in range(new_Fo_shape[0]):
+        foi = new_Fo[line, :]
+        fo_not_0 = foi[foi >= 0.1]
+        cfo = fo_not_0.size
+        sfo = np.sum(fo_not_0)
+        cscs_list.append(np.array([cob,sob, cfo,sfo]))
+
+    cscs_np = np.array(cscs_list)
+    shape = list(Fo_shape[:ind])
+    shape.append(4)
+
+    cscs_array =cscs_np.reshape(shape)
+    return cscs_array
+
+def ob_fo_precipitation_strength_cscs(cscs_array):
+
+    if len(cscs_array.shape) == 1:
+        cscs_array = cscs_array.reshape(1,1, 4)
+    cob = cscs_array[..., 0]
+    sob = cscs_array[..., 1]
+    cfo = cscs_array[..., 2]
+    sfo = cscs_array[..., 3]
+
+    sob[cob==0] = IV
+    cob[cob == 0] = 1
+    sfo[cfo == 0] =IV
+    cfo[cfo == 0] = 1
+
+    shape1 = list(cscs_array.shape)
+    if len(cscs_array.shape) == 2:
+        result = np.zeros((2, shape1[0]))
+        result[0, :] = sob / cob
+        result[1, :] = sfo / cfo
+    else:
+        result = np.zeros((1 + shape1[0], shape1[1]))
+        result[0, :] = sob / cob
+        result[1, :] = sfo / cfo
+
+    return result
+
+
+def ob_fo_precipitation_strength(ob,fo):
     '''
     :param ob: 观测降水序列
     :param fo: 预报降水序列
@@ -319,6 +385,11 @@ def ob_fo_precipitation_strenght(ob,fo):
             fo_not_0 = foi[foi >= 0.1]
             result.append(np.mean(fo_not_0))
     result = np.array(result)
+    return result
+
+
+def ob_fo_precipitation_strenght(ob,fo):
+    result = ob_fo_precipitation_strength(ob,fo)
     return result
 
 
@@ -526,7 +597,7 @@ def rmsf_tlfo(tlfo_array):
     return rmsf
 
 
-def tase(Ob, Fo):
+def tase(Ob, Fo,weight = None):
     '''
     计算平均误差、平均绝对误差、均方误差、均方根误差的中间结果
     -----------------------------
@@ -538,7 +609,6 @@ def tase(Ob, Fo):
     tase_list = []
     Fo_shape = Fo.shape
     Ob_shape = Ob.shape
-
     Ob_shpe_list = list(Ob_shape)
     size = len(Ob_shpe_list)
     ind = -size
@@ -550,18 +620,27 @@ def tase(Ob, Fo):
     new_Fo_shape = tuple(Ob_shpe_list)
     new_Fo = Fo.reshape(new_Fo_shape)
     new_Fo_shape = new_Fo.shape
-    for line in range(new_Fo_shape[0]):
-        total_count = Ob.size
-        e_sum = np.sum(new_Fo[line, :] - Ob)
-        ae_sum = np.sum(np.abs(new_Fo[line, :] - Ob))
-        se_sum = np.sum(np.square(new_Fo[line, :] - Ob))
-        tase_list.append(np.array([total_count, e_sum, ae_sum, se_sum]))
+    if weight is None:
+        for line in range(new_Fo_shape[0]):
+            total_count = Ob.size
+            e_sum = np.sum(new_Fo[line, :] - Ob)
+            ae_sum = np.sum(np.abs(new_Fo[line, :] - Ob))
+            se_sum = np.sum(np.square(new_Fo[line, :] - Ob))
+            tase_list.append(np.array([total_count, e_sum, ae_sum, se_sum]))
+    else:
+        for line in range(new_Fo_shape[0]):
+            total_count = np.sum(weight)
+            e_sum = np.sum((new_Fo[line, :] - Ob) * weight)
+            ae_sum = np.sum(np.abs(new_Fo[line, :] - Ob) * weight)
+            se_sum = np.sum(np.square(new_Fo[line, :] - Ob)*weight)
+            tase_list.append(np.array([total_count, e_sum, ae_sum, se_sum]))
+
     tase_np = np.array(tase_list)
     shape = list(Fo_shape[:ind])
     shape.append(4)
-
     tase_array = tase_np.reshape(shape)
     return tase_array
+
 
 def max_error(Ob,Fo):
     me_list = []
@@ -645,7 +724,8 @@ def max_abs_error(Ob,Fo):
         error_array  = np.max(np.abs(Fo - Ob))
     return error_array
 
-def me(Ob, Fo):
+
+def me(Ob, Fo,weight = None):
     '''
     me 求两组数据的误差平均值
     -----------------------------
@@ -653,30 +733,36 @@ def me(Ob, Fo):
     :param Fo: 预测数据 任意维numpy数组,Fo.shape 和Ob.shape一致
     :return: 负无穷到正无穷的实数，最优值为0
     '''
-    me_list = []
-    Fo_shape = Fo.shape
-    Ob_shape = Ob.shape
 
-    Ob_shpe_list = list(Ob_shape)
-    size = len(Ob_shpe_list)
-    ind = -size
-    Fo_Ob_index = list(Fo_shape[ind:])
-    if Fo_Ob_index != Ob_shpe_list:
-        print('预报数据和观测数据维度不匹配')
-        return
-    if len(Fo_shape)> len(Ob_shape):
-        Ob_shpe_list.insert(0, -1)
-        new_Fo_shape = tuple(Ob_shpe_list)
-        new_Fo = Fo.reshape(new_Fo_shape)
-        new_Fo_shape = new_Fo.shape
-        for line in range(new_Fo_shape[0]):
-            mean_error = np.mean(new_Fo[line, :] - Ob)
-            me_list.append(mean_error)
-        mean_error_array = np.array(me_list)
-        shape = list(Fo_shape[:ind])
-        mean_error_array = mean_error_array.reshape(shape)
+    if weight is None:
+        me_list = []
+        Fo_shape = Fo.shape
+        Ob_shape = Ob.shape
+
+        Ob_shpe_list = list(Ob_shape)
+        size = len(Ob_shpe_list)
+        ind = -size
+        Fo_Ob_index = list(Fo_shape[ind:])
+        if Fo_Ob_index != Ob_shpe_list:
+            print('预报数据和观测数据维度不匹配')
+            return
+        if len(Fo_shape)> len(Ob_shape):
+            Ob_shpe_list.insert(0, -1)
+            new_Fo_shape = tuple(Ob_shpe_list)
+            new_Fo = Fo.reshape(new_Fo_shape)
+            new_Fo_shape = new_Fo.shape
+            for line in range(new_Fo_shape[0]):
+                mean_error = np.mean(new_Fo[line, :] - Ob)
+                me_list.append(mean_error)
+            mean_error_array = np.array(me_list)
+            shape = list(Fo_shape[:ind])
+            mean_error_array = mean_error_array.reshape(shape)
+        else:
+            mean_error_array  = np.mean(Fo - Ob)
     else:
-        mean_error_array  = np.mean(Fo - Ob)
+        tase_array = tase(Ob,Fo,weight)
+        mean_error_array = me_tase(tase_array)
+
     return mean_error_array
 
 
@@ -691,7 +777,7 @@ def me_tase(tase_array):
     return mean_error
 
 
-def mae(Ob, Fo):
+def mae(Ob, Fo,weight = None):
     '''
     me 求两组数据的误差平均值
     -----------------------------
@@ -699,31 +785,37 @@ def mae(Ob, Fo):
     :param Fo: 预测数据 任意维numpy数组,Fo.shape 和Ob.shape一致
     :return: 负无穷到正无穷的实数，最优值为0
     '''
-    mae_list = []
-    Fo_shape = Fo.shape
-    Ob_shape = Ob.shape
+    if weight is None:
+        mae_list = []
+        Fo_shape = Fo.shape
+        Ob_shape = Ob.shape
 
-    Ob_shpe_list = list(Ob_shape)
-    size = len(Ob_shpe_list)
-    ind = -size
-    Fo_Ob_index = list(Fo_shape[ind:])
-    if Fo_Ob_index != Ob_shpe_list:
-        print('预报数据和观测数据维度不匹配')
-        return
-    if len(Fo_shape) == len(Ob_shape):
-        mean_abs_error = np.mean(np.abs(Fo - Ob))
-        return mean_abs_error
+        Ob_shpe_list = list(Ob_shape)
+        size = len(Ob_shpe_list)
+        ind = -size
+        Fo_Ob_index = list(Fo_shape[ind:])
+        if Fo_Ob_index != Ob_shpe_list:
+            print('预报数据和观测数据维度不匹配')
+            return
+        if len(Fo_shape) == len(Ob_shape):
+            mean_abs_error = np.mean(np.abs(Fo - Ob))
+            return mean_abs_error
+        else:
+            Ob_shpe_list.insert(0, -1)
+            new_Fo_shape = tuple(Ob_shpe_list)
+            new_Fo = Fo.reshape(new_Fo_shape)
+            new_Fo_shape = new_Fo.shape
+            for line in range(new_Fo_shape[0]):
+                mean_abs_error = np.mean(np.abs(new_Fo[line, :] - Ob))
+                mae_list.append(mean_abs_error)
+            mean_error_array = np.array(mae_list)
+            shape = list(Fo_shape[:ind])
+            mean_abs_error_array = mean_error_array.reshape(shape)
+            return mean_abs_error_array
     else:
-        Ob_shpe_list.insert(0, -1)
-        new_Fo_shape = tuple(Ob_shpe_list)
-        new_Fo = Fo.reshape(new_Fo_shape)
-        new_Fo_shape = new_Fo.shape
-        for line in range(new_Fo_shape[0]):
-            mean_abs_error = np.mean(np.abs(new_Fo[line, :] - Ob))
-            mae_list.append(mean_abs_error)
-        mean_error_array = np.array(mae_list)
-        shape = list(Fo_shape[:ind])
-        mean_abs_error_array = mean_error_array.reshape(shape)
+        tase_array = tase(Ob, Fo, weight)
+        mean_abs_error_array = mae_tase(tase_array)
+
         return mean_abs_error_array
 
 
@@ -738,7 +830,7 @@ def mae_tase(tase_array):
     return mean_abs_error
 
 
-def mse(Ob, Fo):
+def mse(Ob, Fo,weight = None):
     '''
     mean_sqrt_error, 求两组数据的均方误差
     ----------------------------------
@@ -746,34 +838,38 @@ def mse(Ob, Fo):
     :param Fo: 预测数据 任意维numpy数组,Fo.shape 和Ob.shape一致
     :return: 0到无穷大，最优值为0
     '''
+    if weight is None:
+        mse_list = []
+        Fo_shape = Fo.shape
+        Ob_shape = Ob.shape
 
-    mse_list = []
-    Fo_shape = Fo.shape
-    Ob_shape = Ob.shape
-
-    Ob_shpe_list = list(Ob_shape)
-    size = len(Ob_shpe_list)
-    ind = -size
-    Fo_Ob_index = list(Fo_shape[ind:])
-    if Fo_Ob_index != Ob_shpe_list:
-        print('预报数据和观测数据维度不匹配')
-        return
-    if len(Fo_shape) == len(Ob_shape):
-        mean_square_error = np.mean(np.square(Fo - Ob))
-        return mean_square_error
+        Ob_shpe_list = list(Ob_shape)
+        size = len(Ob_shpe_list)
+        ind = -size
+        Fo_Ob_index = list(Fo_shape[ind:])
+        if Fo_Ob_index != Ob_shpe_list:
+            print('预报数据和观测数据维度不匹配')
+            return
+        if len(Fo_shape) == len(Ob_shape):
+            mean_square_error = np.mean(np.square(Fo - Ob))
+            return mean_square_error
+        else:
+            Ob_shpe_list.insert(0, -1)
+            new_Fo_shape = tuple(Ob_shpe_list)
+            new_Fo = Fo.reshape(new_Fo_shape)
+            new_Fo_shape = new_Fo.shape
+            for line in range(new_Fo_shape[0]):
+                mean_square_error = np.mean(np.square(new_Fo[line, :] - Ob))
+                mse_list.append(mean_square_error)
+            mean_sqrt_array = np.array(mse_list)
+            shape = list(Fo_shape[:ind])
+            mean_sqrt_error_array = mean_sqrt_array.reshape(shape)
+            return mean_sqrt_error_array
     else:
-        Ob_shpe_list.insert(0, -1)
-        new_Fo_shape = tuple(Ob_shpe_list)
-        new_Fo = Fo.reshape(new_Fo_shape)
-        new_Fo_shape = new_Fo.shape
-        for line in range(new_Fo_shape[0]):
-            mean_square_error = np.mean(np.square(new_Fo[line, :] - Ob))
-            mse_list.append(mean_square_error)
-        mean_sqrt_array = np.array(mse_list)
-        shape = list(Fo_shape[:ind])
-        mean_sqrt_error_array = mean_sqrt_array.reshape(shape)
-        return mean_sqrt_error_array
+        tase_array = tase(Ob, Fo, weight)
+        mean_squre_error = mse_tase(tase_array)
 
+        return mean_squre_error
 
 def mse_tase(tase_array):
     '''
@@ -786,7 +882,7 @@ def mse_tase(tase_array):
     return mean_squre_error
 
 
-def rmse(Ob, Fo):
+def rmse(Ob, Fo,weight = None):
     '''
     root_mean_square_error 求两组数据的均方根误差
     ------------------------------
@@ -794,33 +890,38 @@ def rmse(Ob, Fo):
     :param Fo: 预测数据 任意维numpy数组,Fo.shape 和Ob.shape一致
     :return: 0到无穷大，最优值为0
     '''
-    rmse_list = []
-    Fo_shape = Fo.shape
-    Ob_shape = Ob.shape
+    if weight is None:
+        rmse_list = []
+        Fo_shape = Fo.shape
+        Ob_shape = Ob.shape
 
-    Ob_shpe_list = list(Ob_shape)
-    size = len(Ob_shpe_list)
-    ind = -size
-    Fo_Ob_index = list(Fo_shape[ind:])
-    if Fo_Ob_index != Ob_shpe_list:
-        print('预报数据和观测数据维度不匹配')
-        return
-    if len(Fo_shape) == len(Ob_shape):
-        mean_square_error = np.sqrt(np.mean(np.square(Fo - Ob)))
-        return mean_square_error
+        Ob_shpe_list = list(Ob_shape)
+        size = len(Ob_shpe_list)
+        ind = -size
+        Fo_Ob_index = list(Fo_shape[ind:])
+        if Fo_Ob_index != Ob_shpe_list:
+            print('预报数据和观测数据维度不匹配')
+            return
+        if len(Fo_shape) == len(Ob_shape):
+            mean_square_error = np.sqrt(np.mean(np.square(Fo - Ob)))
+            return mean_square_error
+        else:
+            Ob_shpe_list.insert(0, -1)
+            new_Fo_shape = tuple(Ob_shpe_list)
+            new_Fo = Fo.reshape(new_Fo_shape)
+            new_Fo_shape = new_Fo.shape
+            for line in range(new_Fo_shape[0]):
+                root_mean_sqrt_error = np.sqrt(np.mean(np.square(new_Fo[line, :] - Ob)))
+                rmse_list.append(root_mean_sqrt_error)
+            root_mean_sqrt_array = np.array(rmse_list)
+            shape = list(Fo_shape[:ind])
+            root_mean_sqrt_error_array = root_mean_sqrt_array.reshape(shape)
+            return root_mean_sqrt_error_array
     else:
-        Ob_shpe_list.insert(0, -1)
-        new_Fo_shape = tuple(Ob_shpe_list)
-        new_Fo = Fo.reshape(new_Fo_shape)
-        new_Fo_shape = new_Fo.shape
-        for line in range(new_Fo_shape[0]):
-            root_mean_sqrt_error = np.sqrt(np.mean(np.square(new_Fo[line, :] - Ob)))
-            rmse_list.append(root_mean_sqrt_error)
-        root_mean_sqrt_array = np.array(rmse_list)
-        shape = list(Fo_shape[:ind])
-        root_mean_sqrt_error_array = root_mean_sqrt_array.reshape(shape)
-        return root_mean_sqrt_error_array
+        tase_array = tase(Ob, Fo, weight)
+        root_mean_sqrt_error = rmse_tase(tase_array)
 
+        return root_mean_sqrt_error
 
 def rmse_tase(tase_array):
     '''
@@ -929,7 +1030,7 @@ def bias_tmmsss(tmmsss_array):
     return bias0
 
 
-def corr(Ob, Fo):
+def corr(Ob, Fo,weight = None):
     '''
     相关系数，求实况数据还和预测数据之间的相关系数
     -----------------------------
@@ -937,7 +1038,7 @@ def corr(Ob, Fo):
     :param Fo: 预测数据 任意维numpy数组,Fo.shape 和Ob.shape一致
     :return: corr0
     '''
-    tmmsss_array = tmmsss(Ob,Fo)
+    tmmsss_array = tmmsss(Ob,Fo,weight = weight)
     corr0 = corr_tmmsss(tmmsss_array)
     return corr0
 
@@ -1064,6 +1165,8 @@ def ob_fo_sum_tmmsss(tmmsss_array):
         result[1:, :] = my * tmmsss_array[..., 0]
     return result
 
+
+
 def ob_fo_mean_tmmsss(tmmsss_array):
     '''
     相关系数，求实况数据还和预测数据之间的相关系数
@@ -1086,7 +1189,32 @@ def ob_fo_mean_tmmsss(tmmsss_array):
         result[1:, :] = my
     return result
 
-def tmmsss(Ob, Fo):
+
+
+def ob_fo_std_tmmsss(tmmsss_array):
+    '''
+    相关系数，求实况数据还和预测数据之间的相关系数
+    :param tmmsss_array: 包含命中空报和漏报的多维数组，其中最后一维长度为6，分别记录了（count,mx,my,sxx,syy,sxy）
+    :return:
+    '''
+
+    if len(tmmsss_array.shape) == 1:
+        tmmsss_array = tmmsss_array.reshape(1, 1, 6)
+    sx = tmmsss_array[..., 3]
+    sy = tmmsss_array[..., 4]
+    shape1 = list(tmmsss_array.shape)
+    if len(tmmsss_array.shape) == 2:
+        result = np.zeros((2, shape1[0]))
+        result[0, :] = sx
+        result[1, :] = sy
+    else:
+        result = np.zeros((1 + shape1[0], shape1[1]))
+        result[0, :] = sx
+        result[1:, :] = sy
+    result = np.sqrt(result)
+    return result
+
+def tmmsss(Ob, Fo,weight = None):
     '''
     统计相关系数等检验量所需的中间变量
     :param Ob: 实况数据  任意维numpy数组
@@ -1109,18 +1237,32 @@ def tmmsss(Ob, Fo):
     new_Fo_shape = tuple(Ob_shpe_list)
     new_Fo = Fo.reshape(new_Fo_shape)
     new_Fo_shape = new_Fo.shape
-    for line in range(new_Fo_shape[0]):
-        ob_f = Ob.flatten()
-        fo_f = new_Fo[line, :].flatten()
+    ob_f = Ob.flatten()
+    if weight is None:
         count = Ob.size
         mx = np.mean(ob_f)
-        my = np.mean(fo_f)
-        dx = ob_f - mx
-        dy = fo_f - my
-        sxx = np.mean(np.power(dx, 2))
-        syy = np.mean(np.power(dy, 2))
-        sxy = np.mean(dx * dy)
-        tmmsss_array_list.append(np.array([count, mx, my, sxx, syy, sxy]))
+        for line in range(new_Fo_shape[0]):
+            fo_f = new_Fo[line, :].flatten()
+            my = np.mean(fo_f)
+            dx = ob_f - mx
+            dy = fo_f - my
+            sxx = np.mean(np.power(dx, 2))
+            syy = np.mean(np.power(dy, 2))
+            sxy = np.mean(dx * dy)
+            tmmsss_array_list.append(np.array([count, mx, my, sxx, syy, sxy]))
+    else:
+        weight_f = weight.flatten()
+        count = np.sum(weight_f)
+        mx = np.sum(ob_f * weight_f) /count
+        for line in range(new_Fo_shape[0]):
+            fo_f = new_Fo[line, :].flatten()
+            my = np.sum(fo_f * weight_f) /count
+            dx = ob_f - mx
+            dy = fo_f - my
+            sxx = np.sum(np.power(dx, 2) * weight_f)/count
+            syy = np.sum(np.power(dy, 2) * weight_f)/count
+            sxy = np.sum(dx * dy * weight_f) / count
+            tmmsss_array_list.append(np.array([count, mx, my, sxx, syy, sxy]))
     tmmsss_array = np.array(tmmsss_array_list)
     shape = list(Fo_shape[:ind])
     shape.append(6)
@@ -1545,40 +1687,11 @@ if __name__=="__main__":
     import datetime
     import meteva
     import xarray as xr
-    # grid0 = meteva.base.grid([111.025, 122.975, 0.05], [28.025, 37.975, 0.05])
-    #
-    # grd0 = xr.open_dataset(r"H:\task\paper\word\w20-ElR\2020080312yb\WRF3.2020080312012.grb2",
-    #                        filter_by_keys={'typeOfLevel': 'surface'})
-    #
-    # sta = pd.DataFrame({"level": 0, "time": datetime.datetime(2022, 1, 1, 8), "dtime": 0,
-    #                     "lon": grd0.coords["longitude"].values.flatten(),
-    #                     "lat": grd0.coords["latitude"].values.flatten(),
-    #                     "id": np.arange(grd0.coords["latitude"].values.size),
-    #                     "tp": grd0.variables["tp"].values.flatten()
-    #                     })
-    #
-    # fo = meteva.base.interp_sg_idw(sta, grid=grid0, nearNum=1, effectR=200)  # 将站点数据插值到网格上
-    #
-    # ob = meteva.base.grid_data(grid0)
-    # for i in range(1, 13):
-    #     ob1 = meteva.base.read_griddata_from_nc(r"H:\task\paper\word\w20-ElR\2020080400sk\surfr" + str(i).zfill(2) + "h.nc",
-    #                                     grid=grid0)
-    #     ob.values += ob1
-    # #print(ob)
-    #
-    # value = meteva.method.pas(ob.values, fo.values, grade_list=[0.1])
-    # print("pas01_value=" + str(value[0]))
-    #meteva.base.read_stadata_from_csv()
 
-    sta = pd.read_csv(r"C:\Users\admin\Documents\WeChat Files\wxid_54saim7nonz321\FileStorage\File\2023-04\a.txt",
-                      skiprows = 0,header = None,sep="\s+")
-    ob = sta.iloc[:,0].values
-    fo = sta.iloc[:,1].values
-    value = meteva.method.pas(ob, fo, grade_list=[0.1])
-    print("pas01_value=" + str(value[0]))
-    value = meteva.method.pas(ob, fo, grade_list=[10])
-    print("pas10_value=" + str(value[0]))
-    value = meteva.method.pas(ob, fo, grade_list=[25])
-    print("pas25_value=" + str(value[0]))
-    value = meteva.method.pas(ob, fo, grade_list=[50])
-    print("pas50_value=" + str(value[0]))
+    rain01_ob = np.random.randn(1000)
+    rain01_ob[rain01_ob < 0] = 0
+    rain01_fo = np.random.randn(2, 1000)
+    rain01_fo[rain01_fo < 0] = 0
+    print("观测和预报的平均降水强度分别是：")
+    result = ob_fo_precipitation_strength(rain01_ob, rain01_fo)  # 多个预报时 返回数组的size =  1+预报成员
+    print(result)
