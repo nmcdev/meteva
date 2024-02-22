@@ -42,7 +42,8 @@ def add_map(ax,add_county_line = False,add_worldmap = True,title = None,sup_font
 
 def creat_axs(nplot,map_extend,ncol = None,height  = None,width = None,dpi = 300,sup_title = None,sup_fontsize = 12,
               add_county_line = False,add_worldmap = True,add_minmap = None,title_list = None,add_index = None,wspace = None,grid = True,
-              xticks_inter = None,yticks_inter = None,linewidth = [0.3,0.3,0.2],color = ["k","k","k"]):
+              xticks_inter = None,yticks_inter = None,linewidth = [0.3,0.3,0.2],color = ["k","k","k"],keep_ticks = 1,
+              width_colorbar = 0.5):
 
 
     ax_index = []
@@ -77,17 +78,23 @@ def creat_axs(nplot,map_extend,ncol = None,height  = None,width = None,dpi = 300
         sup_height_title = sup_fontsize * 0.12
 
     height_title = sup_fontsize * 0.1
-    height_bottem_xticsk = sup_fontsize * 0.05
-    height_hspace = sup_fontsize * 0.025
-
+    if keep_ticks==1:
+        height_hspace = sup_fontsize * 0.025
+    else:
+        height_hspace = sup_fontsize * 0.005
 
     if wspace is None:
         width_wspace = height_hspace*2
     else:
         width_wspace = wspace
 
-    width_colorbar = 0.5
-    width_left_yticks = sup_fontsize * 0.2
+
+    if keep_ticks==1:
+        width_left_yticks = sup_fontsize * 0.2
+        height_bottem_xticsk = sup_fontsize * 0.05
+    else:
+        width_left_yticks = 0
+        height_bottem_xticsk =0
 
     if ncol is None:
         match_list = []
@@ -224,12 +231,24 @@ def creat_axs(nplot,map_extend,ncol = None,height  = None,width = None,dpi = 300
         ax.set_xlim((slon, elon))
         ax.set_ylim((slat, elat))
 
+        if keep_ticks>=0:
+            if p >= nplot - ncol or keep_ticks:
+                # 最底行画横坐标
+                ax.set_xticks(xticks)
+                ax.set_xticklabels(xticks_label, fontsize=sup_fontsize * 0.9, family='Times New Roman')
+            else:
+                ax.set_xticklabels("", fontsize=sup_fontsize * 0.9, family='Times New Roman')
 
-        ax.set_xticks(xticks)
-        ax.set_xticklabels(xticks_label, fontsize=sup_fontsize * 0.9, family='Times New Roman')
-        ax.set_yticks(yticks)
-        ax.set_yticklabels(yticks_label, fontsize=sup_fontsize * 0.9, family='Times New Roman')
 
+            if pi ==0 or keep_ticks:
+                # 最左侧画纵坐标
+                ax.set_yticks(yticks)
+                ax.set_yticklabels(yticks_label, fontsize=sup_fontsize * 0.9, family='Times New Roman')
+            else:
+                ax.set_yticklabels("", fontsize=sup_fontsize * 0.9, family='Times New Roman')
+        else:
+            ax.set_xticks([])
+            ax.set_yticks([])
         if grid: plt.grid(linestyle = "--",linewidth = 0.5)
         if title_list is None:
             sub_title = None
@@ -238,7 +257,7 @@ def creat_axs(nplot,map_extend,ncol = None,height  = None,width = None,dpi = 300
         add_map(ax,add_county_line=add_county_line,add_worldmap=add_worldmap,sup_fontsize=sup_fontsize,title=sub_title,
                 linewidth = linewidth,color =color)
 
-        if len(ax_index)>1:
+        if len(ax_index)>=1:
             ix = slon + 0.02*(elon - slon) * 5 / width_map
             iy = elat - 0.035*(elat - slat) * 5 / height_map
             plt.text(ix, iy, ax_index[p], bbox=dict(fc='white', ec='white',pad = 0),fontsize = sup_fontsize,zorder=100)
@@ -283,12 +302,13 @@ def creat_axs(nplot,map_extend,ncol = None,height  = None,width = None,dpi = 300
         return ax_list,min_ax_list
 
 
-def add_contourf(ax,grd,cmap ="rainbow",clevs= None,add_colorbar = True,cut_colorbar = True,title = None,title_fontsize = 8,clip = None):
+def add_contourf(ax,grd,cmap ="rainbow",clevs= None,add_colorbar = True,cut_colorbar = True,title = None,title_fontsize = 8,clip = None,
+                 extend = None,colorbar_location = None,alpha=1):
     slon = ax.transLimits._boxin.x0
     elon = ax.transLimits._boxin.x1
     slat = ax.transLimits._boxin.y0
     elat = ax.transLimits._boxin.y1
-
+    if grd is None:return
     grid0 = meteva.base.get_grid_of_data(grd)
     grid1 = meteva.base.grid([slon,elon,grid0.dlon],[slat,elat,grid0.dlat])
     grd1 = meteva.base.interp_gg_linear(grd,grid1,outer_value=np.nan)
@@ -297,17 +317,25 @@ def add_contourf(ax,grd,cmap ="rainbow",clevs= None,add_colorbar = True,cut_colo
     y = grd1['lat'].values
     vmax = np.nanmax(grd1.values)
     vmin = np.nanmin(grd1.values)
-
-    cmap1,clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap,clevs=clevs,vmin=vmin,vmax = vmax,cut_colorbar = cut_colorbar)
-    norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
-    im = ax.contourf(x, y, np.squeeze(grd1.values), levels=clevs1, cmap=cmap1,norm = norm)
-
+    cmap1,clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap,clevs=clevs,vmin=vmin,vmax = vmax,cut_colorbar = cut_colorbar,extend =extend)
+    if extend is None:
+        norm = BoundaryNorm(clevs1, ncolors=cmap1.N - 1)
+    elif extend == "both":
+        norm = BoundaryNorm(clevs1, ncolors=cmap1.N + 1)
+    else:
+        norm = BoundaryNorm(clevs1, ncolors=cmap1.N)
+    im = ax.contourf(x, y, np.squeeze(grd1.values), levels=clevs1, cmap=cmap1,norm = norm,alpha=alpha,extend = extend)
     fig = plt.gcf()
     width = fig.bbox.width/fig.dpi
     height = fig.bbox.height/fig.dpi
-    location = [ax.bbox.x1/fig.dpi/width+0.005, ax.bbox.y0 / fig.dpi/height, 0.01, ax.bbox.height/fig.dpi/height]
+
     ax.set_title(title,fontsize =title_fontsize)
     if add_colorbar:
+        if colorbar_location is None:
+            location = [ax.bbox.x1 / fig.dpi / width + 0.005, ax.bbox.y0 / fig.dpi / height, 0.01,
+                        ax.bbox.height / fig.dpi / height]
+        else:
+            location = colorbar_location
         colorbar_position = fig.add_axes(location)  # 位置[左,下,宽,高]
         plt.colorbar(im,cax= colorbar_position)
 
@@ -393,7 +421,7 @@ def add_contour(ax,grd,color='k', linewidth = 1,label_fontsize = 5,clevs = None,
 
 
 
-def add_mesh(ax,grd,cmap ="rainbow",clevs= None,add_colorbar = True,title = None,title_fontsize = 8):
+def add_mesh(ax,grd,cmap ="rainbow",clevs= None,add_colorbar = True,title = None,title_fontsize = 8,extend = None,colorbar_location = None):
 
 
     slon = ax.transLimits._boxin.x0
@@ -410,17 +438,29 @@ def add_mesh(ax,grd,cmap ="rainbow",clevs= None,add_colorbar = True,title = None
     vmax = np.nanmax(grd1.values)
     vmin = np.nanmin(grd1.values)
     cmap1,clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap,clevs=clevs,vmin=vmin,vmax = vmax)
-    norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
+    if extend is None:
+        norm = BoundaryNorm(clevs1, ncolors=cmap1.N - 1)
+    elif extend == "both":
+        norm = BoundaryNorm(clevs1, ncolors=cmap1.N + 1, extend=extend)
+    else:
+        norm = BoundaryNorm(clevs1, ncolors=cmap1.N)
     im = ax.pcolormesh(x, y, np.squeeze(grd1.values), cmap=cmap1, norm=norm)
     #im = ax.contourf(x, y, np.squeeze(grd.values), levels=clevs1, cmap=cmap1,norm = norm)
 
     fig = plt.gcf()
-    width = fig.bbox.width/fig.dpi
-    height = fig.bbox.height/fig.dpi
-    left_low = (width +0.1 - 0.8) / width
-    location = [ax.bbox.x1/fig.dpi/width+0.005, ax.bbox.y0 / fig.dpi/height, 0.01, ax.bbox.height/fig.dpi/height]
+
+    #left_low = (width +0.1 - 0.8) / width
+
     ax.set_title(title,fontsize =title_fontsize)
     if add_colorbar:
+        if colorbar_location is None:
+            width = fig.bbox.width / fig.dpi
+            height = fig.bbox.height / fig.dpi
+            location = [ax.bbox.x1 / fig.dpi / width + 0.005, ax.bbox.y0 / fig.dpi / height, 0.01,
+                        ax.bbox.height / fig.dpi / height]
+        else:
+            location = colorbar_location
+
         colorbar_position = fig.add_axes(location)  # 位置[左,下,宽,高]
         plt.colorbar(im,cax= colorbar_position)
     return im
@@ -462,7 +502,7 @@ def add_barbs(ax,wind,color = "k",skip = None,title = None,title_fontsize = 8,le
 
 
 def add_scatter(ax,sta0,cmap = "rainbow",clevs = None,point_size = None,fix_size = True,threshold = 2,min_spot_value = 0,mean_value = 2,
-                add_colorbar = True,alpha = None,title = None,title_fontsize = 8):
+                add_colorbar = True,alpha = None,title = None,title_fontsize = 8,extend = None,colorbar_location = None):
 
     slon = ax.transLimits._boxin.x0
     elon = ax.transLimits._boxin.x1
@@ -482,8 +522,13 @@ def add_scatter(ax,sta0,cmap = "rainbow",clevs = None,point_size = None,fix_size
     vmin_v = np.min(sta_without_iv.iloc[:,-1].values)
 
     cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap, clevs=clevs, vmin=vmin_v, vmax=vmax_v)
+    if extend is None:
+        norm = BoundaryNorm(clevs1, ncolors=cmap1.N - 1)
+    elif extend == "both":
+        norm = BoundaryNorm(clevs1, ncolors=cmap1.N + 2, extend=extend)
+    else:
+        norm = BoundaryNorm(clevs1, ncolors=cmap1.N+1, extend=extend)
 
-    norm = BoundaryNorm(clevs1, ncolors=cmap1.N - 1)
     fig = plt.gcf()
     map_width = ax.bbox.width/fig.dpi
 
@@ -524,14 +569,16 @@ def add_scatter(ax,sta0,cmap = "rainbow",clevs = None,point_size = None,fix_size
 
 
     if add_colorbar:
-        width = fig.bbox.width / fig.dpi
-        height = fig.bbox.height / fig.dpi
-        location = [ax.bbox.x1 / fig.dpi / width + 0.005, ax.bbox.y0 / fig.dpi / height, 0.01,
-                    ax.bbox.height / fig.dpi / height]
+        if colorbar_location is None:
+            width = fig.bbox.width / fig.dpi
+            height = fig.bbox.height / fig.dpi
+            location = [ax.bbox.x1 / fig.dpi / width + 0.005, ax.bbox.y0 / fig.dpi / height, 0.01,
+                        ax.bbox.height / fig.dpi / height]
+        else:
+            location = colorbar_location
 
-        if (add_colorbar):
-            colorbar_position = fig.add_axes(location)  # 位置[左,下,宽,高]
-            plt.colorbar(im, cax=colorbar_position)
+        colorbar_position = fig.add_axes(location)  # 位置[左,下,宽,高]
+        plt.colorbar(im, cax=colorbar_position)
     return im
 
 def add_scatter_text(ax,sta0,color = "k",cmap = None,clevs = None,tag = 2,
@@ -645,7 +692,6 @@ def add_closed_line(ax,graphy,color = "k",linewidth=2,fontsize = 10,title = None
     return
 
 
-
 def add_shear_line(ax,graphy,linewidth = 1,title = None,title_fontsize = 8):
     if graphy is None:
         return
@@ -685,7 +731,7 @@ def add_shear_line(ax,graphy,linewidth = 1,title = None,title_fontsize = 8):
     ax.set_title(title,fontsize =title_fontsize)
     return
 
-def add_trough_axes(ax,graphy,linewidths = None,title = None,title_fontsize = 8):
+def add_trough_axes(ax,graphy,color = "r",linewidths = None,title = None,title_fontsize = 8):
     if graphy is None:
         return
     slon = ax.transLimits._boxin.x0
@@ -706,7 +752,7 @@ def add_trough_axes(ax,graphy,linewidths = None,title = None,title_fontsize = 8)
         line = value["axes"]
         point = np.array(line["point"])
         if point.size>2:
-            ax.plot(point[:, 0], point[:, 1], "r", linewidth=linewidths)
+            ax.plot(point[:, 0], point[:, 1],color, linewidth=linewidths)
 
     ax.set_xlim(slon,elon)
     ax.set_ylim(slat,elat)
@@ -753,7 +799,7 @@ def add_jet_axes(ax,graphy,title = None,title_fontsize = 8,color ="yellow" ):
     ax.set_title(title,fontsize =title_fontsize)
     return
 
-def add_cyclone_trace(ax,sta_cyclone_trace,size = 0.2,linewidth = 1,title = None,title_fontsize = 8):
+def add_cyclone_trace(ax,sta_cyclone_trace,size = 0.3,linewidth = 1,title = None,title_fontsize = 8):
 
     np = len(sta_cyclone_trace.index)
     for i in range(np - 1):
@@ -762,18 +808,18 @@ def add_cyclone_trace(ax,sta_cyclone_trace,size = 0.2,linewidth = 1,title = None
         speed = sta_cyclone_trace.iloc[i+1,-1]
 
 
-        if speed > 10.8 and speed <17.2:
-            color = "yellow"
+        if speed >= 10.8 and speed <17.2:
+            color = "k"
         elif speed >=17.2 and speed <24.5:
             color = "b"
         elif speed >= 24.5 and speed < 32.7:
-            color = "g"
+            color = "y"
         elif speed >= 32.7 and speed < 41.5:
             color = "orange"
         elif speed >=41.5 and speed < 51:
-            color = "m"
-        else:
             color = "r"
+        else:
+            color = "m"
         ax.plot(lon, lat, c = color, linewidth=linewidth, zorder=29)
         time_ob = sta_cyclone_trace.iloc[i,1]
 
@@ -794,7 +840,7 @@ def add_cyclone_trace(ax,sta_cyclone_trace,size = 0.2,linewidth = 1,title = None
                     lat1 = lat[0] + r_o * math.sin(theta)
                 lon_list.append(lon1)
                 lat_list.append(lat1)
-            ax.fill(lon_list,lat_list,c = color,zorder = 30)
+            ax.fill(lon_list,lat_list,c = color,zorder = 30,linewidth=0)
             r_o = size * 0.3
             lon_list = []
             lat_list = []
@@ -804,7 +850,7 @@ def add_cyclone_trace(ax,sta_cyclone_trace,size = 0.2,linewidth = 1,title = None
                 lat1 = lat[0] + r_o * math.sin(theta)
                 lon_list.append(lon1)
                 lat_list.append(lat1)
-            ax.fill(lon_list,lat_list,c = "white",zorder = 30)
+            ax.fill(lon_list,lat_list,c = "white",zorder = 30,linewidth=0)
     ax.set_title(title,fontsize =title_fontsize)
     return
 
