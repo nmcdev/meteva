@@ -15,7 +15,7 @@ def write_griddata_to_micaps4(da, save_path="a.txt", creat_dir=False, effectiveN
     :param da:xarray多维数据信息,需要用 meteva 的格式
     :param save_path:存储路径
     :param creat_dir:存储路径中的文件夹若不存在是否创建
-    :param effectiveNum：有效数字，默认 2
+    :param effectiveNum：有效数字，默认 3
     :param show:是否输出存储结果，默认否
     :param title:MICAPS4第四类格式的title，默认根据 save_path 自动生成
     :param inte:MICAPS4第四类格式的等值线间隔，默认根据数值自动生成
@@ -102,7 +102,7 @@ def write_griddata_to_micaps4(da, save_path="a.txt", creat_dir=False, effectiveN
         format_str = "%." + str(effectiveNum) + "f "
 
         np.savetxt(save_path, grid_values, delimiter=' ',
-            fmt = format_str, header = title, comments = '', encoding = 'GBK')
+                   fmt=format_str, header=title, comments='', encoding='GBK')
         if show:
             print('成功输出至' + save_path)
         return True
@@ -113,7 +113,7 @@ def write_griddata_to_micaps4(da, save_path="a.txt", creat_dir=False, effectiveN
         return False
 
 
-def write_griddata_to_nc(da, save_path="a.txt", creat_dir=False, effectiveNum=3, show=False):
+def write_griddata_to_nc(da,save_path = "a.txt",creat_dir = False,effectiveNum = 3,show = False):
     try:
         dir = os.path.split(os.path.abspath(save_path))[0]
         if not os.path.isdir(dir):
