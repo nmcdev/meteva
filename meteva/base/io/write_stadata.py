@@ -68,7 +68,15 @@ def write_stadata_to_micaps3(sta0,save_path = "a.txt",creat_dir = False, type = 
             if len(colums) == 4:
                 df["data0"] = 0
         effectiveNum_str = "%." + '%d'% effectiveNum + "f"
-        df.to_csv(save_path,mode='a',header=None,sep = "\t",float_format=effectiveNum_str,index = None)
+        # ---by zhyn
+        if title is None:
+            df.to_csv(save_path,mode='a',header=None,sep = "\t",float_format=effectiveNum_str,index = None)
+        else:
+            if title.find("闪电")>=0 or title.find("light")>=0:
+                df.to_csv(save_path, mode='a', header=None, sep="  ", float_format=effectiveNum_str, index=None)
+            else:
+                df.to_csv(save_path, mode='a', header=None, sep="\t", float_format=effectiveNum_str, index=None)
+        # ---end by zhyn
         if show:
             print('成功输出至' + save_path)
         return True

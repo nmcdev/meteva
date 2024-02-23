@@ -366,7 +366,7 @@ class CMADaasAccess():
         
         #print(params['timeRange'])
         if url is None:
-            url = "http://"+meteva.base.cmadaas_set[0]+"/music-ws/api?"
+            url = "http://"+meteva.base.cmadaas_set[0]+':'+meteva.base.cmadaas_set[1]+"/music-ws/api?"
 
         urlstr = CMADaasAccess.get_url(url, params)
         if show_url is True : print(urlstr)

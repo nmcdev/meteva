@@ -69,8 +69,8 @@ def rain_sg(sta_ob,grd_fo,grade_list,save_path=None,show  = False,dpi = 200,add_
         clevs_name.append(gs0 + "-" + gs1)
     clevs_name.append(">=" + str(int(grade_list[len(grade_list) - 2])))
 
-    if point_size is None:
-        pass
+
+
 
     valid_time = 0
     if "valid_time" in grd_fo.attrs.keys():
@@ -87,6 +87,16 @@ def rain_sg(sta_ob,grd_fo,grade_list,save_path=None,show  = False,dpi = 200,add_
         right_plots_width = 0
         width = (hight - title_hight - legend_hight) * grid_fo.nlon / grid_fo.nlat + left_plots_width + right_plots_width
         map_width = width - left_plots_width - right_plots_width
+
+        if point_size is None:
+            sta_id1 = sta_ob_in.drop_duplicates(['id'])
+            sta_dis = meteva.base.sta_dis_ensemble_near_by_sta(sta_id1, nearNum=2)
+            dis_values = sta_dis["data1"].values
+            dis_values.sort()
+            dis1 = dis_values[int(len(dis_values) * 0.02) + 1]
+            point_size = (map_width * dis1 / (grid_fo.elon - grid_fo.slon)) ** 2
+            if (point_size > 50): point_size = 50
+            if (point_size < 0.1): point_size = 0.1
 
         fig = plt.figure(figsize=(width, hight),dpi=dpi)
         # 设置画幅的布局方式，

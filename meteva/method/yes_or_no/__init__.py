@@ -10,3 +10,4 @@ from .score import hfmc,hfmc_of_sun_rain,pofd_hfmc,pod_hfmc,sr_hfmc,bias_hfmc,ts
 from .score import pod,pofd,sr,bias,ts,ets,far,mr,pc,pc_of_sun_rain,r,s,bias_extend_linear,bias_extend_log,hk_yesorno_hfmc,hk_yesorno,hss_yesorno,hss_yesorno_hfmc
 from .score import hap_count,effective_dtime,effective_dtime_hfmdt,hfmdt
 from .score import ob_fo_hr,ob_fo_hr_hfmc,ob_fo_hc_hfmc,ob_fo_hc,odds_ratio,odds_ratio_hfmc,orss_hfmc,orss,fscore,fscore_hfmc
+from .score import  false_alarm_count,false_alarm_count_hfmc

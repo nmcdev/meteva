@@ -5,11 +5,12 @@ import copy
 import time
 import pandas as pd
 import os
-
+import math
 
 method_coluns_dict = {
     "hfmc_of_sun_rain":["Hsr","Fsr","Msr","Csr"],
     "hfmc" :  ["H","F","M","C"],
+    "hfmc_multi": ["H", "F", "M", "C"],
     "tase":["T", "E", "A", "S"],
     "tc_count":["T", "C"],
     "tlfo":["T","LFO"],
@@ -20,7 +21,10 @@ method_coluns_dict = {
     "nas_uv": ["T", "AC", "SCORE"],
     "na_uv":["T","AC"],
     "nasws_s": ["T", "AC", "SCORE", "SEVERER", "WEAK"],
-    "fss":["pob","pfo","fbs"]
+    "fss":["pob","pfo","fbs"],
+    "tems":["T","E","MX","SX"],
+    "cscs":["CX","SX","CY","SY"],
+    "hnh": np.arange(20).tolist()
 
 }
 
@@ -29,13 +33,18 @@ def get_score_method_with_mid(method):
         meteva.method.ts,meteva.method.bias,meteva.method.ets,meteva.method.mr,meteva.method.far,
         meteva.method.r,meteva.method.hss_yesorno,meteva.method.pofd,meteva.method.pod,
         meteva.method.dts,meteva.method.orss,meteva.method.pc,meteva.method.roc,meteva.method.sr,
-        meteva.method.hk_yesorno,meteva.method.odds_ratio,meteva.method.ob_fo_hr,meteva.method.ob_fo_hc
+        meteva.method.hk_yesorno,meteva.method.odds_ratio,meteva.method.ob_fo_hr,meteva.method.ob_fo_hc,
+        meteva.method.false_alarm_count
     ]
+    hfmc_multi_list = [
+        meteva.method.ts_multi,meteva.method.bias_multi,meteva.method.ets_multi,meteva.method.mr_multi,meteva.method.far_multi,
+        meteva.method.pofd_multi,meteva.method.pod_multi,meteva.method.sr_multi]
+
     hfmc_of_sum_rain_list = [meteva.method.pc_of_sun_rain]
     tase_list = [meteva.method.me, meteva.method.mae, meteva.method.mse, meteva.method.rmse]
     tc_list = [meteva.method.correct_rate,meteva.method.wrong_rate]
     tmmsss_list = [meteva.method.residual_error, meteva.method.residual_error_rate,meteva.method.corr,
-                    meteva.method.nse,meteva.method.ob_fo_mean,meteva.method.ob_fo_sum]
+                    meteva.method.nse,meteva.method.ob_fo_mean,meteva.method.ob_fo_sum,meteva.method.ob_fo_std]
     tbask_list = [meteva.product.regulation.temperature.temp_forecaster_score]
     nasws_s_list = [meteva.method.acs, meteva.method.scs, meteva.method.wind_weaker_rate,
                      meteva.method.wind_severer_rate]
@@ -45,6 +54,10 @@ def get_score_method_with_mid(method):
     toar_list = [meteva.method.mre]
     tlfo_list = [meteva.method.rmsf]
     fss_list = [meteva.method.fss]
+    tems_list = [meteva.method.bs,meteva.method.bss]
+    hnh_list = [meteva.method.roc_auc]
+    cscs_list = [meteva.method.ob_fo_precipitation_strength]
+
     method_mid = None
     method_name = method.__name__
 
@@ -52,6 +65,8 @@ def get_score_method_with_mid(method):
         method_mid = getattr(meteva.method, method_name + "_hfmc")
     elif method in hfmc_list:
         method_mid  = getattr(meteva.method, method_name +"_hfmc")
+    elif method in hfmc_multi_list:
+        method_mid  = getattr(meteva.method, method_name[:-6] +"_hfmc")
     elif method in tase_list:
         method_mid = getattr(meteva.method, method_name + "_tase")
     elif method in tc_list:
@@ -66,6 +81,8 @@ def get_score_method_with_mid(method):
         method_mid = getattr(meteva.product, method_name + "_tbask")
     elif method in nasws_s_list:
         method_mid = getattr(meteva.method, method_name + "_nasws")
+    elif method in tems_list:
+        method_mid = getattr(meteva.method, method_name + "_tems")
     elif method in nasws_uv_list:
         method_name1 = method_name.replace("_uv","_nasws")
         method_mid = getattr(meteva.method, method_name1)
@@ -77,7 +94,10 @@ def get_score_method_with_mid(method):
         method_mid = getattr(meteva.method, method_name1)
     elif method in fss_list:
         method_mid = getattr(meteva.method, method_name + "_fof")
-
+    elif method in hnh_list:
+        method_mid = getattr(meteva.method, method_name + "_hnh")
+    elif method in cscs_list:
+        method_mid = getattr(meteva.method, method_name + "_cscs")
     #print(method_mid)
     return method_mid
 
@@ -86,13 +106,18 @@ def get_middle_method(method):
         meteva.method.ts,meteva.method.bias,meteva.method.ets,meteva.method.mr,meteva.method.far,
         meteva.method.r,meteva.method.hss_yesorno,meteva.method.pofd,meteva.method.pod,
         meteva.method.dts,meteva.method.orss,meteva.method.pc,meteva.method.roc,meteva.method.sr,
-        meteva.method.hk_yesorno,meteva.method.odds_ratio,meteva.method.ob_fo_hr,meteva.method.ob_fo_hc
+        meteva.method.hk_yesorno,meteva.method.odds_ratio,meteva.method.ob_fo_hr,meteva.method.ob_fo_hc,
+        meteva.method.false_alarm_count
     ]
+    hfmc_multi_list = [
+        meteva.method.ts_multi,meteva.method.bias_multi,meteva.method.ets_multi,meteva.method.mr_multi,meteva.method.far_multi,
+        meteva.method.pofd_multi,meteva.method.pod_multi,meteva.method.sr_multi]
+
     hfmc_of_sum_rain_list = [meteva.method.pc_of_sun_rain]
     tase_list = [meteva.method.me, meteva.method.mae, meteva.method.mse, meteva.method.rmse]
     tc_list = [meteva.method.correct_rate,meteva.method.wrong_rate]
     tmmsss_list = [meteva.method.residual_error, meteva.method.residual_error_rate,meteva.method.corr,meteva.method.ob_fo_sum,meteva.method.ob_fo_mean,
-                   meteva.method.nse]
+                   meteva.method.nse,meteva.method.ob_fo_std]
     toar_list = [meteva.method.mre]
     tlfo_list = [meteva.method.rmsf]
     tbask_list = [meteva.product.regulation.temperature.temp_forecaster_score]
@@ -101,12 +126,16 @@ def get_middle_method(method):
     nas_uv_list = [meteva.method.acd_uv,meteva.method.scd_uv]
     na_uv_list = [meteva.method.acz_uv]
     fss_list = [meteva.method.fss]
-
+    tems_list = [meteva.method.bs, meteva.method.bss]
+    hnh_list = [meteva.method.roc_auc]
+    cscs_list = [meteva.method.ob_fo_precipitation_strength]
     method_mid = None
     if method in hfmc_of_sum_rain_list:
         method_mid = meteva.method.hfmc_of_sun_rain
     elif method in hfmc_list:
         method_mid  = meteva.method.hfmc
+    elif method in hfmc_multi_list:
+        method_mid = meteva.method.hfmc_multi
     elif method in tase_list:
         method_mid = meteva.method.tase
     elif method in tc_list:
@@ -129,7 +158,12 @@ def get_middle_method(method):
         method_mid = meteva.method.na_uv
     elif method in fss_list:
         method_mid = meteva.method.fss
-
+    elif method in tems_list:
+        method_mid = meteva.method.tems
+    elif method in hnh_list:
+        method_mid = meteva.method.hnh
+    elif method in cscs_list:
+        method_mid = meteva.method.cscs
     return method_mid
 
 def get_middle_columns(method):
@@ -296,7 +330,15 @@ def middle_df_sta(sta_all,method,grade_list = None,compare = None,gid = None):
         method_args["g"] = "id"
         method_args["gll"] = gll
         if grade_list is not None:
-            grade_exp, names_exp = np.meshgrid(grade_list, names)
+            if method == meteva.method.hfmc_multi:
+                grade_list_name = ["<" + str(grade_list[0])]
+                ng = len(grade_list)
+                for kk in range(ng - 1):
+                    grade_list_name.append("[" + str(grade_list[kk]) + "," + str(grade_list[kk + 1]) + ")")
+                grade_list_name.append(">" + str(grade_list[ng - 1]))
+                grade_exp, names_exp = np.meshgrid(grade_list, names)
+            else:
+                grade_exp, names_exp = np.meshgrid(grade_list, names)
             grade_exp = grade_exp.flatten().tolist()
             names_exp = names_exp.flatten().tolist()
         else:
@@ -306,7 +348,15 @@ def middle_df_sta(sta_all,method,grade_list = None,compare = None,gid = None):
     else:
         #sta_all_gid = sta_all
         if grade_list is not None:
-            grade_exp = grade_list
+            if method == meteva.method.hfmc_multi:
+                grade_list_name = ["<" + str(grade_list[0])]
+                ng = len(grade_list)
+                for kk in range(ng- 1):
+                    grade_list_name.append("[" + str(grade_list[kk]) + "," + str(grade_list[kk + 1]) + ")")
+                grade_list_name.append(">" + str(grade_list[ng-1]))
+                grade_exp = grade_list_name
+            else:
+                grade_exp = grade_list
         else:
             pass
 
@@ -341,8 +391,21 @@ def middle_df_sta(sta_all,method,grade_list = None,compare = None,gid = None):
             dict1 = {"time": sta["time"].values[0], "dtime": sta["dtime"].values[0],"T":mid_array[0],"BASK":mid_array[1]}
             tbask_df = pd.DataFrame(dict1,index = [k])
             df_list.append(tbask_df)
-        else:
+        elif method.__name__ =="hnh":
+            for m in range(1, member_count):
+                sta2 = meteva.base.sele_by_para(sta1, member=[data_names[0], data_names[m]])
+                data_name  = data_names[m]
+                mid_array, _ = meteva.product.score(sta2, method)
+                mid_array1 = mid_array.flatten()
+                #print(mid_array)
+                dict1 = {"time": sta["time"].values[0], "dtime": sta["dtime"].values[0],"member":data_name}
+                for i in range(20):
+                    dict1[i] = mid_array1[i]
+                hnh_df = pd.DataFrame(dict1, index=[k])
+                #print(hnh_df)
+                df_list.append(hnh_df)
 
+        else:
             for m in range(1, member_count):
                 if col_step==1:
                     sta2 = meteva.base.sele_by_para(sta1, member=[data_names[0], data_names[m]])
@@ -383,7 +446,6 @@ def middle_df_sta(sta_all,method,grade_list = None,compare = None,gid = None):
                     print(data_names[m] + "的" + time_str+"起报的"+str(sta2["dtime"].values[0])+"时效预报的空间范围不完整,对应的实况时间为："+time_str_ob)
     df_all = pd.concat(df_list, axis=0)
     return df_all
-
 
 
 def middle_df_sta_bak1(sta_all,method,grade_list = None,compare = None,gid = None):
@@ -485,7 +547,6 @@ def middle_df_sta_bak1(sta_all,method,grade_list = None,compare = None,gid = Non
     df_all = pd.concat(df_list, axis=0)
     return df_all
 
-
 def tran_middle_df_to_ds(df_all,mid_columns = None):
     '''
 
@@ -532,7 +593,6 @@ def tran_middle_ds_to_df(ds_all):
     df_all = df1.dropna()
     return df_all
 
-
 def middle_ds_sta(sta_all,method,grade_list = None,compare = None,gid = None):
     '''
 
@@ -548,13 +608,32 @@ def middle_ds_sta(sta_all,method,grade_list = None,compare = None,gid = None):
     ds_all = tran_middle_df_to_ds(df_all,mid_columns)
     return ds_all
 
-
 def middle_df_grd(grd_ob, grd_fo, method, grade_list=None, compare=None, marker=None, marker_name=None):
     mid_columns = get_middle_columns(method)
     level_fo = grd_fo["level"].values[0]
     time_fo = grd_fo["time"].values[0]
     dtime = grd_fo["dtime"].values[0]
     fo_name = grd_fo["member"].values[0]
+
+    lats = grd_ob["lat"].values
+    lons = grd_ob["lon"].values
+    xx,yy = np.meshgrid(lons,lats)
+    weight = np.cos(yy*math.pi / 180)
+    grid0 = meteva.base.get_grid_of_data(grd_ob)
+    grid_fo = meteva.base.get_grid_of_data(grd_fo)
+    if grid0.slon != grid_fo.slon or grid0.slat != grid_fo.slat or grid0.dlon != grid_fo.dlon or grid0.dlat != grid_fo.dlat or grid0.nlon != grid_fo.nlon or grid0.nlat != grid_fo.nlat:
+        print("the grid of grd_ob is :")
+        print("lon:" + str(grid0.glon))
+        print("lat:" + str(grid0.glat))
+        print("the grid of grd_fo is :")
+        print("lon:" + str(grid_fo.glon))
+        print("lat:" + str(grid_fo.glat))
+        print("the grid of grd_ob is different from the grid of  grd_fo")
+        return None
+
+    grid0_ = meteva.base.grid(grid0.glon,grid0.glat)
+    grd_weight = meteva.base.grid_data(grid0_,weight)
+    #meteva.base.pcolormesh_2d_grid(grd_weight,save_path="a.png")
     if method.__name__.find("_uv") >= 0:
         fo_name = fo_name[2:]
 
@@ -574,7 +653,8 @@ def middle_df_grd(grd_ob, grd_fo, method, grade_list=None, compare=None, marker=
             mid_array = method(ob[0,...],fo[0,...], ob[1,...],fo[1,...], **method_args)
         else:
             mid_array = method(ob, fo, **method_args)
-
+            if method.__name__ == "hnh":
+                mid_array = mid_array.flatten()
         index_names = ["level","time", "dtime", "member"]
         dict1 = {"level":level_fo,"time": time_fo, "dtime": dtime, "member": fo_name}
 
@@ -624,7 +704,13 @@ def middle_df_grd(grd_ob, grd_fo, method, grade_list=None, compare=None, marker=
                 index = np.where(marker.values == mark)
                 ob = grd_ob.values[index]
                 fo = grd_fo.values[index]
+                if method.__name__ in ["tase","tmmsss"]:
+                    #目前暂时只支持tase和tmmsss相关的指标的带权重
+                    w = grd_weight.values[index]
+                    method_args["weight"] = w
                 mid_array = method(ob, fo, **method_args)
+                if method.__name__ == "hnh":
+                    mid_array = mid_array.flatten()
 
             index_names = ["level","time", "dtime", "member"]
             dict1 = {"level":level_fo,"time": time_fo, "dtime": dtime, "member": fo_name}
@@ -693,15 +779,44 @@ def get_grid_marker(grid,step = 10):
 
 if __name__ =="__main__":
     pass
-    import pandas as pd
-    path = r"O:\data\hdf\gongbao\wind3h_update12h_station2k\wind3h_update12h_station2k.h5"
-    path = r"H:/a.txt"
-    uv = pd.read_hdf(path)
-    uv = meteva.base.sele_by_para(uv,time = "2022081408",dtime = [24])
-    uv.to_hdf(r"H:/a.txt","df")
-    #print(uv)
+    # import pandas as pd
+    # path = r"O:\data\hdf\gongbao\rain24h_update12h_station2k\rain24h_update12h_station2k.h5"
+    #
+    # # #path = r"H:/a.h5"
+    # sta_all = pd.read_hdf(path)
+    # sta_all = meteva.base.sele_by_para(sta_all, time_range=["2023123108", "2024010208"], dtime_range=[24, 72])
+    # print(sta_all)
+    # import meteva.product as mpd
+    # import meteva.method as mem
+    # result = mpd.score(sta_all,mem.ob_fo_precipitation_strength,g = "dtime",plot = "bar",tag = 3,save_path = r"H:\task\a.png")
+    # print(result)
+    # dfmid = meteva.perspact.middle_df_sta(sta_all,mem.cscs)
+    # print(dfmid)
+    # result = meteva.perspact.score_df(dfmid,mem.ob_fo_precipitation_strength,g = ["member","dtime"],plot = "bar",tag = 3,save_path = r"H:\task\b.png")
+    # print(result)
+    # print()
+
+
+    # sta_all = meteva.base.sele_by_para(sta_all,time_range = ["2023062008","2023062408"],dtime_range = [24,72])
+    #
+    # print(sta_all.iloc[:,6].values)
+    # sta_all1 = sta_all.copy()
+    # sta_all1.iloc[:,6] = 0
+    # sta_all1.iloc[sta_all.iloc[:,6].values >=10 , 6] = 1
+    # sta_all1.iloc[:, 7:] = sta_all.iloc[:, 7:].values /50
+    # values = sta_all1.iloc[:,7:].values
+    # values[values>1] = 1
+    # sta_all1.iloc[:,7:] = values
+    # sta_all1.to_hdf(r"H:\test_data\input\mps\rain24_10m_probability.h5","df")
 
     #method = get_middle_columns(meteva.method.nasws_uv)
     #print(method)
-    df = middle_df_sta(uv,meteva.method.nas_uv)
-    print(df)
+
+    # sta_all1 = pd.read_hdf(r"H:\test_data\input\mps\rain24_10m_probability.h5")
+    # df = middle_df_sta(sta_all1,meteva.method.hfmc_multi,grade_list=[0.3,0.5])
+    # print(df)
+    # score = meteva.perspact.score_df(df,meteva.method.ts_multi,g = ["member","grade"],plot="line",
+    #                                   save_path=r"H:\test_data\output\mps\ts.png")
+    # print(score)
+    # score = meteva.product.score(sta_all1,meteva.method.ts_multi,grade_list=[0.3,0.5])
+    # print(score)

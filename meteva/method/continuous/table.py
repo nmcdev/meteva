@@ -2,7 +2,8 @@ import pandas as pd
 import numpy as np
 import copy
 
-def accumulation_strenght_table(ob,fo, member_list = None,save_path=None):
+
+def accumulation_strength_table(ob,fo, member_list = None,save_path=None):
     '''
 
     :param ob:
@@ -72,8 +73,11 @@ def accumulation_strenght_table(ob,fo, member_list = None,save_path=None):
         print("累计降水量随强度变化表已以excel表格形式保存至" + save_path)
     return conf_mx
 
+def accumulation_strenght_table(ob,fo, member_list = None,save_path=None):
+   return accumulation_strength_table(ob,fo,member_list=member_list,save_path=save_path)
 
-def frequency_strenght_table(ob,fo, member_list = None,save_path=None):
+
+def frequency_strength_table(ob,fo, member_list = None,save_path=None):
     '''
 
     :param ob:
@@ -144,3 +148,5 @@ def frequency_strenght_table(ob,fo, member_list = None,save_path=None):
         print("降水频次随强度变化表已以excel表格形式保存至" + save_path)
     return conf_mx
 
+def frequency_strenght_table(ob,fo, member_list = None,save_path=None):
+    return frequency_strength_table(ob,fo,member_list=member_list,save_path = save_path)

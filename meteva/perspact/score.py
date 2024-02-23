@@ -36,7 +36,29 @@ def score_df(df, method, s = None,g=None,gll_dict = None,plot = None,excel_path 
                 members = [s["member"]]
             df0  = df0.loc[df0['member'].isin(members)]
             s.pop("member")
+
+
+        if "lat" in s.keys() or "lon" in s.keys():
+            region_ids = df0["id"]
+            max_id = np.max(region_ids)
+            min_id = np.min(region_ids)
+            max_ = max(max_id, abs(min_id))
+            if max_ < 1000000:
+                lat = np.round(region_ids / 1000)
+                lon = region_ids - lat * 1000
+            else:
+                lat = np.round(region_ids / 10000)
+                lon = region_ids - lat * 10000
+                lon /= 10
+                lat /= 10
+            df0["lon"] =lon
+            df0["lat"] =lat
+
+
     df1 = meteva.base.sele_by_dict(df0, s)
+    if len(df1.index) ==0:
+        print("所选参数范围内没有检验数据")
+        return None,None
 
     if method_name.find("ob_fo_") >= 0 and first:
         df_ob = copy.deepcopy(df1)
@@ -49,6 +71,9 @@ def score_df(df, method, s = None,g=None,gll_dict = None,plot = None,excel_path 
         if method_mid.__name__ =="tmmsss":
             df_ob["T"] = df1["T"]
             df_ob["MY"] = df1["MX"]
+        if method_mid.__name__ == "cscs":
+            df_ob["CY"] = df1["CX"]
+            df_ob["SY"] = df1["SX"]
             pass
         df_ob.drop_duplicates(subset=None, keep='first', inplace=True)
         df1 = pd.concat([df_ob,df1],axis=0)
@@ -60,7 +85,8 @@ def score_df(df, method, s = None,g=None,gll_dict = None,plot = None,excel_path 
             return
 
     g_time = ["time","year","month","day","hour","minute","dtime","xun","hou",
-              "ob_time","ob_year","ob_month","ob_day","ob_hour","ob_minute","ob_xun","ob_hou"]
+              "ob_time","ob_year","ob_month","ob_day","ob_hour","ob_minute","ob_xun","ob_hou",
+              "day_hour","ob_day_hour","year_month","ob_year_month"]
 
     if g is None:
         g = [g]
@@ -85,11 +111,13 @@ def score_df(df, method, s = None,g=None,gll_dict = None,plot = None,excel_path 
 
                 if g[gg] in g_time:
                     _,gll = meteva.base.group(df1,g = g[gg])
+                    gll.sort()
                 else:
                     #为了保持原有排序，不用group函数
                     groups = df1[g[gg]]
                     groups = groups.drop_duplicates(keep="first")
                     gll = groups.values
+
                 gll_dict[g[gg]] = gll
 
         # 将分组方式统一成单层列表，或者两层列表
@@ -116,6 +144,7 @@ def score_df(df, method, s = None,g=None,gll_dict = None,plot = None,excel_path 
         gll0 = gll_dict[g[0]]
 
     g0 = g[0]
+
     df1_list, gll = meteva.base.group(df1, g=g0, gll=gll0)
     if len(g) == 1:
         score_list = []
@@ -127,12 +156,20 @@ def score_df(df, method, s = None,g=None,gll_dict = None,plot = None,excel_path 
                 mid_array = tmmsss_array[0, :]
                 for j in range(1, tmmsss_array.shape[0]):
                     mid_array = meteva.method.tmmsss_merge(mid_array, tmmsss_array[j, :])
+
+            elif method_mid == meteva.method.tems:
+                tems_array = df1_list[i][column_list].values
+                mid_array = tems_array[0, :]
+                for j in range(1, tems_array.shape[0]):
+                    mid_array = meteva.method.tems_merge(mid_array, tems_array[j, :])
             else:
                 mid_list = []
                 for column in column_list:
                     mid = np.sum(df1_list[i][column])
                     mid_list.append(mid)
                 mid_array = np.array(mid_list)
+                if method_mid == meteva.method.hnh:
+                    mid_array = mid_array.reshape(10,2)
             score1 = score_method_with_mid(mid_array)
             score_list.append(score1)
             if gll is None:
@@ -781,6 +818,8 @@ def score_xy_df(df_mid,method,s = None,g = None,gll_dict = None,save_path = None
         if "grade" in s.keys():
             df_mid = df_mid.loc[df_mid['grade']== s["grade"]]
             s.pop("grade")
+
+
     #print(df_mid)
     df_mid = meteva.base.sele_by_dict(df_mid, s)
     score_array,g_dict =score_df(df_mid,method,g = g_list,gll_dict = gll_dict)
@@ -792,7 +831,6 @@ def score_xy_df(df_mid,method,s = None,g = None,gll_dict = None,save_path = None
     region_ids = g_dict["id"]
     max_id = np.max(region_ids)
     min_id = np.min(region_ids)
-
     max_ = max(max_id,abs(min_id))
     if max_ <1000000:
         lat = np.round(region_ids  / 1000)
@@ -802,7 +840,7 @@ def score_xy_df(df_mid,method,s = None,g = None,gll_dict = None,save_path = None
         lon = region_ids - lat * 10000
         lon /=10
         lat /=10
-    score_grd_list = None
+    grd_list = []
     gnames0 = None
     if len(g_list) == 1:
         dict1 = {"level":df_mid["level"].values[0],"time":df_mid["time"].values[0],"dtime":df_mid["dtime"].values[0],
@@ -810,7 +848,7 @@ def score_xy_df(df_mid,method,s = None,g = None,gll_dict = None,save_path = None
         df = pd.DataFrame(dict1)
         score_sta = meteva.base.sta_data(df)
         score_grd = meteva.base.trans_sta_to_grd(score_sta)
-        score_grd_list.append(score_grd)
+        grd_list.append(score_grd)
         #score_grd.values[score_grd.values == meteva.base.IV] = 0
         #meteva.base.plot_tools.contourf_2d_grid(score_grd, save_path,**kwargs)
         #return [score_grd],None
@@ -897,7 +935,7 @@ def score_xy_df(df_mid,method,s = None,g = None,gll_dict = None,save_path = None
     else:
         title_list = []
         for i in range(len(gnames0)):
-            title_list.append(g_list[0] + ":" + str(gnames0[i]))
+            title_list.append(str(gnames0[i]))
         kwargs["title"] = title_list
     meteva.base.plot_tools.plot_2d_grid_list(grd_list_plot, type="mesh", save_path = save_path, **kwargs)
 

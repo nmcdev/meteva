@@ -138,6 +138,8 @@ def prepare_dataset(para,recover = True):
         else:
             output_file = para["output_dir"] +"/"+filename1+ "/" + para["hdf_file_name"]
         meteva.base.creat_path(output_file)
+        if os.path.exists(output_file):
+            os.remove(output_file)
         sta_all.to_hdf(output_file, "df")
         print("success combined data to " + output_file)
     else:
@@ -174,16 +176,25 @@ def prepare_dataset_without_combining(para,recover = True):
     filename1, type1 = os.path.splitext(hdf_filename)
 
     elements = para["ob_data"].keys()
-    for ele in elements:
-        para1 = copy.deepcopy(para)
-        if "hdf_dir" in para["ob_data"][ele].keys():
-            hdf_path = para["ob_data"][ele]["hdf_dir"] + "/" + para["hdf_file_name"]
+    if "dir_ob" in elements:
+        if "hdf_dir" in para["ob_data"].keys():
+            hdf_path = para["ob_data"]["hdf_dir"] + "/" + para["hdf_file_name"]
         else:
-            hdf_path = para["output_dir"]  +"/"+filename1+ "/ob_" +ele+ "/"+hdf_filename
+            hdf_path = para["output_dir"] +"/"+filename1+ "/ob_data/"+hdf_filename
 
-        para1["ob_data"] = para["ob_data"][ele]
-        para1["ob_data"]["hdf_path"] = hdf_path
-        creat_ob_dataset(para1,ele,recover = recover)
+        para["ob_data"]["hdf_path"] = hdf_path
+        creat_ob_dataset(para)
+    else:
+        for ele in elements:
+            para1 = copy.deepcopy(para)
+            if "hdf_dir" in para["ob_data"][ele].keys():
+                hdf_path = para["ob_data"][ele]["hdf_dir"] + "/" + para["hdf_file_name"]
+            else:
+                hdf_path = para["output_dir"]  +"/"+filename1+ "/ob_" +ele+ "/"+hdf_filename
+
+            para1["ob_data"] = para["ob_data"][ele]
+            para1["ob_data"]["hdf_path"] = hdf_path
+            creat_ob_dataset(para1,ele,recover = recover)
 
     models = para["fo_data"].keys()
     for model in models:
@@ -374,6 +385,8 @@ def creat_fo_dataset(model,para):
         meteva.base.set_stadata_coords(sta_all, level=0)
 
     meteva.base.creat_path(hdf_path)
+    if os.path.exists(hdf_path):
+        os.remove(hdf_path)
     sta_all.to_hdf(hdf_path, "df")
     print(hdf_path)
     return sta_all
@@ -503,8 +516,8 @@ def creat_ob_dataset(para,ele = "ob",recover = True):
                             if len(data_name0) == 1:
                                 meteva.base.set_stadata_names(dat,data_name)
                             meteva.base.set_stadata_coords(dat,time = time1)
-
                             sta_list.append(dat)
+                            print("success read data from "+ path)
                         else:
                             print("fail read data from " + path)
                     except:
@@ -517,6 +530,8 @@ def creat_ob_dataset(para,ele = "ob",recover = True):
         meteva.base.set_stadata_coords(sta_all, level=0)
 
     meteva.base.creat_path(hdf_path)
+    if os.path.exists(hdf_path):
+        os.remove(hdf_path)
     sta_all.to_hdf(hdf_path, "df")
     #print(hdf_path)
 

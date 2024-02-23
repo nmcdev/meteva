@@ -572,11 +572,10 @@ def feature_finder(grd_ob0, grd_fo0, smooth, threshold, minsize,compare = ">=",m
     # Yprop = propCounts(Ysm > thresh[1], minsize[1], maxsize[1])[3]
     # Xlabelsfeature = propCounts(Xsm > thresh[0], minsize[0], maxsize[0])[4]
     # Ylabelsfeature = propCounts(Ysm > thresh[1], minsize[1], maxsize[1])[4]
-
-    Xprop = propCounts(ob_hp, minsize[0], maxsize[0])[3]
-    Yprop = propCounts(fo_hp, minsize[1], maxsize[1])[3]
-    Xlabelsfeature = propCounts(ob_hp, minsize[0], maxsize[0])[4]
-    Ylabelsfeature = propCounts(fo_hp, minsize[1], maxsize[1])[4]
+    _,_,_,Xprop,Xlabelsfeature = propCounts(ob_hp, minsize[0], maxsize[0])
+    _, _, _,Yprop,Ylabelsfeature = propCounts(fo_hp, minsize[1], maxsize[1])
+    #Xlabelsfeature = propCounts(ob_hp, minsize[0], maxsize[0])[4]
+    #Ylabelsfeature = propCounts(fo_hp, minsize[1], maxsize[1])[4]
 
     out = {'grd_ob':grd_ob, 'grd_fo':grd_fo,
            "grd_ob_smooth":grd_ob_smooth,"grd_fo_smooth":grd_fo_smooth,
@@ -814,9 +813,18 @@ def feature_finder_single(grd_fo0,smooth, threshold, minsize,compare = ">="):
 
     return out
 
+if __name__=="__main__":
+    import meteva.base as meb
+    grid1 = meb.grid([100, 120, 0.05], [24, 40, 0.05])
+    path_ob = r'H:\test_data\input\mem\mode\ob\rain03\20072611.000.nc'
+    path_fo_03 = r'H:\test_data\input\mem\mode\ec\rain03\20072608.003.nc'
 
+    grd_ob = meb.read_griddata_from_nc(path_ob, grid=grid1, time="2020072611", dtime=0, data_name="OBS")
+    grd_fo_03 = meb.read_griddata_from_nc(path_fo_03, grid=grid1, time="2020072608", dtime=3, data_name="ECMWF")
 
-
+    look_ff =feature_finder(grd_ob,grd_fo_03,smooth = 5,threshold = 5,minsize = 5)
+    print(look_ff)
+    print("*** 目标识别完成 ***\n")
 
 
 

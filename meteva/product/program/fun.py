@@ -10,125 +10,149 @@ import numpy as np
 
 
 def get_time_str_one_by_one(time1,time0 = None,row = 1):
-    if row == 3:
-        if time0 is None:
-            time2 = meteva.base.tool.time_tools.all_type_time_to_datetime(time1)
-            if  time2.minute == 0:
-                time_str = time2.strftime('%H{h}\n%d{d}\n%Y{y}%m{m}').format(y='年', m='月', d='日',h = "时")
-            else:
-                time_str = time2.strftime('%H{h}%M{mi}\n%m{m}%d{d}\n%Y{y}').format(y='年', m='月', d='日',h='时',mi = '分')
-        else:
-            time00 = meteva.base.tool.time_tools.all_type_time_to_datetime(time0)
-            time2 = meteva.base.tool.time_tools.all_type_time_to_datetime(time1)
-            if time2.year != time00.year:
-                if time2.hour == 0 and time2.minute == 0:
-                    time_str = time1.strftime('%d{d}\n%m{m}\n%Y{y}').format(y='年', m='月', d='日')
-                elif time1.minute == 0:
-                    time_str = time1.strftime('%H{h}\n%d{d}\n%Y{y}%m{m}').format(y='年', m='月', d='日',h='时')
-                else:
-                    time_str = time1.strftime('%M{mi}\n%H{h}\n%Y{y}%m{m}%d{d}').format(y='年', m='月', d='日',h='时',mi = '分')
-            elif time2.month != time00.month:
-                if time2.hour == 0 and time2.minute == 0:
-                    time_str = time2.strftime('%d{d}\n%m{m}').format(m='月', d='日')
-                elif time2.minute == 0:
-                    time_str = time2.strftime('%H{h}\n%d{d}\n%m{m}').format(m='月', d='日',h='时')
-                else:
-                    time_str = time2.strftime('%M{mi}\n%H{h}\n%m{m}%d{d}').format(m='月', d='日',h='时',mi = '分')
-            elif time2.day != time00.day:
-                if time2.hour == 0 and time2.minute == 0 and time00.hour ==0:
-                    time_str = time2.strftime('%d{d}').format(d='日')
-                elif time2.minute == 0:
-                    time_str = time2.strftime('%H{h}\n%d{d}').format(d='日',h='时')
-                else:
-                    time_str = time2.strftime('%M{mi}\n%H{h}\n%d{d}').format(d='日',h='时',mi = '分')
-            elif time2.hour != time00.hour:
-                if time2.minute == 0:
-                    time_str = time2.strftime('%H{h}').format(h='时')
-                else:
-                    time_str = time2.strftime('%M{mi}\n%H{h}').format(h='时',mi = '分')
-            else:
-                time_str = time2.strftime("%M分")
-    elif row == 2:
-        if time0 is None:
-            time2 = meteva.base.tool.time_tools.all_type_time_to_datetime(time1)
-            if time2.hour == 0 and time2.minute == 0:
-                time_str = time2.strftime('%d{d}\n%Y{y}%m{m}').format(y='年', m='月', d='日')
-            elif time2.minute == 0:
-                time_str = time2.strftime('%H{h}\n%d{d}\n%Y{y}%m{m}').format(y='年', m='月', d='日',h='时')
-            else:
-                time_str = time2.strftime('%M{mi}\n%H{h}\n%Y{y}%m{m}%d{d}').format(y='年', m='月', d='日',h='时',mi = '分')
-        else:
-            time00 = meteva.base.tool.time_tools.all_type_time_to_datetime(time0)
-            time2 = meteva.base.tool.time_tools.all_type_time_to_datetime(time1)
-            if time2.year != time00.year:
-                if time2.hour == 0 and time2.minute == 0:
-                    time_str = time1.strftime('%d{d}\n%Y{y}%m{m}').format(y='年', m='月', d='日')
-                elif time1.minute == 0:
-                    time_str = time1.strftime('%H{h}\n%d{d}\n%Y{y}%m{m}').format(y='年', m='月', d='日',h='时')
-                else:
-                    time_str = time1.strftime('%M{mi}\n%H{h}\n%Y{y}%m{m}%d{d}').format(y='年', m='月', d='日',h='时',mi = '分')
-            elif time2.month != time00.month:
-                if time2.hour == 0 and time2.minute == 0:
-                    time_str = time2.strftime('%d{d}\n%m{m}').format(m='月', d='日')
-                elif time2.minute == 0:
-                    time_str = time2.strftime('%H{h}\n%m{m}%d{d}').format(m='月', d='日',h='时')
-                else:
-                    time_str = time2.strftime('%M{mi}\n%H{h}\n%m{m}%d{d}').format(m='月', d='日',h='时',mi = '分')
-            elif time2.day != time00.day:
-                if time2.hour == 0 and time2.minute == 0:
-                    time_str = time2.strftime('%d{d}').format(d='日')
-                elif time2.minute == 0:
-                    time_str = time2.strftime('%H{h}\n%d{d}').format(d='日',h='时')
-                else:
-                    time_str = time2.strftime('%M{mi}\n%H{h}\n%d{d}').format(d='日',h='时',mi = '分')
-            elif time2.hour != time00.hour:
-                if time2.minute == 0:
-                    time_str = time2.strftime('%H{h}').format(h='时')
-                else:
-                    time_str = time2.strftime('%M{mi}\n%H{h}').format(h='时',mi = '分')
-            else:
-                time_str = time2.strftime("%M分")
-    else:
-        if time0 is None:
-            time2 = meteva.base.tool.time_tools.all_type_time_to_datetime(time1)
-            if time2.hour == 0 and time2.minute == 0:
 
-                time_str = time2.strftime('%Y{y}%m{m}%d{d}').format(y='年', m='月', d='日')
-            elif time2.minute == 0:
-                time_str = time2.strftime('%Y{y}%m{m}%d{d}%H{h}').format(y='年', m='月', d='日', h='时')
+    if meteva.base.language =="ch":
+        if row == 3:
+            if time0 is None:
+                time2 = meteva.base.tool.time_tools.all_type_time_to_datetime(time1)
+                if  time2.minute == 0:
+                    time_str = time2.strftime('%H{h}\n%d{d}\n%Y{y}%m{m}').format(y='年', m='月', d='日',h = "时")
+                else:
+                    time_str = time2.strftime('%H{h}%M{mi}\n%m{m}%d{d}\n%Y{y}').format(y='年', m='月', d='日',h='时',mi = '分')
             else:
-                time_str = time2.strftime('%Y{y}%m{m}%d{d}%H{h}%M{mi}').format(y='年', m='月', d='日', h='时', mi='分')
+                time00 = meteva.base.tool.time_tools.all_type_time_to_datetime(time0)
+                time2 = meteva.base.tool.time_tools.all_type_time_to_datetime(time1)
+                if time2.year != time00.year:
+                    if time2.hour == 0 and time2.minute == 0:
+                        time_str = time1.strftime('%d{d}\n%m{m}\n%Y{y}').format(y='年', m='月', d='日')
+                    elif time1.minute == 0:
+                        time_str = time1.strftime('%H{h}\n%d{d}\n%Y{y}%m{m}').format(y='年', m='月', d='日',h='时')
+                    else:
+                        time_str = time1.strftime('%M{mi}\n%H{h}\n%Y{y}%m{m}%d{d}').format(y='年', m='月', d='日',h='时',mi = '分')
+                elif time2.month != time00.month:
+                    if time2.hour == 0 and time2.minute == 0:
+                        time_str = time2.strftime('%d{d}\n%m{m}').format(m='月', d='日')
+                    elif time2.minute == 0:
+                        time_str = time2.strftime('%H{h}\n%d{d}\n%m{m}').format(m='月', d='日',h='时')
+                    else:
+                        time_str = time2.strftime('%M{mi}\n%H{h}\n%m{m}%d{d}').format(m='月', d='日',h='时',mi = '分')
+                elif time2.day != time00.day:
+                    if time2.hour == 0 and time2.minute == 0 and time00.hour ==0:
+                        time_str = time2.strftime('%d{d}').format(d='日')
+                    elif time2.minute == 0:
+                        time_str = time2.strftime('%H{h}\n%d{d}').format(d='日',h='时')
+                    else:
+                        time_str = time2.strftime('%M{mi}\n%H{h}\n%d{d}').format(d='日',h='时',mi = '分')
+                elif time2.hour != time00.hour:
+                    if time2.minute == 0:
+                        time_str = time2.strftime('%H{h}').format(h='时')
+                    else:
+                        time_str = time2.strftime('%M{mi}\n%H{h}').format(h='时',mi = '分')
+                else:
+                    time_str = time2.strftime("%M")+"分"
+        elif row == 2:
+            if time0 is None:
+                time2 = meteva.base.tool.time_tools.all_type_time_to_datetime(time1)
+                if time2.hour == 0 and time2.minute == 0:
+                    time_str = time2.strftime('%d{d}\n%Y{y}%m{m}').format(y='年', m='月', d='日')
+                elif time2.minute == 0:
+                    time_str = time2.strftime('%H{h}\n%d{d}\n%Y{y}%m{m}').format(y='年', m='月', d='日',h='时')
+                else:
+                    time_str = time2.strftime('%M{mi}\n%H{h}\n%Y{y}%m{m}%d{d}').format(y='年', m='月', d='日',h='时',mi = '分')
+            else:
+                time00 = meteva.base.tool.time_tools.all_type_time_to_datetime(time0)
+                time2 = meteva.base.tool.time_tools.all_type_time_to_datetime(time1)
+                if time2.year != time00.year:
+                    if time2.hour == 0 and time2.minute == 0:
+                        time_str = time1.strftime('%d{d}\n%Y{y}%m{m}').format(y='年', m='月', d='日')
+                    elif time1.minute == 0:
+                        time_str = time1.strftime('%H{h}\n%d{d}\n%Y{y}%m{m}').format(y='年', m='月', d='日',h='时')
+                    else:
+                        time_str = time1.strftime('%M{mi}\n%H{h}\n%Y{y}%m{m}%d{d}').format(y='年', m='月', d='日',h='时',mi = '分')
+                elif time2.month != time00.month:
+                    if time2.hour == 0 and time2.minute == 0:
+                        time_str = time2.strftime('%d{d}\n%m{m}').format(m='月', d='日')
+                    elif time2.minute == 0:
+                        time_str = time2.strftime('%H{h}\n%m{m}%d{d}').format(m='月', d='日',h='时')
+                    else:
+                        time_str = time2.strftime('%M{mi}\n%H{h}\n%m{m}%d{d}').format(m='月', d='日',h='时',mi = '分')
+                elif time2.day != time00.day:
+                    if time2.hour == 0 and time2.minute == 0:
+                        time_str = time2.strftime('%d{d}').format(d='日')
+                    elif time2.minute == 0:
+                        time_str = time2.strftime('%H{h}\n%d{d}').format(d='日',h='时')
+                    else:
+                        time_str = time2.strftime('%M{mi}\n%H{h}\n%d{d}').format(d='日',h='时',mi = '分')
+                elif time2.hour != time00.hour:
+                    if time2.minute == 0:
+                        time_str = time2.strftime('%H{h}').format(h='时')
+                    else:
+                        time_str = time2.strftime('%M{mi}\n%H{h}').format(h='时',mi = '分')
+                else:
+                    time_str = time2.strftime("%M")+"分"
         else:
-            time00 = meteva.base.tool.time_tools.all_type_time_to_datetime(time0)
-            time2 = meteva.base.tool.time_tools.all_type_time_to_datetime(time1)
-            if time2.year != time00.year:
+            if time0 is None:
+                time2 = meteva.base.tool.time_tools.all_type_time_to_datetime(time1)
                 if time2.hour == 0 and time2.minute == 0:
-                    time_str = time1.strftime('%Y{y}%m{m}%d{d}').format(y='年', m='月', d='日')
-                elif time1.minute == 0:
-                    time_str = time1.strftime('%Y{y}%m{m}%d{d}%H{h}').format(y='年', m='月', d='日', h='时')
-                else:
-                    time_str = time1.strftime('%Y{y}%m{m}%d{d}%H{h}%M{mi}').format(y='年', m='月', d='日', h='时', mi='分')
-            elif time2.month != time00.month:
-                if time2.hour == 0 and time2.minute == 0:
-                    time_str = time2.strftime('%m{m}%d{d}').format(m='月', d='日')
+
+                    time_str = time2.strftime('%Y{y}%m{m}%d{d}').format(y='年', m='月', d='日')
                 elif time2.minute == 0:
-                    time_str = time2.strftime('%m{m}%d{d}%H{h}').format(m='月', d='日', h='时')
+                    time_str = time2.strftime('%Y{y}%m{m}%d{d}%H{h}').format(y='年', m='月', d='日', h='时')
                 else:
-                    time_str = time2.strftime('%m{m}%d{d}%H{h}%M{mi}').format(m='月', d='日', h='时', mi='分')
-            elif time2.day != time00.day:
-                if time2.hour == 0 and time2.minute == 0:
-                    time_str = time2.strftime('%d{d}').format(d='日')
-                elif time2.minute == 0:
-                    time_str = time2.strftime('%d{d}%H{h}').format(d='日', h='时')
-                else:
-                    time_str = time2.strftime('%d{d}%H{h}%M{mi}').format(d='日', h='时', mi='分')
-            elif time2.hour != time00.hour:
-                if time2.minute == 0:
-                    time_str = time2.strftime('%H{h}').format(h='时')
-                else:
-                    time_str = time2.strftime('%H{h}%M{mi}').format(h='时', mi='分')
+                    time_str = time2.strftime('%Y{y}%m{m}%d{d}%H{h}%M{mi}').format(y='年', m='月', d='日', h='时', mi='分')
             else:
-                time_str = time2.strftime("%M分")
+                time00 = meteva.base.tool.time_tools.all_type_time_to_datetime(time0)
+                time2 = meteva.base.tool.time_tools.all_type_time_to_datetime(time1)
+                if time2.year != time00.year:
+                    if time2.hour == 0 and time2.minute == 0:
+                        time_str = time1.strftime('%Y{y}%m{m}%d{d}').format(y='年', m='月', d='日')
+                    elif time1.minute == 0:
+                        time_str = time1.strftime('%Y{y}%m{m}%d{d}%H{h}').format(y='年', m='月', d='日', h='时')
+                    else:
+                        time_str = time1.strftime('%Y{y}%m{m}%d{d}%H{h}%M{mi}').format(y='年', m='月', d='日', h='时', mi='分')
+                elif time2.month != time00.month:
+                    if time2.hour == 0 and time2.minute == 0:
+                        time_str = time2.strftime('%m{m}%d{d}').format(m='月', d='日')
+                    elif time2.minute == 0:
+                        time_str = time2.strftime('%m{m}%d{d}%H{h}').format(m='月', d='日', h='时')
+                    else:
+                        time_str = time2.strftime('%m{m}%d{d}%H{h}%M{mi}').format(m='月', d='日', h='时', mi='分')
+                elif time2.day != time00.day:
+                    if time2.hour == 0 and time2.minute == 0:
+                        time_str = time2.strftime('%d{d}').format(d='日')
+                    elif time2.minute == 0:
+                        time_str = time2.strftime('%d{d}%H{h}').format(d='日', h='时')
+                    else:
+                        time_str = time2.strftime('%d{d}%H{h}%M{mi}').format(d='日', h='时', mi='分')
+                elif time2.hour != time00.hour:
+                    if time2.minute == 0:
+                        time_str = time2.strftime('%H{h}').format(h='时')
+                    else:
+                        time_str = time2.strftime('%H{h}%M{mi}').format(h='时', mi='分')
+                else:
+                    time_str = time2.strftime("%M")+"分"
+    else:
+        if row >=1:
+            if time0 is None:
+                time2 = meteva.base.tool.time_tools.all_type_time_to_datetime(time1)
+                time_str = time2.strftime('%H{h}:%M{mi}\n%m{m}-%d{d}\n%Y{y}').format(y='', m='', d='', h='',
+                                                                                       mi='')
+            else:
+                time00 = meteva.base.tool.time_tools.all_type_time_to_datetime(time0)
+                time2 = meteva.base.tool.time_tools.all_type_time_to_datetime(time1)
+                if time2.year != time00.year:
+                    time_str = time2.strftime('%H{h}:%M{mi}\n%m{m}-%d{d}\n%Y{y}').format(y='', m='', d='', h='',
+                                                                                        mi='')
+                else:
+                    time_str = time2.strftime('%H{h}:%M{mi}\n%m{m}-%d{d}').format(m='', d='', h=':',
+                                                                                        mi='')
+        else:
+            if time0 is None:
+                time2 = meteva.base.tool.time_tools.all_type_time_to_datetime(time1)
+                time_str = time2.strftime('%Y{y}-%m{m}-%d{d} %H{h}:%M{mi}').format(y='', m='', d='', h='', mi='')
+            else:
+                time2 = meteva.base.tool.time_tools.all_type_time_to_datetime(time1)
+                time_str = time2.strftime('%Y{y}-%m{m}-%d{d} %H{h}:%M{mi}').format(y='', m='', d='', h='', mi='')
 
     return time_str
 
@@ -593,7 +617,6 @@ def get_x_ticks(ticks,width,row = 2):
                 index1 = index1[0][::sp_rate]
             times_used = times[index1]
             xticks = (times_used - times[0]) / np.timedelta64(1, 'h')
-
             xtick_labels = get_time_str_list(times_used,row=row)
             #print(xticks)
         else:

@@ -185,7 +185,10 @@ def time_list_line_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
             #plt.hlines(0,x_plot[0],x_plot[-1],"k",linewidth = 0.5)
             if i == len(times_fo) - 1:
                 plt.xticks(x_plot, time_strs,fontsize =  sup_fontsize * 0.8)
-                plt.xlabel("实况时间",fontsize = sup_fontsize * 0.9)
+                if meteva.base.language=="ch":
+                    plt.xlabel("实况时间",fontsize = sup_fontsize * 0.9)
+                else:
+                    plt.xlabel("observation time", fontsize=sup_fontsize * 0.9)
             else:
                 plt.xticks(x_plot,time_strs_null)
 
@@ -194,8 +197,10 @@ def time_list_line_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
         rect_ylabel = [0.03, 0.45, 0.0, 0.0]  # 左下宽高
         ax_ylabel = plt.axes(rect_ylabel)
         ax_ylabel.axes.set_axis_off()
-        plt.text(0, 0, "起报时间", fontsize=sup_fontsize * 0.9, rotation=90)
-
+        if meteva.base.language=="ch":
+            plt.text(0, 0, "起报时间", fontsize=sup_fontsize * 0.9, rotation=90)
+        else:
+            plt.text(0, 0, "time", fontsize=sup_fontsize * 0.9, rotation=90)
         save_path1 = None
         if save_path is None:
             if save_dir is None:
@@ -208,7 +213,10 @@ def time_list_line_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
         if save_path1 is not None:
             meteva.base.tool.path_tools.creat_path(save_path1)
             plt.savefig(save_path1,bbox_inches='tight')
-            print("图片已保存至" + save_path1)
+            if meteva.base.language:
+                print("图片已保存至" + save_path1)
+            else:
+                print("fig has saved to ")
         if show:
             plt.show()
         plt.close()
@@ -230,7 +238,7 @@ def time_list_line_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
             print("have printed pictrue elements to " + json_path1)
 
 
-def time_list_line(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,show = False,dpi = 300,title = "预报准确性和稳定性对比图",
+def time_list_line(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,show = False,dpi = 300,title = None,
                    sup_fontsize = 10,width = None,height = None,json_dir = None,json_path = None):
     sta_ob_and_fos1 = meteva.base.sele_by_dict(sta_ob_and_fos0, s)
     ids = list(set(sta_ob_and_fos1.loc[:,"id"]))
@@ -238,16 +246,27 @@ def time_list_line(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,sho
     nids = len(ids)
     if isinstance(title, list):
         if nids != len(title):
-            print("手动设置的title数目和要绘制的图形数目不一致")
+            if meteva.base.language =="ch":
+                print("手动设置的title数目和要绘制的图形数目不一致")
+            else:
+                print("title count is different from fig count")
             return
 
     if save_path is not None:
         if isinstance(save_path,str):
             save_path = [save_path]
         if nids != len(save_path):
-            print("手动设置的save_path数目和要绘制的图形数目不一致")
+            if meteva.base.language =="ch":
+                print("手动设置的save_path数目和要绘制的图形数目不一致")
+            else:
+                print("save_path count is different from fig count")
             return
 
+    if title is None:
+        if meteva.base.language=="ch":
+            title = "预报准确性和稳定性对比图"
+        else:
+            title = "Forecast Accuracy and Stability"
     for n in range(nids):
         id = ids[n]
         #print(id)
@@ -255,7 +274,10 @@ def time_list_line(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,sho
         times_fo = sta_ob_and_fos.loc[:, "time"].values
         times_fo = list(set(times_fo))
         if (len(times_fo) == 1):
-            print("仅有单个起报时间的预报，程序退出")
+            if meteva.base.language == "ch":
+                print("仅有单个起报时间的预报，程序退出")
+            else:
+                print("only forecast of one start time，progress end")
             return
         times_fo.sort()
         times_fo = np.array(times_fo)
@@ -304,7 +326,6 @@ def time_list_line(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,sho
         dtime_all = pd.Series(time_all) - times_fo[0]
         x_all = dtime_all/np.timedelta64(1, 'h')
         x_all = x_all.values
-        #print(x_all)
         x_plot,time_strs = meteva.product.program.get_x_ticks(time_all,width-1)
         x_plot += x_all[0]
 
@@ -350,7 +371,10 @@ def time_list_line(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,sho
                 picture_ele_dict["subplots"][i][name]["value"] = value.tolist()
 
             time_f1 = meteva.base.tool.time_tools.all_type_time_to_datetime(time_f1)
-            time_str = time_f1.strftime('%d{d}%H{h}').format(d='日', h='时')+"        "
+            if meteva.base.language=="ch":
+                time_str = time_f1.strftime('%d{d}%H{h}').format(d='日', h='时')+"        "
+            else:
+                time_str = time_f1.strftime(' %m-%d %H:%M') + "           "
             all_y_label.append(time_str)
             plt.ylabel(time_str, rotation='horizontal',fontsize = sup_fontsize *0.75)
             if i ==0:
@@ -372,16 +396,25 @@ def time_list_line(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,sho
             if i == len(times_fo) - 1:
                 #print(x_plot)
                 plt.xticks(x_plot, time_strs,fontsize = sup_fontsize * 0.8)
-                plt.xlabel("实况时间",fontsize = sup_fontsize * 0.9)
+                if meteva.base.language=="ch":
+                    plt.xlabel("实况时间",fontsize = sup_fontsize * 0.9)
+                else:
+                    plt.xlabel("Observation time", fontsize=sup_fontsize * 0.9)
             else:
                 plt.xticks(x_plot,time_strs_null)
 
         picture_ele_dict["y_label"] = all_y_label
-        rect_ylabel = [0.03, 0.45, 0.0, 0.0]  # 左下宽高
-        ax_ylabel = plt.axes(rect_ylabel)
-        ax_ylabel.axes.set_axis_off()
-        plt.text(0, 0, "起报时间", fontsize=sup_fontsize * 0.9, rotation=90)
 
+        if meteva.base.language =="ch":
+            rect_ylabel = [0.03, 0.45, 0.0, 0.0]  # 左下宽高
+            ax_ylabel = plt.axes(rect_ylabel)
+            ax_ylabel.axes.set_axis_off()
+            plt.text(0, 0, "起报时间", fontsize=sup_fontsize * 0.9, rotation=90)
+        else:
+            rect_ylabel = [0.00, 0.45, 0.0, 0.0]  # 左下宽高
+            ax_ylabel = plt.axes(rect_ylabel)
+            ax_ylabel.axes.set_axis_off()
+            plt.text(0, 0, "time", fontsize=sup_fontsize * 0.9, rotation=90)
         save_path1 = None
         if save_path is None:
             if save_dir is None:
@@ -393,7 +426,10 @@ def time_list_line(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,sho
         if save_path1 is not None:
             meteva.base.tool.path_tools.creat_path(save_path1)
             plt.savefig(save_path1,bbox_inches='tight')
-            print("图片已保存至" + save_path1)
+            if meteva.base.language=="ch":
+                print("图片已保存至" + save_path1)
+            else:
+                print("fig has been saved to " + save_path1)
         if show:
             plt.show()
         plt.close()
@@ -649,7 +685,7 @@ def time_list_mesh_error(sta_ob_and_fos0,s = None,save_dir = None,save_path = No
     return
 
 def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
-                   clev = None,cmap = None,plot_error = True,max_error = None,cmap_error= None,
+                   clevs = None,cmap = None,plot_error = True,max_error = None,cmap_error= None,
                    show = False,xtimetype = "mid",dpi = 300,annot =0,title = "预报准确性和稳定性对比图",
                    sup_fontsize = 10,width = None,height = None,json_dir = None,json_path = None):
     '''
@@ -702,8 +738,14 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
     dhs_fo_not0 = dhs_fo[dhs_fo != 0]
     dh_y = np.min(dhs_fo_not0)
     min_dtime = int(np.min(sta_fo_all1["dtime"]))
-    sta_ob_part1 = meteva.base.between_dtime_range(sta_ob_all1,min_dtime,min_dtime+dh_y-0.1)
-    sta_ob_part2 = meteva.base.move_fo_time(sta_ob_part1,dh_y)
+    sta_ob_part2_list = []
+    for ky in range(int(dh_y),int(np.max(sta_ob_all1["dtime"])),int(dh_y)):
+        sta_ob_part1 = meteva.base.between_dtime_range(sta_ob_all1,min_dtime+ky-dh_y,min_dtime+ky-0.1)
+        sta_ob_part2 = meteva.base.move_fo_time(sta_ob_part1,ky)
+        sta_ob_part2_list.append(sta_ob_part2)
+
+    sta_ob_part2_ = meteva.base.concat(sta_ob_part2_list)
+    sta_ob_part2 = sta_ob_part2_.drop_duplicates()
 
     ob_time_s = sta_fo_all1["time"] + sta_fo_all1["dtime"] * np.timedelta64(1, 'h')
     times_ob = list(set(ob_time_s.values))
@@ -809,6 +851,7 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
                 jr = row - j - 1
                 time_fo = times_fo[0] + np.timedelta64(1, 'h') * dh_y * jr
                 sta_on_row = meteva.base.in_time_list(sta_one_id,time_fo)
+                #print(sta_on_row)
                 dhx0 = (time_fo - times_ob[0])/np.timedelta64(1, 'h')
                 dhxs = sta_on_row["dtime"].values + dhx0
                 index_i = (dhxs/dh_x).astype(np.int16)
@@ -890,7 +933,7 @@ def time_list_mesh(sta_ob_and_fos0,s = None,save_dir = None,save_path = None,
 
             if cmap is None:
                 cmap = "rainbow"
-            cmap_part ,clev_part= meteva.base.tool.color_tools.def_cmap_clevs(cmap,clev,vmin,vmax)
+            cmap_part ,clev_part= meteva.base.tool.color_tools.def_cmap_clevs(cmap,clevs,vmin,vmax)
             # sns.heatmap(dat.T, ax=ax2, mask=mask, cmap=cmap_part, vmin=vmin, vmax=vmax, center=None, robust=False, annot=annot,fmt='.0f'
             # , annot_kws = {'size': annot_size})
 

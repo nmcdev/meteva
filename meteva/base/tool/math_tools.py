@@ -43,6 +43,15 @@ def angle_of_line(ax,ay,bx,by):
 
     return angle
 
+def cross_angle(lines1,linee1, lines2,linee2):
+    delta1 = [linee1[0] - lines1[0],linee1[1]-lines1[1]]
+    delta2 = [linee2[0] - lines2[0],linee2[1]-lines2[1]]
+    length1 = math.sqrt(math.pow(delta1[0],2) + math.pow(delta1[1],2))
+    length2 = math.sqrt(math.pow(delta2[0],2) + math.pow(delta2[1],2))
+    cos1 = (delta1[0] * delta2[0] + delta1[1] * delta2[1])/(length1 * length2)
+    angle = math.acos(cos1) *180/ math.PI
+    return angle
+
 
 #经度纬度信息转换为直角坐标系
 def lon_lat_to_cartesian(lon, lat, R=1):

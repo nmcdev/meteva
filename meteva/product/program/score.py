@@ -93,7 +93,7 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
             strs = strs.replace("lon_","")
             fo_name.append(strs)
     else:
-        ensemble_score_method = [meteva.method.cr,variance_divide_by_mse]
+        ensemble_score_method = [meteva.method.cr,meteva.method.crps,variance_divide_by_mse]
         if method in ensemble_score_method:
             fo_name = [""]
         elif method ==meteva.method.variance_mse:
@@ -112,7 +112,7 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
                       meteva.method.mr_multi, meteva.method.far_multi]
         if method in mutil_list:
         # 如果是多分类检验，但又没有设置分级方法，就需要从数据中获得全局的种类
-            values = sta_ob_and_fos.iloc[:,6:].flatten()
+            values = sta_ob_and_fos.iloc[:,6:].values.flatten()
             index_list = list(set(values))
             if len(index_list) > 30:
                 msg = "自动识别的样本类别超过30种，判断样本为连续型变量，grade_list不能缺省"
@@ -306,7 +306,7 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
                 legend = keys[1]
                 axis = keys[0]
         if "ylabel" not in plot_args.keys():
-            plot_args["ylabel"] = method.__name__.upper()
+            plot_args["ylabel"] = method.__name__
 
 
 
@@ -386,7 +386,7 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
 
 
     data_names = meteva.base.get_stadata_names(sta_ob_and_fos_list[0])
-    ensemble_score_method = [meteva.method.cr, variance_divide_by_mse]
+    ensemble_score_method = [meteva.method.cr,meteva.method.crps, variance_divide_by_mse]
     if method.__name__.find("ob_fo")>=0:
         fo_name = data_names
 

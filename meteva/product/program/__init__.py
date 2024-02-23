@@ -5,9 +5,11 @@ from .space_compare import rain_sg,rain_comprehensive_sg,rain_comprehensive_chin
 from .score import score,score_id,score_tdt
 from .table import table
 from .plot import plot
+from .time_space_compare import mesh_lon_time,mesh_time_lat
 from .fun import get_time_str_list,get_group_name,get_x_label,get_title_from_dict,get_x_ticks,get_y_ticks,get_dayofyear_str_list,get_xun_str_list
 from .error_ana_list import error_boxplot,error_boxplot_abs
 from .error_ana_scatter import mae_scatter,rmse_scatter,me_scatter
 from .sample_statistic import sample_tdt,sample_id
 from .diurnal import diunal_max_hour_id,diunal_max_hour
 from .typhoon import tran_typhoon_report
+from .process_compare import process_compare

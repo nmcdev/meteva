@@ -364,7 +364,11 @@ def far_hfmc(hfmc_array):
     hit = hfmc_array[...,0]
     fal = hfmc_array[...,1]
     sum = hit + fal
-    sum[sum == 0] = 0.1  # sum=0 是主动追求低空报的行为，所以应该给其空报率=0
+    if sum.size == 1:
+        if sum[0] ==0:
+            sum =0.1
+    else:
+        sum[sum == 0] = 0.1  # sum=0 是主动追求低空报的行为，所以应该给其空报率=0
     far0 = fal / sum
     if far0.size == 1:
         far0 = far0[0]
@@ -670,6 +674,36 @@ def ets_hfmc(hfmc_array):
     if ets_array.size ==1:
         ets_array = ets_array[0]
     return ets_array
+
+def false_alarm_count_hfmc(hfmc_array):
+    '''
+    ets评分
+    :param hfmc_array:包含命中空报和漏报的多维数组，其中最后一维长度为4，分别记录了（命中数，空报数，漏报数，正确否定数）
+    倒数第2维或为等级维度
+    :return: 空报数
+    '''
+    if len(hfmc_array.shape) == 1:
+        hfmc_array = hfmc_array.reshape(1,4)
+    fal = hfmc_array[...,1]
+    if fal.size ==1:
+        fal = fal[0]
+    return fal
+
+def false_alarm_count(Ob, Fo, grade_list=[1e-30],compare =">=",compair = None):
+    '''
+    ts评分
+    :param Ob: 实况数据  任意维numpy数组
+    :param Fo: 预测数据 任意维numpy数组,Fo.shape 和Ob.shape一致
+    :param grade_list: 多个阈值同时检验时的等级参数
+    :return: 0-1的实数，0代表没有技巧，完美值为1
+    '''
+    if compair is not None:
+        print("warning: the argument compair will be abolished, please use compare instead\n警告：参数compair 将被废除，以后请使用参数compare代替")
+        compare = compair
+    hfmc_array =hfmc(Ob, Fo, grade_list,compare= compare)
+    return false_alarm_count_hfmc(hfmc_array)
+
+
 
 def hfmc(Ob, Fo, grade_list=[1e-30],compare =">=",compair = None):
     '''

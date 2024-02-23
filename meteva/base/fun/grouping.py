@@ -23,7 +23,7 @@ def group(sta_ob_and_fos,g = None,gll = None,drop_g_column = False):
         valid_group = ["level","time","time_range","year","month","day","dayofyear","hour","xun",
                        "ob_time","ob_time_range","ob_year","ob_month","ob_day","ob_dayofyear","ob_hour",
                        "dtime","dtime_range","dday","dhour","id","lon_range","lon_step","lat_range","lat_step","last_range","last_step","grid",
-                       "province_name","member"]
+                       "province_name","member","ob_day_hour","ob_year_month","day_hour","year_month"]
 
         data_names = meteva.base.get_stadata_names(sta_ob_and_fos)
 
@@ -229,126 +229,220 @@ def group(sta_ob_and_fos,g = None,gll = None,drop_g_column = False):
                     sta_ob_and_fos_list.append(grouped_dict[key])
             else:
                 for group_list in group_list_list:
-                    sta = sta_ob_and_fos.loc[fo_times.index.hour.isin(group_list)]
+                    sta = sta_ob_and_fos.loc[xuns.isin(group_list)]
                     if len(sta.index) !=0:
                         valid_group_list_list.append(group_list)
                         sta_ob_and_fos_list.append(sta)
-
-        elif g == "ob_time":
-            dtimes = sta_ob_and_fos["dtime"] * np.timedelta64(1, 'h')
-            obtimes = sta_ob_and_fos['time'] + dtimes
-            if group_list_list is None:
-                grouped_dict = dict(list(sta_ob_and_fos.groupby(obtimes)))
-                keys = grouped_dict.keys()
-                for key in keys:
-                    valid_group_list_list.append([key])
-                    sta_ob_and_fos_list.append(grouped_dict[key])
-            else:
-
-                for group_list in group_list_list:
-                    group_list1 = []
-                    for time_g1 in group_list:
-                        group_list1.append(meteva.base.all_type_time_to_datetime(time_g1))
-                    sta = sta_ob_and_fos.loc[obtimes.isin(group_list1)]
-
-                    if len(sta.index) !=0:
-                        valid_group_list_list.append(group_list1)
-                        sta_ob_and_fos_list.append(sta)
-        elif g == "ob_time_range":
-            if group_list_list is None:
-                print("当group_by = ob_time_range时 group_list_list 参数不能为None")
-            else:
-                for group_list in group_list_list:
-                    sta = meteva.base.between_ob_time_range(sta_ob_and_fos,group_list[0],group_list[1])
-                    if len(sta.index) !=0:
-                        valid_group_list_list.append(group_list)
-                        sta_ob_and_fos_list.append(sta)
-
-
-        elif g == "ob_year":
-            dtimes = sta_ob_and_fos["dtime"] * np.timedelta64(1, 'h')
-            obtimes = pd.Series(0, index=sta_ob_and_fos['time'] + dtimes)
-            if group_list_list is None:
-                grouped_dict = dict(list(sta_ob_and_fos.groupby(obtimes.index.year)))
-                keys = grouped_dict.keys()
-                for key in keys:
-                    valid_group_list_list.append([key])
-                    sta_ob_and_fos_list.append(grouped_dict[key])
-            else:
-                for group_list in group_list_list:
-                    sta = sta_ob_and_fos.loc[obtimes.index.year.isin(group_list)]
-                    if len(sta.index) !=0:
-                        valid_group_list_list.append(group_list)
-                        sta_ob_and_fos_list.append(sta)
-
-        elif g == "ob_month":
-            dtimes = sta_ob_and_fos["dtime"] * np.timedelta64(1, 'h')
-            obtimes = pd.Series(0, index=sta_ob_and_fos['time'] + dtimes)
-            if group_list_list is None:
-                grouped_dict = dict(list(sta_ob_and_fos.groupby(obtimes.index.month)))
-                keys = grouped_dict.keys()
-                for key in keys:
-                    valid_group_list_list.append([key])
-                    sta_ob_and_fos_list.append(grouped_dict[key])
-            else:
-                for group_list in group_list_list:
-                    sta = sta_ob_and_fos.loc[obtimes.index.month.isin(group_list)]
-                    if len(sta.index) !=0:
-                        valid_group_list_list.append(group_list)
-                        sta_ob_and_fos_list.append(sta)
-        elif g == "ob_day":
-            dtimes = sta_ob_and_fos["dtime"] * np.timedelta64(1, 'h')
-            obtimes = pd.Series(0, index=sta_ob_and_fos['time'] + dtimes)
+        elif g == "day_hour":
             time0 = datetime.datetime(1900, 1, 1, 0, 0)
-            seconds = 3600 * 24
-            indexs = (obtimes.index - time0) // np.timedelta64(1, "D")
-
+            seconds = 3600
+            indexs = (sta_ob_and_fos['time'] - time0) // np.timedelta64(1, "h")
             if group_list_list is None:
                 grouped_dict = dict(list(sta_ob_and_fos.groupby(indexs)))
                 keys = grouped_dict.keys()
                 for key in keys:
-                    valid_group_list_list.append([time0 + datetime.timedelta(days=key)])
+                    valid_group_list_list.append([time0 + datetime.timedelta(hours=key)])
                     sta_ob_and_fos_list.append(grouped_dict[key])
             else:
                 for group_list in group_list_list:
                     days_list = []
                     for day0 in group_list:
-                        day = (day0 - time0).total_seconds() // seconds
+                        day1 = meteva.base.all_type_time_to_datetime(day0)
+                        day = (day1 - time0).total_seconds() // seconds
                         days_list.append(day)
                     sta = sta_ob_and_fos.loc[indexs.isin(days_list)]
-                    if len(sta.index) !=0:
+                    if len(sta.index) != 0:
                         valid_group_list_list.append(group_list)
                         sta_ob_and_fos_list.append(sta)
-        elif g == "ob_dayofyear":
-            dtimes = sta_ob_and_fos["dtime"] * np.timedelta64(1, 'h')
-            obtimes = pd.Series(0, index=sta_ob_and_fos['time'] + dtimes)
+        elif g == "year_month":
+            sta_ob_and_fos.reset_index(drop = True,inplace = True)
+            fo_times = pd.Series(0, index=sta_ob_and_fos['time'])
+            year = fo_times.index.year.astype(np.int16)
+            month = fo_times.index.month.astype(np.int16)
+            yms = year*100+month
+            yms = pd.Series(yms)
             if group_list_list is None:
-                grouped_dict = dict(list(sta_ob_and_fos.groupby(obtimes.index.dayofyear)))
+                grouped_dict = dict(list(sta_ob_and_fos.groupby(yms)))
                 keys = grouped_dict.keys()
                 for key in keys:
                     valid_group_list_list.append([key])
                     sta_ob_and_fos_list.append(grouped_dict[key])
             else:
                 for group_list in group_list_list:
-                    sta = sta_ob_and_fos.loc[obtimes.index.dayofyear.isin(group_list)]
+                    sta = sta_ob_and_fos.loc[yms.isin(group_list)]
                     if len(sta.index) !=0:
                         valid_group_list_list.append(group_list)
                         sta_ob_and_fos_list.append(sta)
-        elif g == "ob_hour":
-            dtimes = sta_ob_and_fos["dtime"] * np.timedelta64(1, 'h')
-            obtimes = pd.Series(0, index=sta_ob_and_fos['time'] + dtimes)
-            if group_list_list is None:
-                grouped_dict = dict(list(sta_ob_and_fos.groupby(obtimes.index.hour)))
-                keys = grouped_dict.keys()
-                for key in keys:
-                    valid_group_list_list.append([key])
-                    sta_ob_and_fos_list.append(grouped_dict[key])
+
+        elif g.find("ob_") ==0:
+            dtime_units = "hour"
+            if len(sta_ob_and_fos.attrs) > 0:
+                if "dtime_units" in sta_ob_and_fos.attrs:
+                    if sta_ob_and_fos.attrs["dtime_units"] != "hour":
+                        dtime_units = "minute"
+            if dtime_units == "hour":
+                dtimes = sta_ob_and_fos["dtime"] * np.timedelta64(1, 'h')
             else:
-                for group_list in group_list_list:
-                    sta = sta_ob_and_fos.loc[obtimes.index.hour.isin(group_list)]
-                    if len(sta.index) !=0:
-                        valid_group_list_list.append(group_list)
-                        sta_ob_and_fos_list.append(sta)
+                dtimes = sta_ob_and_fos["dtime"] * np.timedelta64(1, 'm')
+
+            #dtimes = sta_ob_and_fos["dtime"] * np.timedelta64(1, 'h')
+            obtimes = pd.Series(0, index=sta_ob_and_fos['time'] + dtimes)
+            if g == "ob_time":
+                if group_list_list is None:
+                    grouped_dict = dict(list(sta_ob_and_fos.groupby(obtimes.index)))
+                    keys = grouped_dict.keys()
+                    for key in keys:
+                        valid_group_list_list.append([key])
+                        sta_ob_and_fos_list.append(grouped_dict[key])
+                else:
+
+                    for group_list in group_list_list:
+                        group_list1 = []
+                        for time_g1 in group_list:
+                            group_list1.append(meteva.base.all_type_time_to_datetime(time_g1))
+                        sta = sta_ob_and_fos.loc[obtimes.isin(group_list1)]
+
+                        if len(sta.index) !=0:
+                            valid_group_list_list.append(group_list1)
+                            sta_ob_and_fos_list.append(sta)
+            elif g == "ob_time_range":
+                if group_list_list is None:
+                    print("当group_by = ob_time_range时 group_list_list 参数不能为None")
+                else:
+                    for group_list in group_list_list:
+                        sta = meteva.base.between_ob_time_range(sta_ob_and_fos,group_list[0],group_list[1])
+                        if len(sta.index) !=0:
+                            valid_group_list_list.append(group_list)
+                            sta_ob_and_fos_list.append(sta)
+
+            elif g == "ob_year":
+                if group_list_list is None:
+                    grouped_dict = dict(list(sta_ob_and_fos.groupby(obtimes.index.year)))
+                    keys = grouped_dict.keys()
+                    for key in keys:
+                        valid_group_list_list.append([key])
+                        sta_ob_and_fos_list.append(grouped_dict[key])
+                else:
+                    for group_list in group_list_list:
+                        sta = sta_ob_and_fos.loc[obtimes.index.year.isin(group_list)]
+                        if len(sta.index) !=0:
+                            valid_group_list_list.append(group_list)
+                            sta_ob_and_fos_list.append(sta)
+
+            elif g == "ob_month":
+                if group_list_list is None:
+                    grouped_dict = dict(list(sta_ob_and_fos.groupby(obtimes.index.month)))
+                    keys = grouped_dict.keys()
+                    for key in keys:
+                        valid_group_list_list.append([key])
+                        sta_ob_and_fos_list.append(grouped_dict[key])
+                else:
+                    for group_list in group_list_list:
+                        sta = sta_ob_and_fos.loc[obtimes.index.month.isin(group_list)]
+                        if len(sta.index) !=0:
+                            valid_group_list_list.append(group_list)
+                            sta_ob_and_fos_list.append(sta)
+            elif g == "ob_day":
+                time0 = datetime.datetime(1900, 1, 1, 0, 0)
+                seconds = 3600 * 24
+                indexs = (obtimes.index - time0) // np.timedelta64(1, "D")
+
+                if group_list_list is None:
+                    grouped_dict = dict(list(sta_ob_and_fos.groupby(indexs)))
+                    keys = grouped_dict.keys()
+                    for key in keys:
+                        valid_group_list_list.append([time0 + datetime.timedelta(days=key)])
+                        sta_ob_and_fos_list.append(grouped_dict[key])
+                else:
+                    for group_list in group_list_list:
+                        days_list = []
+                        for day0 in group_list:
+                            day = (day0 - time0).total_seconds() // seconds
+                            days_list.append(day)
+                        sta = sta_ob_and_fos.loc[indexs.isin(days_list)]
+                        if len(sta.index) !=0:
+                            valid_group_list_list.append(group_list)
+                            sta_ob_and_fos_list.append(sta)
+            elif g == "ob_day_hour":
+                time0 = datetime.datetime(1900, 1, 1, 0, 0)
+                seconds = 3600
+                indexs = (obtimes.index - time0) // np.timedelta64(1, "h")
+
+                if group_list_list is None:
+                    grouped_dict = dict(list(sta_ob_and_fos.groupby(indexs)))
+                    keys = grouped_dict.keys()
+                    for key in keys:
+                        valid_group_list_list.append([time0 + datetime.timedelta(hours=key)])
+                        sta_ob_and_fos_list.append(grouped_dict[key])
+                else:
+                    for group_list in group_list_list:
+                        days_list = []
+                        for day0 in group_list:
+                            day = (day0 - time0).total_seconds() // seconds
+                            days_list.append(day)
+                        sta = sta_ob_and_fos.loc[indexs.isin(days_list)]
+                        if len(sta.index) != 0:
+                            valid_group_list_list.append(group_list)
+                            sta_ob_and_fos_list.append(sta)
+            elif g == "ob_dayofyear":
+                if group_list_list is None:
+                    grouped_dict = dict(list(sta_ob_and_fos.groupby(obtimes.index.dayofyear)))
+                    keys = grouped_dict.keys()
+                    for key in keys:
+                        valid_group_list_list.append([key])
+                        sta_ob_and_fos_list.append(grouped_dict[key])
+                else:
+                    for group_list in group_list_list:
+                        sta = sta_ob_and_fos.loc[obtimes.index.dayofyear.isin(group_list)]
+                        if len(sta.index) !=0:
+                            valid_group_list_list.append(group_list)
+                            sta_ob_and_fos_list.append(sta)
+            elif g == "ob_hour":
+                if group_list_list is None:
+                    grouped_dict = dict(list(sta_ob_and_fos.groupby(obtimes.index.hour)))
+                    keys = grouped_dict.keys()
+                    for key in keys:
+                        valid_group_list_list.append([key])
+                        sta_ob_and_fos_list.append(grouped_dict[key])
+                else:
+                    for group_list in group_list_list:
+                        sta = sta_ob_and_fos.loc[obtimes.index.hour.isin(group_list)]
+                        if len(sta.index) !=0:
+                            valid_group_list_list.append(group_list)
+                            sta_ob_and_fos_list.append(sta)
+            elif g == "ob_xun":
+                mons = obtimes.index.month.astype(np.int16)
+                days = obtimes.index.day.astype(np.int16)
+                xuns = np.ceil(days / 10).values.astype(np.int16)
+                xuns[xuns > 3] = 3
+                xuns += (mons - 1) * 3
+                xuns = pd.Series(xuns)
+                if group_list_list is None:
+                    grouped_dict = dict(list(sta_ob_and_fos.groupby(xuns)))
+                    keys = grouped_dict.keys()
+                    for key in keys:
+                        valid_group_list_list.append([key])
+                        sta_ob_and_fos_list.append(grouped_dict[key])
+                else:
+                    for group_list in group_list_list:
+                        sta = sta_ob_and_fos.loc[xuns.isin(group_list)]
+                        if len(sta.index) != 0:
+                            valid_group_list_list.append(group_list)
+                            sta_ob_and_fos_list.append(sta)
+
+            elif g == "ob_year_month":
+                if group_list_list is None:
+                    grouped_dict = dict(list(sta_ob_and_fos.groupby(obtimes.index.hour)))
+                    keys = grouped_dict.keys()
+                    for key in keys:
+                        valid_group_list_list.append([key])
+                        sta_ob_and_fos_list.append(grouped_dict[key])
+                else:
+                    for group_list in group_list_list:
+                        sta = sta_ob_and_fos.loc[obtimes.index.hour.isin(group_list)]
+                        if len(sta.index) != 0:
+                            valid_group_list_list.append(group_list)
+                            sta_ob_and_fos_list.append(sta)
 
         elif g == "dtime":
             if group_list_list is None:
@@ -556,14 +650,18 @@ def group(sta_ob_and_fos,g = None,gll = None,drop_g_column = False):
     if len(valid_group_list_list)==0:
         valid_group_list = None
     else:
-        vg =np.array(valid_group_list_list)
-        if len(valid_group_list_list) > 1:
-            valid_group_list =  vg.squeeze().tolist()
-        else:
-            if vg.size == 1:
-                valid_group_list = valid_group_list_list[0]
+
+        try:
+            vg =np.array(valid_group_list_list)
+            if len(valid_group_list_list) > 1:
+                valid_group_list =  vg.squeeze().tolist()
             else:
-                valid_group_list = valid_group_list_list
+                if vg.size == 1:
+                    valid_group_list = valid_group_list_list[0]
+                else:
+                    valid_group_list = valid_group_list_list
+        except:
+            valid_group_list = valid_group_list_list
 
     return sta_ob_and_fos_list,valid_group_list
 

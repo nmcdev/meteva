@@ -43,6 +43,7 @@ def terrain_height_correct(sta_temp, grid, sta_alt = None, member_list =  None,r
 
 
     grd_alt = meteva.base.read_griddata_from_nc(grd_alt_path)
+    grd_alt.values[grd_alt.values<0] = 0
     grid_alt = meteva.base.get_grid_of_data(grd_alt)
     grid_inner = meteva.base.get_inner_grid(grid,grid_alt)
     grd_alt = meteva.base.interp_gg_linear(grd_alt,grid_inner)
@@ -56,17 +57,17 @@ def terrain_height_correct(sta_temp, grid, sta_alt = None, member_list =  None,r
 
     ids = list(set(sta_temp["id"].values.tolist()))
     delta = meteva.base.in_id_list(delta, ids)
-    #print(delta)
-    #print(delta)
     delta["level"] = meteva.base.IV
     delta["time"] = meteva.base.IV
     delta["dtime"] = meteva.base.IV
     datanames = meteva.base.get_stadata_names(sta_temp)
+
     sta_all_delta = meteva.base.combine_expand_IV(sta_temp, delta)
     if member_list is None:member_list = datanames
     for i in range(len(member_list)):
         name = member_list[i]
         sta_all_delta[name] += sta_all_delta.iloc[:, -1]
     datanames = meteva.base.get_stadata_names(sta_all_delta)
+
     sta_all_corrected = sta_all_delta.drop(columns=[datanames[-1]])
     return sta_all_corrected

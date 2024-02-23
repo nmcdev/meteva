@@ -35,7 +35,7 @@ from . import consistent
 
 # 采用如下形式将5个用户必要的函数导入到mode模块下
 from .make_spatialVx import make_spatialVx
-from .feature_finder import feature_finder,feature_finder_single,feature_finder_and_merge
+from .feature_finder import feature_finder,feature_finder_single,feature_finder_and_merge,measure_label
 from .centmatch import centmatch
 from .merge_force import merge_force,merge
 from .deltamm import deltamm
@@ -51,4 +51,4 @@ from .interester import interester
 from .operater import operate
 from .load import load_feature_summary,load_feature_summary_list
 from .tran_to_dataframe import features_list_to_df
-from .consistent import combined_near_labels,unimatch,unimerge
+from .consistent import combined_near_labels,unimatch,unimerge,unimatch_pro

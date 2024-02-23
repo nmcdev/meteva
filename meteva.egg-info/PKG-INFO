@@ -1,15 +1,17 @@
-Metadata-Version: 1.1
+Metadata-Version: 2.1
 Name: meteva
-Version: 1.2.9.2
+Version: 1.8
 Summary: A collections of functions for meteorological verification.
 Home-page: UNKNOWN
-Author: liucouhua,daikan,wangbaoli
+Author: liucouhua,daikan,wangbaoli,tangbuxing
 Author-email: liucouhua@163.com
 License: GPL3
-Description: #nmc_verification
-        提供气象产品检验相关程序
-        说明文档详见： https://www.showdoc.cc/meteva
 Platform: UNKNOWN
 Classifier: Development Status :: 3 - Alpha
 Classifier: Intended Audience :: Developers
 Classifier: Programming Language :: Python :: 3
+
+#nmc_verification
+提供气象产品检验相关程序 
+说明文档详见： https://www.showdoc.cc/meteva
+
