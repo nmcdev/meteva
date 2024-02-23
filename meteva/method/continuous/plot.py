@@ -1,3 +1,4 @@
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import meteva
@@ -118,7 +119,11 @@ def scatter_regress(ob, fo,member_list = None, rtype="linear",vmax = None,vmin =
         ob_s = ob[sort_index]
         colors = colors[sort_index]
         #plt.scatter(fo_s, ob_s, c=colors,s = markersize,cmap="tab20c")
-        plt.scatter(fo_s, ob_s, c=colors, s=markersize, cmap="turbo")
+
+        if matplotlib.__version__=="3.3.4":
+            plt.scatter(fo_s, ob_s, c=colors, s=markersize, cmap="turbo")
+        else:
+            plt.scatter(fo_s, ob_s, c=colors, s=markersize, cmap="rainbow")
         #plt.plot(fo, ob, '.', color='b', markersize=markersize)
 
         plt.subplots_adjust(left=0, bottom=0.0, right=1.0, top = 1 - height_suptitle/height_fig,

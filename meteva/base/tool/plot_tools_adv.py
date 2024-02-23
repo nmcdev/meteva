@@ -317,13 +317,15 @@ def add_contourf(ax,grd,cmap ="rainbow",clevs= None,add_colorbar = True,cut_colo
     y = grd1['lat'].values
     vmax = np.nanmax(grd1.values)
     vmin = np.nanmin(grd1.values)
+    if extend is None: extend = "neither"
     cmap1,clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap,clevs=clevs,vmin=vmin,vmax = vmax,cut_colorbar = cut_colorbar,extend =extend)
-    if extend is None:
-        norm = BoundaryNorm(clevs1, ncolors=cmap1.N - 1)
-    elif extend == "both":
-        norm = BoundaryNorm(clevs1, ncolors=cmap1.N + 1)
-    else:
-        norm = BoundaryNorm(clevs1, ncolors=cmap1.N)
+    # if extend == "neither":
+    #     norm = BoundaryNorm(clevs1, ncolors=cmap1.N - 1)
+    # elif extend == "both":
+    #     norm = BoundaryNorm(clevs1, ncolors=cmap1.N + 1)
+    # else:
+    #     norm = BoundaryNorm(clevs1, ncolors=cmap1.N)
+    norm = BoundaryNorm(clevs1, ncolors=cmap1.N)
     im = ax.contourf(x, y, np.squeeze(grd1.values), levels=clevs1, cmap=cmap1,norm = norm,alpha=alpha,extend = extend)
     fig = plt.gcf()
     width = fig.bbox.width/fig.dpi
@@ -437,13 +439,17 @@ def add_mesh(ax,grd,cmap ="rainbow",clevs= None,add_colorbar = True,title = None
     y = grd1['lat'].values
     vmax = np.nanmax(grd1.values)
     vmin = np.nanmin(grd1.values)
-    cmap1,clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap,clevs=clevs,vmin=vmin,vmax = vmax)
-    if extend is None:
-        norm = BoundaryNorm(clevs1, ncolors=cmap1.N - 1)
-    elif extend == "both":
-        norm = BoundaryNorm(clevs1, ncolors=cmap1.N + 1, extend=extend)
-    else:
-        norm = BoundaryNorm(clevs1, ncolors=cmap1.N)
+    if extend is None: extend="neither"
+    cmap1,clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap,clevs=clevs,vmin=vmin,vmax = vmax,extend=extend)
+    # if extend is None:
+    #     norm = BoundaryNorm(clevs1, ncolors=cmap1.N - 1)
+    # elif extend == "both":
+    #     norm = BoundaryNorm(clevs1, ncolors=cmap1.N)
+    #     #norm = BoundaryNorm(clevs1, ncolors=cmap1.N + 1, extend=extend)
+    # else:
+    #     #norm = BoundaryNorm(clevs1, ncolors=cmap1.N,extend = extend)
+    #     norm = BoundaryNorm(clevs1, ncolors=cmap1.N)
+    norm = BoundaryNorm(clevs1, ncolors=cmap1.N)
     im = ax.pcolormesh(x, y, np.squeeze(grd1.values), cmap=cmap1, norm=norm)
     #im = ax.contourf(x, y, np.squeeze(grd.values), levels=clevs1, cmap=cmap1,norm = norm)
 
@@ -462,7 +468,7 @@ def add_mesh(ax,grd,cmap ="rainbow",clevs= None,add_colorbar = True,title = None
             location = colorbar_location
 
         colorbar_position = fig.add_axes(location)  # 位置[左,下,宽,高]
-        plt.colorbar(im,cax= colorbar_position)
+        plt.colorbar(im,cax= colorbar_position,extend = extend)
     return im
 
 def add_barbs(ax,wind,color = "k",skip = None,title = None,title_fontsize = 8,length = None):
@@ -520,15 +526,17 @@ def add_scatter(ax,sta0,cmap = "rainbow",clevs = None,point_size = None,fix_size
 
     vmax_v = np.max(sta_without_iv.iloc[:,-1].values)
     vmin_v = np.min(sta_without_iv.iloc[:,-1].values)
-
-    cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap, clevs=clevs, vmin=vmin_v, vmax=vmax_v)
-    if extend is None:
-        norm = BoundaryNorm(clevs1, ncolors=cmap1.N - 1)
-    elif extend == "both":
-        norm = BoundaryNorm(clevs1, ncolors=cmap1.N + 2, extend=extend)
-    else:
-        norm = BoundaryNorm(clevs1, ncolors=cmap1.N+1, extend=extend)
-
+    if extend is None: extend="neither"
+    cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap, clevs=clevs, vmin=vmin_v, vmax=vmax_v,extend = extend)
+    # if extend is None:
+    #     norm = BoundaryNorm(clevs1, ncolors=cmap1.N - 1)
+    # elif extend == "both":
+    #     #norm = BoundaryNorm(clevs1, ncolors=cmap1.N + 2, extend=extend)
+    #     norm = BoundaryNorm(clevs1, ncolors=cmap1.N)
+    # else:
+    #     #norm = BoundaryNorm(clevs1, ncolors=cmap1.N+1, extend=extend)
+    #     norm = BoundaryNorm(clevs1, ncolors=cmap1.N)
+    norm = BoundaryNorm(clevs1, ncolors=cmap1.N)
     fig = plt.gcf()
     map_width = ax.bbox.width/fig.dpi
 
@@ -578,7 +586,7 @@ def add_scatter(ax,sta0,cmap = "rainbow",clevs = None,point_size = None,fix_size
             location = colorbar_location
 
         colorbar_position = fig.add_axes(location)  # 位置[左,下,宽,高]
-        plt.colorbar(im, cax=colorbar_position)
+        plt.colorbar(im, cax=colorbar_position,extend = extend)
     return im
 
 def add_scatter_text(ax,sta0,color = "k",cmap = None,clevs = None,tag = 2,

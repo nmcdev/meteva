@@ -1,18 +1,12 @@
-import pandas as pd
-import meteva.method as mem
-import meteva.base as meb
-import meteva.product as mpd
-import meteva.perspact as mps # 透视分析模块
-import datetime
-import meteva
+import matplotlib.colors as colors
 import numpy as np
-import os
-import traceback
-import copy
 import matplotlib.pyplot as plt
+import copy
 from matplotlib.colors import BoundaryNorm
 import matplotlib.patches as patches
-import matplotlib.colors as colors
+
+
+
 
 def creat_cmap_from_rgb(rgb_list_list,extend = None):
     if isinstance(rgb_list_list[0],list):
@@ -203,6 +197,9 @@ def seaborn_score_bak(rmse_z ,rmse_t ,rmse_q ,rmse_ws ,rmse_t2m ,g_dict,save_pat
     plt.close()
 
 if __name__ =="__main__":
+    import pandas as pd
+    import meteva.method as mem
+    import meteva.perspact as mps  # 透视分析模块
     middle_result_path = r"H:\task\other\202308-AImodel\mid\z_tase_cli.h5"
     df_tase_z_cli = pd.read_hdf(middle_result_path)
     rmse_z500, gdict = mps.score_df(df_tase_z_cli, mem.rmse,

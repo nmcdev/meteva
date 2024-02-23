@@ -96,6 +96,8 @@ meteva/method/space/baddeley_binary_image_metric/lib/loc_list_setup.py
 meteva/method/space/baddeley_binary_image_metric/lib/locperf.py
 meteva/method/space/baddeley_binary_image_metric/lib/make_spatialVx.py
 meteva/method/space/baddeley_binary_image_metric/lib/solutionset.py
+meteva/method/space/cra/__init__.py
+meteva/method/space/cra/cra.py
 meteva/method/space/fqi/__init__.py
 meteva/method/space/fqi/fqi.py
 meteva/method/space/fqi/uiqi.py
@@ -246,7 +248,6 @@ meteva/method/vector/plot.py
 meteva/method/vector/score.py
 meteva/method/weather_system/__init__.py
 meteva/method/weather_system/identify.py
-meteva/method/weather_system/plot.py
 meteva/method/yes_or_no/__init__.py
 meteva/method/yes_or_no/plot.py
 meteva/method/yes_or_no/score.py
@@ -254,6 +255,7 @@ meteva/method/yes_or_no/skill.py
 meteva/method/yes_or_no/table.py
 meteva/perspact/__init__.py
 meteva/perspact/middle_prepare.py
+meteva/perspact/multi_element_veri.py
 meteva/perspact/score.py
 meteva/product/__init__.py
 meteva/product/application/__init__.py
@@ -269,7 +271,6 @@ meteva/product/program/diurnal.py
 meteva/product/program/error_ana_list.py
 meteva/product/program/error_ana_scatter.py
 meteva/product/program/fun.py
-meteva/product/program/multi_element_veri.py
 meteva/product/program/plot.py
 meteva/product/program/process_compare.py
 meteva/product/program/sample_statistic.py

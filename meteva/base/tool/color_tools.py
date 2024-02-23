@@ -1048,7 +1048,6 @@ def def_cmap_clevs(cmap = "rainbow",clevs = None,vmin = None,vmax = None,cut_col
             elif r >= 7:
                 inte = inte * 8
 
-
             vmin = inte * (math.floor(vmin / inte))
             vmax = inte * (math.ceil(vmax / inte)+0.5)
             clevs2 = np.arange(vmin, vmax, inte)
@@ -1056,6 +1055,7 @@ def def_cmap_clevs(cmap = "rainbow",clevs = None,vmin = None,vmax = None,cut_col
             clevs2 = clevs1
     else:
         clevs2 = clevs
+
 
     # 设置cmap2
     if cmap1 is None:
@@ -1077,6 +1077,7 @@ def def_cmap_clevs(cmap = "rainbow",clevs = None,vmin = None,vmax = None,cut_col
     #将cmap2 和clev2 协调
     cmap3,clevs3 = coordinate_cmap_to_clevs(cmap2,clevs2)
 
+
     # 从cmap3 和cmap3中提取部分colorbar
 
     if vmin is not None and vmax is not None and cut_colorbar:
@@ -1084,12 +1085,22 @@ def def_cmap_clevs(cmap = "rainbow",clevs = None,vmin = None,vmax = None,cut_col
     else:
         cmap4,clevs4  = cmap3,clevs3
 
-
     colors_list = cmap4.colors
     if extend == "both":
-        cmap5 = colors.ListedColormap(colors_list[1:-1])
-        cmap5.set_under(colors_list[0])
-        cmap5.set_over(colors_list[-1])
+
+        if len(colors_list)  == len(clevs4) +1:
+            cmap5 = colors.ListedColormap(colors_list[1:-1])
+            cmap5.set_under(colors_list[0])
+            cmap5.set_over(colors_list[-1])
+        elif len(colors_list) == len(clevs4):
+            cmap5 = colors.ListedColormap(colors_list[:-1])
+            cmap5.set_under([1, 1, 1])
+            cmap5.set_over(colors_list[-1])
+        else:
+            cmap5 = colors.ListedColormap(colors_list)
+            cmap5.set_under([1, 1, 1])
+            cmap5.set_over([0, 0, 0])
+
     elif extend == "min":
         cmap5 = colors.ListedColormap(colors_list[1:])
         cmap5.set_under(colors_list[0])

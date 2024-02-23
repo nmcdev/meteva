@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import pkg_resources
+import matplotlib
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 plt.rcParams['font.sans-serif']=['SimHei'] #用来正常显示中文标签
@@ -373,18 +374,19 @@ def plot_2d_grid_list(grd_list,type = "contour",save_path = None,title = None,cl
             vmin1 = np.min(grd.values)
             if vmin > vmin1:
                 vmin = vmin1
+    if extend is None: extend = "neither"
     cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap, clevs=clevs, vmin=vmin, vmax=vmax,extend=extend)
     # norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
-    if extend is None:
-        norm = BoundaryNorm(clevs1, ncolors=cmap1.N - 1)
-    elif extend == "both":
-        if type=="contour":
-            norm = BoundaryNorm(clevs1, ncolors=cmap1.N + 1)
-        else:
-            norm = BoundaryNorm(clevs1, ncolors=cmap1.N + 1,extend=extend)
-    else:
-        norm = BoundaryNorm(clevs1, ncolors=cmap1.N)
-
+    # if extend is None:
+    #     norm = BoundaryNorm(clevs1, ncolors=cmap1.N - 1)
+    # elif extend == "both":
+    #     if type=="contour":
+    #         norm = BoundaryNorm(clevs1, ncolors=cmap1.N + 1)
+    #     else:
+    #         norm = BoundaryNorm(clevs1, ncolors=cmap1.N + 1,extend=extend)
+    # else:
+    #     norm = BoundaryNorm(clevs1, ncolors=cmap1.N)
+    norm = BoundaryNorm(clevs1, ncolors=cmap1.N)
     vmax = elon
     vmin = slon
     r = rlon
@@ -598,7 +600,7 @@ def plot_2d_grid_list(grd_list,type = "contour",save_path = None,title = None,cl
 
 
 def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = "rainbow",add_county_line = False,add_worldmap=False,show = False,dpi = 300,
-                       sup_fontsize = 10,height = None,width = None):
+                       sup_fontsize = 10,height = None,width = None,extend = None):
 
     if save_path is None:
         show = True
@@ -657,15 +659,15 @@ def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = "rai
 
     vmax = np.max(grd.values)
     vmin = np.min(grd.values)
+    if extend is None: extend = "neither"
+    cmap1,clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap,clevs=clevs,vmin=vmin,vmax = vmax,extend=extend)
 
-    cmap1,clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap,clevs=clevs,vmin=vmin,vmax = vmax)
-
-    norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
+    norm = BoundaryNorm(clevs1, ncolors=cmap1.N)
     im = ax.pcolormesh(x, y, np.squeeze(grd.values), cmap=cmap1,norm=norm)
     #im = ax.contourf(x,y,np.squeeze(grd.values))
     left_low = (width + 0.1 - right_plots_width) / width
     colorbar_position = fig.add_axes([left_low, legend_hight / height, 0.02, 1-title_hight/height])  # 位置[左,下,宽,高]
-    plt.colorbar(im,cax= colorbar_position)
+    plt.colorbar(im,cax= colorbar_position,extend = extend)
 
 
     vmax = x[-1]
@@ -822,18 +824,19 @@ def scatter_sta(sta0,value_column=None,
 
     vmax_v = np.max(sta_without_iv[plot_data_names].values)
     vmin_v = np.min(sta_without_iv[plot_data_names].values)
-
+    if extend is None: extend = "neither"
     cmap1,clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap,clevs=clevs,vmin=vmin_v,vmax = vmax_v,extend=extend)
     #clevs1, cmap1 = meteva.base.tool.color_tools.def_cmap_clevs(clevs=clevs, cmap=cmap, vmin = None, vmax=None)
     #meteva.base.tool.color_tools.show_cmap_clev(cmap1,clevs1)
 
-    if extend is None:
-        norm = BoundaryNorm(clevs1, ncolors=cmap1.N - 1)
-    elif extend == "both":
-        norm = BoundaryNorm(clevs1, ncolors=cmap1.N + 2, extend=extend)
-    else:
-        norm = BoundaryNorm(clevs1, ncolors=cmap1.N+1, extend=extend)
+    # if extend is None:
+    #     norm = BoundaryNorm(clevs1, ncolors=cmap1.N - 1)
+    # elif extend == "both":
+    #     norm = BoundaryNorm(clevs1, ncolors=cmap1.N + 2, extend=extend)
+    # else:
+    #     norm = BoundaryNorm(clevs1, ncolors=cmap1.N+1, extend=extend)
 
+    norm = BoundaryNorm(clevs1, ncolors=cmap1.N)
 
     if point_size is None:
 
@@ -999,7 +1002,7 @@ def scatter_sta(sta0,value_column=None,
                           " value:"+str(sta_one_member.iloc[index,6]))
 
             colorbar_position = fig.add_axes([left_low, legend_hight / height, 0.02, 1-title_hight/height])  # 位置[左,下,宽,高]
-            plt.colorbar(im, cax=colorbar_position)
+            plt.colorbar(im, cax=colorbar_position,extend=extend)
 
 
             ax.set_xticks(xticks)
@@ -1258,14 +1261,15 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
 
 
     map_area = height_map *width_map
-
+    if extend is None: extend = "neither"
     cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap, clevs=clevs, vmin=vmin, vmax=vmax,extend=extend)
-    if extend is None:
-        norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
-    elif extend == "both":
-        norm = BoundaryNorm(clevs1, ncolors=cmap1.N + 2, extend=extend)
-    else:
-        norm = BoundaryNorm(clevs1, ncolors=cmap1.N + 1, extend=extend)
+    # if extend is None:
+    #     norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
+    # elif extend == "both":
+    #     norm = BoundaryNorm(clevs1, ncolors=cmap1.N + 2, extend=extend)
+    # else:
+    #     norm = BoundaryNorm(clevs1, ncolors=cmap1.N + 1, extend=extend)
+    norm = BoundaryNorm(clevs1, ncolors=cmap1.N)
     #print(sta0_list[0])
     if point_size is None:
 
@@ -1497,7 +1501,7 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
     left_low = (width_left_yticks + ncol * (width_map  + width_wspace))/width
     colorbar_position = fig.add_axes([left_low, height_bottem_xticsk / height,0.02, height_all_plot/height])  # 位置[左,下,宽,高]
 
-    cb = plt.colorbar(im, cax=colorbar_position)
+    cb = plt.colorbar(im, cax=colorbar_position,extend = extend)
     cb.ax.tick_params(labelsize=sup_fontsize *0.8)  #设置色标刻度字体大小。
 
 
@@ -2466,7 +2470,6 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
                     else:
                         plt.grid()
 
-        #print("a")
         if sup_title is not None:
 
 
@@ -2486,11 +2489,15 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
                 strss = sup_title.split("\n")
                 #by = 1 - (height_suplegend - len(strss) * sup_fontsize * 0.01) / height_fig + 0.025
 
+
                 by = ax_top.bbox.ymax / fig.bbox.ymax + (len(strss) * sup_fontsize * 0.015 + 0.1) / height_fig
                 plt.suptitle(sup_title, x = 0,y = by, fontsize=sup_fontsize ,horizontalalignment='left')
 
-                #by = 1 - (height_suplegend - legend_row * sup_fontsize * 0.9 * 0.02) / height_fig + 0.05
-                by = ax_top.bbox.ymax / fig.bbox.ymax + (legend_row * sup_fontsize * 0.7 * 0.02 + 0.15) / height_fig
+                if matplotlib.__version__ == "3.2.2":
+                    by = ax_top.bbox.ymax / fig.bbox.ymax + (legend_row * sup_fontsize * 0.7 * 0.02 + 0.6) / height_fig
+
+                else:
+                    by = ax_top.bbox.ymax / fig.bbox.ymax + (legend_row * sup_fontsize * 0.7 * 0.02 + 0.15) / height_fig
                 if subplot_num >1:
                     fig.legend(fontsize = sup_fontsize *0.7,ncol = legend_col,loc = "upper right",
                            bbox_to_anchor=(1,by))
@@ -2506,9 +2513,11 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
                 else:
                     legend_row = int(math.ceil(legend_num / legend_col))
                 #print(height_fig)
-                by = ax_top.bbox.ymax/fig.bbox.ymax + (legend_row * sup_fontsize * 0.9 * 0.03 + 0.1) / height_fig
+                if matplotlib.__version__ =="3.2.2" :
+                    by = ax_top.bbox.ymax/fig.bbox.ymax + (legend_row * sup_fontsize * 0.9 * 0.03 + 0.6) / height_fig
+                else:
+                    by = ax_top.bbox.ymax / fig.bbox.ymax + (legend_row * sup_fontsize * 0.9 * 0.03 + 0.1) / height_fig
 
-                #by = 1 - (height_suplegend - legend_row * sup_fontsize * 0.9 * 0.03) / height_fig + 0.025
                 #print(by)
 
                 if subplot_num > 1:
@@ -3277,7 +3286,7 @@ def bar_line(array,type_list,name_list_dict = None,legend = None,axis = None,vmi
             #         else:
             #             plt.grid()
 
-        # print("a")
+        print("a")
         if sup_title is not None:
 
             if legend_num == 1:
@@ -3300,7 +3309,10 @@ def bar_line(array,type_list,name_list_dict = None,legend = None,axis = None,vmi
                 plt.suptitle(sup_title, x=0, y=by, fontsize=sup_fontsize, horizontalalignment='left')
 
                 # by = 1 - (height_suplegend - legend_row * sup_fontsize * 0.9 * 0.02) / height_fig + 0.05
-                by = ax_top.bbox.ymax / fig.bbox.ymax + (legend_row * sup_fontsize * 0.7 * 0.02 + 0.15) / height_fig
+                if matplotlib.__version__ == "3.2.2":
+                    by = ax_top.bbox.ymax / fig.bbox.ymax + (legend_row * sup_fontsize * 0.7 * 0.02 + 0.6) / height_fig
+                else:
+                    by = ax_top.bbox.ymax / fig.bbox.ymax + (legend_row * sup_fontsize * 0.7 * 0.02 + 0.15) / height_fig
                 if subplot_num > 1:
                     fig.legend(fontsize=sup_fontsize * 0.7, ncol=legend_col, loc="upper right",
                                bbox_to_anchor=(1, by))
@@ -3316,7 +3328,10 @@ def bar_line(array,type_list,name_list_dict = None,legend = None,axis = None,vmi
                 else:
                     legend_row = int(math.ceil(legend_num / legend_col))
                 # print(height_fig)
-                by = ax_top.bbox.ymax / fig.bbox.ymax + (legend_row * sup_fontsize * 0.9 * 0.03 + 0.1) / height_fig
+                if matplotlib.__version__ == "3.2.2":
+                    by = ax_top.bbox.ymax / fig.bbox.ymax + (legend_row * sup_fontsize * 1 * 0.03 + 0.6) / height_fig
+                else:
+                    by = ax_top.bbox.ymax / fig.bbox.ymax + (legend_row * sup_fontsize * 0.9 * 0.03 + 0.1) / height_fig
 
                 # by = 1 - (height_suplegend - legend_row * sup_fontsize * 0.9 * 0.03) / height_fig + 0.025
                 # print(by)
