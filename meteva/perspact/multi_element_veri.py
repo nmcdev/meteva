@@ -61,7 +61,7 @@ def score_skill_seaborn(score_array_list,title_list,discription_list,member_list
         ny = data_k.shape[0]
         x = np.arange(nx + 1) - 0.5
         y = np.arange(ny + 1) - 0.5
-        norm = BoundaryNorm(clevs, ncolors=cmap.N + 1, extend="both")
+        norm = BoundaryNorm(clevs, ncolors=cmap.N + 1)
         im = ax_one.pcolormesh(x, y, data_k, cmap=cmap, norm=norm, linewidths=2, edgecolor="w")
         ax_one.spines['bottom'].set_linewidth(0)
         ax_one.spines['top'].set_linewidth(0)
@@ -93,7 +93,7 @@ def score_skill_seaborn(score_array_list,title_list,discription_list,member_list
     location = [0.2, -0.15, 0.6, 0.05]
     colorbar_position = fig.add_axes(location)  # 位置[左,下,宽,高]
     plt.colorbar(im, cax=colorbar_position, orientation="horizontal",
-                 ticks=clevs, label="Better <- % difference in RMSE vs ECMWF -> Worse")
+                 ticks=clevs, label="Better <- % difference in RMSE vs ECMWF -> Worse", extend="both")
     if save_path is None:
         show = True
     else:
