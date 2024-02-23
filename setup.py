@@ -43,7 +43,7 @@ setup(
                       'pandas>=1.0.4,<=2.0.3',
                       "netCDF4>=1.4.2,<=1.5.6",
                       'scipy>=0.19.0',
-                      'xarray>=0.10.0',
+                      'xarray>=0.10.0,<=0.20.0',
                       'scikit-learn>=0.21.2',
                       'matplotlib>=3.2.2,<=3.3.4',
                       "httplib2>=0.12.0",
