@@ -8,8 +8,9 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-def write_griddata_to_micaps4(da, save_path="a.txt", creat_dir=False, effectiveNum=3, show=False, title=None, inte=None,
-                              vmin=None, vmax=None):
+
+def write_griddata_to_micaps4(da,save_path = "a.txt",creat_dir = False,effectiveNum = 3,show = False,title = None,inte=None,vmin=None,vmax=None):
+
     """
     输出micaps4格式文件
     :param da:xarray多维数据信息,需要用 meteva 的格式
@@ -51,14 +52,14 @@ def write_griddata_to_micaps4(da, save_path="a.txt", creat_dir=False, effectiveN
         values = da.values
         grid_values = np.squeeze(values)
 
-        if (vmax is None):
+        if(vmax is None):
             vmax = math.ceil(max(grid_values.flatten()))
-        if (vmin is None):
+        if(vmin is None):
             vmin = math.ceil(min(grid_values.flatten()))
-
-        if (inte is None):
+        
+        if(inte is None):
             dif = (vmax - vmin) / 10.0
-            if dif == 0:
+            if dif ==0:
                 inte = 1
             else:
                 inte = math.pow(10, math.floor(math.log10(dif)))
@@ -102,7 +103,8 @@ def write_griddata_to_micaps4(da, save_path="a.txt", creat_dir=False, effectiveN
         format_str = "%." + str(effectiveNum) + "f "
 
         np.savetxt(save_path, grid_values, delimiter=' ',
-                   fmt=format_str, header=title, comments='', encoding='GBK')
+
+                   fmt=format_str, header=title, comments='',encoding='GBK')
         if show:
             print('成功输出至' + save_path)
         return True
@@ -112,7 +114,8 @@ def write_griddata_to_micaps4(da, save_path="a.txt", creat_dir=False, effectiveN
         print(exstr)
         return False
 
-
+    
+    
 def write_griddata_to_nc(da,save_path = "a.txt",creat_dir = False,effectiveNum = 3,show = False):
     try:
         dir = os.path.split(os.path.abspath(save_path))[0]
@@ -266,4 +269,5 @@ def write_griddata_to_gds_file(da, save_path="a.txt", creat_dir=False, show=Fals
 
 if __name__ == "__main__":
     grd = meteva.base.read_griddata_from_micaps4(r"H:\test_data\input\meb\m4.txt")
-    write_griddata_to_gds_file(grd, save_path=r"H:\test_data\output\meb\gds_test.000")
+    write_griddata_to_gds_file(grd,save_path=r"H:\test_data\output\meb\gds_test.000")
+
