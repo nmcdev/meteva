@@ -461,7 +461,11 @@ def xarray_to_griddata(xr0,
         lons = da1.lon.values
         dlon = (lons[-1] - lons[0])/(len(lons) - 1)
         grid = meteva.base.grid([lons[0],lons[-1],dlon],[lats[0],lats[-1],dlat])
-        da1 = meteva.base.interp_xg_linear(da1,grid)
+        try:
+            da1 = meteva.base.interp_xg_linear(da1,grid)
+        except:
+            #如果不能重置网格就还是返回原来的网格数据
+            pass
 
     return da1
 
