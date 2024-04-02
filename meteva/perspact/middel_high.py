@@ -17,33 +17,35 @@ para = {
     "step":5,  #masker间隔（单位：°）
     "recover":False,
     "ob_data": {
-        "dir_ob":r"\\10.28.16.234\data2\AI\CRA40\2018\Z\LLL\YYYYMMDDHH.nc",  # 实况场数据路径
+        "CRA40":{
+        "dirm": r"\\10.28.16.234\data2\AI\CRA40\2018\Z\LLL\YYYYMMDDHH.nc",  # 实况场数据路径
         "read_method": meteva.base.read_griddata_from_nc,
         "read_para": {},
-        "time_type": "UT",  #实况数据时间类型
-        "multiple": 1,    #当文件数据的单位是位势米，通过乘以9.8转换成位势
+        "time_type": "UT",  # 实况数据时间类型
+        "multiple": 1,  # 当文件数据的单位是位势米，通过乘以9.8转换成位势
+        }
     },
     "fo_data": {
-        "NMC":{
-            "dir_fo": r"\\10.28.16.234\data2\AI\NMC_CRA40\Z\LLL\YYYYMMDDHH\YYYYMMDDHH.TTT.nc",
+        "ECMWF":{
+            "dirm": r"\\10.28.16.234\data2\AI\ECMWF\grib\YYMMDD\YYMMDDHH.TTT.grib",
             "dtime": [12, 240, 12],
-            "reasonable_value": [-100, 400],
-            "read_method": meteva.base.read_griddata_from_nc,
-            "read_para": {},
+            "read_method": meteva.base.read_griddata_from_grib,
+            "read_para": {"level_type":"isobaricInhPa","value_name":"gh"},
             "time_type": "UT",  # 预报数据时间类型是北京时，即08时起报
             "multiple": 1,  # 当文件数据的单位是位势米，通过乘以9.8转换成位势
-            "move_fo_time":0
+            "move_fo_time":0,
+            "veri_by":"self"
         },
 
-        "ECMWF": {
-            "dir_fo":  r"\\10.28.16.177\NMC_Tsinghua_reforecast\cra40\YYYYMMDDHH.nc",
+        "NMC1": {
+            "dirm":  r"\\10.28.16.177\NMC_Tsinghua_reforecast\cra40\YYYYMMDDHH.nc",
             "dtime": [12, 240, 12],
-            "reasonable_value": [-100, 400],
             "read_method": meteva.base.read_griddata_from_nc,
             "read_para": {"value_name": "GPH"},
             "time_type": "UT",#预报数据时间类型是北京时，即08时起报
             "multiple":1, #当文件数据的单位是位势米，通过乘以9.8转换成位势
-            "move_fo_time": 12
+            "move_fo_time": 12,
+            "veri_by": "CRA40"
         },
     },
 }
@@ -82,6 +84,11 @@ def middle_of_score(para):
         time1 = begin_time
         para_fo1 = para["fo_data"][model]
         move_fo_time = para_fo1["move_fo_time"]
+        veri_by = para_fo1["veri_by"]
+        if veri_by =="self":
+            para_ob1 = para_fo1
+        else:
+            para_ob1 = para["ob_data"][veri_by]
 
         save_k = 0  # 用来在收集的过程间隔一段时间报错一下结果，避免程序错误时没有任何输出导致要重头再来
         dtime_list = np.arange(para_fo1["dtime"][0], para_fo1["dtime"][1] + 1, para_fo1["dtime"][2]).tolist()
@@ -99,24 +106,24 @@ def middle_of_score(para):
                             save_k += 1  #
                             time_ob = time1 + datetime.timedelta(hours=dh)
                             time_ob_bt = time_ob + datetime.timedelta(hours=8)
-                            if para["ob_data"]["time_type"].lower() == "bt":
+                            if para_ob1["time_type"].lower() == "bt":
                                 time_path = time_ob_bt
                             else:
                                 time_path = time_ob
 
-                            path0 = meteva.base.get_path(para["ob_data"]["dir_ob"], time_path)
+                            path0 = meteva.base.get_path(para_ob1["dirm"], time_path)
                             path0 = path0.replace("LLL",str(level))
                             if not os.path.exists(path0):
                                 print(path0 +" not exist")
                                 continue
-                            grd_obs = para["ob_data"]["read_method"](path0, grid=para["grid"], time=time_ob,
+                            grd_obs = para_ob1["read_method"](path0, grid=para["grid"], time=time_ob,
                                                                          dtime=0, data_name="OBS", show=True,level = level,
-                                                                         **para["ob_data"]["read_para"])
+                                                                         **para_ob1["read_para"])
                             if grd_obs is None:
                                 print("faild to read "+ path0)
                                 continue
 
-                            grd_obs.values *= para["ob_data"]["multiple"]
+                            grd_obs.values *= para_ob1["multiple"]
 
                             time1_ = time1
                             if para_fo1["time_type"].lower() == "bt":
@@ -124,7 +131,7 @@ def middle_of_score(para):
                             time1_ -= datetime.timedelta(hours=move_fo_time)
 
 
-                            path1 = meteva.base.get_path(para_fo1["dir_fo"], time1_, dh+move_fo_time)
+                            path1 = meteva.base.get_path(para_fo1["dirm"], time1_, dh+move_fo_time)
 
                             path1 = path1.replace("LLL", str(level))
                             grd_fo = para_fo1["read_method"](path1, grid=para["grid"], time=time1, dtime=dh,level = level,
@@ -155,7 +162,13 @@ def middle_of_score(para):
 
 
 if __name__ == "__main__":
-    middle_of_score(para)
-    path = r"H:\test_data\output\mps\tase_z.h5"
-    df = pd.read_hdf(path)
-    print(df)
+    path = meteva.base.get_path(r"\\10.28.16.234\data2\AI\ECMWF\grib\YYMMDD\YYMMDDHH.TTT.grib",datetime.datetime(2018,1,1,0))
+    #meteva.base.print_grib_file_info(path,filter_by_keys={"typeOfLevel":"isobaricInhPa"})
+
+    grd = meteva.base.read_griddata_from_grib(path,level_type="isobaricInhPa",value_name="gh",level=[850,500])
+    # print(grd)
+    # middle_of_score(para)
+    # path = r"H:\test_data\output\mps\tase_z.h5"
+    # df = pd.read_hdf(path)
+    # print(df)
+    # meteva.perspact.score_df(df,meteva.method.rmse,g = ["member","dtime"],plot = "line")
