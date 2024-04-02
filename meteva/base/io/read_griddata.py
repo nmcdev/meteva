@@ -165,25 +165,32 @@ def read_griddata_from_nc(filename,grid = None,
     try:
         ds0 = xr.open_dataset(filename)
 
-        #如果文件中包含多层次多时效数据，通过先选择
-        dict_sel = {}
-        if level is not None:
-            if level_dim is not None:
-                if ds0[level_dim].values.size>1:
-                    dict_sel[level_dim] = level
-            else:
-                if ds0["level"].values.size > 1:
-                    dict_sel["level"] = level
-        if dtime is not None:
-            if dtime_dim is not None:
-                if ds0[dtime_dim].values.size > 1:
-                    dict_sel[dtime_dim] = dtime
-            else:
-                if ds0["dtime"].values.size > 1:
-                    dict_sel["dtime"] = dtime
-        if len(dict_sel.keys())>0 and value_name is not None:
-            ds0 = ds0[value_name]
-            ds0 = ds0.loc[dict_sel]
+        try:
+            #如果文件中包含多层次多时效数据，通过先选择部分时效、层次，提升效率
+            dict_sel = {}
+            if level is not None:
+                if level_dim is not None:
+                    if ds0[level_dim].values.size>1:
+                        dict_sel[level_dim] = level
+                else:
+                    if "level" in ds0.coords:
+                        if ds0["level"].values.size > 1:
+                            dict_sel["level"] = level
+            if dtime is not None:
+                if dtime_dim is not None:
+                    if ds0[dtime_dim].values.size > 1:
+                        dict_sel[dtime_dim] = dtime
+                else:
+                    if "dtime" in ds0.coords:
+                        if ds0["dtime"].values.size > 1:
+                            dict_sel["dtime"] = dtime
+            if len(dict_sel.keys())>0 and value_name is not None:
+                ds0 = ds0[value_name]
+                ds0 = ds0.loc[dict_sel]
+        except:
+            #如果不能提取
+            pass
+
         da1 = meteva.base.xarray_to_griddata(ds0,value_name=value_name,member_dim=member_dim,level_dim=level_dim,time_dim=time_dim,dtime_dim=dtime_dim,
                                              lat_dim=lat_dim,lon_dim=lon_dim)
 
