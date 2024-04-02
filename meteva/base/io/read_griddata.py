@@ -343,19 +343,75 @@ def read_griddata_from_grib(filename,level_type= None,grid = None,
 
         if level_type is not None:filter_by_keys['typeOfLevel'] = level_type
         if "typeOfLevel" in filter_by_keys.keys(): level_type = filter_by_keys['typeOfLevel']
-        if level is not None:
-            filter_by_keys['level'] = level
         ds0 = xr.open_dataset(filename, engine="cfgrib", backend_kwargs={'filter_by_keys': filter_by_keys,"indexpath": ""},)
+        try:
+            #如果文件中包含多层次多时效数据，通过先选择部分时效、层次，提升效率
+            dict_sel = {}
+            if level is not None:
+                if level_type is not None:
+                    if ds0[level_type].values.size>1:
+                        dict_sel[level_type] = level
+                else:
+                    if "level" in ds0.coords:
+                        if ds0["level"].values.size > 1:
+                            dict_sel["level"] = level
+            if dtime is not None:
+                if dtime_dim is not None:
+                    if ds0[dtime_dim].values.size > 1:
+                        dict_sel[dtime_dim] = dtime
+                else:
+                    if "dtime" in ds0.coords:
+                        if ds0["dtime"].values.size > 1:
+                            dict_sel["dtime"] = dtime
+            if len(dict_sel.keys())>0 and value_name is not None:
+                ds0 = ds0[value_name]
+                ds0 = ds0.loc[dict_sel]
+        except:
+            #如果不能提取
+            pass
+
+
         da1 = meteva.base.xarray_to_griddata(ds0,value_name=value_name,member_dim=member_dim,level_dim=level_type,time_dim=time_dim,dtime_dim=dtime_dim,
                                              lat_dim=lat_dim,lon_dim=lon_dim)
         ds0.close()
         meteva.base.reset(da1)
+
+        # 如果有level参数
+        if level is not None:
+            level_list = []
+            if isinstance(level, list):
+                level_list = level
+            elif isinstance(level, np.ndarray):
+                level_list = level.tolist()
+            else:
+                level_list = [level]
+
+            # 如果level参数和数据文件里面正好都是一层，就认为level是用来设置层次参数的
+            if len(da1.coords["level"]) == 1 and len(level_list) == 1:
+                meteva.base.set_griddata_coords(da1, level_list=level_list)
+            else:
+                # 如果level参数和数据文件不都为1层，则认为level是用来提取某些层次数据的
+                da1 = meteva.base.in_level_list(da1, level_list=level_list)
+
+        # 如果有dtime参数
+        if dtime is not None:
+            dtime_list = []
+            if isinstance(dtime, list):
+                dtime_list = dtime
+            elif isinstance(dtime, np.ndarray):
+                dtime_list = dtime.tolist()
+            else:
+                dtime_list = [dtime]
+
+            # 如果level参数和数据文件里面正好都是一个时效，就认为dtime是用来设置时效参数的
+            if len(da1.coords["dtime"]) == 1 and len(dtime_list) == 1:
+                meteva.base.set_griddata_coords(da1, dtime_list=dtime_list)
+            else:
+                # 如果level参数和数据文件不都为1时效，则认为level是用来提取某些时效数据的
+                da1 = meteva.base.in_dtime_list(da1, dtime_list=dtime_list)
+
         if time is not None and len(da1.coords["time"])==1:
             meteva.base.set_griddata_coords(da1,gtime=[time])
-        if dtime is not None and len(da1.coords["dtime"])==1:
-            meteva.base.set_griddata_coords(da1,dtime_list=[dtime])
-        if level is not None and len(da1.coords["level"])==1:
-            meteva.base.set_griddata_coords(da1,level_list=[level])
         if data_name is not None and len(da1.coords["member"])==1:
             meteva.base.set_griddata_coords(da1,member_list=[data_name])
 
