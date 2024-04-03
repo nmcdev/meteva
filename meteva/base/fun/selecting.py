@@ -778,9 +778,11 @@ def in_province_list(sta,province_name_list):
 
 def not_nan(sta):
     danames = meteva.base.get_stadata_names(sta)
-    sta1 = sta.copy()
-    for name in danames:
-        sta1 = sta[pd.notnull(sta1[name])]
+    # sta1 = sta.copy()
+    # for name in danames:
+    #     sta1 = sta[pd.notnull(sta1[name])]
+    sta1 = sta.dropna(subset=danames)
+
     return sta1
 
 #返回站点参数字典列表
