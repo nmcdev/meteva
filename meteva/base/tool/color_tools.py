@@ -1,16 +1,15 @@
+import meteva
 import numpy as np
 import matplotlib
 import matplotlib.image as image
 from matplotlib import cm
 import matplotlib.pyplot as plt
-plt.rcParams['font.sans-serif']=['SimHei'] #用来正常显示中文标签
-plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
 import matplotlib.colors as colors
 import pkg_resources
 import math
 import os
 import colorsys
-import meteva
+
 
 def clev_cmap_temper_2m_k():
     path = pkg_resources.resource_filename('meteva', "resources/colormaps/color_temp_2m.txt")
@@ -438,7 +437,7 @@ def cmap_clevs_me_bwr(vmin,vmax):
 
     vmin = inte * ((int)(vmin / inte) - 1)
     vmax = inte * ((int)(vmax / inte) + 2)
-    max_abs_h = math.ceil(max(abs(vmax),abs(vmin)))/2
+    max_abs_h = inte * math.ceil(max(abs(vmax),abs(vmin))/inte)/2
     clevs = []
     colors_list = []
 
@@ -449,7 +448,7 @@ def cmap_clevs_me_bwr(vmin,vmax):
         else:
             rgb = [1+ i/max_abs_h,1+ i/max_abs_h,1]
         #print(rgb)
-        if i>=-inte:
+        if i>=-inte*1.5:
             rgb= [1,1,1]
         colors_list.append(rgb)
 
