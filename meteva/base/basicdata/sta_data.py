@@ -154,7 +154,7 @@ def set_stadata_coords(sta,level = None,time = None,dtime = None,id = None,lat =
         time1 = meteva.base.all_type_time_to_time64(time)
         sta.loc[:,'time'] = time1
         if len(sta.index) ==1:
-            sta["time"] = sta["time"].astype(np.datetime64)
+            sta["time"] = sta["time"].astype('datetime64[ns]')
     if dtime is not None:
         sta.loc[:,'dtime'] = dtime
         dtime_type = str(sta["dtime"].dtype)
