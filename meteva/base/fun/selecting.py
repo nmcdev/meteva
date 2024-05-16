@@ -123,6 +123,18 @@ def in_id_list(sta,id_list):
     return sta1
 
 
+def in_lon_list(sta,lon_list):
+    if not isinstance(lon_list,list) and not isinstance(lon_list,np.ndarray):
+        lon_list = [lon_list]
+    sta1 = sta.loc[sta['lon'].isin(lon_list)]
+    return sta1
+
+def in_lat_list(sta,lat_list):
+    if not isinstance(lat_list,list) and not isinstance(lat_list,np.ndarray):
+        lat_list = [lat_list]
+    sta1 = sta.loc[sta['lat'].isin(lat_list)]
+    return sta1
+
 #为拥有多time层的站点数据，依次增加time层所表示的list列表
 
 #为拥有多time层的站点数据，依次增加time层所表示的list列表
@@ -940,7 +952,7 @@ def sele_by_dict(data,s):
             data_names_range.append(str(data_name)+"_range")
         p_set.extend(data_names_range)
         for key in s.keys():
-            if key in data_names:
+            if key in data_names and key not in ["lon","lat"]:                 #lon,lat 默认表示取值范围，而不是具体的值
                 value_one = s[key]
                 if not isinstance(value_one,list):
                     value_one = [value_one]
@@ -1236,11 +1248,18 @@ def sele_by_para(data,member = None,level = None,time = None,time_range = None,y
         sta1 = in_dhour_list(sta1,dhour)
     if lon is not None:
         if not isinstance(lon,list):
-            print("lon参数需为列表形式的包含起始经度（浮点数）和结束经度（浮点）的参数")
+            lon = [lon - 1e-6, lon + 1e-6]
+        elif len(lon)==1:
+            lon = [lon[0]-1e-6,lon[0]+1e-6]
+
+            #print("lon参数需为列表形式的包含起始经度（浮点数）和结束经度（浮点）的参数")
         sta1 = between_lon_range(sta1,lon[0],lon[1])
     if lat is not None:
         if not isinstance(lat,list):
-            print("lat参数需为列表形式的包含起始纬度（浮点数）和结束纬度（浮点）的参数")
+            lat = [lat - 1e-6, lat + 1e-6]
+        elif len(lat) == 1:
+            lat = [lat[0] - 1e-6, lat[0] + 1e-6]
+            #print("lat参数需为列表形式的包含起始纬度（浮点数）和结束纬度（浮点）的参数")
         sta1 = between_lat_range(sta1,lat[0],lat[1])
 
 
