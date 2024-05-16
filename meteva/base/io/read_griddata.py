@@ -1600,41 +1600,88 @@ def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim
             return grd
 
         else:
-            grid0 = meteva.base.grid(ctl["glon"],ctl["glat"])
+            grid0 = meteva.base.grid(ctl["glon"], ctl["glat"])
             blocksize_xy = grid0.nlon * grid0.nlat * 4
 
             data_list = []
-            blocksize_one_time = ctl["cumulate_levels"] *blocksize_xy
+            blocksize_one_time = ctl["cumulate_levels"] * blocksize_xy
+
             nlevel = ctl["vars"][value_index]["nlevel"]
+            index_level = []
+            levels_all = ctl["zdef"]
+
+            if level is not None:
+                if nlevel == 1:
+                    # 如果level参数和数据文件里面正好都是一层，就认为level是用来设置层次参数的
+                    if isinstance(level, list):
+                        if len(level) > 1:
+                            print("value " + value_name + " has only one level")
+                            return None
+                    valid_levels = level
+                    index_level = [0]
+                else:
+                    # 需要读取的层次列表
+                    need_levels = []
+                    if isinstance(level, list):
+                        need_levels = level
+                    else:
+                        need_levels = [level]
+                    valid_levels = []
+
+                    index_level_dict = {}
+                    for index1 in range(nlevel):
+                        level1 = ctl["zdef"][index1]
+                        index_level_dict[level1] = index1
+                    for level1 in need_levels:
+                        if level1 not in index_level_dict.keys():
+                            print(str(level1) + " not in zdef list")
+                        else:
+                            index_level.append(index_level_dict[level1])
+                            valid_levels.append(level1)
+
+            else:
+                if nlevel == 1:  # 只有一层的变量
+                    valid_levels = [levels_all[0]]
+                    index_level = [0]
+                else:
+                    # 有多层的变量，level参数为None时，读取全部层次
+                    valid_levels = levels_all
+                    index_level = np.arange(nlevel).tolist()
+
+            nlevel_valid = len(index_level)
+            if nlevel_valid == 0:
+                return None
             for nn in range(ctl["nensemble"]):
                 for t in range(ctl["ntime"]):
-                    start_index =blocksize_one_time *ctl["ntime"] * nn +  t * blocksize_one_time + ctl["vars"][value_index][
-                        "start_bolck_index"] * blocksize_xy
-                    position = file.seek(start_index)
-                    blocksize_one_value = blocksize_xy * nlevel
-                    content = file.read(blocksize_one_value)
-                    data1 = np.frombuffer(content, dtype=endian + "f")
-                    data_list.append(data1)
+                    start_index = blocksize_one_time * ctl["ntime"] * nn + t * blocksize_one_time + \
+                                  ctl["vars"][value_index][
+                                      "start_bolck_index"] * blocksize_xy
+                    for v in range(nlevel_valid):
+                        index1 = index_level[v]
+                        start_index1 = start_index + index1 * blocksize_xy
+                        position = file.seek(start_index1)
+                        blocksize_one_value = blocksize_xy
+                        content = file.read(blocksize_one_value)
+                        data1 = np.frombuffer(content, dtype=endian + "f")
+                        data_list.append(data1)
 
             data = np.array(data_list)
-            data = data.reshape(ctl["nensemble"], ctl["ntime"], nlevel, ctl["nlat"], ctl["nlon"])
-            data = data.transpose(0,2,1,3,4)
-            if nlevel != len(ctl["zdef"]):
-                level_list = np.arange(ctl["vars"][value_index]["nlevel"])
-            else:
-                level_list =ctl["zdef"]
+            data = data.reshape(ctl["nensemble"], ctl["ntime"], nlevel_valid, ctl["nlat"], ctl["nlon"])
+            data = data.transpose(0, 2, 1, 3, 4)
 
             if dtime_dim is None:
-                grid1 = meteva.base.grid(ctl["glon"],ctl["glat"],gtime=ctl["gtime"],dtime_list=[0],level_list=level_list,member_list=ctl["edef"])
+                grid1 = meteva.base.grid(ctl["glon"], ctl["glat"], gtime=ctl["gtime"], dtime_list=[0],
+                                         level_list=valid_levels, member_list=ctl["edef"])
             else:
 
-                grid1 = meteva.base.grid(ctl["glon"], ctl["glat"], gtime=[ctl["gtime"][0]], dtime_list=ctl["dtime_list"] ,
-                                         level_list=level_list, member_list=ctl["edef"])
+                grid1 = meteva.base.grid(ctl["glon"], ctl["glat"], gtime=[ctl["gtime"][0]],
+                                         dtime_list=ctl["dtime_list"],
+                                         level_list=valid_levels, member_list=ctl["edef"])
 
-            #print(grid1)
-            grd_one_var = meteva.base.grid_data(grid1,data)
+            # print(grid1)
+            grd_one_var = meteva.base.grid_data(grid1, data)
             if grid is not None:
-                grd_one_var = meteva.base.interp_gg_linear(grd_one_var,grid=grid,outer_value=outer_value)
+                grd_one_var = meteva.base.interp_gg_linear(grd_one_var, grid=grid, outer_value=outer_value)
             if data_name is not None:
                 meteva.base.set_griddata_coords(grd_one_var, member_list=[data_name])
             file.close()
@@ -1647,7 +1694,7 @@ def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim
             exstr = traceback.format_exc()
             print(exstr)
 
-        print(ctl_path + "数据读取错误")
+        print(ctl_path + " read failed")
         return None
 
 
