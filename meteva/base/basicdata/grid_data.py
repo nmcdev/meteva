@@ -160,8 +160,8 @@ def xarray_to_griddata(xr0,
         ds0 = xr.Dataset({'data0': xr0})
     else:
         if value_name is not None:
-            da = xr0[value_name]
-            ds0 = xr.Dataset({'data0': da})
+            da_ = xr0[value_name]
+            ds0 = xr.Dataset({'data0': da_})
             name = value_name
         else:
             ds0 = xr0
@@ -169,10 +169,14 @@ def xarray_to_griddata(xr0,
 
     if dtime_dim == "time":
         ds0 = ds0.rename_dims({"time": "dtime"})
+        if 'time' in ds0.coords:
+            ds0 = ds0.rename({'time': 'dtime'})
         dtime_dim = "dtime"
 
     if time_dim == "dtime":
         ds0 = ds0.rename_dims({"dtime": "time"})
+        if 'dtime' in ds0.coords:
+            ds0 = ds0.rename({'dtime': 'time'})
         time_dim = "time"
 
     drop_list = []
@@ -326,7 +330,6 @@ def xarray_to_griddata(xr0,
         ds.coords["lon"] = ("lon", [0])
 
 
-
     if da is None:
         name_list = list((ds0))
         for name in name_list:
@@ -398,7 +401,6 @@ def xarray_to_griddata(xr0,
     da = da.transpose(dim_order["member"], dim_order["level"], dim_order["time"],
                       dim_order["dtime"], dim_order["lat"], dim_order["lon"])
 
-    #print(da)
     ds[name] = (("member", "level", "time", "dtime", "lat", "lon"), da.values)
     attrs_name = list(da.attrs)
     for key in attrs_name:
@@ -451,21 +453,22 @@ def xarray_to_griddata(xr0,
 
     meteva.base.reset(da1)
     lats = da1.lat.values
-    dlats = lats[1:] - lats[:-1]
-    maxdlats = np.max(dlats)
-    mindlats = np.min(dlats)
-    if (maxdlats - mindlats)/maxdlats > 0.001:
-        print("***")
-        nlat = int((lats[-1] - lats[0])/mindlats) + 2
-        dlat = (lats[-1] - lats[0])/(nlat-1)
-        lons = da1.lon.values
-        dlon = (lons[-1] - lons[0])/(len(lons) - 1)
-        grid = meteva.base.grid([lons[0],lons[-1],dlon],[lats[0],lats[-1],dlat])
-        try:
-            da1 = meteva.base.interp_xg_linear(da1,grid)
-        except:
-            #如果不能重置网格就还是返回原来的网格数据
-            pass
+    lons = da1.lon.values
+    if len(lats)>1 and len(lons)>1:
+        dlats = lats[1:] - lats[:-1]
+        maxdlats = np.max(dlats)
+        mindlats = np.min(dlats)
+        if (maxdlats - mindlats)/maxdlats > 0.001:
+            print("***")
+            nlat = int((lats[-1] - lats[0])/mindlats) + 2
+            dlat = (lats[-1] - lats[0])/(nlat-1)
+            dlon = (lons[-1] - lons[0])/(len(lons) - 1)
+            grid = meteva.base.grid([lons[0],lons[-1],dlon],[lats[0],lats[-1],dlat])
+            try:
+                da1 = meteva.base.interp_xg_linear(da1,grid)
+            except:
+                #如果不能重置网格就还是返回原来的网格数据
+                pass
 
     return da1
 
@@ -886,18 +889,20 @@ def DataArray_to_grd(dataArray,member = None,level = None,time = None,dtime = No
 
 def reset(grd):
     lats = grd["lat"].values
-    if lats[0]>lats[1]:
-        lats = grd["lat"].values[::-1]
-        grd['lat'] = lats
-        dat = grd.values[:, :, :, :, ::-1, :]
-        grd.values = dat
+    if len(lats)>1:
+        if lats[0]>lats[1]:
+            lats = grd["lat"].values[::-1]
+            grd['lat'] = lats
+            dat = grd.values[:, :, :, :, ::-1, :]
+            grd.values = dat
 
     lons = grd["lon"].values
-    if lons[0]>lons[1]:
-        lons = grd["lon"].values[::-1]
-        grd['lon'] = lons
-        dat = grd.values[:, :, :, :, :, ::-1]
-        grd.values = dat
+    if len(lons)>1:
+        if lons[0]>lons[1]:
+            lons = grd["lon"].values[::-1]
+            grd['lon'] = lons
+            dat = grd.values[:, :, :, :, :, ::-1]
+            grd.values = dat
 
     return
 
