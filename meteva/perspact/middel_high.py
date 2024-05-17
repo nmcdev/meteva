@@ -7,6 +7,8 @@ import numpy as np
 
 para = {
     "mid_method":meteva.method.tase,
+    "grade_list": None,
+    "compare":None,
     "middle_result_path": r"H:\test_data\output\mps\tase_z.h5",
     "begin_time": datetime.datetime(2018,8,1,0),
     "end_time": datetime.datetime(2018,8,2,0),
@@ -26,22 +28,22 @@ para = {
         }
     },
     "fo_data": {
-        "ECMWF":{
-            "dirm": r"\\10.28.16.234\data2\AI\ECMWF\grib\YYMMDD\YYMMDDHH.TTT.grib",
+        "Fu":{
+            "dirm": r"\\10.28.16.234\data2\AI\fuxi\Z\LLL\YYYYMMDDHH\YYYYMMDDHH.TTT.nc",
             "dtime": [12, 240, 12],
-            "read_method": meteva.base.read_griddata_from_grib,
-            "read_para": {"level_type":"isobaricInhPa","value_name":"gh"},
+            "read_method": meteva.base.read_griddata_from_nc,
+            "read_para": {},
             "time_type": "UT",  # 预报数据时间类型是北京时，即08时起报
             "multiple": 1,  # 当文件数据的单位是位势米，通过乘以9.8转换成位势
             "move_fo_time":0,
-            "veri_by":"self"
+            "veri_by":"CRA40"
         },
 
-        "NMC1": {
-            "dirm":  r"\\10.28.16.177\NMC_Tsinghua_reforecast\cra40\YYYYMMDDHH.nc",
+        "pa": {
+            "dirm":   r"\\10.28.16.234\data2\AI\Pangu_ERA5\Z\LLL\YYYYMMDDHH\YYYYMMDDHH.TTT.nc",
             "dtime": [12, 240, 12],
             "read_method": meteva.base.read_griddata_from_nc,
-            "read_para": {"value_name": "GPH"},
+            "read_para": {},
             "time_type": "UT",#预报数据时间类型是北京时，即08时起报
             "multiple":1, #当文件数据的单位是位势米，通过乘以9.8转换成位势
             "move_fo_time": 12,
@@ -51,7 +53,6 @@ para = {
 }
 
 
-
 def middle_of_score(para):
     middle_result_path = para["middle_result_path"]
     meteva.base.creat_path(middle_result_path)
@@ -59,7 +60,7 @@ def middle_of_score(para):
     mid_method = para["mid_method"]
     grid0 = para["grid"]
     # grid0 = meteva.base.grid([0,359.75,0.25],[-89.75,89.75,0.25])
-    marker = meteva.perspact.get_grid_marker(grid0, step=10)
+    marker = meteva.perspact.get_grid_marker(grid0, step=para["step"])
     # marker = None
     level_list =para["level_list"]
     mid_list = []
@@ -138,19 +139,22 @@ def middle_of_score(para):
                                                              data_name=model, show=True, **para_fo1["read_para"])
                             if grd_fo is not None:
                                 grd_fo.values *= para_fo1["multiple"]
-                                df_mid = meteva.perspact.middle_df_grd(grd_obs, grd_fo,mid_method, marker=marker)
+                                df_mid = meteva.perspact.middle_df_grd(grd_obs, grd_fo,mid_method, marker=marker,
+                                                                       grade_list=para["grade_list"],compare=para["compare"])
                                 mid_list.append(df_mid)
                             else:
                                 print("faild to read " + path1)
-                time1 = time1 + datetime.timedelta(hours=para["time_step"])  # 在统计时段内时间递增，遍历所有时间。在程序调试阶段，参数hours的取值可以设得大一点，比如2400，全年先算个几天看看结果是否合理,如果合理再改成240，再看结果合理再改成24，或12
-                # 当收集了超过200个时效的数据时就输出一次
-                if save_k % 500 == 0:
-                    mid_all = meteva.base.concat(mid_list)
-                    # 先删除文件在重新输出文件，避免文件大小膨胀
-                    if os.path.exists(middle_result_path):
-                        os.remove(middle_result_path)
-                    mid_all.to_hdf(middle_result_path, "df")  # 将结果输出到文件
 
+                            # 当收集了超过500个时效的数据时就输出一次
+                            if save_k % 500 == 0:
+                                mid_all = meteva.base.concat(mid_list)
+                                # 先删除文件在重新输出文件，避免文件大小膨胀
+                                if os.path.exists(middle_result_path):
+                                    os.remove(middle_result_path)
+                                mid_all.to_hdf(middle_result_path, "df")  # 将结果输出到文件
+
+
+            time1 = time1 + datetime.timedelta(hours=para["time_step"])
     mid_all = meteva.base.concat(mid_list)
     # 先删除文件在重新输出文件，避免文件大小膨胀
     if os.path.exists(middle_result_path):
@@ -161,14 +165,10 @@ def middle_of_score(para):
     return
 
 
-if __name__ == "__main__":
-    path = meteva.base.get_path(r"\\10.28.16.234\data2\AI\ECMWF\grib\YYMMDD\YYMMDDHH.TTT.grib",datetime.datetime(2018,1,1,0))
-    #meteva.base.print_grib_file_info(path,filter_by_keys={"typeOfLevel":"isobaricInhPa"})
 
-    grd = meteva.base.read_griddata_from_grib(path,level_type="isobaricInhPa",value_name="gh",level=[850,500])
-    # print(grd)
-    # middle_of_score(para)
-    # path = r"H:\test_data\output\mps\tase_z.h5"
-    # df = pd.read_hdf(path)
-    # print(df)
-    # meteva.perspact.score_df(df,meteva.method.rmse,g = ["member","dtime"],plot = "line")
+
+
+if __name__ == "__main__":
+
+
+    pass
