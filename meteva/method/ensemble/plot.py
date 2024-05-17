@@ -1,9 +1,8 @@
 import matplotlib.pyplot as plt
-plt.rcParams['font.sans-serif']=['SimHei'] #用来正常显示中文标签
-plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
+import meteva
 import numpy as np
 import copy
-import meteva
+
 
 
 def box_plot_ensemble(ob, fo,member_list = None, vmax = None,vmin = None,save_path=None,show = False,dpi = 300,title ="频率对比箱须图",

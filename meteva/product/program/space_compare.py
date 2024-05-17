@@ -1,11 +1,9 @@
+import meteva
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-plt.rcParams['font.sans-serif']=['SimHei'] #用来正常显示中文标签
-plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
 import numpy  as np
 from meteva.base.tool.plot_tools import add_china_map_2basemap
 #from sklearn.linear_model import LinearRegression
-import meteva
 from meteva.base import IV
 import math
 from matplotlib.colors import BoundaryNorm
@@ -425,18 +423,18 @@ def rain_sg(sta_ob,grd_fo,grade_list,save_path=None,show  = False,dpi = 200,add_
                     knext_row = pi + (pj + 1) * ncol
                     if knext_row >= nplot:
                         ax.set_xticks(xticks)
-                        ax.set_xticklabels(xticks_label, fontsize=sup_fontsize * 0.8, family='Times New Roman')
+                        ax.set_xticklabels(xticks_label, fontsize=sup_fontsize * 0.8) #, family='Times New Roman')
                     else:
                         ax.set_xticks(xticks)
-                        ax.set_xticklabels(xticks_label_None, fontsize=sup_fontsize * 0.8, family='Times New Roman')
+                        ax.set_xticklabels(xticks_label_None, fontsize=sup_fontsize * 0.8) #, family='Times New Roman')
 
                     if ylabel_seted == 0:
                         ax.set_yticks(yticks)
-                        ax.set_yticklabels(yticks_label, fontsize=sup_fontsize * 0.8, family='Times New Roman')
+                        ax.set_yticklabels(yticks_label, fontsize=sup_fontsize * 0.8) #, family='Times New Roman')
                         plt.ylabel(member1)
                     else:
                         ax.set_yticks(yticks)
-                        ax.set_yticklabels(yticks_label_None, fontsize=sup_fontsize * 0.8, family='Times New Roman')
+                        ax.set_yticklabels(yticks_label_None, fontsize=sup_fontsize * 0.8) #, family='Times New Roman')
 
 
                     if dat[0,0] == meteva.base.IV:continue
