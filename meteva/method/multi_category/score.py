@@ -684,12 +684,11 @@ def get_s_array(p1,p2,p3,k1=-0.25,k2=-0.25):
 
     s_array[2,0] = s_array[0,2]  #对称
 
-    print(s_array)
     return s_array
 
 
 
-def murphy_ctable(ctable_array,s_array):
+def murphy_ctable(p_array,s_array):
     '''
     根据3×3的列联表，和评分权重矩阵 计算 Murphy 矩阵
     评分公式参考《预报检验-大气科学从业者指南》 4.3.2节，公式 4.8
@@ -698,7 +697,7 @@ def murphy_ctable(ctable_array,s_array):
     :return:  Murphy评分
     '''
 
-    score = np.sum(ctable_array * s_array)
+    score = np.sum(p_array * s_array)
     return score
 
 
@@ -727,7 +726,7 @@ def murphy_score(ob,fo,grade_list = None,p1 = None,p2 = None,p3 = None,k1 = -0.2
     if len(ctable.shape)==2:
         ctable = ctable.reshape(1,ctable.shape[0],ctable.shape[1])
 
-
+    ctable = ctable/ctable[-1,-1]
     if p1 is not None and p2 is not None and p3 is not None:
         # 如果用户从外部指定实况的概率，就用用户指定的概率来生成权重矩阵s_array
         s_array = get_s_array(p1,p2,p3,k1,k2)
