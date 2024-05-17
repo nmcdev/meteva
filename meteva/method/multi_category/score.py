@@ -616,3 +616,143 @@ def seeps_skill(Ob, Fo, p1=None, threshold=None):
     seeps_array = seeps(Ob,Fo,p1= p1,threshold=threshold)
     skill = 1- seeps_array
     return skill
+
+
+def show_valid_k1_k2(p1,p2,p3):
+    x = np.arange(201)*0.01-1
+    y = np.arange(201)*0.01-1
+    valid_index = np.zeros((201,201))
+    for i in range(201):
+        for j in range(201):
+            k2 = x[i]
+            k1 = y[j]
+
+            s11 = (p3 + p1*(p3-p2) * k1 + p3*(p2+p3)*k2) / (p1 * (p1+p3))
+            s13 = -(1+(p1+p2)*k1 + (p2+p3)*k2)/(p1+p3)
+            s22 = -(p1*k1 + p3 *k2)/p2
+            s33 = (p1+p1*(p1+p2)*k1 + p3*(p1-p2)*k2)/(p3*(p1+p3))
+
+            if (i == 125 and j == 50):
+                print()
+
+            # 非顺序条件
+            if k1 < s11 and k1 < s22 and k2 <s22 and k2 < s33 and s13 < s11 and s13 < s33:
+                valid_index[i,j] = 1
+
+                #顺序条件
+                if s13< k1 and s13 < k2:
+                    valid_index[i, j] += 1
+    print(valid_index)
+    import matplotlib.pyplot as plt
+    plt.pcolormesh(valid_index.T)
+    plt.show()
+
+def get_s_array(p1,p2,p3,k1=-0.25,k2=-0.25):
+    '''
+    根据3分类预报问题的实况气候概率p1,p2和p3， 确定Murphy评分的评分权重矩阵。
+    评分权重的确定原理简单叙述如下：
+    3分类预报的完整检验信息可由一个3×3的列联表表示。列联表中的元素p_ij表示 观测为第i类,预报为第j类的样本数。
+    总的评分等于列联表每个元素×一个权重系数后求和得到 sum(p_ij * s_ij)。 为此需要确定9个评分权重系数。
+    一般来说对角线上的权重系数s_ii 应该是正的，表示奖励， 非对角线上的s_ij是负的表示惩罚。那这9个评分权重该取为多少，
+    用它们做评价才是公平的？ 为此主要考虑2点，一是如果全部报对（列联表的元素全部集中在对角线上），评分应为1，另外，
+    随机预报的评分应该为0，这2个条件可以构成关于权重系数的4个方程构成的方程组，这个方程组中包含3个分类的实况概率p1、p2、p3，
+    构成的已知参数。如果考虑这个评分矩阵是对称的，则一共有6个待定系数，因此它是一个欠定问题。为此有两个评分权重系数必须事先指定，
+    为此令 k1 = s12, k2 = s23， 在此基础上可以计算出其它4个系数 s11,s22,s33,s13.
+    根据Murphy的分析，k1和k2的取值范围为(-0.5,0)时，计算出的评分权重可以满足：
+    s12 < s11,s12<s22, s23<s22,s23<s33, s13<s12,s13<s23。
+    关于上述内容的更详细论述可参考《预报检验-大气科学从业者指南》 4.3.2节
+    :param p1: 实况第1分类的概率
+    :param p2: 实况第2分类的概率
+    :param p3: 实况第3分类的概率
+    :param k1:权重系数s12
+    :param k2:权重系数s23
+    :return: 3×3的权重系数矩阵。
+    '''
+
+    s_array = np.zeros((3,3))
+
+    s_array[0,1] = k1
+    s_array[1, 0] = k1  #对称
+    s_array[1,2] = k2
+    s_array[2, 1] = k2  #对称
+
+    #《预报检验-大气科学从业者指南》 4.3.2节 公式4.13
+    s_array[0,0] = (p3 + p1 * (p3 - p2) * k1 + p3 * (p2 + p3) * k2) / (p1 * (p1 + p3))
+    s_array[0, 2] = -(1 + (p1 + p2) * k1 + (p2 + p3) * k2) / (p1 + p3)
+    s_array[1,1] = -(p1 * k1 + p3 * k2) / p2
+    s_array[2,2] = (p1 + p1 * (p1 + p2) * k1 + p3 * (p1 - p2) * k2) / (p3 * (p1 + p3))
+
+    s_array[2,0] = s_array[0,2]  #对称
+
+    return s_array
+
+
+
+def murphy_ctable(p_array,s_array):
+    '''
+    根据3×3的列联表，和评分权重矩阵 计算 Murphy 矩阵
+    评分公式参考《预报检验-大气科学从业者指南》 4.3.2节，公式 4.8
+    :param ctable_array:  3×3的观测预报列联表
+    :param s_array:  评分权重矩阵
+    :return:  Murphy评分
+    '''
+
+    score = np.sum(p_array * s_array)
+    return score
+
+
+
+def murphy_score(ob,fo,grade_list = None,p1 = None,p2 = None,p3 = None,k1 = -0.25,k2 = 0.25):
+    '''
+    计算Murphy 评分。
+    步骤包括：
+    1. 根据实况和预报数据，以及等级划分阈值，统计列联表
+    2. 根据3分类预报问题的实况气候概率p1,p2和p3，确定Murphy评分的评分权重矩阵（函数 get_s_array）
+    3. 根据列联表和权重矩阵，计算Murphy 评分。
+
+    :param ob: 实况数据，
+    :param fo: 预报数据
+    :param grade_list:实况和预报分类的阈值，如果实况和预报已经是离散的等级，则不需要该参数
+    :param p1: 实况为第1分类的气候概率
+    :param p2:实况为第2分类的气候概率
+    :param p3:实况为第2分类的气候概率
+    :param k1: 评分权重系数 s12
+    :param k2:评分权重系数 s23
+    :return: Murphy评分。
+    '''
+
+    #根据实况获取观测预报的列联表
+    ctable = meteva.method.multi_category.table.contingency_table_multicategory(ob,fo,grade_list)
+    if len(ctable.shape)==2:
+        ctable = ctable.reshape(1,ctable.shape[0],ctable.shape[1])
+
+    ctable = ctable/ctable[-1,-1]
+    if p1 is not None and p2 is not None and p3 is not None:
+        # 如果用户从外部指定实况的概率，就用用户指定的概率来生成权重矩阵s_array
+        s_array = get_s_array(p1,p2,p3,k1,k2)
+    else:
+        #如果用户未指定实况概率，则根据传入的实况数据来获取每个等级的概率，再计算权重矩阵
+        p_ob = ctable[0, :-1, -1] / ctable[0, -1, -1]  # 返回的列联表实际上是4×4的，其中最后一行是实况的概率分布
+        s_array = get_s_array(p_ob[0], p_ob[1], p_ob[2], k1, k2)
+
+
+    score_list = []
+    for i in range(ctable.shape[0]):
+        ct_array = ctable[i, :-1, :-1]
+        score1 =murphy_ctable(ct_array,s_array)  #已知列联表和权重系数矩阵，计算Murphy 评分
+        score_list.append(score1)
+
+    if len(score_list)==1:
+        return score_list[0]  #单个预报返回实数
+    else:
+        return np.array(score_list)  #多个预报返回数组
+
+
+
+
+
+if __name__ == "__main__":
+
+
+    s_array = get_s_array(-0.5,-0.25,0.2,0.5,0.3)
+    print(s_array*60)

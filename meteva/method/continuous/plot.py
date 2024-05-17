@@ -4,7 +4,6 @@ import matplotlib as mpl
 import meteva
 import numpy as np
 import  math
-#from sklearn.linear_model import LinearRegression
 from  matplotlib import  cm
 from matplotlib.ticker import NullFormatter, FixedLocator
 import copy
@@ -120,9 +119,9 @@ def scatter_regress(ob, fo,member_list = None, rtype="linear",vmax = None,vmin =
         colors = colors[sort_index]
         #plt.scatter(fo_s, ob_s, c=colors,s = markersize,cmap="tab20c")
 
-        if matplotlib.__version__=="3.3.4":
+        try:
             plt.scatter(fo_s, ob_s, c=colors, s=markersize, cmap="turbo")
-        else:
+        except:
             plt.scatter(fo_s, ob_s, c=colors, s=markersize, cmap="rainbow")
         #plt.plot(fo, ob, '.', color='b', markersize=markersize)
 

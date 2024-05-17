@@ -1,8 +1,6 @@
 import meteva
 import numpy as np
 import matplotlib.pyplot as plt
-plt.rcParams['font.sans-serif']=['SimHei'] #用来正常显示中文标签
-plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
 import math
 from matplotlib.colors import BoundaryNorm
 
@@ -235,17 +233,17 @@ def creat_axs(nplot,map_extend,ncol = None,height  = None,width = None,dpi = 300
             if p >= nplot - ncol or keep_ticks:
                 # 最底行画横坐标
                 ax.set_xticks(xticks)
-                ax.set_xticklabels(xticks_label, fontsize=sup_fontsize * 0.9, family='Times New Roman')
+                ax.set_xticklabels(xticks_label, fontsize=sup_fontsize * 0.9) #, family='Times New Roman')
             else:
-                ax.set_xticklabels("", fontsize=sup_fontsize * 0.9, family='Times New Roman')
+                ax.set_xticklabels("", fontsize=sup_fontsize * 0.9) #, family='Times New Roman')
 
 
             if pi ==0 or keep_ticks:
                 # 最左侧画纵坐标
                 ax.set_yticks(yticks)
-                ax.set_yticklabels(yticks_label, fontsize=sup_fontsize * 0.9, family='Times New Roman')
+                ax.set_yticklabels(yticks_label, fontsize=sup_fontsize * 0.9) #, family='Times New Roman')
             else:
-                ax.set_yticklabels("", fontsize=sup_fontsize * 0.9, family='Times New Roman')
+                ax.set_yticklabels("", fontsize=sup_fontsize * 0.9) #, family='Times New Roman')
         else:
             ax.set_xticks([])
             ax.set_yticks([])
@@ -300,6 +298,7 @@ def creat_axs(nplot,map_extend,ncol = None,height  = None,width = None,dpi = 300
         return ax_list
     else:
         return ax_list,min_ax_list
+
 
 
 def add_contourf(ax,grd,cmap ="rainbow",clevs= None,add_colorbar = True,cut_colorbar = True,title = None,title_fontsize = 8,clip = None,
@@ -905,3 +904,4 @@ def add_lines(ax,graphy,cent = None,color = "k",linestyle = "-",linewidths = Non
     ax.set_ylim(slat,elat)
     ax.set_title(title,fontsize =title_fontsize)
     return
+

@@ -200,7 +200,7 @@ class mfig:
             else:
                 xticks_label[-1] = "   " + xticks_label[-1] + "°W"
             ax.set_xticks(xticks)
-            ax.set_xticklabels(xticks_label, fontsize=sup_fontsize * 0.9, family='Times New Roman')
+            ax.set_xticklabels(xticks_label, fontsize=sup_fontsize * 0.9) #, family='Times New Roman')
 
             vmax = elat
             vmin = slat
@@ -233,7 +233,7 @@ class mfig:
                 else:
                     yticks_label.append(str(round(yticks[y], 6)) + "    ")
             ax.set_yticks(yticks)
-            ax.set_yticklabels(yticks_label, fontsize=sup_fontsize * 0.9, family='Times New Roman')
+            ax.set_yticklabels(yticks_label, fontsize=sup_fontsize * 0.9) #, family='Times New Roman')
             if title_list is None:
                 sub_title = None
             else:

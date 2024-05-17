@@ -318,6 +318,11 @@ def middle_df_sta(sta_all,method,grade_list = None,compare = None,gid = None):
     names_exp = None
     group_name = None
     if need_g:
+        #may be some id in gid is not in sta_all,valid group is not same as group in grid
+        sta_all_id = copy.deepcopy(sta_all[["id"]])
+        sta_all_id.drop_duplicates()
+        sta = meteva.base.combine_on_id(gid,sta_all_id,how="inner")
+        gid = sta
         group_name = gid.columns[1]
         groups = gid[group_name]
         groups = groups.drop_duplicates(keep = "first")
@@ -554,7 +559,7 @@ def tran_middle_df_to_ds(df_all,mid_columns = None):
     :param mid_columns: 中间数据对应的列名称，列表形式
     :return:
     '''
-
+    print("该函数有bug，在相邻格点取值完全相同时，会产生nan")
     all_columns = df_all.columns
     if mid_columns is None:
 

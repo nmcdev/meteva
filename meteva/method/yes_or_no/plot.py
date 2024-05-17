@@ -1,8 +1,7 @@
 import matplotlib.pyplot as plt
-plt.rcParams['font.sans-serif']=['SimHei'] #用来正常显示中文标签
-plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
-from meteva.method.yes_or_no.score import *
 import meteva
+from meteva.method.yes_or_no.score import *
+
 
 
 def performance(ob, fo,grade_list=[1e-30],compare =">=",compair = None, member_list=None,x_y = "sr_pod", save_path=None,show = False,dpi = 300, title="综合表现图",

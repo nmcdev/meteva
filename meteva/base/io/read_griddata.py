@@ -165,280 +165,73 @@ def read_griddata_from_nc(filename,grid = None,
     try:
         ds0 = xr.open_dataset(filename)
 
+        try:
+            #如果文件中包含多层次多时效数据，通过先选择部分时效、层次，提升效率
+            dict_sel = {}
+            if level is not None:
+                if level_dim is not None:
+                    if ds0[level_dim].values.size>1:
+                        dict_sel[level_dim] = level
+                else:
+                    if "level" in ds0.coords:
+                        if ds0["level"].values.size > 1:
+                            dict_sel["level"] = level
+            if dtime is not None:
+                if dtime_dim is not None:
+                    if ds0[dtime_dim].values.size > 1:
+                        dict_sel[dtime_dim] = dtime
+                else:
+                    if "dtime" in ds0.coords:
+                        if ds0["dtime"].values.size > 1:
+                            dict_sel["dtime"] = dtime
+            if len(dict_sel.keys())>0 and value_name is not None:
+                ds0 = ds0[value_name]
+                ds0 = ds0.loc[dict_sel]
+        except:
+            #如果不能提取
+            pass
 
-        '''
-        if dtime_dim == "time":
-            ds0 = ds0.rename_dims({"time":"dtime"})
-            dtime_dim = "dtime"
-
-
-        if time_dim == "dtime":
-            ds0 = ds0.rename_dims({"dtime": "time"})
-            time_dim = "time"
-
-
-        #print(ds0)
-        drop_list = []
-        ds = xr.Dataset()
-        #1判断要素成员member
-        if(member_dim is None):
-            member_dim = "member"
-        if member_dim in list(ds0.coords) or member_dim in list(ds0.dims):
-            if member_dim in ds0.coords:
-                members = ds0.coords[member_dim]
-            else:
-                members = ds0[member_dim]
-                drop_list.append(member_dim)
-
-            ds.coords["member"] = ("member", members)
-            attrs_name = list(members.attrs)
-            for key in attrs_name:
-                ds.member.attrs[key] = members.attrs[key]
-        else:
-            ds.coords["member"] = ("member", [0])
-
-        #2判断层次level
-        if (level_dim is None):
-            if "level" in list(ds0.coords) or "level" in list(ds0.dims):
-                level_dim = "level"
-            elif "lev" in ds0.coords or "lev" in list(ds0.dims):
-                level_dim = "lev"
-        if level_dim in ds0.coords or level_dim in list(ds0.dims):
-            if level_dim in ds0.coords:
-                levels = ds0.coords[level_dim]
-            else:
-                levels = ds0[level_dim]
-                drop_list.append(level_dim)
-            ds.coords["level"] = ("level", levels)
-            attrs_name = list(levels.attrs)
-            for key in attrs_name:
-                ds.level.attrs[key] = levels.attrs[key]
-        else:
-            ds.coords["level"] = ("level", [0])
-
-        # 3判断时间time
-        if(time_dim is None):
-            if "time" in ds0.coords or "time" in list(ds0.dims):
-                time_dim = "time"
-
-        if time_dim in ds0.coords or time_dim in list(ds0.dims):
-            if time_dim in ds0.coords:
-                times = ds0.coords[time_dim]
-            else:
-                times = ds0[time_dim]
-            ds.coords["time"] = ("time", times)
-            attrs_name = list(times.attrs)
-            for key in attrs_name:
-                ds.time.attrs[key] = times.attrs[key]
-        else:
-            ds.coords["time"] = ("time", [0])
-
-        # 4判断时效dt
-        dtime_dim0 = dtime_dim
-
-        if dtime_dim is None:
-            if "dtime" in ds0.coords or "dtime" in list(ds0.dims):
-                dtime_dim = "dtime"
-
-        if dtime_dim in ds0.coords or dtime_dim in list(ds0.dims):
-            if dtime_dim in ds0.coords:
-                dts = ds0.coords[dtime_dim]
-            else:
-                dts = ds0[dtime_dim]
-                drop_list.append(dtime_dim)
-
-            ds.coords["dtime"] = ("dtime", dts)
-            attrs_name = list(dts.attrs)
-            for key in attrs_name:
-                ds.dtime.attrs[key] = dts.attrs[key]
-        else:
-            ds.coords["dtime"] = ("dtime", [0])
-
-        #5判断纬度lat
-        if(lat_dim is None):
-            if "latitude" in ds0.coords or "latitude" in list(ds0.dims):
-                lat_dim = "latitude"
-            elif "lat" in ds0.coords or "lat" in list(ds0.dims):
-                lat_dim = "lat"
-        if lat_dim in ds0.coords or lat_dim in list(ds0.dims):
-            if lat_dim in ds0.coords:
-                lats = ds0.coords[lat_dim]
-            else:
-                lats = ds0[lat_dim]
-                drop_list.append(lat_dim)
-            dims = lats.dims
-            if len(dims) == 1:
-                ds.coords["lat"] = ("lat", lats)
-            else:
-                if "lon" in dims[0].lower() or "x" in dims.lower():
-                    lats = lats.values.T
-                ds.coords["lat"] = (("lat","lon"), lats)
-            attrs_name = list(lats.attrs)
-            for key in attrs_name:
-                ds.lat.attrs[key] = lats.attrs[key]
-        else:
-            ds.coords["lat"] = ("lat",[0])
-
-        #6判断经度lon
-        if(lon_dim is None):
-            if "longitude" in ds0.coords or "longitude" in list(ds0.dims):
-                lon_dim = "longitude"
-            elif "lon" in ds0.coords or "lon" in list(ds0.dims):
-                lon_dim = "lon"
-        if lon_dim in ds0.coords or lon_dim in list(ds0.dims):
-            if lon_dim in ds0.coords:
-                lons = ds0.coords[lon_dim]
-            else:
-                lons = ds0[lon_dim]
-                #print(lons)
-                drop_list.append(lon_dim)
-
-            dims = lons.dims
-            if len(dims) == 1:
-                ds.coords["lon"] = ("lon", lons)
-            else:
-                if "lon" in dims[0].lower() or "x" in dims.lower():
-                    lons = lons.values.T
-                ds.coords["lon"] = (("lat","lon"), lons)
-            attrs_name = list(lons.attrs)
-            for key in attrs_name:
-                ds.lon.attrs[key] = lons.attrs[key]
-        else:
-            ds.coords["lon"] = ("lon",[0])
-
-        #print(ds)
-        da = None
-        if value_name is not None:
-            da = ds0[value_name]
-            name = value_name
-        else:
-            name_list = list((ds0))
-            for name in name_list:
-                if name in drop_list: continue
-                da = ds0[name]
-                shape = da.values.shape
-                size = 1
-                for i in range(len(shape)):
-                    size = size * shape[i]
-                if size > 1:
-                    break
-
-        dims = da.dims
-        dim_order = {}
-
-        for dim in dims:
-            if member_dim == dim:
-                dim_order["member"] = dim
-            elif level_dim ==dim:
-                dim_order["level"] = dim
-            elif time_dim == dim:
-                dim_order["time"] = dim
-            elif dtime_dim == dim:
-                dim_order["dtime"] = dim
-            elif lon_dim == dim:
-                dim_order["lon"] = dim
-            elif lat_dim ==dim:
-                dim_order["lat"] = dim
-        for dim in dims:
-            if "member" not in dim_order.keys() and "member" in dim.lower():
-                dim_order["member"] = dim
-            elif "time" not in dim_order.keys() and dim.lower().find("time") ==0:
-                dim_order["time"] = dim
-            elif "dtime" not in dim_order.keys() and dim.lower().find("dt") ==0:
-                dim_order["dtime"] = dim
-            elif "level" not in dim_order.keys() and dim.lower().find("lev") ==0:
-                dim_order["level"] = dim
-            elif "lat" not in dim_order.keys() and (dim.lower().find("lat") ==0 or 'y' == dim.lower()):
-                dim_order["lat"] = dim
-            elif "lon" not in dim_order.keys() and(dim.lower().find("lon") ==0 or 'x' == dim.lower()):
-                dim_order["lon"] = dim
-
-        if "member" not in dim_order.keys():
-            dim_order["member"] = "member"
-            da = da.expand_dims("member")
-        if "time" not in dim_order.keys():
-            dim_order["time"] = "time"
-            da = da.expand_dims("time")
-        if "level" not in dim_order.keys():
-            dim_order["level"] = "level"
-            da = da.expand_dims("level")
-        if "dtime" not in dim_order.keys():
-            dim_order["dtime"] = "dtime"
-            da = da.expand_dims("dtime")
-        if "lat" not in dim_order.keys():
-            dim_order["lat"] = "lat"
-            da = da.expand_dims("lat")
-        if "lon" not in dim_order.keys():
-            dim_order["lon"] = "lon"
-            da = da .expand_dims("lon")
-
-
-        #print(ds)
-        da = da.transpose(dim_order["member"],dim_order["level"],dim_order["time"],
-                          dim_order["dtime"],dim_order["lat"],dim_order["lon"])
-        #print(da)
-        ds[name] = (("member","level","time","dtime","lat","lon"),da)
-        attrs_name = list(da.attrs)
-        for key in attrs_name:
-            ds[name].attrs[key] = da.attrs[key]
-        attrs_name = list(ds0.attrs)
-        for key in attrs_name:
-            ds.attrs[key] = ds0.attrs[key]
-
-        ds0.close()
-        da1 = ds[name]
-
-        da1.name = "data"
-        if da1.coords["time"] is None:
-            da1.coords['time'] = pd.date_range("2099-1-1", periods=1)
-        else:
-            time_dim_value = da1.coords["time"].values
-            if len(time_dim_value) == 1:
-                 if pd.isnull(time_dim_value):
-                     da1.coords['time'] = pd.date_range("2099-1-1", periods=1)
-
-        if da1.coords["dtime"] is None:
-            da1.coords["dtime"] = [0]
-        else:
-            level_dim_value = da1.coords["dtime"].values
-            if len(level_dim_value)==1:
-                if pd.isnull(level_dim_value):
-                    da1.coords["dtime"] = [0]
-
-        if da1.coords["level"] is None:
-            da1.coords["level"] = [0]
-        else:
-            level_dim_value = da1.coords["level"].values
-            if len(level_dim_value)==1:
-                if pd.isnull(level_dim_value):
-                    da1.coords["level"] = [0]
-
-
-
-
-        if isinstance(da1.coords["dtime"].values[0], np.timedelta64):
-            dtime_int_m = (da1.coords["dtime"]/np.timedelta64(1, 'm'))
-            dtime_int_dm = dtime_int_m%60
-            maxdm  = np.max(dtime_int_dm)
-            if maxdm ==0:
-                #print(dtime_int)
-                da1.coords["dtime"] = (dtime_int_m/60).astype(np.int16)
-            else:
-                da1.coords["dtime"] = (dtime_int_m +10000).astype(np.int16)
-
-        attrs_name = list(da1.attrs)
-        if "dtime_type" in attrs_name:
-            da1.attrs["dtime_type"]= "hour"
-        '''
         da1 = meteva.base.xarray_to_griddata(ds0,value_name=value_name,member_dim=member_dim,level_dim=level_dim,time_dim=time_dim,dtime_dim=dtime_dim,
                                              lat_dim=lat_dim,lon_dim=lon_dim)
+
+        #如果有level参数
+        if level is not None:
+            level_list = []
+            if isinstance(level, list):
+                level_list = level
+            elif isinstance(level, np.ndarray):
+                level_list = level.tolist()
+            else:
+                level_list =[level]
+
+            #如果level参数和数据文件里面正好都是一层，就认为level是用来设置层次参数的
+            if len(da1.coords["level"])==1 and len(level_list)==1:
+                meteva.base.set_griddata_coords(da1,level_list=level_list)
+            else:
+                #如果level参数和数据文件不都为1层，则认为level是用来提取某些层次数据的
+                da1 = meteva.base.in_level_list(da1,level_list=level_list)
+
+        #如果有dtime参数
+        if dtime is not None:
+            dtime_list = []
+            if isinstance(dtime, list):
+                dtime_list = dtime
+            elif isinstance(dtime, np.ndarray):
+                dtime_list = dtime.tolist()
+            else:
+                dtime_list =[dtime]
+
+            #如果level参数和数据文件里面正好都是一个时效，就认为dtime是用来设置时效参数的
+            if len(da1.coords["dtime"])==1 and len(dtime_list)==1:
+                meteva.base.set_griddata_coords(da1,dtime_list=dtime_list)
+            else:
+                #如果level参数和数据文件不都为1时效，则认为level是用来提取某些时效数据的
+                da1 = meteva.base.in_dtime_list(da1,dtime_list=dtime_list)
+
+
         meteva.base.reset(da1)
         if time is not None and len(da1.coords["time"])==1:
             meteva.base.set_griddata_coords(da1,gtime=[time])
-        if dtime is not None and len(da1.coords["dtime"])==1:
-            meteva.base.set_griddata_coords(da1,dtime_list=[dtime])
-        if level is not None and len(da1.coords["level"])==1:
-            meteva.base.set_griddata_coords(da1,level_list=[level])
         if data_name is not None and len(da1.coords["member"])==1:
             meteva.base.set_griddata_coords(da1,member_list=[data_name])
 
@@ -550,19 +343,75 @@ def read_griddata_from_grib(filename,level_type= None,grid = None,
 
         if level_type is not None:filter_by_keys['typeOfLevel'] = level_type
         if "typeOfLevel" in filter_by_keys.keys(): level_type = filter_by_keys['typeOfLevel']
-        if level is not None:
-            filter_by_keys['level'] = level
         ds0 = xr.open_dataset(filename, engine="cfgrib", backend_kwargs={'filter_by_keys': filter_by_keys,"indexpath": ""},)
+        try:
+            #如果文件中包含多层次多时效数据，通过先选择部分时效、层次，提升效率
+            dict_sel = {}
+            if level is not None:
+                if level_type is not None:
+                    if ds0[level_type].values.size>1:
+                        dict_sel[level_type] = level
+                else:
+                    if "level" in ds0.coords:
+                        if ds0["level"].values.size > 1:
+                            dict_sel["level"] = level
+            if dtime is not None:
+                if dtime_dim is not None:
+                    if ds0[dtime_dim].values.size > 1:
+                        dict_sel[dtime_dim] = dtime
+                else:
+                    if "dtime" in ds0.coords:
+                        if ds0["dtime"].values.size > 1:
+                            dict_sel["dtime"] = dtime
+            if len(dict_sel.keys())>0 and value_name is not None:
+                ds0 = ds0[value_name]
+                ds0 = ds0.loc[dict_sel]
+        except:
+            #如果不能提取
+            pass
+
+
         da1 = meteva.base.xarray_to_griddata(ds0,value_name=value_name,member_dim=member_dim,level_dim=level_type,time_dim=time_dim,dtime_dim=dtime_dim,
                                              lat_dim=lat_dim,lon_dim=lon_dim)
         ds0.close()
         meteva.base.reset(da1)
+
+        # 如果有level参数
+        if level is not None:
+            level_list = []
+            if isinstance(level, list):
+                level_list = level
+            elif isinstance(level, np.ndarray):
+                level_list = level.tolist()
+            else:
+                level_list = [level]
+
+            # 如果level参数和数据文件里面正好都是一层，就认为level是用来设置层次参数的
+            if len(da1.coords["level"]) == 1 and len(level_list) == 1:
+                meteva.base.set_griddata_coords(da1, level_list=level_list)
+            else:
+                # 如果level参数和数据文件不都为1层，则认为level是用来提取某些层次数据的
+                da1 = meteva.base.in_level_list(da1, level_list=level_list)
+
+        # 如果有dtime参数
+        if dtime is not None:
+            dtime_list = []
+            if isinstance(dtime, list):
+                dtime_list = dtime
+            elif isinstance(dtime, np.ndarray):
+                dtime_list = dtime.tolist()
+            else:
+                dtime_list = [dtime]
+
+            # 如果level参数和数据文件里面正好都是一个时效，就认为dtime是用来设置时效参数的
+            if len(da1.coords["dtime"]) == 1 and len(dtime_list) == 1:
+                meteva.base.set_griddata_coords(da1, dtime_list=dtime_list)
+            else:
+                # 如果level参数和数据文件不都为1时效，则认为level是用来提取某些时效数据的
+                da1 = meteva.base.in_dtime_list(da1, dtime_list=dtime_list)
+
         if time is not None and len(da1.coords["time"])==1:
             meteva.base.set_griddata_coords(da1,gtime=[time])
-        if dtime is not None and len(da1.coords["dtime"])==1:
-            meteva.base.set_griddata_coords(da1,dtime_list=[dtime])
-        if level is not None and len(da1.coords["level"])==1:
-            meteva.base.set_griddata_coords(da1,level_list=[level])
         if data_name is not None and len(da1.coords["member"])==1:
             meteva.base.set_griddata_coords(da1,member_list=[data_name])
 
@@ -1751,41 +1600,88 @@ def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim
             return grd
 
         else:
-            grid0 = meteva.base.grid(ctl["glon"],ctl["glat"])
+            grid0 = meteva.base.grid(ctl["glon"], ctl["glat"])
             blocksize_xy = grid0.nlon * grid0.nlat * 4
 
             data_list = []
-            blocksize_one_time = ctl["cumulate_levels"] *blocksize_xy
+            blocksize_one_time = ctl["cumulate_levels"] * blocksize_xy
+
             nlevel = ctl["vars"][value_index]["nlevel"]
+            index_level = []
+            levels_all = ctl["zdef"]
+
+            if level is not None:
+                if nlevel == 1:
+                    # 如果level参数和数据文件里面正好都是一层，就认为level是用来设置层次参数的
+                    if isinstance(level, list):
+                        if len(level) > 1:
+                            print("value " + value_name + " has only one level")
+                            return None
+                    valid_levels = level
+                    index_level = [0]
+                else:
+                    # 需要读取的层次列表
+                    need_levels = []
+                    if isinstance(level, list):
+                        need_levels = level
+                    else:
+                        need_levels = [level]
+                    valid_levels = []
+
+                    index_level_dict = {}
+                    for index1 in range(nlevel):
+                        level1 = ctl["zdef"][index1]
+                        index_level_dict[level1] = index1
+                    for level1 in need_levels:
+                        if level1 not in index_level_dict.keys():
+                            print(str(level1) + " not in zdef list")
+                        else:
+                            index_level.append(index_level_dict[level1])
+                            valid_levels.append(level1)
+
+            else:
+                if nlevel == 1:  # 只有一层的变量
+                    valid_levels = [levels_all[0]]
+                    index_level = [0]
+                else:
+                    # 有多层的变量，level参数为None时，读取全部层次
+                    valid_levels = levels_all
+                    index_level = np.arange(nlevel).tolist()
+
+            nlevel_valid = len(index_level)
+            if nlevel_valid == 0:
+                return None
             for nn in range(ctl["nensemble"]):
                 for t in range(ctl["ntime"]):
-                    start_index =blocksize_one_time *ctl["ntime"] * nn +  t * blocksize_one_time + ctl["vars"][value_index][
-                        "start_bolck_index"] * blocksize_xy
-                    position = file.seek(start_index)
-                    blocksize_one_value = blocksize_xy * nlevel
-                    content = file.read(blocksize_one_value)
-                    data1 = np.frombuffer(content, dtype=endian + "f")
-                    data_list.append(data1)
+                    start_index = blocksize_one_time * ctl["ntime"] * nn + t * blocksize_one_time + \
+                                  ctl["vars"][value_index][
+                                      "start_bolck_index"] * blocksize_xy
+                    for v in range(nlevel_valid):
+                        index1 = index_level[v]
+                        start_index1 = start_index + index1 * blocksize_xy
+                        position = file.seek(start_index1)
+                        blocksize_one_value = blocksize_xy
+                        content = file.read(blocksize_one_value)
+                        data1 = np.frombuffer(content, dtype=endian + "f")
+                        data_list.append(data1)
 
             data = np.array(data_list)
-            data = data.reshape(ctl["nensemble"], ctl["ntime"], nlevel, ctl["nlat"], ctl["nlon"])
-            data = data.transpose(0,2,1,3,4)
-            if nlevel != len(ctl["zdef"]):
-                level_list = np.arange(ctl["vars"][value_index]["nlevel"])
-            else:
-                level_list =ctl["zdef"]
+            data = data.reshape(ctl["nensemble"], ctl["ntime"], nlevel_valid, ctl["nlat"], ctl["nlon"])
+            data = data.transpose(0, 2, 1, 3, 4)
 
             if dtime_dim is None:
-                grid1 = meteva.base.grid(ctl["glon"],ctl["glat"],gtime=ctl["gtime"],dtime_list=[0],level_list=level_list,member_list=ctl["edef"])
+                grid1 = meteva.base.grid(ctl["glon"], ctl["glat"], gtime=ctl["gtime"], dtime_list=[0],
+                                         level_list=valid_levels, member_list=ctl["edef"])
             else:
 
-                grid1 = meteva.base.grid(ctl["glon"], ctl["glat"], gtime=[ctl["gtime"][0]], dtime_list=ctl["dtime_list"] ,
-                                         level_list=level_list, member_list=ctl["edef"])
+                grid1 = meteva.base.grid(ctl["glon"], ctl["glat"], gtime=[ctl["gtime"][0]],
+                                         dtime_list=ctl["dtime_list"],
+                                         level_list=valid_levels, member_list=ctl["edef"])
 
-            #print(grid1)
-            grd_one_var = meteva.base.grid_data(grid1,data)
+            # print(grid1)
+            grd_one_var = meteva.base.grid_data(grid1, data)
             if grid is not None:
-                grd_one_var = meteva.base.interp_gg_linear(grd_one_var,grid=grid,outer_value=outer_value)
+                grd_one_var = meteva.base.interp_gg_linear(grd_one_var, grid=grid, outer_value=outer_value)
             if data_name is not None:
                 meteva.base.set_griddata_coords(grd_one_var, member_list=[data_name])
             file.close()
@@ -1798,7 +1694,7 @@ def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim
             exstr = traceback.format_exc()
             print(exstr)
 
-        print(ctl_path + "数据读取错误")
+        print(ctl_path + " read failed")
         return None
 
 

@@ -188,7 +188,7 @@ def read_micaps14(filename,time = None,dtime = 0,data_name = None):
                 idx += 1
 
                 # symbol xyz
-                xyz = np.array(txt[idx:(idx + 3)]).astype(np.float)
+                xyz = np.array(txt[idx:(idx + 3)]).astype(np.float32)
                 symbol_xyz.append(xyz)
                 idx += 3
 
@@ -235,7 +235,7 @@ def read_micaps14(filename,time = None,dtime = 0,data_name = None):
                 idx += 1
 
                 # line xyz
-                xyz = np.array(txt[idx:(idx + 3 * xyz_num)]).astype(np.float)
+                xyz = np.array(txt[idx:(idx + 3 * xyz_num)]).astype(np.float32)
                 xyz.shape = [xyz_num, 3]
                 cn_xyz.append(xyz)
                 idx += 3 * xyz_num
@@ -253,7 +253,7 @@ def read_micaps14(filename,time = None,dtime = 0,data_name = None):
                 # label xyz
                 if label_num > 0:
                     label_xyz = np.array(
-                        txt[idx:(idx + 3 * label_num)]).astype(np.float)
+                        txt[idx:(idx + 3 * label_num)]).astype(np.float32)
                     label_xyz.shape = [3, label_num]
                     cn_label_xyz.append(label_xyz)
                     idx += label_num * 3
@@ -453,7 +453,7 @@ def read_micaps14(filename,time = None,dtime = 0,data_name = None):
                 idx += 1
 
                 # xyz
-                xyz = np.array(txt[idx:(idx + 3)]).astype(np.float)
+                xyz = np.array(txt[idx:(idx + 3)]).astype(np.float32)
                 nsymbol_xyz.append([xyz])
                 idx += 3
 
@@ -493,7 +493,7 @@ def read_micaps14(filename,time = None,dtime = 0,data_name = None):
                 idx += 1
 
                 # color
-                color = np.array(txt[idx:(idx + 4)]).astype(np.int)
+                color = np.array(txt[idx:(idx + 4)]).astype(np.int32)
                 nsymbol_color.append(color)
                 idx += 4
 
