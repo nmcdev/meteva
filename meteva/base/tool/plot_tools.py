@@ -204,7 +204,11 @@ def add_china_map_2basemap(ax,name ="province", facecolor='none',
                 lines.set_label('_nolabel_')
                 ax.add_collection(lines)
 
-def contourf_xz(grd,subplot = "member",sup_title = None,title = None,save_path = None,**kwargs):
+def contourf_xz(grd,subplot = "member",sup_title = None,title = None,save_path = None,
+                            save_dir = None,
+                            clevs = None,cmap = "rainbow",show = False,dpi =300,
+                      sup_fontsize = 12,width = None,height = None,
+                    ncol = None,extend = None,    **kwargs):
 
     lats = grd["lat"].values
     if lats.size>1:
@@ -217,6 +221,16 @@ def contourf_xz(grd,subplot = "member",sup_title = None,title = None,save_path =
         for s in subplot:
             split.remove(s)
     grd_list = meteva.base.split_grd(grd, used_coords=split)
+
+    if not isinstance(save_path,list):
+        save_path = [save_path]
+    if len(grd_list)>1:
+        if len(save_path) != len(grd_list):
+            if save_dir is None:
+                print("the number of output figures is different from the numbers of save_path")
+            else:
+                save_path = None
+
     for i in range(len(grd_list)):
         grd1 = grd_list[i]
         if sup_title is None:
@@ -288,12 +302,27 @@ def contourf_xz(grd,subplot = "member",sup_title = None,title = None,save_path =
             if values.size>1:
                 name_list_dict[coords] = values
 
-        mesh_contour("contour",data_array,name_list_dict,axis_x="lon",axis_y="level",save_path = save_path,
-                     sup_title = sup_title1,
-        title= title1,**kwargs)
+        if save_path is not None:
+            save_path1=save_path[i]
+        else:
+            if save_dir is not None:
+                save_path1 = save_dir +"/"+ sup_title1+".png"
+            else:
+                save_path1 = None
+
+        mesh_contourf("contourf",data_array,name_list_dict,axis_x="lon",axis_y="level",save_path = save_path1,
+                     sup_title = sup_title1,title= title1,
+                      clevs = clevs,cmap = cmap,show = show,dpi =dpi,
+                    width = width,height = height,sup_fontsize = sup_fontsize,
+                    ncol = ncol,extend = extend,**kwargs)
 
 
-def contourf_yz(grd,subplot = "member",sup_title = None,title = None,save_path = None,**kwargs):
+def contourf_yz(grd,subplot = "member",sup_title = None,title = None,save_path = None,
+                save_dir = None,
+                clevs=None, cmap="rainbow", show=False, dpi=300,
+                sup_fontsize=12, width=None, height=None,
+                ncol=None, extend=None,
+                **kwargs):
 
     lons = grd["lon"].values
     if lons.size>1:
@@ -306,6 +335,16 @@ def contourf_yz(grd,subplot = "member",sup_title = None,title = None,save_path =
         for s in subplot:
             split.remove(s)
     grd_list = meteva.base.split_grd(grd, used_coords=split)
+
+    if not isinstance(save_path,list):
+        save_path = [save_path]
+    if len(grd_list)>1:
+        if len(save_path) != len(grd_list):
+            if save_dir is None:
+                print("the number of output figures is different from the numbers of save_path")
+            else:
+                save_path = None
+
     for i in range(len(grd_list)):
         grd1 = grd_list[i]
         if sup_title is None:
@@ -377,21 +416,32 @@ def contourf_yz(grd,subplot = "member",sup_title = None,title = None,save_path =
             if values.size>1:
                 name_list_dict[coords] = values
 
-        mesh_contour("contour",data_array,name_list_dict,axis_x="lat",axis_y="level",save_path = save_path,
-                     sup_title = sup_title1,
+        if save_path is not None:
+            save_path1=save_path[i]
+        else:
+            if save_dir is not None:
+                save_path1 = save_dir+"/" + sup_title1+".png"
+            else:
+                save_path1 = None
+        mesh_contourf("contourf",data_array,name_list_dict,axis_x="lat",axis_y="level",save_path = save_path1,
+                     sup_title = sup_title1,  clevs = clevs,cmap = cmap,show = show,dpi =dpi,
+                    width = width,height = height,sup_fontsize = sup_fontsize,
+                    ncol = ncol,extend = extend,
         title= title1,**kwargs)
 
 
 
-def contourf(grd,save_path = None,title = None,clevs= None,cmap ="rainbow",add_county_line = False,add_worldmap =False,show = False,dpi = 300,
-                     sup_fontsize = 10,height = None,width = None,subplot = None,ncol = None,sup_title = None,clip= None,add_minmap= None):
+def contourf_xy(grd,save_path = None,title = None,clevs= None,cmap ="rainbow",add_county_line = False,add_worldmap =False,show = False,dpi = 300,
+                     sup_fontsize = 10,height = None,width = None,subplot = None,ncol = None,sup_title = None,clip= None,add_minmap= None,extend = None,
+                save_dir = None):
     contourf_2d_grid(grd,save_path = save_path,title = title,clevs= clevs,cmap =cmap,add_county_line = add_county_line,
                      add_worldmap =add_worldmap,show = show,dpi = dpi,
                      sup_fontsize = sup_fontsize,height = height,width = width,subplot = subplot,ncol = ncol,
-                     sup_title = sup_title,clip= clip,add_minmap= add_minmap)
+                     sup_title = sup_title,clip= clip,add_minmap= add_minmap,extend = extend,save_dir = save_dir)
 
 def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap ="rainbow",add_county_line = False,add_worldmap =False,show = False,dpi = 300,
-                     sup_fontsize = 10,height = None,width = None,subplot = None,ncol = None,sup_title = None,clip= None,add_minmap= None,extend = None):
+                     sup_fontsize = 10,height = None,width = None,subplot = None,ncol = None,sup_title = None,clip= None,add_minmap= None,extend = None,
+                     save_dir = None):
 
     vmin = 10e30
     vmax = -10e30
@@ -412,7 +462,14 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap ="rainbo
                 split.remove(s)
         grd_list = meteva.base.split_grd(grd, used_coords=split)
 
-
+    if not isinstance(save_path,list):
+        save_path = [save_path]
+    if len(grd_list)>1:
+        if len(save_path) != len(grd_list):
+            if save_dir is None:
+                print("the number of output figures is different from the numbers of save_path")
+            else:
+                save_path = None
     for i in range(len(grd_list)):
         grd1 = grd_list[i]
         if sup_title is None:
@@ -475,7 +532,15 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap ="rainbo
                     title00 =data_name +"_L"+level_str+"_"+ dati_str+"_"+dtime_str+"H时效"
                 title1.append(title00)
 
-        plot_2d_grid_list(grd_list1,type = "contour",save_path= save_path,title= title1,clevs=clevs,cmap=cmap,vmax = vmax,vmin = vmin,add_county_line= add_county_line,
+        if save_path is not None:
+            save_path1 = save_path[i]
+        else:
+            if save_dir is not None:
+                save_path1 = save_dir + "/" + sup_title1+".png"
+            else:
+                save_path1 = None
+
+        plot_2d_grid_list(grd_list1,type = "contour",save_path= save_path1,title= title1,clevs=clevs,cmap=cmap,vmax = vmax,vmin = vmin,add_county_line= add_county_line,
                       add_worldmap = add_worldmap,show=show,dpi = dpi,sup_fontsize = sup_fontsize,height= height,width = width,ncol= ncol,
                       sup_title = sup_title1,clip= clip,add_minmap=add_minmap,extend=extend)
 
@@ -916,6 +981,14 @@ def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = "rai
     if show:
         plt.show()
     plt.close()
+
+
+def mesh_xy(grd,save_path = None,title = None,clevs= None,cmap = "rainbow",add_county_line = False,add_worldmap=False,show = False,dpi = 300,
+                       sup_fontsize = 10,height = None,width = None,extend = None):
+
+    pcolormesh_2d_grid(grd,save_path=save_path,title=title,clevs= clevs,cmap=cmap,add_county_line=add_county_line,
+                       add_worldmap=add_worldmap,show = show,dpi=dpi,sup_fontsize=sup_fontsize,height=height,width = width,
+                       extend=extend)
 
 
 
@@ -1880,7 +1953,7 @@ def lineh(array,name_list_dict = None,legend = None,axis = None,xlabel = "Value"
             if log_y:
                 vmax1 = vmax1 * (vmax1 / vmin1) ** 0.3
             else:
-                vmax1 = vmax1 + 0.2 * dmax
+                vmax1 = vmax1 + 0.1 * dmax
 
 
         dat0 = array
@@ -1907,14 +1980,14 @@ def lineh(array,name_list_dict = None,legend = None,axis = None,xlabel = "Value"
                 a = x[ii]
                 b = dat0[ii]
                 if np.isnan(b) or b == meteva.base.IV: continue
-                va = "center"
+                ha = "center"
                 if ii > 0 and ii < len(dat0) - 1:
                     if b > dat0[ii - 1] and b > dat0[ii + 1]:
-                        va = "bottom"
+                        ha = "left"
                     elif b < dat0[ii - 1] and b < dat0[ii + 1]:
-                        va = "top"
+                        ha = "right"
                 fmt_tag = "%." + str(tag) + "f"
-                plt.text(a, b, fmt_tag % b, ha="center", va=va,
+                plt.text(b,a, fmt_tag % b, ha=ha, va="center",
                          fontsize=sup_fontsize * 0.6)
 
         yticks = x[sparsify_yticks - 1::sparsify_yticks]
@@ -2050,7 +2123,7 @@ def lineh(array,name_list_dict = None,legend = None,axis = None,xlabel = "Value"
             if log_y:
                 vmax1 = vmax1 * (vmax1 / vmin1) ** 0.5
             else:
-                vmax1 = vmax1 + 0.5 * dmax
+                vmax1 = vmax1 + 0.1 * dmax
 
         x = np.arange(dat.shape[1])
         legend0 = str(legend_list[0])
@@ -2096,14 +2169,14 @@ def lineh(array,name_list_dict = None,legend = None,axis = None,xlabel = "Value"
                     a = x[ii]
                     b = dat0[ii]
                     if np.isnan(b) or b == meteva.base.IV: continue
-                    va = "center"
+                    ha = "center"
                     if ii > 0 and ii < len(dat0) - 1:
                         if b > dat0[ii - 1] and b > dat0[ii + 1]:
-                            va = "bottom"
+                            ha = "right"
                         elif b < dat0[ii - 1] and b < dat0[ii + 1]:
-                            va = "top"
+                            ha = "left"
                     fmt_tag = "%." + str(tag) + "f"
-                    plt.text(a, b, fmt_tag % b, ha="center", va=va,
+                    plt.text(b,a, fmt_tag % a, ha=ha, va="center",
                              fontsize=sup_fontsize * 0.6)
         if legend_col is None:legend_col=1
         plt.legend(fontsize=sup_fontsize * 0.8, ncol=legend_col, loc=legend_loc)
@@ -2301,7 +2374,7 @@ def lineh(array,name_list_dict = None,legend = None,axis = None,xlabel = "Value"
                     pass
                     vmin1 = vmin1 * (vmin1 / vmax1) ** 0.2
                 else:
-                    vmin1_new = vmin1 - 0.1 * dmax
+                    vmin1_new = vmin1 - 0.2 * dmax
                     if vmin1 >= 0 and vmin1_new <= 0:
                         vmin1_new = 0
                     vmin1 = vmin1_new
@@ -2310,7 +2383,7 @@ def lineh(array,name_list_dict = None,legend = None,axis = None,xlabel = "Value"
                 if log_y:
                     vmax1 = vmax1 * (vmax1 / vmin1) ** 0.5
                 else:
-                    vmax1 = vmax1 + 0.5 * dmax
+                    vmax1 = vmax1 + 0.1 * dmax
 
             ax_one = plt.subplot(nrow, ncol, k + 1)
             if k == 0: ax_top = ax_one
@@ -2380,14 +2453,14 @@ def lineh(array,name_list_dict = None,legend = None,axis = None,xlabel = "Value"
                         a = x[ii]
                         b = dat0[ii]
                         if np.isnan(b) or b == meteva.base.IV: continue
-                        va = "center"
+                        ha = "center"
                         if ii > 0 and ii < len(dat0) - 1:
                             if b > dat0[ii - 1] and b > dat0[ii + 1]:
-                                va = "bottom"
+                                ha = "right"
                             elif b < dat0[ii - 1] and b < dat0[ii + 1]:
-                                va = "top"
+                                ha = "left"
                         fmt_tag = "%." + str(tag) + "f"
-                        plt.text(a, b, fmt_tag % b, ha="center", va=va,
+                        plt.text(b, a, fmt_tag % b, ha=ha, va="center",
                                  fontsize=sup_fontsize * 0.6)
 
             ki = k % ncol
@@ -4272,12 +4345,18 @@ def myheatmap(ax_one,data_0,cmap,clevs,annot=1,fontsize=10):
 def mesh(array,name_list_dict = None,axis_x = None,axis_y = None,cmap = "rainbow",clevs = None,ncol = None,annot =None,save_path = None,show = False,dpi = 300,
          spasify_xticks = None,sup_fontsize = 10,title ="",sup_title = None,width = None,height = None,rect = None,rect_color = "r"):
 
-    mesh_contour("mesh",array,name_list_dict=name_list_dict,axis_x=axis_x,axis_y=axis_y,cmap=cmap,clevs=clevs,
+    mesh_contourf("mesh",array,name_list_dict=name_list_dict,axis_x=axis_x,axis_y=axis_y,cmap=cmap,clevs=clevs,
                  ncol=ncol,annot=annot,save_path=save_path,show=show,dpi=dpi,spasify_xticks=spasify_xticks,
                  sup_fontsize=sup_fontsize,title=title,sup_title = sup_title,width=width,height=height,rect=rect,rect_color=rect_color)
 
+def contourf(array,name_list_dict = None,axis_x = None,axis_y = None,cmap = "rainbow",clevs = None,ncol = None,annot =None,save_path = None,show = False,dpi = 300,
+         spasify_xticks = None,sup_fontsize = 10,title ="",sup_title = None,width = None,height = None,rect = None,rect_color = "r"):
 
-def mesh_contour(type,array,name_list_dict = None,axis_x = None,axis_y = None,cmap = "rainbow",clevs = None,ncol = None,annot =None,save_path = None,show = False,dpi = 300,
+    mesh_contourf("contourf",array,name_list_dict=name_list_dict,axis_x=axis_x,axis_y=axis_y,cmap=cmap,clevs=clevs,
+                 ncol=ncol,annot=annot,save_path=save_path,show=show,dpi=dpi,spasify_xticks=spasify_xticks,
+                 sup_fontsize=sup_fontsize,title=title,sup_title = sup_title,width=width,height=height,rect=rect,rect_color=rect_color)
+
+def mesh_contourf(type,array,name_list_dict = None,axis_x = None,axis_y = None,cmap = "rainbow",clevs = None,ncol = None,annot =None,save_path = None,show = False,dpi = 300,
          spasify_xticks = None,sup_fontsize = 10,title ="",sup_title =None,width = None,height = None,rect = None,rect_color = "r",extend = None):
 
     shape = array.shape
