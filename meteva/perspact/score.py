@@ -1173,7 +1173,7 @@ def score_tdt_df_delta(df_mid, method,reference_member, s=None, gll_dict=None,cm
     for i in range(len(member)):
         if reference_member == member[i]:
             score_array[:] -= score_array[i, :]
-    meteva.base.plot_tools.mesh_contour("mesh", score_array, name_list_dict=gll_dict,cmap=cmap, **kwargs)
+    meteva.base.plot_tools.mesh_contourf("mesh", score_array, name_list_dict=gll_dict,cmap=cmap, **kwargs)
     return score_array,gll_dict
 
 def score_yz_df_delta(df_mid,method,reference_member,s = None,gll_dict = None,save_path = None,cmap ="me_bwr",sup_title = "",**kwargs):
