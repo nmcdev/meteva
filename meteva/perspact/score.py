@@ -244,7 +244,7 @@ def score_df(df, method, s = None,g=None,gll_dict = None,plot = None,excel_path 
         if plot =="line" or plot =="bar" or plot == "barh":
             meteva.base.plot_tools.plot_bar(plot, score_all_array, name_list_dict=gll_dict, **kwargs)
         if plot =="mesh" or plot =="contour":
-            meteva.base.plot_tools.mesh_contour(plot,score_all_array, name_list_dict=gll_dict, **kwargs)
+            meteva.base.plot_tools.mesh_contourf(plot,score_all_array, name_list_dict=gll_dict, **kwargs)
         if plot =="lineh":
             meteva.base.plot_tools.lineh( score_all_array, name_list_dict=gll_dict, **kwargs)
 
