@@ -106,7 +106,7 @@ class grid:
                 elif dtime_type == 'd':
                     self.dtime_type ="D"
                     self.dtimedelta = np.timedelta64(self.dtime_int, 'D')
-                elif dtime_type == 'm':
+                elif dtime_type == 'm' or dtime_type=="min":
                     self.dtime_type ="m"
                     self.dtimedelta = np.timedelta64(self.dtime_int, 'm')
             elif isinstance(gtime[2],np.timedelta64):

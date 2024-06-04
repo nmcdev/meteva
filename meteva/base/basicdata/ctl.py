@@ -9,7 +9,7 @@ import datetime
 import re
 
 
-def read_ctl(ctl_filename):
+def read_ctl(ctl_filename,dtime_dim = None,dtime_start = 0):
     #print(ctl_filename)
     if os.path.exists(ctl_filename):
         ctl = {}
@@ -114,20 +114,36 @@ def read_ctl(ctl_filename):
                         time_begin = datetime.datetime(year, mm, dd, hh, 0)
                         dtime_str = strs[4]
                         dt = int(dtime_str[0:-2])
-                        dict2 = {"mn": "m", "hr": "H", "dy": "D", "mo": "M", "yr": "Y"}
+                        dict2 = {"mn": "min", "hr": "H", "dy": "D", "mo": "M", "yr": "Y"}
                         dt_unit = dtime_str[-2:].lower()
 
                         if dt_unit == "mn":
                             time_end = time_begin + datetime.timedelta(minutes=dt * (ntime - 1))
+                            if dt>=60:
+                               dt_unit ="h"
+                               dt  = int(dt/ 60)
+                            else:
+                                dt_unit = "min"
+                                dt = dt
                         elif dt_unit== "hr":
+                            dt_unit = "h"
                             time_end = time_begin + datetime.timedelta(hours=dt * (ntime - 1))
                         elif dt_unit== "dy":
+                            dt_unit = "h"
                             time_end = time_begin + datetime.timedelta(days=dt * (ntime - 1))
+                            dt *= 24
                         else:
                             time_end = None
                             print("暂时还不能支持逐月或逐年数据的读取")
-                        ctl["gtime"] = [time_begin, time_end, str(dt) + dict2[dt_unit]]
-                        ctl["dtime_list"] = (np.arange(ntime) * dt).tolist()
+
+                        if dtime_dim is None:
+                            ctl["gtime"] = [time_begin, time_end, str(dt) + dt_unit]
+                            ctl["dtime_list"] = [0]
+                        else:
+                            time_begin0 = time_begin - datetime.timedelta(hours=dtime_start)
+                            ctl["gtime"] = [time_begin0]
+                            ctl["dtime_list"] = (np.arange(ntime) * dt + dtime_start).tolist()
+
                     else:
                         print("TDEF 不是线性数组的情况暂不能支持")
 
@@ -142,7 +158,8 @@ def read_ctl(ctl_filename):
                     ctl["vars"] = []
                     cumulate = 0
                     for v in range(nvar):
-                        line = file.readline()
+                        line0 = file.readline()
+                        line = line0.strip()
                         #strs = line.split()
                         strs = re.split("\s+|,",line)
                         onev = {}

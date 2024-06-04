@@ -243,9 +243,9 @@ def contourf_xz(grd,subplot = "member",sup_title = None,title = None,save_path =
                 dati_str = ""
             dtime_str = str(int(grd1["dtime"].values[0]))
             if subplot == ["time"]:
-                sup_title1 = data_name +  "_" + dtime_str + "H时效"
+                sup_title1 = str(data_name) +  "_" + dtime_str + "H时效"
             elif subplot == ["dtime"]:
-                sup_title1 = data_name +  "_" + dati_str
+                sup_title1 = str(data_name) +  "_" + dati_str
             elif subplot == ["member"]:
                 sup_title1 =  dati_str +"_"+ dtime_str + "H时效"
             else:
@@ -292,7 +292,7 @@ def contourf_xz(grd,subplot = "member",sup_title = None,title = None,save_path =
                 elif subplot == ["member"]:
                     title00 = data_name
                 else:
-                    title00 = data_name + "_" + dati_str + "_" + dtime_str + "H时效"
+                    title00 = str(data_name) + "_" + dati_str + "_" + dtime_str + "H时效"
                 title1.append(title00)
 
         data_array = grd1.values.squeeze()
@@ -357,9 +357,9 @@ def contourf_yz(grd,subplot = "member",sup_title = None,title = None,save_path =
                 dati_str = ""
             dtime_str = str(int(grd1["dtime"].values[0]))
             if subplot == ["time"]:
-                sup_title1 = data_name +  "_" + dtime_str + "H时效"
+                sup_title1 = str(data_name) +  "_" + dtime_str + "H时效"
             elif subplot == ["dtime"]:
-                sup_title1 = data_name +  "_" + dati_str
+                sup_title1 = str(data_name) +  "_" + dati_str
             elif subplot == ["member"]:
                 sup_title1 =  dati_str +"_"+ dtime_str + "H时效"
             else:
@@ -404,9 +404,9 @@ def contourf_yz(grd,subplot = "member",sup_title = None,title = None,save_path =
                 elif subplot == ["dtime"]:
                     title00 = dtime_str + "H时效 "
                 elif subplot == ["member"]:
-                    title00 = data_name
+                    title00 = str(data_name)
                 else:
-                    title00 = data_name + "_" + dati_str + "_" + dtime_str + "H时效"
+                    title00 = str(data_name) + "_" + dati_str + "_" + dtime_str + "H时效"
                 title1.append(title00)
 
         data_array = grd1.values.squeeze()
@@ -479,11 +479,11 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap ="rainbo
             dati_str = time_str[0:4] + "年" + time_str[4:6] + "月" + time_str[6:8] + "日" + time_str[8:10] + "时"
             dtime_str = str(int(grd1["dtime"].values[0]))
             if subplot == ["level"]:
-                sup_title1 = data_name + "_" + dati_str + dtime_str + "H时效"
+                sup_title1 = str(data_name) + "_" + dati_str + dtime_str + "H时效"
             elif subplot == ["time"]:
-                sup_title1 = data_name + "_Level" + level_str + "_" + dtime_str + "H时效"
+                sup_title1 = str(data_name) + "_Level" + level_str + "_" + dtime_str + "H时效"
             elif subplot == ["dtime"]:
-                sup_title1 = data_name + "_Level" + level_str + "_" + dati_str
+                sup_title1 = str(data_name) + "_Level" + level_str + "_" + dati_str
             elif subplot == ["member"]:
                 sup_title1 = " Level" + level_str + "_" + dati_str + dtime_str + "H时效"
             else:
@@ -527,9 +527,9 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap ="rainbo
                 elif subplot == ["dtime"]:
                     title00 = dtime_str +  "H时效 "
                 elif subplot == ["member"]:
-                    title00 = data_name
+                    title00 = str(data_name)
                 else:
-                    title00 =data_name +"_L"+level_str+"_"+ dati_str+"_"+dtime_str+"H时效"
+                    title00 =str(data_name) +"_L"+level_str+"_"+ dati_str+"_"+dtime_str+"H时效"
                 title1.append(title00)
 
         if save_path is not None:
@@ -1197,7 +1197,7 @@ def scatter_sta(sta0,value_column=None,
                     time_str = meteva.base.tool.time_tools.time_to_str(sta_one_member.iloc[0, 1])
                     dati_str = time_str[0:4] + "年" + time_str[4:6] + "月" + time_str[6:8] + "日" + time_str[8:10] + "时"
                     level_str = str(int(sta_one_member.iloc[0, 0]))
-                    title1 = data_name + "_L"+level_str+"_" + dati_str + str(sta_one_member.iloc[0,2]) + "H时效"
+                    title1 = str(data_name) + "_L"+level_str+"_" + dati_str + str(sta_one_member.iloc[0,2]) + "H时效"
                 except:
                     print("time or dtime or level 格式错误，请更改相应数据格式或直接指定title")
                     title1= ""
@@ -1206,7 +1206,7 @@ def scatter_sta(sta0,value_column=None,
                 if isinstance(title,list):
                     title1 = title[p]
                 else:
-                    title1 = title +"(" +data_name+")"
+                    title1 = title +"(" +str(data_name)+")"
 
             plt.title(title1,fontsize = sup_fontsize)
 
