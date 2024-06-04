@@ -1486,13 +1486,14 @@ def read_griddata_from_radar_mosaic_v3_gds(filename, grid=None, level=None, time
         return None
 
 
-def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim = None,dtime_start = 0,time = None,level = None, grid = None,endian = "<",
+def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim = None,dtime_start = 0,time = None,
+                           dtime = None,level = None, grid = None,endian = "<",add_block_head_tail = False,
                            data_name=None,dtime_units = "hour",outer_value = None,
                            show=False
                            ):
 
     try:
-        ctl = meteva.base.read_ctl(ctl_path)
+        ctl = meteva.base.read_ctl(ctl_path,dtime_dim=dtime_dim,dtime_start=dtime_start)
         #print(ctl)
         #print(ctl["pdef"])
         #print(ctl_path)
@@ -1530,7 +1531,10 @@ def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim
 
             nx = ctl["pdef"]["nx"]
             ny = ctl["pdef"]["ny"]
-            blocksize_xy =  nx * ny * 4  #+ 8   #+8是否因为数据有问题
+            blocksize_xy =  nx * ny * 4
+            if add_block_head_tail:
+                blocksize_xy += 8  # 每块数据的头尾加了数据大小的说明
+
             block_count = int(file_size/blocksize_xy)  #获得总的平面场个数
             nt = ctl["ntime"]
 
@@ -1602,6 +1606,14 @@ def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim
         else:
             grid0 = meteva.base.grid(ctl["glon"], ctl["glat"])
             blocksize_xy = grid0.nlon * grid0.nlat * 4
+            if add_block_head_tail:
+                blocksize_xy +=8  #每块数据的头尾加了数据大小的说明
+            else:
+                file_size = os.path.getsize(data_path)
+                count = file_size%blocksize_xy
+                if count !=0:
+                    print("warning: The header and tail of each data block in the file may contain a total of 8 bytes describing the length.")
+                    print("If add_data_len=True is not set when calling meb.read_griddata_from_ctl, it may lead to errors in data parsing.")
 
             data_list = []
             blocksize_one_time = ctl["cumulate_levels"] * blocksize_xy
@@ -1638,7 +1650,6 @@ def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim
                         else:
                             index_level.append(index_level_dict[level1])
                             valid_levels.append(level1)
-
             else:
                 if nlevel == 1:  # 只有一层的变量
                     valid_levels = [levels_all[0]]
@@ -1651,44 +1662,103 @@ def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim
             nlevel_valid = len(index_level)
             if nlevel_valid == 0:
                 return None
+
+            #筛选实际要读取的时间和时效，记录下相应的坐标信息以及数据文件中的索引位置
+            t_index_list = []
+
+            #时间是否实际上对应的是时效
+            if dtime_dim == "time":
+                #如果是就按时效找到要遍历的索引
+                if dtime is None:
+                    dtime = ctl["dtime_list"]
+                elif not  isinstance(dtime,list):
+                    dtime = [dtime]
+
+                for t in range(len(ctl["dtime_list"])):
+                    dtime1 = ctl["dtime_list"][t]
+                    if dtime1 in dtime:
+                        t_index_list.append(t)
+
+
+            else:
+                times_all = pd.date_range(ctl["gtime"][0], ctl["gtime"][1], freq=ctl["gtime"][2]).tolist()
+                if time is None:
+                    t_index_list = np.arange(len(times_all))
+                elif isinstance(time, list):
+                    print("read_griddata_from_ctl can suport list values as para time's input ")
+                else:
+                    time0 = meteva.base.all_type_time_to_datetime(time)
+                    for t in range(len(times_all)):
+                        time1 = meteva.base.all_type_time_to_datetime(times_all[t])
+                        if time1 == time0:
+                            t_index_list = [t]
+                            break
+
+
+            final_t_index = []
             for nn in range(ctl["nensemble"]):
-                for t in range(ctl["ntime"]):
+                for t in t_index_list:
                     start_index = blocksize_one_time * ctl["ntime"] * nn + t * blocksize_one_time + \
                                   ctl["vars"][value_index][
                                       "start_bolck_index"] * blocksize_xy
                     for v in range(nlevel_valid):
                         index1 = index_level[v]
                         start_index1 = start_index + index1 * blocksize_xy
+                        if add_block_head_tail:
+                            start_index1 += 4
                         position = file.seek(start_index1)
-                        blocksize_one_value = blocksize_xy
+                        if add_block_head_tail:
+                            blocksize_one_value = blocksize_xy-8  #扣除头尾描述数据大小的字段
+                        else:
+                            blocksize_one_value = blocksize_xy
+
                         content = file.read(blocksize_one_value)
                         data1 = np.frombuffer(content, dtype=endian + "f")
-                        data_list.append(data1)
+                        if data1.size == blocksize_one_value /4:
+                            data_list.append(data1)
+                            final_t_index.append(t)
+                        else:
+                            print("the data file is not complete")
+                            print("t = " + str(t) +" not exists")
 
-            data = np.array(data_list)
-            data = data.reshape(ctl["nensemble"], ctl["ntime"], nlevel_valid, ctl["nlat"], ctl["nlon"])
-            data = data.transpose(0, 2, 1, 3, 4)
-
-            if dtime_dim is None:
-                grid1 = meteva.base.grid(ctl["glon"], ctl["glat"], gtime=ctl["gtime"], dtime_list=[0],
-                                         level_list=valid_levels, member_list=ctl["edef"])
+            if len(final_t_index)==0:
+                print("as data file is not complete, the funtion read none data with the time or dtime para")
+                return None
             else:
+                if dtime_dim=="time":
+                    dtime_array = np.array(ctl["dtime_list"])
+                    final_dtime = dtime_array[final_t_index].astype(np.int32)
+                    final_gtime = ctl["gtime"]
+                else:
+                    final_dtime = ctl["dtime_list"]
+                    times_all = pd.date_range(ctl["gtime"][0], ctl["gtime"][1], freq=ctl["gtime"][2]).tolist()
+                    if len(final_t_index)==1:
+                        final_gtime = [times_all[final_t_index[0]]]
+                    else:
+                        #暂时不支持读取任意时段，所以该分支默认就是所有存在的实际数据
+                        time1 = meteva.base.all_type_time_to_datetime(times_all[final_t_index[-1]])
+                        final_gtime = [ctl["gtime"][0],time1,ctl["gtime"][2]]
 
-                grid1 = meteva.base.grid(ctl["glon"], ctl["glat"], gtime=[ctl["gtime"][0]],
-                                         dtime_list=ctl["dtime_list"],
-                                         level_list=valid_levels, member_list=ctl["edef"])
 
-            # print(grid1)
-            grd_one_var = meteva.base.grid_data(grid1, data)
-            if grid is not None:
-                grd_one_var = meteva.base.interp_gg_linear(grd_one_var, grid=grid, outer_value=outer_value)
-            if data_name is not None:
-                meteva.base.set_griddata_coords(grd_one_var, member_list=[data_name])
-            file.close()
-            grd_one_var.attrs["dtime_units"] = dtime_units
-            if dtime_start != 0:
-                grd_one_var = meteva.base.move_fo_time(grd_one_var, -dtime_start)
-            return grd_one_var
+                data = np.array(data_list)
+
+                data = data.reshape(ctl["nensemble"], len(final_t_index), nlevel_valid, ctl["nlat"], ctl["nlon"])
+                data = data.transpose(0, 2, 1, 3, 4)
+
+                grid1 = meteva.base.grid(ctl["glon"], ctl["glat"], gtime=final_gtime, dtime_list=final_dtime,
+                                             level_list=valid_levels, member_list=ctl["edef"])
+
+
+                grd_one_var = meteva.base.grid_data(grid1, data)
+                if grid is not None:
+                    grd_one_var = meteva.base.interp_gg_linear(grd_one_var, grid=grid, outer_value=outer_value)
+                if data_name is not None:
+                    meteva.base.set_griddata_coords(grd_one_var, member_list=[data_name])
+                file.close()
+                grd_one_var.attrs["dtime_units"] = dtime_units
+                if dtime_start != 0:
+                    grd_one_var = meteva.base.move_fo_time(grd_one_var, -dtime_start)
+                return grd_one_var
     except:
         if show:
             exstr = traceback.format_exc()
