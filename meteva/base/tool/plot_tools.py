@@ -527,9 +527,9 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap ="rainbo
                 elif subplot == ["dtime"]:
                     title00 = dtime_str +  "H时效 "
                 elif subplot == ["member"]:
-                    title00 = data_name
+                    title00 = str(data_name)
                 else:
-                    title00 =data_name +"_L"+level_str+"_"+ dati_str+"_"+dtime_str+"H时效"
+                    title00 =str(data_name) +"_L"+level_str+"_"+ dati_str+"_"+dtime_str+"H时效"
                 title1.append(title00)
 
         if save_path is not None:
