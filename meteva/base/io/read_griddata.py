@@ -1665,34 +1665,36 @@ def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim
 
             #筛选实际要读取的时间和时效，记录下相应的坐标信息以及数据文件中的索引位置
             t_index_list = []
-
-            #时间是否实际上对应的是时效
-            if dtime_dim == "time":
-                #如果是就按时效找到要遍历的索引
-                if dtime is None:
-                    dtime = ctl["dtime_list"]
-                elif not  isinstance(dtime,list):
-                    dtime = [dtime]
-
-                for t in range(len(ctl["dtime_list"])):
-                    dtime1 = ctl["dtime_list"][t]
-                    if dtime1 in dtime:
-                        t_index_list.append(t)
-
-
+            if ctl["ntime"]==1:
+                t_index_list=[0]
             else:
-                times_all = pd.date_range(ctl["gtime"][0], ctl["gtime"][1], freq=ctl["gtime"][2]).tolist()
-                if time is None:
-                    t_index_list = np.arange(len(times_all))
-                elif isinstance(time, list):
-                    print("read_griddata_from_ctl can suport list values as para time's input ")
+                #时间是否实际上对应的是时效
+                if dtime_dim == "time" or dtime_dim == "tdef":
+                    #如果是就按时效找到要遍历的索引
+                    if dtime is None:
+                        dtime_list = ctl["dtime_list"]
+                    elif not  isinstance(dtime,list):
+                        dtime_list = [dtime]
+
+                    for t in range(len(ctl["dtime_list"])):
+                        dtime1 = ctl["dtime_list"][t]
+                        if dtime1 in dtime_list:
+                            t_index_list.append(t)
+
+
                 else:
-                    time0 = meteva.base.all_type_time_to_datetime(time)
-                    for t in range(len(times_all)):
-                        time1 = meteva.base.all_type_time_to_datetime(times_all[t])
-                        if time1 == time0:
-                            t_index_list = [t]
-                            break
+                    times_all = pd.date_range(ctl["gtime"][0], ctl["gtime"][1], freq=ctl["gtime"][2]).tolist()
+                    if time is None:
+                        t_index_list = np.arange(len(times_all))
+                    elif isinstance(time, list):
+                        print("read_griddata_from_ctl can suport list values as para time's input ")
+                    else:
+                        time0 = meteva.base.all_type_time_to_datetime(time)
+                        for t in range(len(times_all)):
+                            time1 = meteva.base.all_type_time_to_datetime(times_all[t])
+                            if time1 == time0:
+                                t_index_list = [t]
+                                break
 
 
             final_t_index = []
@@ -1725,16 +1727,45 @@ def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim
                 print("as data file is not complete, the funtion read none data with the time or dtime para")
                 return None
             else:
-                if dtime_dim=="time":
-                    dtime_array = np.array(ctl["dtime_list"])
-                    final_dtime = dtime_array[final_t_index].astype(np.int32)
-                    final_gtime = ctl["gtime"]
-                else:
-                    final_dtime = ctl["dtime_list"]
-                    times_all = pd.date_range(ctl["gtime"][0], ctl["gtime"][1], freq=ctl["gtime"][2]).tolist()
-                    if len(final_t_index)==1:
-                        final_gtime = [times_all[final_t_index[0]]]
+                if len(final_t_index)==1:
+                    #如果数据只有一个时刻，则起报时间和预报时效是由参数time和dtime来设定的
+                    if time is not None:
+                        #如果输入参数指定了time，则分两种情况
+                        #情况1，数据里只有1个时间，那无论该时间是否和time相同，都以time作为起报时间
+                        #情况2，数据里有多个时间，那能读出来数据，说明读出来的数据的时间正好就是time指定的时间，因此仍然以time作为起报时间
+                        final_gtime=[time]
                     else:
+                        #如果输入参数中没指定time，则分两种情况
+                        #情况1，数据里只有1个时间，那就以ctl给的第0个时间为准
+                        #情况2，数据里有多个时间，但被dtime指定的就1个，此时默认起报时间是ctl的第0个时间
+                        final_gtime =  [ctl["gtime"][0]]
+
+                    if dtime is not None:
+
+                        if isinstance(dtime,list):
+                            if len(dtime)==1:
+                                final_dtime=dtime   #如果dtime参数是包含单个时效的列表，那dtime就是用来指定数据时效的
+                            else:
+                                #如果dtime是多个时效的列表，但实际只读出来了一个时效，则根据final_t_index判断读出来的是哪个时效
+                                dtime_array = np.array(ctl["dtime_list"])
+                                final_dtime = dtime_array[final_t_index].astype(np.int32)
+
+                        else:
+                            final_dtime=[dtime]  #如果dtime参数是整数，那dtime就是用来指定数据时效的
+                    else:
+                        # 如果没有设置时效参数，有两种情况
+                        #情况1，数据只有一个时间，那就以ctl给定时效的值
+                        #情况2，数据有多个时间，但通过time选取了指定的一个，此时还是可以用ctl给定的时效
+                        final_dtime =  ctl["dtime_list"][0]
+
+                else:
+                    if dtime_dim=="time" or dtime_dim=="tdef":
+                        dtime_array = np.array(ctl["dtime_list"])
+                        final_dtime = dtime_array[final_t_index].astype(np.int32)
+                        final_gtime = ctl["gtime"]
+                    else:
+                        final_dtime = ctl["dtime_list"]
+                        times_all = pd.date_range(ctl["gtime"][0], ctl["gtime"][1], freq=ctl["gtime"][2]).tolist()
                         #暂时不支持读取任意时段，所以该分支默认就是所有存在的实际数据
                         time1 = meteva.base.all_type_time_to_datetime(times_all[final_t_index[-1]])
                         final_gtime = [ctl["gtime"][0],time1,ctl["gtime"][2]]
@@ -1758,6 +1789,8 @@ def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim
                 grd_one_var.attrs["dtime_units"] = dtime_units
                 if dtime_start != 0:
                     grd_one_var = meteva.base.move_fo_time(grd_one_var, -dtime_start)
+                if show:
+                    print("success read data with " + ctl_path)
                 return grd_one_var
     except:
         if show:
