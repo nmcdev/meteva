@@ -175,124 +175,6 @@ def get_middle_columns(method):
         print("暂无支持")
         pass
 
-def middle_df_sta_bak2(sta_all,method,grade_list = None,compare = None,gid = None):
-    '''
-
-    :param sta_all:
-    :param method:
-    :param grade_list:
-    :param compare:
-    :param gid:
-    :return:
-    '''
-
-    need_g = False
-    if gid is not None:
-        need_g = True
-
-    mid_columns = get_middle_columns(method)
-    method_args = {}
-    if grade_list is not None:
-        method_args["grade_list"] = grade_list
-    if compare is not None:
-        method_args["compare"] = compare
-    grade_exp = None
-    names_exp = None
-    group_name = None
-    if need_g:
-        group_name = gid.columns[1]
-        groups = gid[group_name]
-        groups = groups.drop_duplicates(keep = "first")
-        names = groups.values
-        gll = []
-        for i in range(len(names)):
-            ids = gid.loc[gid[group_name] == names[i]].values[:, 0]
-            gll.append(ids.tolist())
-
-        method_args["g"] = "id"
-        method_args["gll"] = gll
-        if grade_list is not None:
-            grade_exp, names_exp = np.meshgrid(grade_list, names)
-            grade_exp = grade_exp.flatten().tolist()
-            names_exp = names_exp.flatten().tolist()
-        else:
-            names_exp = names
-
-        sta_all_gid = meteva.base.combine_expand(sta_all,gid)
-    else:
-        sta_all_gid = sta_all
-        if grade_list is not None:
-            grade_exp = grade_list
-        else:
-            pass
-
-
-    sta_list = meteva.base.split(sta_all_gid,used_coords=["level","time","dtime",group_name])
-    print(sta_list[0])
-    df_list = []
-    for k in range(len(sta_list)):
-        sta = sta_list[k]
-
-
-        not_all_iv = [True]
-        if method.__name__.find("_uv") >= 0 or method.__name__.find("distance") >= 0:
-            col_step = 2
-            valid_index = [0, 1]
-        else:
-            col_step = 1
-            valid_index = [0]
-
-        len_ = len(sta.columns)
-        for nv in range(6 + col_step, len_, col_step):
-            not_all_iv1 = np.any(sta.iloc[:, nv].values != meteva.base.IV)
-            not_all_iv.append(not_all_iv1)
-            if not_all_iv1:
-                valid_index.append(nv - 6)
-                if col_step == 2: valid_index.append(nv - 5)
-
-        sta = meteva.base.in_member_list(sta, member_list=valid_index, name_or_index="index")
-        sta1 = meteva.base.not_IV(sta)
-        print(sta1)
-        if len(sta1.index)==0:continue
-        data_names = meteva.base.get_stadata_names(sta1)
-        if method.__name__=="tbask":
-            mid_array, _ = meteva.product.score(sta1, method)
-            dict1 = {"time": sta["time"].values[0], "dtime": sta["dtime"].values[0],"T":mid_array[0],"BASK":mid_array[1]}
-            tbask_df = pd.DataFrame(dict1,index = [k])
-            df_list.append(tbask_df)
-        else:
-
-            for m in range(1, len(data_names)):
-                sta2 = meteva.base.sele_by_para(sta1, member=[data_names[0], data_names[m]])
-
-                mid_array, gll_valid = meteva.product.score(sta2, method,**method_args,drop_g_column=True)
-
-                index_names = ["time","dtime","member"]
-                dict1 = {"time":sta2["time"].values[0],"dtime":  sta2["dtime"].values[0],"member": data_names[m]}
-                if names_exp is not None:
-                    index_names.append(group_name)
-                    dict1[group_name] = names_exp
-                if grade_exp is not None:
-                    index_names.append("grade")
-                    dict1["grade"] = grade_exp
-
-                if method == meteva.method.tc_count:
-                    if grade_list is None:
-                        dat1 = mid_array[..., 0]
-                    else:
-                        dat1 = np.repeat([mid_array[..., 0]],len(grade_list))
-                    dict1[mid_columns[0]] = dat1.flatten()
-                    dict1[mid_columns[1]] = mid_array[..., 1:].flatten()
-                else:
-                    for c in range(len(mid_columns)):
-                        dict1[mid_columns[c]] = mid_array[...,c].flatten()
-
-
-                hfmc_df = pd.DataFrame(dict1)
-                df_list.append(hfmc_df)
-    df_all = pd.concat(df_list, axis=0)
-    return df_all
-
 def middle_df_sta(sta_all,method,grade_list = None,compare = None,gid = None):
     '''
 
@@ -453,105 +335,6 @@ def middle_df_sta(sta_all,method,grade_list = None,compare = None,gid = None):
     return df_all
 
 
-def middle_df_sta_bak1(sta_all,method,grade_list = None,compare = None,gid = None):
-    '''
-
-    :param sta_all:
-    :param method:
-    :param grade_list:
-    :param compare:
-    :param gid:
-    :return:
-    '''
-
-    need_g = False
-    if gid is not None:
-        need_g = True
-
-
-    mid_columns = get_middle_columns(method)
-    method_args = {}
-    if grade_list is not None:
-        method_args["grade_list"] = grade_list
-    if compare is not None:
-        method_args["compare"] = compare
-
-
-    if need_g:
-        group_name = gid.columns[1]
-        sta_all_gid = meteva.base.combine_expand(sta_all,gid)
-        sta_list = meteva.base.split(sta_all_gid, used_coords=["level", "time", "dtime", group_name])
-    else:
-        sta_list = meteva.base.split(sta_all,used_coords=["level","time","dtime"])
-
-
-    df_list = []
-    for k in range(len(sta_list)):
-        print(str(k)+"/"+str(len(sta_list)))
-        sta = sta_list[k]
-        if need_g:
-            group_value = sta.iloc[0,-1]
-            sta = sta.iloc[:,:-1]
-
-        not_all_iv = [True]
-        if method.__name__.find("_uv") >= 0 or method.__name__.find("distance") >= 0:
-            col_step = 2
-            valid_index = [0, 1]
-        else:
-            col_step = 1
-            valid_index = [0]
-
-        len_ = len(sta.columns)
-        for nv in range(6 + col_step, len_, col_step):
-            not_all_iv1 = np.any(sta.iloc[:, nv].values != meteva.base.IV)
-            not_all_iv.append(not_all_iv1)
-            if not_all_iv1:
-                valid_index.append(nv - 6)
-                if col_step == 2: valid_index.append(nv - 5)
-
-        sta = meteva.base.in_member_list(sta, member_list=valid_index, name_or_index="index")
-        sta1 = meteva.base.not_IV(sta)
-        #print(sta1)
-        if len(sta1.index)==0:continue
-        data_names = meteva.base.get_stadata_names(sta1)
-        if method.__name__=="tbask":
-            mid_array, _ = meteva.product.score(sta1, method)
-            dict1 = {"time": sta["time"].values[0], "dtime": sta["dtime"].values[0],"T":mid_array[0],"BASK":mid_array[1]}
-            tbask_df = pd.DataFrame(dict1,index = [k])
-            df_list.append(tbask_df)
-        else:
-
-            for m in range(1, len(data_names)):
-                sta2 = meteva.base.sele_by_para(sta1, member=[data_names[0], data_names[m]])
-
-                mid_array, gll1 = meteva.product.score(sta2, method,**method_args)
-
-                index_names = ["time","dtime","member"]
-                dict1 = {"time":sta2["time"].values[0],"dtime":  sta2["dtime"].values[0],"member": data_names[m]}
-
-                if grade_list is not None:
-                    index_names.append("grade")
-                    dict1["grade"] = grade_list
-                if need_g:
-                    dict1[group_name] = group_value
-
-                #print(dict1)
-                if method == meteva.method.tc_count:
-                    if grade_list is None:
-                        dat1 = mid_array[..., 0]
-                    else:
-                        dat1 = np.repeat([mid_array[..., 0]],len(grade_list))
-                    dict1[mid_columns[0]] = dat1.flatten()
-                    dict1[mid_columns[1]] = mid_array[..., 1:].flatten()
-                else:
-                    for c in range(len(mid_columns)):
-                        dict1[mid_columns[c]] = mid_array[...,c].flatten()
-                        pass
-                hfmc_df = pd.DataFrame(dict1)
-                df_list.append(hfmc_df)
-    df_all = pd.concat(df_list, axis=0)
-    return df_all
-
 def tran_middle_df_to_ds(df_all,mid_columns = None):
     '''
 
@@ -613,6 +396,7 @@ def middle_ds_sta(sta_all,method,grade_list = None,compare = None,gid = None):
     ds_all = tran_middle_df_to_ds(df_all,mid_columns)
     return ds_all
 
+
 def middle_df_grd(grd_ob, grd_fo, method, grade_list=None, compare=None, marker=None, marker_name=None):
     mid_columns = get_middle_columns(method)
     level_fo = grd_fo["level"].values[0]
@@ -648,7 +432,6 @@ def middle_df_grd(grd_ob, grd_fo, method, grade_list=None, compare=None, marker=
 
     if compare is not None:
         method_args["compare"] = compare
-    df_list = []
     if marker is None:
 
         ob = grd_ob.values
@@ -680,70 +463,94 @@ def middle_df_grd(grd_ob, grd_fo, method, grade_list=None, compare=None, marker=
                 dict1[mid_columns[c]] = mid_array[..., c].flatten()
 
         mid_df = pd.DataFrame(dict1)
-        df_list.append(mid_df)
+        return mid_df
 
     else:
-        mark_set = list(set(marker.values.flatten().tolist()))
-        mark_name = marker["member"].values[0]
-        marker_name_dict = {}
-        if  marker_name  is None:
-            for mark in mark_set:
-                marker_name_dict[mark] = mark
+        if method.__name__ == "tase":
+            total_count = grd_weight.values.flatten()
+            error = ((grd_fo.values - grd_ob.values) * grd_weight.values).flatten()
+            abs_error = (np.abs(grd_ob.values - grd_fo.values) * grd_weight.values).flatten()
+            squere_error = (np.square(grd_ob.values - grd_fo.values) * grd_weight.values).flatten()
+            mean_obs = (grd_ob.values* grd_weight.values).flatten()
+            df = pd.DataFrame( {"T":total_count,"E":error,"A":abs_error,"S":squere_error,"M":mean_obs,"id":marker.values.flatten()})
+            # 使用 agg 方法进行聚合计算
+            result_df = df.groupby('id').agg({
+                'T': 'sum',  # 权重和
+                'E': 'sum',  # 误差权重和
+                'A': "sum",  # 绝对误差权重和
+                "S": "sum",  # 误差平方权重和
+                "M":"sum"    #观测平均
+            }).reset_index()
+
+            # 重命名列以匹配您的期望输出
+            result_df.columns = ['id', 'T', 'E', 'A', 'S', 'M']
+            result_df.insert(0,"level",level_fo)
+            result_df.insert(1, "time", time_fo)
+            result_df.insert(2, "dtime", dtime)
+            result_df.insert(3, "member", fo_name)
+            return result_df
         else:
-            for i in range(len(marker_name.index)):
-                marker_name_dict[marker_name.iloc[i,0]] = marker_name.iloc[i,1]
-
-        for mark in mark_set:
-            if method.__name__.find("_uv")>=0:
-                index = np.where(marker.values[0,...] == mark)
-                u_ob = grd_ob.values[0, ...]
-                u_ob = u_ob[index]
-                v_ob = grd_ob.values[1, ...]
-                v_ob = v_ob[index]
-                u_fo = grd_fo.values[0, ...]
-                u_fo = u_fo[index]
-                v_fo = grd_fo.values[1, ...]
-                v_fo = v_fo[index]
-                mid_array = method(u_ob, u_fo, v_ob, v_fo, **method_args)
+            df_list = []
+            mark_set = list(set(marker.values.flatten().tolist()))
+            mark_name = marker["member"].values[0]
+            marker_name_dict = {}
+            if marker_name is None:
+                for mark in mark_set:
+                    marker_name_dict[mark] = mark
             else:
-                index = np.where(marker.values == mark)
-                ob = grd_ob.values[index]
-                fo = grd_fo.values[index]
-                if method.__name__ in ["tase","tmmsss"]:
-                    #目前暂时只支持tase和tmmsss相关的指标的带权重
-                    w = grd_weight.values[index]
-                    method_args["weight"] = w
-                mid_array = method(ob, fo, **method_args)
-                if method.__name__ == "hnh":
-                    mid_array = mid_array.flatten()
+                for i in range(len(marker_name.index)):
+                    marker_name_dict[marker_name.iloc[i, 0]] = marker_name.iloc[i, 1]
 
-            index_names = ["level","time", "dtime", "member"]
-            dict1 = {"level":level_fo,"time": time_fo, "dtime": dtime, "member": fo_name}
-            if mark in marker_name_dict.keys():
-                dict1[mark_name] = marker_name_dict[mark]
-            else:
-                dict1[mark_name] = "other"
-
-            if grade_list is not None:
-                index_names.append("grade")
-                dict1["grade"] = grade_list
-
-            if method == meteva.method.tc_count:
-                if grade_list is None:
-                    dat1 = mid_array[..., 0]
+            for mark in mark_set:
+                if method.__name__.find("_uv") >= 0:
+                    index = np.where(marker.values[0, ...] == mark)
+                    u_ob = grd_ob.values[0, ...]
+                    u_ob = u_ob[index]
+                    v_ob = grd_ob.values[1, ...]
+                    v_ob = v_ob[index]
+                    u_fo = grd_fo.values[0, ...]
+                    u_fo = u_fo[index]
+                    v_fo = grd_fo.values[1, ...]
+                    v_fo = v_fo[index]
+                    mid_array = method(u_ob, u_fo, v_ob, v_fo, **method_args)
                 else:
-                    dat1 = np.repeat([mid_array[..., 0]], len(grade_list))
-                dict1[mid_columns[0]] = dat1.flatten()
-                dict1[mid_columns[1]] = mid_array[..., 1:].flatten()
-            else:
-                for c in range(len(mid_columns)):
-                    dict1[mid_columns[c]] = mid_array[..., c].flatten()
+                    index = np.where(marker.values == mark)
+                    ob = grd_ob.values[index]
+                    fo = grd_fo.values[index]
+                    if method.__name__ in ["tase", "tmmsss"]:
+                        # 目前暂时只支持tase和tmmsss相关的指标的带权重
+                        w = grd_weight.values[index]
+                        method_args["weight"] = w
+                    mid_array = method(ob, fo, **method_args)
+                    if method.__name__ == "hnh":
+                        mid_array = mid_array.flatten()
 
+                index_names = ["level", "time", "dtime", "member"]
+                dict1 = {"level": level_fo, "time": time_fo, "dtime": dtime, "member": fo_name}
+                if mark in marker_name_dict.keys():
+                    dict1[mark_name] = marker_name_dict[mark]
+                else:
+                    dict1[mark_name] = "other"
 
-            mid_df = pd.DataFrame(dict1)
-            df_list.append(mid_df)
-    df_all = pd.concat(df_list, axis=0)
-    return df_all
+                if grade_list is not None:
+                    index_names.append("grade")
+                    dict1["grade"] = grade_list
+
+                if method == meteva.method.tc_count:
+                    if grade_list is None:
+                        dat1 = mid_array[..., 0]
+                    else:
+                        dat1 = np.repeat([mid_array[..., 0]], len(grade_list))
+                    dict1[mid_columns[0]] = dat1.flatten()
+                    dict1[mid_columns[1]] = mid_array[..., 1:].flatten()
+                else:
+                    for c in range(len(mid_columns)):
+                        dict1[mid_columns[c]] = mid_array[..., c].flatten()
+
+                mid_df = pd.DataFrame(dict1)
+                df_list.append(mid_df)
+        df_all = pd.concat(df_list, axis=0)
+        return df_all
 
 
 def middle_ds_grd(grd_ob, grd_fo, method, grade_list=None, compare=None, marker=None, marker_name=None):
