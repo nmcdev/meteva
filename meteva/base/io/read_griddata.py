@@ -1723,6 +1723,9 @@ def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim
                             print("the data file is not complete")
                             print("t = " + str(t) +" not exists")
 
+            final_t_index = list(set(final_t_index))
+            final_t_index.sort()
+
             if len(final_t_index)==0:
                 print("as data file is not complete, the funtion read none data with the time or dtime para")
                 return None
@@ -1756,7 +1759,7 @@ def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim
                         # 如果没有设置时效参数，有两种情况
                         #情况1，数据只有一个时间，那就以ctl给定时效的值
                         #情况2，数据有多个时间，但通过time选取了指定的一个，此时还是可以用ctl给定的时效
-                        final_dtime =  ctl["dtime_list"][0]
+                        final_dtime =  [ctl["dtime_list"][0]]
 
                 else:
                     if dtime_dim=="time" or dtime_dim=="tdef":
