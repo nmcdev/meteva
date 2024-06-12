@@ -54,22 +54,5 @@ setup(
                       "urllib3>=1.21.1",
                       "pynverse>=0.1.4.6",
                       "shapely>=1.8.0"
-                      #"JPype1>=1.4.0"
                       ]
 )
-
-# install_requires = ['numpy>=1.12.1',
-#                     'scipy>=0.19.0',
-#                     'pandas>=1.0.1',
-#                     'xarray>=0.11.0',
-#                     'scikit-learn>=0.21.2',
-#                     'matplotlib>=3.3.1',
-#                     "httplib2>=0.12.0",
-#                     "protobuf>=3.6.1",
-#                     "netCDF4>=1.4.2",
-#                     "seaborn>=0.9.0",
-#                     "pyshp>=2.1.0",
-#                     "tables>=3.4.4",
-#                     "urllib3>=1.21.1",
-#                     "statsmodels>=0.11.0",
-#                     ]
