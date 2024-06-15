@@ -1067,7 +1067,7 @@ def scatter_sta(sta0,value_column=None,
         #print(plot_data_names)
 
     sta_without_iv = meteva.base.sele.not_IV(sta)
-
+    sta_without_iv = meteva.base.sele.not_nan(sta_without_iv)
     values = sta_without_iv.loc[:, plot_data_names].values
     if mean_value is None:
         mean_value = np.sum(np.abs(values)) / values.size
