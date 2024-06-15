@@ -232,7 +232,7 @@ def nas_d(d_ob,d_fo,s_ob = None,s_fo = None, ignore_breeze = False):
         nasd_array = np.zeros(3)
         nasd_array[0] = d_ob.size
         d_angle = np.abs(fo - ob)
-        d_angle[d_angle == 6] = 1
+        d_angle[d_angle == 7] = 1
         index = np.where(d_angle ==0)
         nasd_array[1] = len(index[0]) + breeze_count
         nasd_array[2] = len(index[0]) + breeze_count
