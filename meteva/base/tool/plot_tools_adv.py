@@ -836,11 +836,11 @@ def add_cyclone_trace(ax,sta_cyclone_trace,size = 0.3,linewidth = 1,title = None
             lat_list = []
             for a in range(0,360,5):
                 if a> 70 and a<135:
-                    lon1 = lon[0] + r_o *2.5 * math.cos(70 * math.pi/180)
-                    lat1 = lat[0] + r_o *2.5 * math.sin(70 * math.pi/180)
+                    lon1 = lon[0] + r_o *2 * math.cos(70 * math.pi/180)
+                    lat1 = lat[0] + r_o *2 * math.sin(70 * math.pi/180)
                 elif a >250 and a < 315:
-                    lon1 = lon[0] + r_o * 2.5 * math.cos(250 * math.pi / 180)
-                    lat1 = lat[0] + r_o * 2.5 * math.sin(250 * math.pi / 180)
+                    lon1 = lon[0] + r_o * 2 * math.cos(250 * math.pi / 180)
+                    lat1 = lat[0] + r_o * 2 * math.sin(250 * math.pi / 180)
                 else:
                     theta = math.pi * a / 180
                     lon1 = lon[0] + r_o * math.cos(theta)
