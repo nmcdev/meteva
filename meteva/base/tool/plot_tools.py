@@ -1266,36 +1266,37 @@ def scatter_sta(sta0,value_column=None,
                     add_minmap = "left"
 
             if add_minmap is not None:
-                minmap_lon_lat = [103, 123, 0, 25]
-                minmap_height_rate = 0.27
-                height_bigmap = rect1[3]
-                height_minmap = height_bigmap * minmap_height_rate
-                width_minmap = height_minmap * (minmap_lon_lat[1] - minmap_lon_lat[0]) * height / (
-                        minmap_lon_lat[3] - minmap_lon_lat[2]) / width
+                if add_minmap != False:
+                    minmap_lon_lat = [103, 123, 0, 25]
+                    minmap_height_rate = 0.27
+                    height_bigmap = rect1[3]
+                    height_minmap = height_bigmap * minmap_height_rate
+                    width_minmap = height_minmap * (minmap_lon_lat[1] - minmap_lon_lat[0]) * height / (
+                            minmap_lon_lat[3] - minmap_lon_lat[2]) / width
 
-                width_between_two_map = height_bigmap * 0.01
-                sy_minmap = width_between_two_map + rect1[1]
-                if add_minmap == "left":
-                    sx_minmap = rect1[0] + width_between_two_map
-                else:
-                    sx_minmap = rect1[0] + rect1[2] - width_minmap - width_between_two_map
-                rect_min = [sx_minmap, sy_minmap, width_minmap, height_minmap]
-                ax_min = plt.axes(rect_min)
-                plt.xticks([])
-                plt.yticks([])
-                ax_min.set_xlim((minmap_lon_lat[0], minmap_lon_lat[1]))
-                ax_min.set_ylim((minmap_lon_lat[2], minmap_lon_lat[3]))
-                ax_min.spines["top"].set_linewidth(0.3)
-                ax_min.spines["bottom"].set_linewidth(0.3)
-                ax_min.spines["right"].set_linewidth(0.3)
-                ax_min.spines["left"].set_linewidth(0.3)
-                if elon > 180:
-                    add_china_map_2basemap(ax, name="world360", edgecolor='k', lw=0.3, encoding='gbk',
+                    width_between_two_map = height_bigmap * 0.01
+                    sy_minmap = width_between_two_map + rect1[1]
+                    if add_minmap == "left":
+                        sx_minmap = rect1[0] + width_between_two_map
+                    else:
+                        sx_minmap = rect1[0] + rect1[2] - width_minmap - width_between_two_map
+                    rect_min = [sx_minmap, sy_minmap, width_minmap, height_minmap]
+                    ax_min = plt.axes(rect_min)
+                    plt.xticks([])
+                    plt.yticks([])
+                    ax_min.set_xlim((minmap_lon_lat[0], minmap_lon_lat[1]))
+                    ax_min.set_ylim((minmap_lon_lat[2], minmap_lon_lat[3]))
+                    ax_min.spines["top"].set_linewidth(0.3)
+                    ax_min.spines["bottom"].set_linewidth(0.3)
+                    ax_min.spines["right"].set_linewidth(0.3)
+                    ax_min.spines["left"].set_linewidth(0.3)
+                    if elon > 180:
+                        add_china_map_2basemap(ax, name="world360", edgecolor='k', lw=0.3, encoding='gbk',
+                                               grid0=None)  # "国界"
+
+                    add_china_map_2basemap(ax, name="world", edgecolor='k', lw=0.3, encoding='gbk',
                                            grid0=None)  # "国界"
-
-                add_china_map_2basemap(ax, name="world", edgecolor='k', lw=0.3, encoding='gbk',
-                                       grid0=None)  # "国界"
-                add_china_map_2basemap(ax_min, name="nation", edgecolor='k', lw=0.2, encoding='gbk', grid0=None)  # "省界"
+                    add_china_map_2basemap(ax_min, name="nation", edgecolor='k', lw=0.2, encoding='gbk', grid0=None)  # "省界"
 
 
 
@@ -1890,7 +1891,7 @@ def caculate_axis_width(xticks,fontsize,legend_num = 1):
 
 def lineh(array,name_list_dict = None,legend = None,axis = None,xlabel = "Value",vmin = None,vmax = None,ncol = None,grid = None,tag = -1,save_path = None,show = False
         ,dpi = 300,bar_width = None,sparsify_yticks = 1,sup_fontsize = 10,title = ""
-             ,height = None,width = None,log_y = False,sup_title = None,ylabel = None,legend_col = None,color_list = None,hline = None,marker = None,
+             ,height = None,width = None,log_y = False,sup_title = None,ylabel = None,legend_col = None,color_list = None,vline = None,marker = None,
              legend_loc =  "upper right",linestyle = None,return_axs = False):
     shape = array.shape
     array = copy.deepcopy(array)
@@ -2002,8 +2003,8 @@ def lineh(array,name_list_dict = None,legend = None,axis = None,xlabel = "Value"
         plt.title(title, fontsize=sup_fontsize)
         plt.xlim(vmin1, vmax1)
         plt.ylim(-0.5, array.size - 0.5)
-        if hline is not None:
-            plt.axhline(hline, ls="--", c="k")
+        if vline is not None:
+            plt.axvline(vline, ls="--", c="k")
         if log_y:
             ax_one = plt.gca()
             for tick in ax_one.yaxis.get_major_ticks():
@@ -2189,8 +2190,8 @@ def lineh(array,name_list_dict = None,legend = None,axis = None,xlabel = "Value"
         plt.title(title, fontsize=sup_fontsize)
         plt.ylim(-0.5, dat.shape[1] - 0.5)
         plt.xlim(vmin1, vmax1)
-        if hline is not None:
-            plt.axhline(hline, ls="--", c="k")
+        if vline is not None:
+            plt.axvline(vline, ls="--", c="k")
         if log_y:
             ax_one = plt.gca()
             for tick in ax_one.yaxis.get_major_ticks():
@@ -2477,8 +2478,8 @@ def lineh(array,name_list_dict = None,legend = None,axis = None,xlabel = "Value"
             plt.xticks(fontsize=sup_fontsize * 0.8)
             plt.xlabel(xlabel, fontsize=sup_fontsize * 0.9)
 
-            if hline is not None:
-                plt.axhline(hline, ls="--", c="k")
+            if vline is not None:
+                plt.axvline(vline, ls="--", c="k")
             if isinstance(title, list):
                 if (len(title) != subplot_num):
                     print("子图数和设置的子图标题数不一致")
@@ -4890,7 +4891,7 @@ def mesh_obtime_dtime(sta0,save_dir = None,save_path = None,
 
     width0 = col * 0.1 + 2
     height0 = row * 0.1 + 2
-    x_plot, x_ticks = meteva.product.get_x_ticks(times_ob, width0 - 2,row=3)
+
     #sup_fontsize = 10
 
     rate = max(width0 / 8, height0 / 6)
@@ -4900,7 +4901,7 @@ def mesh_obtime_dtime(sta0,save_dir = None,save_path = None,
         height = height0/rate
 
     sup_fontsize = sup_fontsize / rate
-
+    x_plot, x_ticks = meteva.product.get_x_ticks(times_ob, width - 2,row=3)
 
     x_plot /= dh_x
     #y_plot, y_ticks = meteva.product.get_y_ticks(times_fo, height)
