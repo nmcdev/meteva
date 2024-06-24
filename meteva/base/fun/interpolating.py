@@ -553,6 +553,12 @@ def interp_gg_linear(grd, grid,used_coords = "xy",outer_value = None):
                     print("当目标网格超出数据网格时，outer_value参数必须赋值")
                     return None
                 is_out = True
+        else:
+            if (grid.elat > grid0.elat or grid.slat < grid0.slat):
+                if outer_value is None:
+                    print("当目标网格超出数据网格时，outer_value参数必须赋值")
+                    return None
+                is_out = True
 
         if is_out:
             grid_new0 = meteva.base.get_inner_grid(grid,grid0)
