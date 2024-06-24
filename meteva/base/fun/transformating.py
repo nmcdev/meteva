@@ -191,7 +191,7 @@ def tran_ut_nature_local_time(sta):
     sta_lt = copy.deepcopy(sta)
     lon = copy.deepcopy(sta_lt["lon"].values)
     lon[lon>180] -= 360
-    hour = np.round((lon/15)).astype(np.int)
+    hour = np.round((lon/15)).astype(np.int32)
     sta_lt["time"] += hour * np.timedelta64(1, 'h')
 
     return sta_lt
