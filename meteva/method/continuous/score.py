@@ -1,4 +1,6 @@
 import numpy as np
+
+import meteva.base
 from meteva.base.tool.math_tools import sxy_iteration,ss_iteration
 from meteva.base import IV
 def sample_count(Ob, Fo=None):
@@ -1562,7 +1564,7 @@ def pmse(ob,fo):
 
 
 
-def pas(ob0,fo,grade_list = [0.1]):
+def pas_mid(ob0,fo,grade_list = [0.1]):
     '''
 
     :param ob: 一维numpy数组
@@ -1573,131 +1575,363 @@ def pas(ob0,fo,grade_list = [0.1]):
     if len(ob0.shape) == len(fo.shape):
         fo = fo[np.newaxis,:]
     nfo = fo.shape[0]
-    list1 = []
-    result_list = []
+
+    result_list_list = []
     ob_0 = ob0.flatten()
     #对多个预报进行循环
     for i in range(nfo):
-        nsample = 0
-        score = 0
-        foi = fo[i,:].flatten()
-        # 情况1， 实况降水u=0mm，预报降水x>0mm
-        index0 = np.where((ob_0>=grade_list[0])|(foi>=grade_list[0]))
-        #print(index0[0].size)
+        foi_0 = fo[i,:].flatten()
+        result_list = []
+        for g in range(len(grade_list)):
+            grade = grade_list[g]
+            # 情况1， 实况降水u=0mm，预报降水x>0mm
+            index0 = np.where((ob_0>=grade)|(foi_0>=grade))
+            #print(index0[0].size)
+            if index0[0].size > 0:
+                nsample = index0[0].size
+                ob  = ob_0[index0]
+                foi = foi_0[index0]
 
-        ob  = ob_0[index0]
-        foi = foi[index0]
-        index1 = np.where((ob == 0)&(foi>0))
-        score1 = 0
-        if index1[0].size>0:
-            fo1 = foi[index1]
-            nsample += index1[0].size
-            fo11 = fo1[fo1<5]         # 预报 0<x<5mm的情况
-            score1  += 0.5* fo11.size
-            fo12 = fo1[fo1>=5]        #预报 x>=5mm的情况
-            if fo12.size>0:
-                score1 += 0.5 * np.sum(np.exp(-(fo12 - 5) ** 2 / 25))
-            # print("情况1：")
-            # print(index1[0].size)
-            #print(score1)
-
-        # 情况2， 实况降水u>0mm，预报降水x=0mm
-        index2 = np.where((ob > 0)&(ob<10)&(foi == 0))
-        score2 = 0
-        if index2[0].size>0:
-            ob2 = ob[index2]
-            nsample += index2[0].size
-            score2 += 0.5 * np.sum(np.sin(0.05 * np.pi * (10 + ob2)))
-            # print("情况2：")
-            # print(index2[0].size)
-            #print(score2)
-
-        # 情况3， 实况降水0<u<5mm，预报降水x>0mm
-        index3 = np.where((ob>0)&(ob<5)&(foi>0))
-        score3 =0
-        if index3[0].size >0:
-            nsample += index3[0].size
-            ob3 = ob[index3]
-            fo3 = foi[index3]
-            ob31 = ob3[fo3<ob3]   #情况3.1  0<x<u,0<u<5
-            if ob31.size>0:
-                fo31 = fo3[fo3 < ob3]
-                score3 += np.sum(np.sin(0.05*np.pi*(10+ob31-fo31)))
-            ob32 = ob3[np.where((fo3<5)&(ob3<=fo3))]   #情况3.2  0<x<5,0<u<x
-            score3 += ob32.size
-            ob33 = ob3[fo3>=5]  #情况3.3  x>=5,0<u<5
-            if ob33.size>0:
-                fo33 = fo3[fo3>=5]
-                score3 += np.sum(np.exp(-(fo33-5)**2/25))
-            # print("情况3：")
-            # print(index3[0].size)
-            #print(score3)
-
-        # 情况4， 实况降水5<u<10mm，预报降水x>0mm
-        index4 = np.where((ob>=5)&(ob<10)&(foi>0))
-        score4 = 0
-        if index4[0].size>0:
-            nsample+= index4[0].size
-            ob4 = ob[index4]
-            fo4 = foi[index4]
-            ob41 = ob4[fo4<ob4]  #情况4.1 0<x<u,5<u<10
-            if ob41.size>0:
-                fo41 = fo4[fo4<ob4]
-                score4 += np.sum(np.sin(0.05*np.pi*(10+ob41-fo41)))
-            ob42 = ob4[fo4>=ob4]  #情况4.2 u<x,5<u<10
-            if ob42.size>0:
-                fo42 = fo4[fo4>=ob4]
-                score4 += np.sum(np.exp(-(fo42-ob42)**2/ob42**2))
-            # print("情况4：")
-            # print(index4[0].size)
-            #print(score4)
+                score = 0
+                index1 = np.where((ob >= 0) &(ob<0.1))
+                if index1[0].size>0:
+                    #情况1
+                    fo1 = foi[index1]
+                    score += 0.6 * np.sum(np.exp(-np.power(fo1/10,2)))
 
 
-        # 情况5， 实况降水u>=10mm，预报降水x>0mm
-        index5 = np.where((ob >=10)  & (foi >= 0))
-        score5 = 0
-        if index5[0].size >0:
-            nsample += index5[0].size
-            ob5 = ob[index5]
-            fo5 = foi[index5]
-            ob51 = ob5[fo5<ob5]  #情况5.1, 0<=x<u,u>=10
-            if ob51.size>0:
-                fo51 = fo5[fo5<ob5]
-                score5 += np.sum(np.sin(0.5*np.pi*fo51/ob51))
-            ob52 = ob5[fo5>=ob5]  #情况5.2, u<=x,u>=10
-            if ob52.size>0:
-                fo52 = fo5[fo5>=ob5]
-                score5 += np.sum(np.exp(-(fo52-ob52)**2/ob52**2))
-            # print("情况5：")
-            # print(index5[0].size)
-            #print(score5)
-        score = score1 + score2+score3+score4+score5
-        #print(score)
-        #计算
-        if nsample==0:
-            result1 = IV
-        else:
-            result1 = score/nsample
-        list1.append([nsample,score])
-        result_list.append(result1)
+                # 情况2，1 实况降水u>=0.1mm u<10mm，预报降水xi>=0 xi<0.1
+                index2 = np.where((ob >= 0.1)&(ob<10)&(foi>=0)&(foi<0.1))
+                if index2[0].size>0:
+                    ob2 = ob[index2]
+                    score += 0.6 * np.sum(np.sin(0.05 * np.pi * (10 - ob2)))
 
-    #result_mid = np.array(list1)
-    result = np.array(result_list)
+                # 情况2，2 实况降水u>=0.1mm u<10mm，预报降水xi>=0.1 xi<u
+                index2 = np.where((ob >= 0.1) & (ob < 10) & (foi >= 0.1) & (foi < ob))
+                if index2[0].size > 0:
+                    ob2 = ob[index2]
+                    fo2 = foi[index2]
+                    score += np.sum(np.sin(0.05 * np.pi * (fo2 - ob2 + 10)))
 
+                # 情况2，3 实况降水u>=0.1mm u<10mm，预报降水x>u
+                index2 = np.where((ob >= 0.1) & (ob < 10) & (foi >= ob))
+                if index2[0].size > 0:
+                    ob2 = ob[index2]
+                    fo2 = foi[index2]
+                    score += np.sum(np.exp(-np.power((fo2- ob2)/10,2)))
+
+                # 情况3.1， 实况降水u>=10，预报降水x<u x>=0
+                index3 = np.where((ob >=10)&(foi<ob)&(foi>=0))
+                if index3[0].size >0:
+                    ob3 = ob[index3]
+                    fo3 = foi[index3]
+                    score += np.sum(np.sin(0.5*np.pi*(fo3/ob3)))
+
+                # 情况3.2， 实况降水u>=10mm，预报降水x>=u
+                index3 = np.where((ob >= 10) & (foi >= ob))
+                if index3[0].size > 0:
+                    ob3 = ob[index3]
+                    fo3 = foi[index3]
+                    score += np.sum(np.exp(-np.power((fo3- ob3)/ob3,2)))
+
+                result_list.append([nsample,score])
+
+            else:
+                result_list.append([0, 0])
+        result_list_list.append(result_list)
+
+    result = np.array(result_list_list)
 
     return result
 
 
-if __name__=="__main__":
-    import pandas as pd
-    import datetime
-    import meteva
-    import xarray as xr
+def pas(ob0,fo,grade_list = [0.1]):
+    '''
 
-    rain01_ob = np.random.randn(1000)
-    rain01_ob[rain01_ob < 0] = 0
-    rain01_fo = np.random.randn(2, 1000)
-    rain01_fo[rain01_fo < 0] = 0
-    print("观测和预报的平均降水强度分别是：")
-    result = ob_fo_precipitation_strength(rain01_ob, rain01_fo)  # 多个预报时 返回数组的size =  1+预报成员
-    print(result)
+    :param ob0: 实况
+    :param fo: 预报
+    :param grade_list: 等级
+    :return: pas评分
+    '''
+    result =  pas_mid(ob0,fo,grade_list=grade_list)
+    count_array = result[:,:,0]
+    score_array = result[:,:,1]
+
+    score = score_array/(count_array+1e-30)
+    score[count_array==0] = meteva.base.IV
+    return score
+
+def pasc(ob0,fo):
+    '''
+    PAS晴雨预报评分
+    :param ob0:实况
+    :param fo:预报
+    :return:
+    '''
+    result =  pas_mid(ob0,fo,grade_list=[0.1])
+    count_array = result[:,:,0]
+    score_array = result[:,:,1]
+    # 如果fo只包含一个预报成员
+    if len(ob0.shape) == len(fo.shape):
+        fo = fo[np.newaxis, :]
+    nfo = fo.shape[0]
+
+
+    score_list = []
+    ob_0 = ob0.flatten()
+    # 对多个预报进行循环
+    for i in range(nfo):
+        foi = fo[i, :].flatten()
+        index0 = np.where((ob_0 >=0) &(ob_0 <0.1) &(foi>=0)& (foi<0.1))
+        nsample = index0[0].size  #实况和预报都是晴
+        score1 = (score_array[i] + nsample)/(count_array + nsample)
+        score_list.append(score1)
+
+    score =  np.array(score_list)
+    return  score
+
+
+def ipi(ob0,fo):
+    '''
+        欠量评分
+       :param ob: 一维numpy数组
+       :param fo:  一维或者两维numpy数组，当fo是两维时，表示有多种预报进行对比
+       :return:  实数,pas评分
+       '''
+    # 如果fo只包含一个预报成员
+    if len(ob0.shape) == len(fo.shape):
+        fo = fo[np.newaxis, :]
+    nfo = fo.shape[0]
+    count_list = []
+    score_list = []
+    ob_0 = ob0.flatten()
+    # 对多个预报进行循环
+    for i in range(nfo):
+        foi_0 = fo[i, :].flatten()
+        # 基本条件
+        index0 = np.where(((foi_0 >= 0.1) | (ob_0 >= 0.1))&(foi_0<ob_0))
+        # print(index0[0].size)
+        nsample = index0[0].size
+        score = 0
+        if  nsample>0:
+            ob = ob_0[index0]
+            foi = foi_0[index0]
+            # #情况1
+            # index1 = np.where((ob >= 0) & (ob < 0.1))
+            # if index1[0].size > 0:
+            #     fo_1 = foi[index1]
+            #     score += np.sum(1 - 0.6 * np.exp(- np.power(fo_1/10,2)))
+
+            # 情况2，1
+            index2 = np.where((ob >= 0.1) & (ob < 10) & (foi >= 0) & (foi < 0.1))
+            if index2[0].size > 0:
+                ob2 = ob[index2]
+                score += np.sum(0.6 * np.sin(0.05 * np.pi * (10 - ob2)) - 1)
+
+            # 情况2，2 实况降水u>=0.1mm u<10mm，预报降水xi>=0.1 xi<u
+            index2 = np.where((ob >= 0.1) & (ob < 10) & (foi >= 0.1) & (foi < ob))
+            if index2[0].size > 0:
+                ob2 = ob[index2]
+                fo2 = foi[index2]
+                score += np.sum(np.sin(0.05 * np.pi * (fo2 - ob2 + 10))-1)
+
+            # # 情况2，3 实况降水u>=0.1mm u<10mm，预报降水x>u
+            # index2 = np.where((ob >= 0.1) & (ob < 10) & (foi >= ob))
+            # if index2[0].size > 0:
+            #     ob2 = ob[index2]
+            #     fo2 = foi[index2]
+            #     score += np.sum(1 - np.exp(-np.power((fo2 - ob2) / 10, 2)))
+
+            # 情况3.1， 实况降水u>=10，预报降水x<u x>=0
+            index3 = np.where((ob >= 10) & (foi < ob) & (foi >= 0))
+            if index3[0].size > 0:
+                ob3 = ob[index3]
+                fo3 = foi[index3]
+                score += np.sum(np.sin(0.5 * np.pi * (fo3 / ob3))-1)
+
+            # # 情况3.2， 实况降水u>=10mm，预报降水x>=u
+            # index3 = np.where((ob >= 10) & (foi >= ob))
+            # if index3[0].size > 0:
+            #     ob3 = ob[index3]
+            #     fo3 = foi[index3]
+            #     score += np.sum(1- np.exp(-np.power((fo3 - ob3) / ob3, 2)))
+
+
+            count_list.append(nsample)
+            score_list.append(score)
+    score_array = np.array(score_list)
+    count_array = np.array(count_list)
+
+    score = score_array/(count_array+1e-30)
+    score[count_array==0] = meteva.base.IV
+    return score
+
+
+def epi(ob0,fo):
+    '''
+        过量评分
+       :param ob: 一维numpy数组
+       :param fo:  一维或者两维numpy数组，当fo是两维时，表示有多种预报进行对比
+       :return:  实数,pas评分
+    '''
+
+
+    # 如果fo只包含一个预报成员
+    if len(ob0.shape) == len(fo.shape):
+        fo = fo[np.newaxis, :]
+    nfo = fo.shape[0]
+    count_list = []
+    score_list = []
+    ob_0 = ob0.flatten()
+    # 对多个预报进行循环
+    for i in range(nfo):
+        foi_0 = fo[i, :].flatten()
+        # 基本条件
+        index0 = np.where(((foi_0 >= 0.1) | (ob_0 >= 0.1))&(foi_0>ob_0))
+        # print(index0[0].size)
+        nsample = index0[0].size
+        score = 0
+        if  nsample>0:
+            ob = ob_0[index0]
+            foi = foi_0[index0]
+            #情况1
+            index1 = np.where((ob >= 0) & (ob < 0.1))
+            if index1[0].size > 0:
+                fo_1 = foi[index1]
+                score += np.sum(1 - 0.6 * np.exp(- np.power(fo_1/10,2)))
+
+            # # 情况2，1
+            # index2 = np.where((ob >= 0.1) & (ob < 10) & (foi >= 0) & (foi < 0.1))
+            # if index2[0].size > 0:
+            #     ob2 = ob[index2]
+            #     score += np.sum(0.6 * np.sin(0.05 * np.pi * (10 - ob2)) - 1)
+
+            # 情况2，2 实况降水u>=0.1mm u<10mm，预报降水xi>=0.1 xi<u
+            # index2 = np.where((ob >= 0.1) & (ob < 10) & (foi >= 0.1) & (foi < ob))
+            # if index2[0].size > 0:
+            #     ob2 = ob[index2]
+            #     fo2 = foi[index2]
+            #     score += np.sum(np.sin(0.05 * np.pi * (fo2 - ob2 + 10))-1)
+
+            # 情况2，3 实况降水u>=0.1mm u<10mm，预报降水x>u
+            index2 = np.where((ob >= 0.1) & (ob < 10) & (foi >= ob))
+            if index2[0].size > 0:
+                ob2 = ob[index2]
+                fo2 = foi[index2]
+                score += np.sum(1 - np.exp(-np.power((fo2 - ob2) / 10, 2)))
+
+            # # 情况3.1， 实况降水u>=10，预报降水x<u x>=0
+            # index3 = np.where((ob >= 10) & (foi < ob) & (foi >= 0))
+            # if index3[0].size > 0:
+            #     ob3 = ob[index3]
+            #     fo3 = foi[index3]
+            #     score += np.sum(np.sin(0.5 * np.pi * (fo3 / ob3))-1)
+
+            # 情况3.2， 实况降水u>=10mm，预报降水x>=u
+            index3 = np.where((ob >= 10) & (foi >= ob))
+            if index3[0].size > 0:
+                ob3 = ob[index3]
+                fo3 = foi[index3]
+                score += np.sum(1- np.exp(-np.power((fo3 - ob3) / ob3, 2)))
+
+            count_list.append(nsample)
+            score_list.append(score)
+    score_array = np.array(score_list)
+    count_array = np.array(count_list)
+
+    score = score_array/(count_array+1e-30)
+    score[count_array==0] = meteva.base.IV
+    return score
+
+
+
+if __name__=="__main__":
+    pass
+    import math
+    # import pandas as pd
+    # path = r"H:\test_data\input\mem\pas\1_Two_Typical_Processes_data\1_3Results\1_3_1Results_GCEM\result.txt"
+    # df = pd.read_csv(path,sep="\\s+",header=None)
+    # nsta = len(df.index)
+    #
+    # for i in range(47999):
+    #     ob = np.array([df.iloc[i,0]])
+    #     fo = np.array([df.iloc[i,1]])
+    #     pas1 = pas(ob,fo,grade_list=[0.1])
+    #     pas01 = round(pas1[0,0], 3)
+    #     if pas01 == meteva.base.IV:
+    #         if df.iloc[i,6] ==1 and df.iloc[i,7] ==0:
+    #             pass
+    #         else:
+    #             print(i)
+    #             print(df.iloc[i, 6])
+    #             print(ob)
+    #             print(fo)
+    #             print()
+    #     else:
+    #         if abs(pas1 - df.iloc[i,6])>0.001:
+    #             print(i)
+    #             print(df.iloc[i,6])
+    #             print(ob)
+    #             print(fo)
+    #             # xi = fo[0]
+    #             # ui = ob[0]
+    #             # pas2 = math.exp(-1 * ((xi - ui) / ui) ** 2)
+    #
+    #             print()
+    #
+
+    # import pandas as pd
+    # import datetime
+    # import meteva
+    # import xarray as xr
+    # path  = r"H:\test_data\input\mem\pas\1_Two_Typical_Processes_data\1_2Forecasted_precipitation_data\2019071612\WRF3.2019071600012.nc"
+    # grd = xr.open_dataset(path)
+    # print(grd["APCP_P8_L1_GLC0_acc"])
+    #
+    # time1 = datetime.datetime(2019,7,16,0)
+    # sta = pd.DataFrame({"level": 0, "time": time1, "dtime": 12,
+    #                     "id": np.arange(grd.coords["gridlat_0"].values.size),
+    #                     "lon": grd.coords["gridlon_0"].values.flatten(),
+    #                     "lat": grd.coords["gridlat_0"].values.flatten(),
+    #                     "RAINC": grd.variables["APCP_P8_L1_GLC0_acc"].values.flatten()
+    #                     })
+    # print(sta)
+    #
+    # grd_list = []
+    # time1 = datetime.datetime(2019,7,16,0)
+    # for dh in range(1,13,1):
+    #     time_ob = time1 + datetime.timedelta(hours=dh)
+    #     path = r"H:\test_data\input\mem\pas\1_Two_Typical_Processes_data\1_1Observed_precipitation_data\2019071612\surfr"+str(dh).zfill(2)+"h.nc"
+    #     grd1 = meteva.base.read_griddata_from_nc(path,time=time_ob)
+    #     grd_list.append(grd1)
+    #
+    # grd_all = meteva.base.concat(grd_list)
+    # grd_ob = meteva.base.sum_of_grd(grd_all,used_coords=["time"])
+    # print(grd_ob.values[0,0,0,0,262,1028])
+    #
+    # grid0 = meteva.base.get_grid_of_data(grd_ob)
+    # #grid1 = meteva.base.grid([111.025,122.975,0.05],[28.025,37.975,0.05])
+    # grd_fo = meteva.base.interp_sg_idw(sta,grid0,nearNum=1)
+    #
+    # #grd_ob1 = meteva.base.interp_gg_linear(grd_ob,grid = grid1)
+    # #grd_fo1 = meteva.base.interp_gg_linear(grd_fo,grid = grid1)
+    #
+    # # meteva.base.contourf_xy(grd_ob1,save_path=r"H:\a.png")
+    # # meteva.base.contourf_xy(grd_fo1, save_path=r"H:\b.png")
+    # # print()
+    #
+    # ob_ = grd_ob.values[0,0,0,0,261:461,821:1061]
+    # fo_ = grd_fo.values[0, 0, 0, 0, 261:461, 821:1061]
+    # pas_list = pas(ob_,fo_,grade_list=[0.1,10,25,50])
+    # print(pas_list)
+    #
+    # pasc1 = pasc(ob_,fo_)
+    # print(pasc1)
+    # #
+    #
+    # ipi1 = ipi(ob_,fo_)
+    # epi1 = epi(ob_,fo_)
+    # print(ipi1)
+    # print(epi1)
+    # print()
+
