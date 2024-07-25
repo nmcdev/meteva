@@ -160,6 +160,18 @@ def tran_direction_to_8angle(direction):
         angles[np.abs(direction - i * 45) <= 22.5] = i
     return angles
 
+def tran_direction_to_16angle(direction):
+    '''
+    将0-360度的风向，转换成8个方位，分布用0,1,2，。。。15代表北风，北偏东，东北风，东偏北，东风，
+    #东偏南，东南风，南偏东，南风，南偏西，西南风，西偏南，西风，西偏北，西北风，北偏西风
+    :param direction: 风向角度， 0-360度。 任意维numpy数组
+    :return: 风向方位，0-15，和direction的shape一致的numpy数组
+    '''
+    angles = np.zeros(direction.shape)
+    for i in range(1,16):
+        angles[np.abs(direction - i * 22.5) <= 11.25] = i
+    return angles
+
 def tran_speed_to_14grade(speeds):
     '''
     将风速（m/s)，转换成14个风速等级，分布用0,1,2，。。。13代表静风，1级、2级，。。。，12级和大于等于13级
