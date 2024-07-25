@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 from matplotlib.colors import BoundaryNorm
+import pandas as pd
 
 
 def add_map(ax,add_county_line = False,add_worldmap = True,title = None,sup_fontsize = 12,linewidth = [0.3,0.3,0.2],color = ["k","k","k"]):
@@ -159,15 +160,29 @@ def creat_axs(nplot,map_extend,ncol = None,height  = None,width = None,dpi = 300
     xticks_label_None = []
     for x in range(len(xticks)):
         v1 = xticks[x]
-        if abs(v1 - int(v1))<1e-7:
-            xticks_label.append(str(int(round(v1, 6))))
+        if v1>=0 and v1 <=180:
+            if abs(v1 - int(v1))<1e-7:
+                xticks_label.append(str(int(round(v1, 6)))+ "°E")
+            else:
+                xticks_label.append(str(round(v1, 6))+ "°E")
         else:
-            xticks_label.append(str(round(v1, 6)))
+            if v1<0:
+                v2 = -v1
+            else:
+                v2 = 360 - v1
+            if abs(v1 - int(v1))<1e-7:
+                xticks_label.append(str(int(round(v2, 6)))+ "°W")
+            else:
+                xticks_label.append(str(round(v2, 6))+ "°W")
+
+
+
         xticks_label_None.append("")
-    if xticks[-1] > 0:
-        xticks_label[-1] = "   " + xticks_label[-1] + "°E"
-    else:
-        xticks_label[-1] = "   " + xticks_label[-1] + "°W"
+
+    # if xticks[-1] > 0:
+    #     xticks_label[-1] = "   " + xticks_label[-1] + "°E"
+    # else:
+    #     xticks_label[-1] = "   " + xticks_label[-1] + "°W"
 
     vmax = elat
     vmin = slat
@@ -472,35 +487,47 @@ def add_mesh(ax,grd,cmap ="rainbow",clevs= None,add_colorbar = True,title = None
 
 def add_barbs(ax,wind,color = "k",skip = None,title = None,title_fontsize = 8,length = None):
 
-    slon = ax.transLimits._boxin.x0
-    elon = ax.transLimits._boxin.x1
-    slat = ax.transLimits._boxin.y0
-    elat = ax.transLimits._boxin.y1
-
-    grid0 = meteva.base.get_grid_of_data(wind)
-    grid1 = meteva.base.grid([slon,elon,grid0.dlon],[slat,elat,grid0.dlat])
-    wind1 = meteva.base.interp_gg_linear(wind,grid1,outer_value=np.nan)
-
-    x = wind1['lon'].values
-    y = wind1['lat'].values
-    X, Y = np.meshgrid(x, y)
-    u = np.squeeze(wind1.values[0,...])
-    v = np.squeeze(wind1.values[1,...])
-
     fig = plt.gcf()
-    width = fig.bbox.width/fig.dpi
+    width = fig.bbox.width / fig.dpi
 
-    if skip is  not None:
+    if isinstance(wind, pd.DataFrame):
         if length is None:
-            length = math.sqrt((width-1) * skip / x.size) * 8
+            length = ax.bbox.width / fig.dpi
+        X = wind["lon"].values
+        Y = wind["lat"].values
+        u = wind.iloc[:,-2].values
+        v = wind.iloc[:,-1].values
+        im = ax.barbs(X, Y, u, v,
+                      sizes=dict(emptybarb=0.01, spacing=0.23, height=0.5, width=0.25), color=color,
+                      barb_increments=dict(half=2, full=4, flag=20), length=length, linewidth=length * length * 0.03)
     else:
-        if length is None:
-            length = ax.bbox.width/fig.dpi
-        skip =int((length /10)**2 * x.size / (width - 1))+1
-    ax.set_title(title,fontsize =title_fontsize)
-    im = ax.barbs(X[::skip,::skip],Y[::skip,::skip] , u[::skip,::skip], v[::skip,::skip],
-             sizes=dict(emptybarb=0.01, spacing=0.23, height=0.5,width = 0.25),color = color,
-             barb_increments=dict(half=2, full=4, flag=20),length = length,linewidth = length * length  * 0.03)
+        slon = ax.transLimits._boxin.x0
+        elon = ax.transLimits._boxin.x1
+        slat = ax.transLimits._boxin.y0
+        elat = ax.transLimits._boxin.y1
+
+        grid0 = meteva.base.get_grid_of_data(wind)
+        grid1 = meteva.base.grid([slon,elon,grid0.dlon],[slat,elat,grid0.dlat])
+        wind1 = meteva.base.interp_gg_linear(wind,grid1,outer_value=np.nan)
+
+        x = wind1['lon'].values
+        y = wind1['lat'].values
+        X, Y = np.meshgrid(x, y)
+        u = np.squeeze(wind1.values[0,...])
+        v = np.squeeze(wind1.values[1,...])
+
+
+        if skip is  not None:
+            if length is None:
+                length = math.sqrt((width-1) * skip / x.size) * 8
+        else:
+            if length is None:
+                length = ax.bbox.width/fig.dpi
+            skip =int((length /10)**2 * x.size / (width - 1))+1
+        ax.set_title(title,fontsize =title_fontsize)
+        im = ax.barbs(X[::skip,::skip],Y[::skip,::skip] , u[::skip,::skip], v[::skip,::skip],
+                 sizes=dict(emptybarb=0.01, spacing=0.23, height=0.5,width = 0.25),color = color,
+                 barb_increments=dict(half=2, full=4, flag=20),length = length,linewidth = length * length  * 0.03)
 
 
     return im
