@@ -4361,7 +4361,8 @@ def mesh_contourf(type,array,name_list_dict = None,axis_x = None,axis_y = None,c
          spasify_xticks = None,sup_fontsize = 10,title ="",sup_title =None,width = None,height = None,rect = None,rect_color = "r",extend = None):
 
     shape = array.shape
-    if len(array[array != meteva.base.IV]) == 0:
+    index = np.where(array!=meteva.base.IV)
+    if index[0].size == 0:
         print("所有的值都为缺失值")
         return
 
