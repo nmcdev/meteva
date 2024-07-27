@@ -234,12 +234,21 @@ def in_year_list(sta,year_list):
     return sta1
 
 #为拥有多month的站点数据，依次增加month所表示的list列表
-def in_month_list(sta,month_list):
+def in_month_list(data,month_list):
+
     if not isinstance(month_list,list) and not isinstance(month_list,np.ndarray):
         month_list = [month_list]
-    fo_times = pd.Series(0, index=sta['time'])
-    sta1 = sta.loc[fo_times.index.month.isin(month_list)]
-    return sta1
+
+    if isinstance(data,pd.DataFrame):
+        fo_times = pd.Series(0, index=data['time'])
+        sta1 = data.loc[fo_times.index.month.isin(month_list)]
+        return sta1
+    else:
+        times = data["time"].values
+        fo_times = pd.Series(0, index=data['time'])
+        index = np.where(fo_times.index.month.isin(month_list))[0]
+        grd1 = data.isel(time=index)
+        return grd1
 
 #为拥有多xun的站点数据，依次增加xun所表示的list列表
 def in_xun_list(sta,xun_list):

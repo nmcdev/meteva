@@ -12,7 +12,7 @@ import xarray as xr
 def set_jar_path(path):
     if os.path.exists(path):
         meteva.base.ws_jar_path = path
-        meteva.base.height_oy = os.path.split(path)[0] +"\\height_oy.nc"
+        meteva.base.height_oy = os.path.split(path)[0] +"/height_oy.nc"
     else:
         print(path + " not exists")
 

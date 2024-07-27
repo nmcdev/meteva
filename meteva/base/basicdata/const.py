@@ -5,7 +5,7 @@ import pkg_resources
 PI = 3.1415926
 E = 2.7182818
 ER = 6371.229
-OMEGA = 0.00072722
+OMEGA = 0.000072722
 IV = 999999
 K = 273.15
 dis_1_degree = 111.195

@@ -246,7 +246,7 @@ def centmatch(look_ff, criteria = 1, const = 14,  show = False):
     else :
         if (show):
             print("No objects matched.\n")
-        implicit_merges = 'NULL'
+        implicit_merges = None
         funmatched = np.arange(m)
         vxunmatched = np.arange(n)
     unmatched = {'ob':vxunmatched, 'fo':funmatched}
@@ -267,11 +267,8 @@ def centmatch(look_ff, criteria = 1, const = 14,  show = False):
     else :
         unmatched_Xhat = 'NULL'
     unmatched = {'ob':unmatched_X, 'fo':unmatched_Xhat}
-    
     #调整implicit_merges的存放结构
-    if implicit_merges == 'NULL' or implicit_merges.all() == None :
-        implicit_merges = None
-    else:
+    if implicit_merges is not None:
         implicit_merges = restructuring(implicit_merges[:, 0], implicit_merges[:, 1])
     out.update({'unmatched':unmatched, 'implicit_merges':implicit_merges, 
                       'criteria_values':Dcomp, 'centroid_distances':Dcent, 

@@ -840,7 +840,7 @@ def get_denser_cmap(cmap,multi_num):
     else:
         return cmap
 
-def show_cmap_clev(cmap,clev = None):
+def show_cmap_clev(cmap,clev = None,save_path = None):
     """
     Show color map.
     :param cmap: color map instance.
@@ -869,6 +869,8 @@ def show_cmap_clev(cmap,clev = None):
             labels.append(round(clev[x[i]],6))
         ax.set_xticklabels(labels)
     ax.imshow(im, cmap=cmap)
+    if save_path is not None:
+        plt.savefig(save_path,bbox_inches='tight')
 
 
 def get_color_list(legend_num):
