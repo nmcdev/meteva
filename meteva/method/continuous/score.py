@@ -1659,6 +1659,9 @@ def pas(ob0,fo,grade_list = [0.1]):
 
     score = score_array/(count_array+1e-30)
     score[count_array==0] = meteva.base.IV
+    score = score.squeeze()
+    if score.size ==1:
+        score = score.item()
     return score
 
 def pasc(ob0,fo):
@@ -1684,10 +1687,14 @@ def pasc(ob0,fo):
         foi = fo[i, :].flatten()
         index0 = np.where((ob_0 >=0) &(ob_0 <0.1) &(foi>=0)& (foi<0.1))
         nsample = index0[0].size  #实况和预报都是晴
-        score1 = (score_array[i] + nsample)/(count_array + nsample)
+
+        score1 = (score_array[i] + nsample)/(count_array[i] + nsample)
         score_list.append(score1)
 
     score =  np.array(score_list)
+    score = score.squeeze()
+    if score.size ==1:
+        score = score.item()
     return  score
 
 
@@ -1764,6 +1771,9 @@ def ipi(ob0,fo):
 
     score = score_array/(count_array+1e-30)
     score[count_array==0] = meteva.base.IV
+    score = score.squeeze()
+    if score.size ==1:
+        score = score.item()
     return score
 
 
@@ -1841,6 +1851,9 @@ def epi(ob0,fo):
 
     score = score_array/(count_array+1e-30)
     score[count_array==0] = meteva.base.IV
+    score = score.squeeze()
+    if score.size ==1:
+        score = score.item()
     return score
 
 
