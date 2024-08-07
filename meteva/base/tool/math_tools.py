@@ -345,3 +345,14 @@ def distance_on_earth_surface(lon1,lat1,lon2,lat2):
         if np.isnan(dis):
             dis = 0
     return dis
+
+
+def rotate_vector(vector, angle_degrees):
+    # 将角度从度转换为弧度
+    angle_radians = np.deg2rad(angle_degrees)
+    # 构建旋转矩阵
+    rotation_matrix = np.array([[np.cos(angle_radians), -np.sin(angle_radians)],
+                                [np.sin(angle_radians), np.cos(angle_radians)]])
+    # 应用旋转矩阵到矢量
+    rotated_vector = np.dot(rotation_matrix, vector)
+    return rotated_vector
