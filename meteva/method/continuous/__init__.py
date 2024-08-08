@@ -14,5 +14,5 @@ from .score import wrong_rate,wrong_rate_tc,residual_error,residual_error_tmmsss
 from .score import max_abs_error,max_error,min_error
 from .score import ob_fo_sum,rmsf,tlfo,corr_rank,rmsf_tlfo,ob_fo_quantile
 from .score import ob_fo_sum_tmmsss,ob_fo_mean_tmmsss,ob_fo_std_tmmsss
-from .score import pas,pmse,ipi,epi,pas_mid,pasc
+from .score import pas,pmse,ipi,epi,pas_mid,pasc,iepi,iepi_mid
 from .score import ob_fo_precipitation_strength,ob_fo_precipitation_strength_cscs,cscs,ob_fo_precipitation_strenght
