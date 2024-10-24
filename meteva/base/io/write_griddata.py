@@ -114,8 +114,6 @@ def write_griddata_to_micaps4(da,save_path = "a.txt",creat_dir = False,effective
         print(exstr)
         return False
 
-    
-    
 def write_griddata_to_nc(da,save_path = "a.txt",creat_dir = False,effectiveNum = 3,show = False):
     try:
         dir = os.path.split(os.path.abspath(save_path))[0]
