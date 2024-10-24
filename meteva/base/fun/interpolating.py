@@ -741,3 +741,49 @@ def cubic_f(n, dx):
     else:
         return (dx + 1) * dx * (dx - 1) / 6
 
+
+def interp_zlevel_to_plevel_linear(pressure,element_interp,level_list,with_nan = False):
+    '''
+    将模式面的数据插值到等压面
+    :param pressure: 模式面的气压数据，griddata格式，在level维度是包含多层的
+    :param element_interp:  需要插值到等压面的要素数据,所有维度的坐标必须和pressure完全相同。
+    :param level_list:  需要插值到的等压面层次，取值是气压值的列表，气压的单位需和 pressure变量中气压的单位完全一致。
+    :param with_nan: 如果某个等压面层的某个区域或全部低于所有的模式面的气压或高于所有模式面的气压时，是否以nan的方式返回
+    :return:  网格数据，在level维度坐标和 level_list一致，在member，time,dtime,lat,lon维度和pressure完全一致。
+    '''
+
+    if not isinstance(level_list,list) and not isinstance(level_list,np.ndarray):
+        level_list = [level_list]
+
+    A = pressure.values
+    B = element_interp.values
+    member_dim = np.arange(A.shape[0])[:,None,None,None,None,None]
+    time_dim = np.arange(A.shape[2])[:,None,None,None]
+    dtime_dim = np.arange(A.shape[3])[:,None,None]
+    lat_dim = np.arange(A.shape[4])[:,None]
+    lon_dim = np.arange(A.shape[5])[:]
+
+    grid0 = meteva.base.get_grid_of_data(pressure)
+    grid1 = meteva.base.grid(grid0.glon,grid0.glat,member_list=grid0.members,dtime_list=grid0.dtimes,
+                    gtime=grid0.gtime,level_list=level_list)
+
+    grd_inter = meteva.base.grid_data(grid1)
+
+    for k in range(len(level_list)):
+        level = level_list[k]
+        mask = A < level
+        index_smaller = np.argmax(mask,axis=1)
+        index_bigger = index_smaller - 1
+        p_smaller = A[member_dim,index_smaller,time_dim,dtime_dim,lat_dim,lon_dim]
+        p_bigger = A[member_dim,index_bigger,time_dim,dtime_dim,lat_dim,lon_dim]
+
+        element_smaller = B[member_dim, index_smaller, time_dim, dtime_dim, lat_dim, lon_dim]
+        element_bigger = B[member_dim, index_bigger, time_dim, dtime_dim, lat_dim, lon_dim]
+        rate = (p_bigger - level) /(p_bigger - p_smaller+1e-30)
+        value = rate * element_smaller + (1-rate) * element_bigger
+        if with_nan:
+            index = np.where(index_smaller==0)
+            value[:,:,:,index[0],index[1]] = np.nan
+        grd_inter.values[:,k,:,:,:,:] = value
+
+    return grd_inter
