@@ -298,9 +298,10 @@ def group(sta_ob_and_fos,g = None,gll = None,drop_g_column = False):
 
                     for group_list in group_list_list:
                         group_list1 = []
+
                         for time_g1 in group_list:
-                            group_list1.append(meteva.base.all_type_time_to_datetime(time_g1))
-                        sta = sta_ob_and_fos.loc[obtimes.isin(group_list1)]
+                            group_list1.append(meteva.base.all_type_time_to_time64(time_g1))
+                        sta = sta_ob_and_fos.loc[obtimes.index.isin(group_list1)]
 
                         if len(sta.index) !=0:
                             valid_group_list_list.append(group_list1)
