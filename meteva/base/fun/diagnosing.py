@@ -498,4 +498,35 @@ def t_q_p_to_rh(temp,q,pressure,unit = "%"):
             rh.values *= 100
     return rh
 
+def t_q_to_rh_on_isobar(temp,q,unit = "%"):
+    '''
+    根据温度、比湿,以及温度场的气压坐标值计算相对湿度
+    :param temp:
+    :param q:
+    :return:
+    '''
+    rh100 = copy.deepcopy(temp)
+    if isinstance(temp, pd.DataFrame):
+        rh100.iloc[:,-1] = 100
+    else:
+        rh100.values[...] = 100
 
+    if isinstance(temp, pd.DataFrame):
+        pressure = copy.deepcopy(temp)
+        pressure.iloc[:,-1] = temp["level"].values[:]
+        q100 = t_rh_p_to_q(temp, rh100, pressure)
+        rh = meteva.base.divide_on_level_time_dtime_id(q,q100)
+        if unit == "%":
+            rh.iloc[:,6:] *= 100
+    else:
+        rh = copy.deepcopy(temp)
+        pressure = copy.deepcopy(temp)
+        levels = pressure["level"].values
+        for i in range(levels.size):
+            pressure.values[:,i,:,:,:,:] = levels[i]
+        q100 = t_rh_p_to_q(temp, rh100, pressure)
+        rh.values = q.values/q100.values
+        #rh.values[rh.values>1] = 1
+        if unit=="%":
+            rh.values *= 100
+    return rh
