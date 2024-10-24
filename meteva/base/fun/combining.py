@@ -132,11 +132,11 @@ def combine_on_all_coords(sta, sta1,how = "inner"):
     elif sta1 is None:
         return sta
     else:
+
         columns = ['level', 'time', 'dtime', 'id', 'lon', 'lat']
         sta_value_columns = sta.iloc[:, 6:].columns.values.tolist()
         sta1_value_columns = sta1.iloc[:, 6:].columns.values.tolist()
         if len(sta_value_columns) >= len(sta1_value_columns):
-
             for sta1_value_column in sta1_value_columns:
                 ago_name = copy.deepcopy(sta1_value_column)
                 sta1_value_column = that_the_name_exists(sta_value_columns, sta1_value_column)
@@ -148,6 +148,11 @@ def combine_on_all_coords(sta, sta1,how = "inner"):
                 sta.rename(columns={ago_name: sta_value_column})
         df = pd.merge(sta, sta1, on=columns, how=how)
         df.attrs = copy.deepcopy(sta.attrs)
+
+        #将名称变回原来的名称，保持输入数据不变，避免影响输入数据的后续应用
+        meteva.base.set_stadata_names(sta,sta_value_columns)
+        meteva.base.set_stadata_names(sta1, sta1_value_columns)
+
         return df
 
 def combine_on_leve_time_id(sta,sta1):
