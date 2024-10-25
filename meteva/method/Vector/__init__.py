@@ -7,3 +7,4 @@ from .score import wind_weaker_rate,wind_severer_rate,wind_severer_rate_nasws,wi
 from .score import nasws_uv,na_uv,acd_uv,acs_uv,acz_uv,nas_uv,scd_uv,scs_uv,wind_severer_rate_uv,wind_weaker_rate_uv
 from .score import distance_tdis,distance,tdis
 from .score import tase_angle,tase_angle_uv,me_angle,me_angle_uv,mae_angle,mae_angle_uv,rmse_angle,rmse_angle_uv
+from .score import acd_na,acs_na,tase_angle,tase_angle_uv
