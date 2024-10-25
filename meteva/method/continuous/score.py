@@ -1393,6 +1393,41 @@ def tmmsss_merge(tmmsss0, tmmsss1):
     return tmmsss_array
 
 
+def tmmsss_merge_all(tmmsss_array):
+    '''
+    快速实现批量分块数据的合并
+    :param tmmsss_array: 分块的中间量
+    :return:
+    '''
+    count = tmmsss_array[:,0]
+    mx = tmmsss_array[:,1]
+    my = tmmsss_array[:,2]
+
+    Tcount = np.sum(count)
+    Tsumx = np.sum(count * mx)
+    Tsumy = np.sum(count * my)
+
+    Tmx = Tsumx/Tcount
+    Tmy = Tsumy/Tcount
+
+    ssx = tmmsss_array[:,3]
+    ssy = tmmsss_array[:,4]
+
+    Tssx =np.sum(count * ( ssx+np.power(mx - Tmx,2)))/Tcount
+    Tssy = np.sum(count * ( ssy+np.power(my - Tmy,2)))/Tcount
+
+    sxy = tmmsss_array[:,5]
+
+    Tsxy = np.sum(count * (sxy+(mx - Tmx) * (my - Tmy)))/Tcount
+
+    result = np.array([Tcount,Tmx,Tmy,Tssx,Tssy,Tsxy])
+    return result
+
+
+
+
+
+
 # ????
 def mre(Ob, Fo):
     '''
