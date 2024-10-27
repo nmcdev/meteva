@@ -76,6 +76,30 @@ def tems_merge(tems0, tems1):
     tems_array = np.array(tems_array_list)
     tems_array = tems_array.reshape(tems0_shape)
     return tems_array
+
+
+def tems_merge_all(tems_array):
+    '''
+    快速实现批量分块数据的合并
+    :param tems_array: bs评分计算所需分块的中间量
+    :return:
+    '''
+    count = tems_array[:,0]
+    error =  tems_array[:,1]
+    mx = tems_array[:,2]
+    ssx = tems_array[:,3]
+
+    Tcount = np.sum(count)
+    Terror = np.sum(error)
+    Tsumx = np.sum(count * mx)
+    Tmx = Tsumx/Tcount
+    Tssx =np.sum(count * ( ssx+np.power(mx - Tmx,2)))/Tcount
+
+    result = np.array([Tcount,Terror,Tmx,Tssx])
+    return result
+
+
+
 def bs(Ob, Fo):
     '''
     brier_score 评分
