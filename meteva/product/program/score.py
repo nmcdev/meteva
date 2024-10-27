@@ -340,7 +340,7 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
 
 
 def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = None,plot = "scatter",save_dir = None,save_path = None,show = False,
-             add_county_line = False,map_extend= None,print_max=0,print_min=0,dpi = 300,title = None,sort_by = None,subplot = "member",ncol = None,
+             add_county_line = False,map_extend= None,print_max=0,print_min=0,dpi = 300,title = None,sort_by = None,subplot = "member",ncol = None,halfR = 300,
              **kwargs):
 
     if s is not None:
@@ -608,7 +608,7 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
                         elat = elat0 + dlat0
                         grid1 = meteva.base.grid([slon,elon,dlon0],[slat,elat,dlat0])
 
-                        grd = meteva.base.interp_sg_idw_delta(sta_result1,grid1,halfR=300,nearNum=8)
+                        grd = meteva.base.interp_sg_idw_delta(sta_result1,grid1,halfR=halfR,nearNum=8)
                         meteva.base.tool.plot_tools.contourf_2d_grid(grd, save_path=save_path1, show=show,
                                                             title=title1_list
                                                             , add_county_line=add_county_line,
