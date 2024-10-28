@@ -783,7 +783,8 @@ def interp_zlevel_to_plevel_linear(pressure,element_interp,level_list,with_nan =
         value = rate * element_smaller + (1-rate) * element_bigger
         if with_nan:
             index = np.where(index_smaller==0)
-            value[:,:,:,index[0],index[1]] = np.nan
+            value[:,:,:,:,index[3],index[4]] = np.nan
+
         grd_inter.values[:,k,:,:,:,:] = value
 
     return grd_inter

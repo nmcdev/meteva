@@ -448,13 +448,13 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap ="rainbo
     if isinstance(grd,list):
         grd_list = grd
         for i in range(len(grd_list)):
-            vmax1 = np.max(grd_list[i].values)
-            vmin1 = np.max(grd_list[i].values)
+            vmax1 = np.nanmax(grd_list[i].values)
+            vmin1 = np.nanmin(grd_list[i].values)
             if vmax1 > vmax:vmax = vmax1
             if vmin1 > vmin:vmin = vmin1
     else:
-        vmin = np.min(grd.values)
-        vmax = np.max(grd.values)
+        vmin = np.nanmin(grd.values)
+        vmax = np.nanmax(grd.values)
         split = ["member","level", "time", "dtime"]
         if subplot is not None:
             subplot = [subplot]
