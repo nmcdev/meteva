@@ -145,6 +145,10 @@ meteva/method/space/fuzzy_logic/lib/thresholder.py
 meteva/method/space/fuzzy_logic/lib/thresholder_spatialVx.py
 meteva/method/space/fuzzy_logic/lib/vxstats.py
 meteva/method/space/fuzzy_logic/lib/zapsmall.py
+meteva/method/space/gbeta/G2IL.py
+meteva/method/space/gbeta/Gbeta.py
+meteva/method/space/gbeta/GbetaIL.py
+meteva/method/space/gbeta/__init__.py
 meteva/method/space/geo_box_plot/GeoBoxPlot.py
 meteva/method/space/geo_box_plot/__init__.py
 meteva/method/space/geometric_characterizations/__init__.py
@@ -164,6 +168,8 @@ meteva/method/space/hausdorff_metric/lib/distmap.py
 meteva/method/space/hausdorff_metric/lib/im.py
 meteva/method/space/hausdorff_metric/lib/loc_list_setup.py
 meteva/method/space/hausdorff_metric/lib/solutionset.py
+meteva/method/space/image_moments/__init__.py
+meteva/method/space/image_moments/moment.py
 meteva/method/space/mode/__init__.py
 meteva/method/space/mode/angles_psp.py
 meteva/method/space/mode/as_psp.py
@@ -215,6 +221,8 @@ meteva/method/space/pphindcast/lib/kernel2dsmooth.py
 meteva/method/space/pphindcast/lib/make_spatialVx.py
 meteva/method/space/pphindcast/lib/thresholder.py
 meteva/method/space/pphindcast/lib/vxstats.py
+meteva/method/space/qq_plot/__init__.py
+meteva/method/space/qq_plot/qq_plot.py
 meteva/method/space/rigider/__init__.py
 meteva/method/space/rigider/fint2d.py
 meteva/method/space/rigider/fint2d_old.py
@@ -237,12 +245,20 @@ meteva/method/space/significance/sig_coverage.py
 meteva/method/space/significance/significance.py
 meteva/method/space/significance/spatbiasFS.py
 meteva/method/space/significance/tsboot.py
+meteva/method/space/spectrum/__init__.py
+meteva/method/space/spectrum/spectrum.py
 meteva/method/space/uqi/__init__.py
 meteva/method/space/uqi/uqi.py
 meteva/method/space/vgm/__init__.py
 meteva/method/space/vgm/rdist.py
 meteva/method/space/vgm/structurogram.py
 meteva/method/space/vgm/structurogram_matrix.py
+meteva/method/space/zhumetic/__init__.py
+meteva/method/space/zhumetic/as_unitname.py
+meteva/method/space/zhumetic/distob.py
+meteva/method/space/zhumetic/im.py
+meteva/method/space/zhumetic/solutionset.py
+meteva/method/space/zhumetic/zhumetic.py
 meteva/method/vector/__init__.py
 meteva/method/vector/plot.py
 meteva/method/vector/score.py
@@ -254,7 +270,9 @@ meteva/method/yes_or_no/score.py
 meteva/method/yes_or_no/skill.py
 meteva/method/yes_or_no/table.py
 meteva/perspact/__init__.py
+meteva/perspact/middel_high.py
 meteva/perspact/middle_prepare.py
+meteva/perspact/middle_surface.py
 meteva/perspact/multi_element_veri.py
 meteva/perspact/score.py
 meteva/product/__init__.py
@@ -262,6 +280,7 @@ meteva/product/application/__init__.py
 meteva/product/application/data_collection.py
 meteva/product/application/data_distribute.py
 meteva/product/application/data_prepare.py
+meteva/product/application/data_prepare_on_foTime.py
 meteva/product/application/fun.py
 meteva/product/application/terrain_height_correction.py
 meteva/product/application/time_compare.py
