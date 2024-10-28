@@ -650,6 +650,53 @@ def tase(Ob, Fo,weight = None):
     return tase_array
 
 
+
+def tasem(Ob, Fo,weight = None):
+    '''
+    计算平均误差、平均绝对误差、均方误差、均方根误差的中间结果
+    -----------------------------
+    :param Ob: 实况数据  任意维numpy数组
+    :param Fo: 预测数据 任意维numpy数组,Fo.shape 和Ob.shape一致
+    :return: 一维numpy数组，其内容依次为总样本数、误差总和、绝对误差总和、误差平方总和
+    '''
+
+    tase_list = []
+    Fo_shape = Fo.shape
+    Ob_shape = Ob.shape
+    Ob_shpe_list = list(Ob_shape)
+    size = len(Ob_shpe_list)
+    ind = -size
+    Fo_Ob_index = list(Fo_shape[ind:])
+    if Fo_Ob_index != Ob_shpe_list:
+        print('预报数据和观测数据维度不匹配')
+        return
+    Ob_shpe_list.insert(0, -1)
+    new_Fo_shape = tuple(Ob_shpe_list)
+    new_Fo = Fo.reshape(new_Fo_shape)
+    new_Fo_shape = new_Fo.shape
+    if weight is None:
+        for line in range(new_Fo_shape[0]):
+            total_count = Ob.size
+            e_sum = np.sum(new_Fo[line, :] - Ob)
+            ae_sum = np.sum(np.abs(new_Fo[line, :] - Ob))
+            se_sum = np.sum(np.square(new_Fo[line, :] - Ob))
+            ob_sum = np.sum(Ob)
+            tase_list.append(np.array([total_count, e_sum, ae_sum, se_sum,ob_sum]))
+    else:
+        for line in range(new_Fo_shape[0]):
+            total_count = np.sum(weight)
+            e_sum = np.sum((new_Fo[line, :] - Ob) * weight)
+            ae_sum = np.sum(np.abs(new_Fo[line, :] - Ob) * weight)
+            se_sum = np.sum(np.square(new_Fo[line, :] - Ob)*weight)
+            ob_sum = np.sum( Ob* weight)
+            tase_list.append(np.array([total_count, e_sum, ae_sum, se_sum,ob_sum]))
+
+    tase_np = np.array(tase_list)
+    shape = list(Fo_shape[:ind])
+    shape.append(5)
+    tasem_array = tase_np.reshape(shape)
+    return tasem_array
+
 def max_error(Ob,Fo):
     me_list = []
     Fo_shape = Fo.shape
@@ -1198,6 +1245,28 @@ def ob_fo_mean_tmmsss(tmmsss_array):
     return result
 
 
+def ob_fo_mean_tasem(tasem_array):
+    '''
+    相关系数，求实况数据还和预测数据之间的相关系数
+    :param tmmsss_array: 包含命中空报和漏报的多维数组，其中最后一维长度为6，分别记录了（T,E,A,S,M）
+    :return:
+    '''
+
+    if len(tasem_array.shape) == 1:
+        tasem_array = tasem_array.reshape(1, 1, 5)
+    mx = tasem_array[..., -1] / tasem_array[..., 0]
+    my = (tasem_array[..., -1]+tasem_array[..., 1]) / tasem_array[..., 0]
+    shape1 = list(tasem_array.shape)
+    if len(tasem_array.shape) == 2:
+        result = np.zeros((2, shape1[0]))
+        result[0, :] = mx
+        result[1, :] = my
+    else:
+        result = np.zeros((1 + shape1[0], shape1[1]))
+        result[0, :] = mx
+        result[1:, :] = my
+    return result
+
 
 def ob_fo_std_tmmsss(tmmsss_array):
     '''
@@ -1322,6 +1391,41 @@ def tmmsss_merge(tmmsss0, tmmsss1):
     tmmsss_array = np.array(tmmsss_array_list)
     tmmsss_array = tmmsss_array.reshape(tmmsss0_shape)
     return tmmsss_array
+
+
+def tmmsss_merge_all(tmmsss_array):
+    '''
+    快速实现批量分块数据的合并
+    :param tmmsss_array: 分块的中间量
+    :return:
+    '''
+    count = tmmsss_array[:,0]
+    mx = tmmsss_array[:,1]
+    my = tmmsss_array[:,2]
+
+    Tcount = np.sum(count)
+    Tsumx = np.sum(count * mx)
+    Tsumy = np.sum(count * my)
+
+    Tmx = Tsumx/Tcount
+    Tmy = Tsumy/Tcount
+
+    ssx = tmmsss_array[:,3]
+    ssy = tmmsss_array[:,4]
+
+    Tssx =np.sum(count * ( ssx+np.power(mx - Tmx,2)))/Tcount
+    Tssy = np.sum(count * ( ssy+np.power(my - Tmy,2)))/Tcount
+
+    sxy = tmmsss_array[:,5]
+
+    Tsxy = np.sum(count * (sxy+(mx - Tmx) * (my - Tmy)))/Tcount
+
+    result = np.array([Tcount,Tmx,Tmy,Tssx,Tssy,Tsxy])
+    return result
+
+
+
+
 
 
 # ????

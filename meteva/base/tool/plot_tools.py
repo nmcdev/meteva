@@ -547,7 +547,7 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap ="rainbo
 
 
 def plot_2d_grid_list(grd_list,type = "contour",save_path = None,title = None,clevs= None,cmap ="rainbow",add_county_line = False,add_worldmap =False,show = False,dpi = 300,
-                     sup_fontsize = 10,height = None,width = None,ncol = None,vmax = None,vmin = None, sup_title = None,clip= None,add_minmap = None,extend = None):
+                     sup_fontsize = 10,height = None,width = None,ncol = None,vmax = None,vmin = None, sup_title = None,clip= None,add_minmap = None,extend = None,grid = False):
 
 
     if save_path is None:
@@ -610,10 +610,10 @@ def plot_2d_grid_list(grd_list,type = "contour",save_path = None,title = None,cl
         vmax = -1e30
         vmin = 1e30
         for grd in grd_list:
-            vmax1 = np.max(grd.values)
+            vmax1 = np.nanmax(grd.values)
             if vmax < vmax1:
                 vmax = vmax1
-            vmin1 = np.min(grd.values)
+            vmin1 = np.nanmin(grd.values)
             if vmin > vmin1:
                 vmin = vmin1
     if extend is None: extend = "neither"
@@ -643,9 +643,9 @@ def plot_2d_grid_list(grd_list,type = "contour",save_path = None,title = None,cl
     elif r <= 30 and r >= 20:
         inte = 5
     elif r < 180:
-        inte = 10
-    else:
         inte = 20
+    else:
+        inte = 30
 
     vmin = inte * (math.ceil(vmin / inte))
     vmax = inte * ((int)(vmax / inte) + 1)
@@ -675,8 +675,10 @@ def plot_2d_grid_list(grd_list,type = "contour",save_path = None,title = None,cl
         inte = 4
     elif r <= 30 and r >= 20:
         inte = 5
+    elif r < 80:
+        inte = 20
     else:
-        inte = 10
+        inte = 30
 
     vmin = inte * (math.ceil(vmin / inte))
     vmax = inte * ((int)(vmax / inte) + 1)
@@ -745,6 +747,8 @@ def plot_2d_grid_list(grd_list,type = "contour",save_path = None,title = None,cl
             add_china_map_2basemap(ax, name="county", edgecolor='k', lw=0.2, encoding='gbk', grid0=None)  # "县界"
         ax.set_xlim((slon, elon))
         ax.set_ylim((slat, elat))
+        if grid:
+            plt.grid()
 
 
 
@@ -899,8 +903,8 @@ def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = "rai
     ax.set_ylim((grid0.slat, grid0.elat))
 
 
-    vmax = np.max(grd.values)
-    vmin = np.min(grd.values)
+    vmax = np.nanmax(grd.values)
+    vmin = np.nanmin(grd.values)
     if extend is None: extend = "neither"
     cmap1,clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap,clevs=clevs,vmin=vmin,vmax = vmax,extend=extend)
 
@@ -2646,6 +2650,8 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
 
         if sparsify_xticks is not None:
             xticks_font = sup_fontsize * 1.0 * sparsify_xticks * (width - width_wspace) / width_axis
+            if xticks_font > sup_fontsize * 0.8:
+                xticks_font = sup_fontsize * 0.8
             spasify = sparsify_xticks
         else:
             xticks_font = sup_fontsize * 0.8
@@ -2859,6 +2865,8 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
 
         if sparsify_xticks is not None:
             xticks_font = sup_fontsize * 1.0 * sparsify_xticks * (width - width_wspace) / width_axis_labels
+            if xticks_font > sup_fontsize * 0.8:
+                xticks_font = sup_fontsize * 0.8
             spasify = sparsify_xticks
         else:
             xticks_font = sup_fontsize * 0.8
@@ -3128,9 +3136,11 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
                 width_one_subplot = 8
 
 
-        if spasify_xticks is not None:
-            xticks_font = sup_fontsize * 1.0 * spasify_xticks * (width_one_subplot - width_wspace) / width_axis_labels
-            spasify = spasify_xticks
+        if sparsify_xticks is not None:
+            xticks_font = sup_fontsize * 1.0 * sparsify_xticks * (width_one_subplot - width_wspace) / width_axis_labels
+            if xticks_font > sup_fontsize * 0.8:
+                xticks_font = sup_fontsize * 0.8
+            spasify = sparsify_xticks
         else:
             xticks_font = sup_fontsize * 0.8
 
@@ -4358,7 +4368,7 @@ def contourf(array,name_list_dict = None,axis_x = None,axis_y = None,cmap = "rai
                  sup_fontsize=sup_fontsize,title=title,sup_title = sup_title,width=width,height=height,rect=rect,rect_color=rect_color)
 
 def mesh_contourf(type,array,name_list_dict = None,axis_x = None,axis_y = None,cmap = "rainbow",clevs = None,ncol = None,annot =None,save_path = None,show = False,dpi = 300,
-         spasify_xticks = None,sup_fontsize = 10,title ="",sup_title =None,width = None,height = None,rect = None,rect_color = "r",extend = None):
+         spasify_xticks = None,xticks_inter = None,sup_fontsize = 10,title ="",sup_title =None,width = None,height = None,rect = None,rect_color = "r",extend = None):
 
     shape = array.shape
     index = np.where(array!=meteva.base.IV)
@@ -4461,31 +4471,98 @@ def mesh_contourf(type,array,name_list_dict = None,axis_x = None,axis_y = None,c
                 spasify = int(math.ceil(width_axis_labels / (10 - width_wspace)))
                 width_one_subplot = 8
 
-
-        if spasify_xticks is not None:
-            xticks_font = sup_fontsize * 1.0 * spasify_xticks * (width - width_wspace) / width_axis_labels
-            spasify = spasify_xticks
-        else:
-            xticks_font = sup_fontsize * 0.8
-
-        x = np.arange(len(name_list_dict[axis_x]))
-        xticks = x[spasify-1::spasify]
-        if isinstance(x_one, datetime.datetime):
-            xticks_labels = meteva.product.get_time_str_list(name_list_dict[axis_x][spasify-1::spasify], 3)
-        else:
-            xticks_labels = xticks_labels[spasify-1::spasify]
-
-        if axis_x =="lon":
-            xticks_labels[-1] +="°E"
-        if axis_x=="lat":
-            if int(xticks_labels[-1]) >0:
-                xticks_labels[-1] += "°N"
+        if axis_x == "lon" or axis_x == "lat":
+            vmax = name_list_dict[axis_x][-1]
+            vmin = name_list_dict[axis_x][0]
+            delta = name_list_dict[axis_x][1] - name_list_dict[axis_x][0]
+            rlon = vmax - vmin
+            if xticks_inter is None:
+                r = rlon
+                if r <= 0.1:
+                    inte = 0.05
+                elif r <= 0.5:
+                    inte = 0.1
+                elif r <= 1:
+                    inte = 0.2
+                elif r <= 5 and r > 1:
+                    inte = 1
+                elif r <= 10 and r > 5:
+                    inte = 2
+                elif r < 20 and r >= 10:
+                    inte = 4
+                elif r <= 30 and r >= 20:
+                    inte = 5
+                elif r < 180:
+                    inte = 10
+                else:
+                    inte = 20
             else:
-                xticks_labels_new = []
-                for xticks1 in xticks_labels:
-                    xticks_labels_new.append(xticks1[1:]) #remove  "-"
-                xticks_labels_new[-1] += "°S"
-                xticks_labels = xticks_labels_new
+                inte = xticks_inter
+
+            vmin = inte * (math.ceil(vmin / inte))
+            vmax = inte * ((int)(vmax / inte) + 0.5)
+
+            xticks = np.arange(vmin, vmax, inte)
+            if axis_x == "lon":
+                xticks_labels = []
+
+                for x in range(len(xticks)):
+                    v1 = xticks[x]
+                    if v1 >= 0 and v1 <= 180:
+                        if abs(v1 - int(v1)) < 1e-7:
+                            xticks_labels.append(str(int(round(v1, 6))) + "°E")
+                        else:
+                            xticks_labels.append(str(round(v1, 6)) + "°E")
+                    else:
+                        if v1 < 0:
+                            v2 = -v1
+                        else:
+                            v2 = 360 - v1
+                        if abs(v1 - int(v1)) < 1e-7:
+                            xticks_labels.append(str(int(round(v2, 6))) + "°W")
+                        else:
+                            xticks_labels.append(str(round(v2, 6)) + "°W")
+            else:
+
+                xticks_labels = []
+                for y in range(len(xticks)):
+                    v1 = xticks[y]
+                    if abs(v1 - int(v1)) < 1e-7:
+                        v1 = int(round(v1, 6))
+                    else:
+                        v1 = round(v1, 6)
+                    if xticks[y] >= 0:
+                        xticks_labels.append(str(v1) + "°N")
+                    else:
+                        xticks_labels.append(str(v1) + "°S")
+            xticks_font = sup_fontsize * 0.8
+            xticks = np.round((xticks-name_list_dict[axis_x][0])/delta,1).astype(np.int32)
+
+        else:
+            if spasify_xticks is not None:
+                xticks_font = sup_fontsize * 1.0 * spasify_xticks * (width - width_wspace) / width_axis_labels
+                spasify = spasify_xticks
+            else:
+                xticks_font = sup_fontsize * 0.8
+
+            x = np.arange(len(name_list_dict[axis_x]))
+            xticks = x[spasify-1::spasify]
+            if isinstance(x_one, datetime.datetime):
+                xticks_labels = meteva.product.get_time_str_list(name_list_dict[axis_x][spasify-1::spasify], 3)
+            else:
+                xticks_labels = xticks_labels[spasify-1::spasify]
+        #
+        # if axis_x =="lon":
+        #     xticks_labels[-1] +="°E"
+        # if axis_x=="lat":
+        #     if int(xticks_labels[-1]) >0:
+        #         xticks_labels[-1] += "°N"
+        #     else:
+        #         xticks_labels_new = []
+        #         for xticks1 in xticks_labels:
+        #             xticks_labels_new.append(xticks1[1:]) #remove  "-"
+        #         xticks_labels_new[-1] += "°S"
+        #         xticks_labels = xticks_labels_new
 
 
         xticks_labels_None = []
@@ -4575,7 +4652,6 @@ def mesh_contourf(type,array,name_list_dict = None,axis_x = None,axis_y = None,c
             else:
                 cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap, clevs=clevs, vmin=vmin,
                                                                             vmax=vmax, extend=extend)
-
                 norm = BoundaryNorm(clevs1, ncolors=cmap1.N)
                 im = ax_one.contourf(data_k, levels=clevs1, cmap=cmap1, norm=norm,
                                  extend=extend)
@@ -4584,6 +4660,7 @@ def mesh_contourf(type,array,name_list_dict = None,axis_x = None,axis_y = None,c
             ki = k % ncol
             kj = int(k / ncol)
             knext_row = ki + (kj + 1) * ncol
+
 
             if axis_x=="lon" or axis_x=="lat":
                 #为了让°E显示得更紧凑

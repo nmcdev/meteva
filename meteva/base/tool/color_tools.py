@@ -9,7 +9,7 @@ import pkg_resources
 import math
 import os
 import colorsys
-
+from matplotlib.colors import BoundaryNorm
 
 def clev_cmap_temper_2m_k():
     path = pkg_resources.resource_filename('meteva', "resources/colormaps/color_temp_2m.txt")
@@ -441,8 +441,8 @@ def cmap_clevs_me_bwr(vmin,vmax):
     clevs = []
     colors_list = []
 
-    for i in np.arange(vmin,0,inte).tolist():
-        clevs.append(i)
+    for i in np.arange(vmin,-1e-10,inte).tolist():
+        clevs.append(round(i,10))
         if i <= -max_abs_h:
             rgb = [0,0,(i - vmin)/max_abs_h]
         else:
@@ -840,37 +840,61 @@ def get_denser_cmap(cmap,multi_num):
     else:
         return cmap
 
-def show_cmap_clev(cmap,clev = None,save_path = None):
-    """
-    Show color map.
-    :param cmap: color map instance.
-    :return: None
-    """
-    n_colors = len(cmap.colors)
-    width = 8
-    heigh = 1
-    n_h = int(math.ceil(heigh * n_colors/width))
-    im = np.outer(np.ones(n_h), np.arange(n_colors))
 
-    fig, ax = plt.subplots(1, figsize=(width, heigh),
-                           subplot_kw=dict(xticks=[], yticks=[]))
-    ax.spines['bottom'].set_linewidth(1)
-    ax.spines['left'].set_linewidth(1)
-    ax.spines['top'].set_linewidth(1)
-    ax.spines['right'].set_linewidth(1)
-    if clev is not None:
-        max_tick = 10
-        step = int(math.ceil(n_colors/max_tick))
-        x = np.arange(0,n_colors,step).astype(np.int32)
-        #print(x)
-        ax.set_xticks(x)
-        labels = []
-        for i in range(x.size):
-            labels.append(round(clev[x[i]],6))
-        ax.set_xticklabels(labels)
-    ax.imshow(im, cmap=cmap)
+def show_cmap_clev(cmap,clev = None,extend = None,width = 10,height = 0.3,save_path = None,fontsize = 12):
+    n_colors = len(cmap.colors)
+    if clev is None:
+        clev = np.arange(n_colors).tolist()
+
+    # 创建一个空的 figure 和 axes
+    fig, ax = plt.subplots(figsize=(width, height))
+
+    # 创建一个空的 Normalize 对象，用于映射数据到颜色
+    norm = BoundaryNorm(clev, ncolors=cmap.N)
+
+    # 创建 colorbar 对象
+    cbar = fig.colorbar(cm.ScalarMappable(norm=norm, cmap=cmap), cax=ax, orientation='horizontal', extend=extend)
+    cbar.set_ticks(clev)
+
+    cbar.ax.tick_params(labelsize=fontsize)    # 设置刻度标签字体大小
     if save_path is not None:
-        plt.savefig(save_path,bbox_inches='tight')
+        plt.savefig(save_path,bbox_inches = "tight")
+    else:
+        plt.show()
+
+
+
+# def show_cmap_clev(cmap,clev = None,save_path = None):
+#     """
+#     Show color map.
+#     :param cmap: color map instance.
+#     :return: None
+#     """
+#     n_colors = len(cmap.colors)
+#     width = 8
+#     heigh = 1
+#     n_h = int(math.ceil(heigh * n_colors/width))
+#     im = np.outer(np.ones(n_h), np.arange(n_colors))
+#
+#     fig, ax = plt.subplots(1, figsize=(width, heigh),
+#                            subplot_kw=dict(xticks=[], yticks=[]))
+#     ax.spines['bottom'].set_linewidth(1)
+#     ax.spines['left'].set_linewidth(1)
+#     ax.spines['top'].set_linewidth(1)
+#     ax.spines['right'].set_linewidth(1)
+#     if clev is not None:
+#         max_tick = 10
+#         step = int(math.ceil(n_colors/max_tick))
+#         x = np.arange(0,n_colors,step).astype(np.int32)
+#         #print(x)
+#         ax.set_xticks(x)
+#         labels = []
+#         for i in range(x.size):
+#             labels.append(round(clev[x[i]],6))
+#         ax.set_xticklabels(labels)
+#     ax.imshow(im, cmap=cmap)
+#     if save_path is not None:
+#         plt.savefig(save_path,bbox_inches='tight')
 
 
 def get_color_list(legend_num):
@@ -1114,20 +1138,20 @@ def def_cmap_clevs(cmap = "rainbow",clevs = None,vmin = None,vmax = None,cut_col
     return cmap5,clevs4
 
 
-def merge_cmap_clevs(cmap0,clevs0,cmap1,clevs2):
+def merge_cmap_clevs(cmap0,clevs0,cmap1,clevs1):
     '''
     合并两个colorbar
-    :param cmap0:
-    :param clevs0:
-    :param cmap1:
-    :param clevs2:
+    :param cmap0: 第0个colorbar的cmap
+    :param clevs0:第0个colorbar的clevs
+    :param cmap1:第1个colorbar的cmap
+    :param clevs1:第1个colorbar的clevs
     :return:
     '''
     colors0 = np.array(cmap0.colors).tolist()
     colors1 = np.array(cmap1.colors).tolist()
     colors0.extend(colors1)
     cmap_m = colors.ListedColormap(colors0, 'indexed')
-    clevs0.extend(clevs2)
+    clevs0.extend(clevs1)
     return cmap_m,clevs0
 
 

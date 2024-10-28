@@ -1605,7 +1605,7 @@ def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim
 
         else:
             grid0 = meteva.base.grid(ctl["glon"], ctl["glat"])
-            blocksize_xy = grid0.nlon * grid0.nlat * 4
+            blocksize_xy = np.int64(grid0.nlon * grid0.nlat * 4)   #在超大的文件读取时需要用64位来记录,避免32位数不能索引到文件的所有位置
             if add_block_head_tail:
                 blocksize_xy +=8  #每块数据的头尾加了数据大小的说明
             else:
@@ -1613,7 +1613,7 @@ def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim
                 count = file_size%blocksize_xy
                 if count !=0:
                     print("warning: The header and tail of each data block in the file may contain a total of 8 bytes describing the length.")
-                    print("If add_data_len=True is not set when calling meb.read_griddata_from_ctl, it may lead to errors in data parsing.")
+                    print("If add_block_head_tail is not set when calling meb.read_griddata_from_ctl, it may lead to errors in data parsing.")
 
             data_list = []
             blocksize_one_time = ctl["cumulate_levels"] * blocksize_xy
@@ -1790,8 +1790,8 @@ def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim
                     meteva.base.set_griddata_coords(grd_one_var, member_list=[data_name])
                 file.close()
                 grd_one_var.attrs["dtime_units"] = dtime_units
-                if dtime_start != 0:
-                    grd_one_var = meteva.base.move_fo_time(grd_one_var, -dtime_start)
+                # if dtime_start != 0:
+                #     grd_one_var = meteva.base.move_fo_time(grd_one_var, -dtime_start)
                 if show:
                     print("success read data with " + ctl_path)
                 return grd_one_var

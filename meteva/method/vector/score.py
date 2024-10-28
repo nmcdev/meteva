@@ -392,10 +392,9 @@ def nasws_s(s_ob,s_fo,min_s = 0,max_s = 300):
     shape = list(Fo_shape[:ind])
     shape.append(5)
     nass_array = nass_array.reshape(shape)
-
-
-
     return nass_array
+
+
 
 
 def nasws_uv(u_ob,u_fo,v_ob,v_fo,min_s = 0,max_s = 300):
@@ -611,8 +610,8 @@ def na_ds(d_ob,d_fo,s_ob,s_fo):
         :param s_ob:观测的风速，numpy数组，shape和d_ob完全一致
         :param d_fo:预报的风向，numpy数组，numpy可以比d_ob高一维（用于同时进行多家预报结果检验），fo.shape低维与ob.shape保持一致
         :param s_fo:预报的风速，numpy数组，numpy可以比d_ob高一维（用于同时进行多家预报结果检验），fo.shape低维与ob.shape保持一致
-        :return:根据预报和观测的风向风速数据，统计得到的样本数、风向和风速都正确样本数，d_fo和d_ob的shape一致，则说明只有一家预报，此时返回
-                 一维的数据，size= 2。 如果d_fo和d_ob的shape不一致，则说明有多个预报，则返回的数据shape = （预报成员数，2）
+        :return:根据预报和观测的风向风速数据，统计得到的样本数、风向和风速都正确样本数，风向正确的样本数，风速正确的样本数，d_fo和d_ob的shape一致，则说明只有一家预报，此时返回
+                 一维的数据，size= 4。 如果d_fo和d_ob的shape不一致，则说明有多个预报，则返回的数据shape = （预报成员数，4）
         '''
     Ob_shape = d_ob.shape
     Fo_shape = d_fo.shape
@@ -636,14 +635,28 @@ def na_ds(d_ob,d_fo,s_ob,s_fo):
     for line in range(new_Fo_shape[0]):
         fo_d = meteva.base.tool.math_tools.tran_direction_to_8angle(new_Fo_d[line, :])
         fo_s = meteva.base.tool.math_tools.tran_speed_to_14grade(new_Fo_s[line,:])
-        nasd_array = np.zeros(2)
+        nasd_array = np.zeros(4)
         nasd_array[0] = d_ob.size
+
+        #综合准确
         index = np.where((fo_d == ob_d)&(fo_s == ob_s))
-        nasd_array[1] += len(index[0])
+        nasd_array[1] = len(index[0])
+
+
+        #风向准确
+        index = np.where(fo_d == ob_d)
+        nasd_array[2] = len(index[0])
+
+        #风速准确
+        index = np.where(fo_s == ob_s)
+        nasd_array[3] = len(index[0])
+
         nasd_list.append(nasd_array)
+
+
     nrag_array = np.array(nasd_list)
     shape = list(Fo_shape[:ind])
-    shape.append(2)
+    shape.append(4)
     nrag_array = nrag_array.reshape(shape)
     return nrag_array
 
@@ -657,8 +670,8 @@ def na_uv(u_ob,u_fo,v_ob,v_fo):
     :param u_fo: 预报的u分量，numpy数组，shape和u_ob完全一致或比u_ob高一维（用于同时进行多家预报结果检验），u_fo.shape低维与u_ob.shape保持一致
     :param v_ob: 观测的u分量，numpy数组，shape 和u_ob完全一致
     :param v_fo: 预报的v分量，numpy数组，shape和u_ob完全一致或比u_ob高一维（用于同时进行多家预报结果检验），v_fo.shape低维与v_ob.shape保持一致
-    :return:根据预报和观测的风向风速数据，统计得到的样本数、风向和风速都正确样本数，d_fo和d_ob的shape一致，则说明只有一家预报，此时返回
-                 一维的数据，size= 2。 如果d_fo和d_ob的shape不一致，则说明有多个预报，则返回的数据shape = （预报成员数，2）
+    :return:根据预报和观测的风向风速数据，统计得到的样本数、风向和风速都正确样本数，风向正确的样本数，风速正确的样本数，d_fo和d_ob的shape一致，则说明只有一家预报，此时返回
+                 一维的数据，size= 4。 如果d_fo和d_ob的shape不一致，则说明有多个预报，则返回的数据shape = （预报成员数，4）
     '''
     s_ob,d_ob = meteva.base.math_tools.u_v_to_s_d(u_ob,v_ob)
     s_fo,d_fo = meteva.base.math_tools.u_v_to_s_d(u_fo,v_fo)
@@ -668,6 +681,39 @@ def na_uv(u_ob,u_fo,v_ob,v_fo):
 def acz_na(na_array):
     '''
     基于中间结果计算风预报综合准确率，
+    :param nrag_array: 输入nrag函数统计得到的样本数、风向风速都正确的样本数
+    :return: 返回风预报综合准确率
+    '''
+    total = na_array[...,0]
+    sc = na_array[...,1]
+    ac = sc/total
+    return ac
+
+def acd_na(na_array):
+    '''
+    基于中间结果计算风向准确率，
+    :param nrag_array: 输入nrag函数统计得到的样本数、风向风速都正确的样本数
+    :return: 返回风预报综合准确率
+    '''
+    total = na_array[...,0]
+    sc = na_array[...,2]
+    ac = sc/total
+    return ac
+
+def acs_na(na_array):
+    '''
+    基于中间结果计算风速准确率，
+    :param nrag_array: 输入nrag函数统计得到的样本数、风向风速都正确的样本数
+    :return: 返回风预报综合准确率
+    '''
+    total = na_array[...,0]
+    sc = na_array[...,3]
+    ac = sc/total
+    return ac
+
+def acs_nacs(na_array):
+    '''
+    基于中间结果计算风速准确率，
     :param nrag_array: 输入nrag函数统计得到的样本数、风向风速都正确的样本数
     :return: 返回风预报综合准确率
     '''

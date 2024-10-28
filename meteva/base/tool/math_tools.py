@@ -160,6 +160,16 @@ def tran_direction_to_8angle(direction):
         angles[np.abs(direction - i * 45) <= 22.5] = i
     return angles
 
+def tran_8angle_to_direction(angle):
+    '''
+    将0-360度的风向，转换成8个方位，分布用0,1,2，。。。7代表北风，东北风，东方，东南风，南风，西南风，西风，西北风
+    :param angle: 风向角度， 0-360度。 任意维numpy数组
+    :return: 风向方位，0-7，和direction的shape一致的numpy数组
+    '''
+    direction = angle * 45 + 22.5
+
+    return direction
+
 def tran_direction_to_16angle(direction):
     '''
     将0-360度的风向，转换成8个方位，分布用0,1,2，。。。15代表北风，北偏东，东北风，东偏北，东风，
@@ -184,6 +194,14 @@ def tran_speed_to_14grade(speeds):
         gi = gs[i]
         grades[speeds>=gi] = i
     return grades
+
+def tran_14grade_to_speed(grade):
+    gs = np.array([0,0.3,1.6,3.4,5.5,8.0,10.8,13.9,17.2,20.8,24.5,28.5,32.7,37,41.5,46.2,51.0,56.1,999999])
+    grade_int = grade.astype(np.int32)
+    grade_int[grade>18] = 18
+    speed = gs[grade_int]
+
+    return speed
 
 def s_d_to_u_v(speed,direction):
     u = -speed * np.sin(direction * 3.14 / 180)
@@ -345,6 +363,61 @@ def distance_on_earth_surface(lon1,lat1,lon2,lat2):
         if np.isnan(dis):
             dis = 0
     return dis
+
+
+
+def bearing_of_great_circle(lonA,latA, lonB, latB):
+    '''
+    已知地球表面上两个点A和B的经纬度，计算B相对于A的大圆方位角
+    :param lonA:
+    :param latA:
+    :param lonB:
+    :param latB:
+    :return:
+    '''
+
+    if isinstance(latA,np.ndarray):
+        # 将十进制度数转化为弧度
+        index = np.where((latA == meteva.base.IV)|(lonA == meteva.base.IV)|(latB == meteva.base.IV)|(lonB == meteva.base.IV))
+        lat1 = np.radians(latA)
+        lon1 = np.radians(lonA)
+        lat2 = np.radians(latB)
+        lon2 = np.radians(lonB)
+
+
+        # haversine公式
+        dlon = lon2 - lon1
+        y = np.sin(dlon) * np.cos(lat2)
+        x = np.cos(lat1) * np.sin(lat2) - (np.sin(lat1) * np.cos(lat2) * np.cos(dlon))
+
+        bearing = np.arctan2(y, x)
+
+        # 将弧度转化为度数
+        bearing = np.degrees(bearing)
+
+        # 调整方位角到0-360度
+        bearing = (bearing + 360) % 360
+        bearing[index] = meteva.base.IV
+
+    else:
+
+        # 将十进制度数转化为弧度
+        lat1, lon1, lat2, lon2 = map(math.radians, [latA, lonA, latB, lonB])
+
+        # haversine公式
+        dlon = lon2 - lon1
+        y = math.sin(dlon) * math.cos(lat2)
+        x = math.cos(lat1) * math.sin(lat2) - (math.sin(lat1) * math.cos(lat2) * math.cos(dlon))
+
+        bearing = math.atan2(y, x)
+
+        # 将弧度转化为度数
+        bearing = math.degrees(bearing)
+
+        # 调整方位角到0-360度
+        bearing = (bearing + 360) % 360
+
+    return bearing
 
 
 def rotate_vector(vector, angle_degrees):

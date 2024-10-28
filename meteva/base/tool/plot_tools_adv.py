@@ -13,7 +13,9 @@ def add_map(ax,add_county_line = False,add_worldmap = True,title = None,sup_font
 
     if meteva.base.customized_basemap_list is None:
         if add_worldmap:
-            meteva.base.tool.plot_tools.add_china_map_2basemap(ax, name="world", edgecolor='k', lw=0.3, encoding='gbk', grid0=None)  # "国界"
+            meteva.base.tool.plot_tools.add_china_map_2basemap(ax, name="world", edgecolor='k', lw=0.3, encoding='gbk', grid0=None)  # "世界地图"
+            meteva.base.tool.plot_tools.add_china_map_2basemap(ax, name="world360", edgecolor='k', lw=0.3, encoding='gbk',
+                                                               grid0=None)  # "世界地图"
         meteva.base.tool.plot_tools.add_china_map_2basemap(ax, name="nation", edgecolor='k', lw=0.3,encoding = 'gbk')  #"国界"
         meteva.base.tool.plot_tools.add_china_map_2basemap(ax, edgecolor='k', lw=0.3,encoding = 'gbk')  #"省界"
         if add_county_line:
@@ -43,7 +45,7 @@ def add_map(ax,add_county_line = False,add_worldmap = True,title = None,sup_font
 
 
 def creat_axs(nplot,map_extend,ncol = None,height  = None,width = None,dpi = 300,sup_title = None,sup_fontsize = 12,
-              add_county_line = False,add_worldmap = True,add_minmap = None,title_list = None,add_index = None,wspace = None,grid = True,
+              add_county_line = False,add_worldmap = True,add_minmap = None,title_list = None,add_index = None,wspace = None,hspace = None,grid = True,
               xticks_inter = None,yticks_inter = None,linewidth = [0.3,0.3,0.2],color = ["k","k","k"],keep_ticks = 1,
               width_colorbar = 0.5):
 
@@ -80,10 +82,13 @@ def creat_axs(nplot,map_extend,ncol = None,height  = None,width = None,dpi = 300
         sup_height_title = sup_fontsize * 0.12
 
     height_title = sup_fontsize * 0.1
-    if keep_ticks==1:
-        height_hspace = sup_fontsize * 0.025
+    if hspace is None:
+        if keep_ticks==1:
+            height_hspace = sup_fontsize * 0.025
+        else:
+            height_hspace = sup_fontsize * 0.005
     else:
-        height_hspace = sup_fontsize * 0.005
+        height_hspace = hspace
 
     if wspace is None:
         width_wspace = height_hspace*2
@@ -522,7 +527,8 @@ def add_barbs(ax,wind,color = "k",skip = None,title = None,title_fontsize = 8,le
 
         if skip is  not None:
             if length is None:
-                length = math.sqrt((width-1) * skip / x.size) * 8
+                #length = math.sqrt((width-1) * skip / x.size) * 5
+                length = math.sqrt(ax.bbox.width*skip/ fig.dpi)*1.0
         else:
             if length is None:
                 length = ax.bbox.width/fig.dpi

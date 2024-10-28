@@ -12,15 +12,19 @@ method_coluns_dict = {
     "hfmc" :  ["H","F","M","C"],
     "hfmc_multi": ["H", "F", "M", "C"],
     "tase":["T", "E", "A", "S"],
+    "tase_angle": ["T", "E_angle", "A_angle", "S_angle"],
+    "tase_angle_uv": ["T", "E_angle", "A_angle", "S_angle"],
+    "tasem":["T", "E", "A", "S","M"],
     "tc_count":["T", "C"],
     "tlfo":["T","LFO"],
     "toar":["T","OAR"],
     "tmmsss": ["T", "MX","MY","SX","SY","SXY"],
     "tbask":["T","BASK"],
-    "nasws_uv": ["T", "AC", "SCORE", "SEVERER", "WEAK"],
-    "nas_uv": ["T", "AC", "SCORE"],
-    "na_uv":["T","AC"],
-    "nasws_s": ["T", "AC", "SCORE", "SEVERER", "WEAK"],
+    "nasws_uv": ["T", "ACS", "SCORE", "SEVERER", "WEAK"],
+    "nas_uv": ["T", "ACS", "SCORE"],
+    "na_uv":["T","ACZ","ACD","ACS"],
+    "nasws_s": ["T", "ACS", "SPEEDSCORE", "SEVERER", "WEAK"],
+    "na_s":["T","ACS"],
     "fss":["pob","pfo","fbs"],
     "tems":["T","E","MX","SX"],
     "cscs":["CX","SX","CY","SY"],
@@ -42,6 +46,8 @@ def get_score_method_with_mid(method):
 
     hfmc_of_sum_rain_list = [meteva.method.pc_of_sun_rain]
     tase_list = [meteva.method.me, meteva.method.mae, meteva.method.mse, meteva.method.rmse]
+    tase_angle_list = [meteva.method.me_angle, meteva.method.mae_angle, meteva.method.rmse_angle]
+    tasem_list = [meteva.method.ob_fo_mean]
     tc_list = [meteva.method.correct_rate,meteva.method.wrong_rate]
     tmmsss_list = [meteva.method.residual_error, meteva.method.residual_error_rate,meteva.method.corr,
                     meteva.method.nse,meteva.method.ob_fo_mean,meteva.method.ob_fo_sum,meteva.method.ob_fo_std]
@@ -50,7 +56,7 @@ def get_score_method_with_mid(method):
                      meteva.method.wind_severer_rate]
     nasws_uv_list = [meteva.method.acs_uv,meteva.method.scs_uv,meteva.method.wind_weaker_rate_uv,meteva.method.wind_severer_rate_uv]
     nas_uv_list = [meteva.method.acd_uv,meteva.method.scd_uv]
-    na_uv_list = [meteva.method.acz_uv]
+    na_uv_list = [meteva.method.acz_uv,meteva.method.acd_uv,meteva.method.acs_uv]
     toar_list = [meteva.method.mre]
     tlfo_list = [meteva.method.rmsf]
     fss_list = [meteva.method.fss]
@@ -58,46 +64,51 @@ def get_score_method_with_mid(method):
     hnh_list = [meteva.method.roc_auc]
     cscs_list = [meteva.method.ob_fo_precipitation_strength]
 
-    method_mid = None
+    method_mid = []
     method_name = method.__name__
 
     if method in hfmc_of_sum_rain_list:
-        method_mid = getattr(meteva.method, method_name + "_hfmc")
-    elif method in hfmc_list:
-        method_mid  = getattr(meteva.method, method_name +"_hfmc")
-    elif method in hfmc_multi_list:
-        method_mid  = getattr(meteva.method, method_name[:-6] +"_hfmc")
-    elif method in tase_list:
-        method_mid = getattr(meteva.method, method_name + "_tase")
-    elif method in tc_list:
-        method_mid = getattr(meteva.method, method_name + "_tc")
-    elif method in tmmsss_list:
-        method_mid = getattr(meteva.method, method_name + "_tmmsss")
-    elif method in toar_list:
-        method_mid = getattr(meteva.method, method_name + "_toar")
-    elif method in tlfo_list:
-        method_mid = getattr(meteva.method, method_name + "_tlfo")
-    elif method in tbask_list:
-        method_mid = getattr(meteva.product, method_name + "_tbask")
-    elif method in nasws_s_list:
-        method_mid = getattr(meteva.method, method_name + "_nasws")
-    elif method in tems_list:
-        method_mid = getattr(meteva.method, method_name + "_tems")
-    elif method in nasws_uv_list:
+        method_mid.append(getattr(meteva.method, method_name + "_hfmc"))
+    if method in hfmc_list:
+        method_mid.append(getattr(meteva.method, method_name +"_hfmc"))
+    if method in hfmc_multi_list:
+        method_mid.append(getattr(meteva.method, method_name[:-6] +"_hfmc"))
+    if method in tase_list:
+        method_mid.append(getattr(meteva.method, method_name + "_tase"))
+    if method in tase_angle_list:
+        method_name1 = method_name.split("_")[0]
+        method_mid.append(getattr(meteva.method, method_name1 + "_tase"))
+    if method in tc_list:
+        method_mid.append(getattr(meteva.method, method_name + "_tc"))
+    if method in tmmsss_list:
+        method_mid.append(getattr(meteva.method, method_name + "_tmmsss"))
+    if method in toar_list:
+        method_mid.append(getattr(meteva.method, method_name + "_toar"))
+    if method in tlfo_list:
+        method_mid.append(getattr(meteva.method, method_name + "_tlfo"))
+    if method in tbask_list:
+        method_mid.append(getattr(meteva.product, method_name + "_tbask"))
+    if method in nasws_s_list:
+        method_mid.append(getattr(meteva.method, method_name + "_nasws"))
+    if method in tems_list:
+        method_mid.append(getattr(meteva.method, method_name + "_tems"))
+    if method in nasws_uv_list:
         method_name1 = method_name.replace("_uv","_nasws")
-        method_mid = getattr(meteva.method, method_name1)
-    elif method in nas_uv_list:
+        method_mid.append(getattr(meteva.method, method_name1))
+    if method in nas_uv_list:
         method_name1 = method_name.replace("_uv","_nas")
-        method_mid = getattr(meteva.method, method_name1)
-    elif method in na_uv_list:
+        method_mid.append(getattr(meteva.method, method_name1))
+    if method in na_uv_list:
         method_name1 = method_name.replace("_uv","_na")
-        method_mid = getattr(meteva.method, method_name1)
-    elif method in fss_list:
-        method_mid = getattr(meteva.method, method_name + "_fof")
-    elif method in hnh_list:
-        method_mid = getattr(meteva.method, method_name + "_hnh")
-    elif method in cscs_list:
-        method_mid = getattr(meteva.method, method_name + "_cscs")
+        method_mid.append(getattr(meteva.method, method_name1))
+    if method in fss_list:
+        method_mid.append(getattr(meteva.method, method_name + "_fof"))
+    if method in hnh_list:
+        method_mid.append(getattr(meteva.method, method_name + "_hnh"))
+    if method in cscs_list:
+        method_mid.append(getattr(meteva.method, method_name + "_cscs"))
+    if method in tasem_list:
+        method_mid.append(getattr(meteva.method,method_name+"_tasem"))
     #print(method_mid)
     return method_mid
 
@@ -115,6 +126,8 @@ def get_middle_method(method):
 
     hfmc_of_sum_rain_list = [meteva.method.pc_of_sun_rain]
     tase_list = [meteva.method.me, meteva.method.mae, meteva.method.mse, meteva.method.rmse]
+    tase_angle_list = [meteva.method.me_angle, meteva.method.mae_angle, meteva.method.rmse_angle]
+    tasem_list = [meteva.method.ob_fo_mean]
     tc_list = [meteva.method.correct_rate,meteva.method.wrong_rate]
     tmmsss_list = [meteva.method.residual_error, meteva.method.residual_error_rate,meteva.method.corr,meteva.method.ob_fo_sum,meteva.method.ob_fo_mean,
                    meteva.method.nse,meteva.method.ob_fo_std]
@@ -124,46 +137,51 @@ def get_middle_method(method):
     nasws_s_list = [meteva.method.acs,meteva.method.scs,meteva.method.wind_weaker_rate,meteva.method.wind_severer_rate]
     nasws_uv_list = [meteva.method.acs_uv,meteva.method.scs_uv,meteva.method.wind_weaker_rate_uv,meteva.method.wind_severer_rate_uv]
     nas_uv_list = [meteva.method.acd_uv,meteva.method.scd_uv]
-    na_uv_list = [meteva.method.acz_uv]
+    na_uv_list = [meteva.method.acz_uv,meteva.method.acs_uv,meteva.method.acd_uv]
     fss_list = [meteva.method.fss]
     tems_list = [meteva.method.bs, meteva.method.bss]
     hnh_list = [meteva.method.roc_auc]
     cscs_list = [meteva.method.ob_fo_precipitation_strength]
-    method_mid = None
+    method_mid = []
+
     if method in hfmc_of_sum_rain_list:
-        method_mid = meteva.method.hfmc_of_sun_rain
-    elif method in hfmc_list:
-        method_mid  = meteva.method.hfmc
-    elif method in hfmc_multi_list:
-        method_mid = meteva.method.hfmc_multi
-    elif method in tase_list:
-        method_mid = meteva.method.tase
-    elif method in tc_list:
-        method_mid = meteva.method.tc_count
-    elif method in tmmsss_list:
-        method_mid = meteva.method.tmmsss
-    elif method in toar_list:
-        method_mid = meteva.method.toar
-    elif method in tlfo_list:
-        method_mid = meteva.method.tlfo
-    elif method in tbask_list:
-        method_mid = meteva.product.regulation.temperature.tbask
-    elif method in nasws_s_list:
-        method_mid = meteva.method.nasws_s
-    elif method in nasws_uv_list:
-        method_mid = meteva.method.nasws_uv
-    elif method in nas_uv_list:
-        method_mid = meteva.method.nas_uv
-    elif method in na_uv_list:
-        method_mid = meteva.method.na_uv
-    elif method in fss_list:
-        method_mid = meteva.method.fss
-    elif method in tems_list:
-        method_mid = meteva.method.tems
-    elif method in hnh_list:
-        method_mid = meteva.method.hnh
-    elif method in cscs_list:
-        method_mid = meteva.method.cscs
+        method_mid.append(meteva.method.hfmc_of_sun_rain)
+    if method in hfmc_list:
+        method_mid.append(meteva.method.hfmc)
+    if method in hfmc_multi_list:
+        method_mid.append(meteva.method.hfmc_multi)
+    if method in tase_list:
+        method_mid.append(meteva.method.tase)
+    if method in tase_angle_list:
+        method_mid.append(meteva.method.tase_angle)
+    if method in tc_list:
+        method_mid.append(meteva.method.tc_count)
+    if method in tmmsss_list:
+        method_mid.append(meteva.method.tmmsss)
+    if method in toar_list:
+        method_mid.append(meteva.method.toar)
+    if method in tlfo_list:
+        method_mid.append(meteva.method.tlfo)
+    if method in tbask_list:
+        method_mid.append(meteva.product.regulation.temperature.tbask)
+    if method in nasws_s_list:
+        method_mid.append(meteva.method.nasws_s)
+    if method in nasws_uv_list:
+        method_mid.append(meteva.method.nasws_uv)
+    if method in nas_uv_list:
+        method_mid.append(meteva.method.nas_uv)
+    if method in na_uv_list:
+        method_mid.append(meteva.method.na_uv)
+    if method in fss_list:
+        method_mid.append(meteva.method.fss)
+    if method in tems_list:
+        method_mid.append(meteva.method.tems)
+    if method in hnh_list:
+        method_mid.append(meteva.method.hnh)
+    if method in cscs_list:
+        method_mid.append(meteva.method.cscs)
+    if method in tasem_list:
+        method_mid.append(meteva.method.tasem)
     return method_mid
 
 def get_middle_columns(method):
@@ -473,6 +491,7 @@ def middle_df_grd(grd_ob, grd_fo, method, grade_list=None, compare=None, marker=
             squere_error = (np.square(grd_ob.values - grd_fo.values) * grd_weight.values).flatten()
             mean_obs = (grd_ob.values* grd_weight.values).flatten()
             df = pd.DataFrame( {"T":total_count,"E":error,"A":abs_error,"S":squere_error,"M":mean_obs,"id":marker.values.flatten()})
+            df.dropna(inplace=True)
             # 使用 agg 方法进行聚合计算
             result_df = df.groupby('id').agg({
                 'T': 'sum',  # 权重和
