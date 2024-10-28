@@ -7,6 +7,7 @@ import collections
 import copy
 
 
+
 # 实现任意纬度分类的函数
 def score_df(df, method, s = None,g=None,gll_dict = None,plot = None,excel_path = None,first = True,**kwargs):
     '''
@@ -23,16 +24,32 @@ def score_df(df, method, s = None,g=None,gll_dict = None,plot = None,excel_path 
     :return:
     '''
     method_name = method.__name__
+    method_mid_list = meteva.perspact.get_middle_method(method)
+    method_mid = None
+    column_df = df.columns
+    column_list_all = []
+    for method_mid1 in method_mid_list:
+        column_list = meteva.perspact.get_middle_columns(method_mid1)
+        if set(column_list) <= set(column_df):
+            method_mid = method_mid1
+        else:
+            column_list_all.append(column_list)
+    if method_mid is None:
+        print("input pandas.DataFrame must contains columns in list of " + str(
+            column_list_all) + " for mem." + method_name + " caculation")
 
-    method_mid = meteva.perspact.get_middle_method(method)
-    column_list = meteva.perspact.get_middle_columns(method_mid)
-    score_method_with_mid = meteva.perspact.get_score_method_with_mid(method)
+        return None, None
+
+    score_method_with_mid_list = meteva.perspact.get_score_method_with_mid(method)
+    score_method_with_mid = None
+    for mid in score_method_with_mid_list:
+        mid_name = method_mid.__name__.split("_")[0]
+        if mid.__name__.find(mid_name)>0:
+            score_method_with_mid = mid
+
     df0 = meteva.base.sta_data(df)
 
-    column_df = df.columns
-    if not set(column_list) <= set(column_df):
-        print("input pandas.DataFrame must contains columns in list of "+ str(column_list) + " for mem." + method_name + " caculation")
-        return None,None
+
 
     if s is not None:
         if "member" in s.keys():
@@ -62,6 +79,8 @@ def score_df(df, method, s = None,g=None,gll_dict = None,plot = None,excel_path 
 
 
     df1 = meteva.base.sele_by_dict(df0, s)
+
+
     if len(df1.index) ==0:
         print("所选参数范围内没有检验数据")
         return None,None
@@ -81,6 +100,12 @@ def score_df(df, method, s = None,g=None,gll_dict = None,plot = None,excel_path 
             df_ob["CY"] = df1["CX"]
             df_ob["SY"] = df1["SX"]
             pass
+        if method_mid.__name__ =="tasem":
+            try:
+                df1["M"] = df1["M"] + df1["E"]
+            except:
+                print("中间数据中未包含M 列")
+
         df_ob.drop_duplicates(subset=None, keep='first', inplace=True)
         df1 = pd.concat([df_ob,df1],axis=0)
         if g is None:
@@ -163,15 +188,17 @@ def score_df(df, method, s = None,g=None,gll_dict = None,plot = None,excel_path 
         for i in range(len(df1_list)):
             if method_mid == meteva.method.tmmsss:
                 tmmsss_array = df1_list[i][column_list].values
-                mid_array = tmmsss_array[0, :]
-                for j in range(1, tmmsss_array.shape[0]):
-                    mid_array = meteva.method.tmmsss_merge(mid_array, tmmsss_array[j, :])
+                mid_array = meteva.method.tmmsss_merge_all(tmmsss_array)
+                # mid_array = tmmsss_array[0, :]
+                # for j in range(1, tmmsss_array.shape[0]):
+                #     mid_array = meteva.method.tmmsss_merge(mid_array, tmmsss_array[j, :])
 
             elif method_mid == meteva.method.tems:
                 tems_array = df1_list[i][column_list].values
-                mid_array = tems_array[0, :]
-                for j in range(1, tems_array.shape[0]):
-                    mid_array = meteva.method.tems_merge(mid_array, tems_array[j, :])
+                mid_array = meteva.method.tems_merge_all(tems_array)
+                # mid_array = tems_array[0, :]
+                # for j in range(1, tems_array.shape[0]):
+                #     mid_array = meteva.method.tems_merge(mid_array, tems_array[j, :])
             else:
                 mid_list = []
                 for column in column_list:
@@ -970,7 +997,7 @@ def score_xy_df(df_mid,method,s = None,g = None,gll_dict = None,save_path = None
         grd_list_plot = []
         for i in range(len(grd_list)):
             score_grd = grd_list[i].copy()
-            score_grd.values[score_grd.values == meteva.base.IV] = 0
+            score_grd.values[score_grd.values == meteva.base.IV] = np.nan
             grd_list_plot.append(score_grd)
         if gnames0 is None:
             title_list = None
@@ -1009,7 +1036,7 @@ def score_xy_df_delta(df_mid,method,reference_member,s = None,gll_dict = None,sa
     grd_list_plot = []
     for i in range(len(grd_list)):
         score_grd = grd_list[i].copy()
-        score_grd.values[score_grd.values == meteva.base.IV] = 0
+        score_grd.values[score_grd.values == meteva.base.IV] = np.nan
         grd_list_plot.append(score_grd)
 
     title_list = []
