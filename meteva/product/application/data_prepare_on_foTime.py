@@ -9,9 +9,11 @@ import os
 
 
 para_example= {
-    "begin_time":datetime.datetime.now() - datetime.timedelta(days =7),
-    "end_time":datetime.datetime.now(),
+    "base_on":"foTime",
+    "begin_time":datetime.datetime(2024,10,1,0),
+    "end_time":datetime.datetime(2024,10,1,0),
     "station_file":r"H:\task\other\202009-veri_objective_method\sta_info.m3",
+    "time_type":"UT",
     "defalut_value":0,
     "hdf_file_name":"last_week_data.h5",
     "interp": meteva.base.interp_gs_nearest,
@@ -29,7 +31,7 @@ para_example= {
     "fo_data":{
         "ECMWF": {
             "dir_fo": r"S:\data\grid\ECMWF_HR\APCP\YYYYMMDD\YYMMDDHH.TTT.nc",
-            "hour":[8,20,12],
+            "hour":[0,12,12],
             "dtime":[0,240,12],
             "read_method": meteva.base.io.read_griddata_from_nc,
             "read_para": {},
@@ -42,7 +44,7 @@ para_example= {
 
         "SCMOC": {
             "dir_fo": r"S:\data\grid\NWFD_SCMOC\RAIN03\YYYYMMDD\YYMMDDHH.TTT.nc",
-            "hour": [8, 20,12],
+            "hour": [0, 12,12],
             "dtime":[3,240,3],
             "read_method": meteva.base.io.read_griddata_from_nc,
             "read_para": {},
@@ -87,10 +89,10 @@ def prepare_dataset_on_foTime(para,recover = True):
             max1 = para["fo_data"][model]["dtime"][1]
             if max1 >max_dtime:
                 max_dtime = max1
+        para["max_dtime"] = max_dtime
 
         hdf_file_list = [hdf_path]
         para["ob_data"]["hdf_path"] = hdf_path
-        para["max_dtime"] = max_dtime
         sta_ob = creat_ob_dataset_on_foTime(para)
         operation = para["ob_data"]["operation"]
         operation_para = para["ob_data"]["operation_para"]
@@ -150,6 +152,15 @@ def prepare_dataset_without_combining_on_foTime(para,recover = True):
     :param para: 根据配置参数从站点和网格数据中读取数据插值到指定站表上，在存储成hdf格式文件，然后从hdf格式文件中读取相应的文件合并成检验要的数据集合文件
     :return:
     '''
+
+    # 找到最大的时效
+    max_dtime = 0
+    models = para["fo_data"].keys()
+    for model in models:
+        max1 = para["fo_data"][model]["dtime"][1]
+        if max1 > max_dtime:
+            max_dtime = max1
+    para["max_dtime"] = max_dtime
 
     # 全局参数预处理，站点列表的读取
     station = meteva.base.read_station(para["station_file"])
@@ -579,4 +590,5 @@ def rename_hdf_file(old_para,new_para):
 
 if __name__ == "__main__":
 
-    prepare_dataset_on_foTime(para_example)
+    #prepare_dataset_on_foTime(para_example)
+    prepare_dataset_without_combining_on_foTime(para_example)

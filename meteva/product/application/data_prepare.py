@@ -78,14 +78,14 @@ def prepare_dataset(para,recover = True):
 
 
 def prepare_dataset_without_combining(para,recover = True):
-    on_obTime = "obTime"
+    base_on = "obTime"
     if "base_on" in para.keys():
-        on_obTime = para["on_obTime"]
+        base_on = para["base_on"]
 
     if "time_type" not in para.keys():
         para["time_type"] = "BT"
 
-    if on_obTime =="obTime":
+    if base_on =="obTime":
         prepare_dataset_without_combining_on_obTime(para,recover=recover)
 
     else:
