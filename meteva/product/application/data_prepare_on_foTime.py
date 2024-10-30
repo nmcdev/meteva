@@ -463,66 +463,64 @@ def creat_ob_dataset_on_foTime(para,ele = "ob",recover = True):
     time1 = begin_time
     while time1 <= end_time:
         if time1.hour in hours:
-            if time1 in exist_time_list:
-                continue
-
-            if para["time_type"] == para["ob_data"]["time_type"]:
-                file_time = time1
-            else:
-                if para["time_type"] == "BT":
-                    #主程序是北京时，文件是世界时
-                    file_time = time1 - datetime.timedelta(hours = 8)
+            if time1 not in exist_time_list:
+                if para["time_type"] == para["ob_data"]["time_type"]:
+                    file_time = time1
                 else:
-                    #主程序是世界时，文件是北京时
-                    file_time = time1 + datetime.timedelta(hours = 8)
-
-            if dir_ob is None:
-                dat = read_method(**read_para, time=file_time)
-                if dat is not None:
-                    if not isinstance(dat, pd.DataFrame):
-                        interp = para["interp"]
-                        dat = interp(dat, station)
+                    if para["time_type"] == "BT":
+                        #主程序是北京时，文件是世界时
+                        file_time = time1 - datetime.timedelta(hours = 8)
                     else:
-                        dat = meteva.base.fun.comp.put_stadata_on_station(dat, station)
-                    if reasonable_value is not None:
-                        dat = meteva.base.sele_by_para(dat, value=reasonable_value)
-                    data_name0 = meteva.base.get_stadata_names(dat)
-                    if len(data_name0) == 1:
-                        meteva.base.set_stadata_names(dat, data_name)
-                    meteva.base.set_stadata_coords(dat, time=time1)
-                    sta_list.append(dat)
-                    print("success read data from " + str(read_para) + str(file_time))
-            else:
-                file_exit = False
-                path = meteva.base.get_path(dir_ob, file_time)
-                if is_gds:
-                    if path in gds_file_list:
-                        file_exit = True
-                else:
-                    if os.path.exists(path) or path is None:
-                        file_exit = True
-                if file_exit:
-                    try:
-                        dat = read_method(path,**read_para)
-                        if dat is not None:
-                            dat = meteva.base.fun.comp.put_stadata_on_station(dat,station)
-                            if not isinstance(dat,pd.DataFrame):
-                                interp = para["interp"]
-                                dat = interp(dat,station)
-                            if reasonable_value is not None:
-                                dat = meteva.base.sele_by_para(dat,value=reasonable_value)
-                            data_name0 = meteva.base.get_stadata_names(dat)
-                            if len(data_name0) == 1:
-                                meteva.base.set_stadata_names(dat,data_name)
-                            meteva.base.set_stadata_coords(dat,time = time1)
-                            sta_list.append(dat)
-                            print("success read data from "+ path)
+                        #主程序是世界时，文件是北京时
+                        file_time = time1 + datetime.timedelta(hours = 8)
+
+                if dir_ob is None:
+                    dat = read_method(**read_para, time=file_time)
+                    if dat is not None:
+                        if not isinstance(dat, pd.DataFrame):
+                            interp = para["interp"]
+                            dat = interp(dat, station)
                         else:
-                            print("fail read data from " + path)
-                    except:
-                        print("fail read data from " + path)
+                            dat = meteva.base.fun.comp.put_stadata_on_station(dat, station)
+                        if reasonable_value is not None:
+                            dat = meteva.base.sele_by_para(dat, value=reasonable_value)
+                        data_name0 = meteva.base.get_stadata_names(dat)
+                        if len(data_name0) == 1:
+                            meteva.base.set_stadata_names(dat, data_name)
+                        meteva.base.set_stadata_coords(dat, time=time1)
+                        sta_list.append(dat)
+                        print("success read data from " + str(read_para) + str(file_time))
                 else:
-                    print(path +  "does not exist")
+                    file_exit = False
+                    path = meteva.base.get_path(dir_ob, file_time)
+                    if is_gds:
+                        if path in gds_file_list:
+                            file_exit = True
+                    else:
+                        if os.path.exists(path) or path is None:
+                            file_exit = True
+                    if file_exit:
+                        try:
+                            dat = read_method(path,**read_para)
+                            if dat is not None:
+                                dat = meteva.base.fun.comp.put_stadata_on_station(dat,station)
+                                if not isinstance(dat,pd.DataFrame):
+                                    interp = para["interp"]
+                                    dat = interp(dat,station)
+                                if reasonable_value is not None:
+                                    dat = meteva.base.sele_by_para(dat,value=reasonable_value)
+                                data_name0 = meteva.base.get_stadata_names(dat)
+                                if len(data_name0) == 1:
+                                    meteva.base.set_stadata_names(dat,data_name)
+                                meteva.base.set_stadata_coords(dat,time = time1)
+                                sta_list.append(dat)
+                                print("success read data from "+ path)
+                            else:
+                                print("fail read data from " + path)
+                        except:
+                            print("fail read data from " + path)
+                    else:
+                        print(path +  "does not exist")
 
         time1 += datetime.timedelta(hours=1)
 
