@@ -2596,7 +2596,9 @@ def lineh(array,name_list_dict = None,legend = None,axis = None,xlabel = "Value"
 def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",vmin = None,vmax = None,ncol = None,grid = None,tag = -1,save_path = None,show = False
         ,dpi = 300,bar_width = None,spasify_xticks = None,sparsify_xticks = None,sup_fontsize = 10,title = ""
              ,height = None,width = None,log_y = False,sup_title = None,xlabel = None,legend_col = None,color_list = None,hline = None,marker = None,
-             legend_loc =  "upper center",linestyle = None,return_axs = False):
+             legend_loc =  "upper center",linestyle = None,return_axs = False,
+             lower=None, higher=None
+             ):
     shape = array.shape
 
 
@@ -2722,6 +2724,13 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
             else:
                 plt.bar(x_plot,y_plot,width= width *0.95,color = color_list[0])
 
+            if lower is not None and higher is not None:
+                lower1 = lower[array != meteva.base.IV]
+                higher1 = higher[array != meteva.base.IV]
+                for cc in range(len(x_plot)):
+                    x1 = x_plot[cc]
+                    plt.vlines(x1, lower1[cc], higher1[cc], colors='k')
+
             if len(array[array ==meteva.base.IV])>0:
                 x_iv = x[array == meteva.base.IV]
                 y_iv = np.zeros(x_iv.size)
@@ -2821,11 +2830,26 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
                 else:
                     legend = keys[1]
                     dat = array.T
+                    #置信区间矩阵跟随转置
+                    if lower is not None:
+                        lower_ = lower.T
+                    if higher is not None:
+                        higher_ = higher.T
+
         if legend == keys[1]:
             dat = array.T
+            # 置信区间矩阵跟随转置
+            if lower is not None:
+                lower_ = lower.T
+            if higher is not None:
+                higher_ = higher.T
 
         if dat is None:
             dat = array
+
+            lower_ = lower
+            higher_ = lower
+
         if legend not in keys:
             print("legend 参数的取值必须是name_list_dict的key")
         if axis not in keys:
@@ -2947,11 +2971,21 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
                 if color_list is None:
                     if meteva.base.plot_color_dict is not None and legend_list[i] in meteva.base.plot_color_dict.keys():
                         color_set1 = meteva.base.plot_color_dict[legend_list[i]]
-                        plt.bar(x_plot, y_plot, width=bar_width * 0.95, label=legend_list[i],color = color_set1)
+                        bars = plt.bar(x_plot, y_plot, width=bar_width * 0.95, label=legend_list[i],color = color_set1)
                     else:
-                        plt.bar(x_plot, y_plot,width=bar_width * 0.95,label = legend_list[i])
+                        bars = plt.bar(x_plot, y_plot,width=bar_width * 0.95,label = legend_list[i])
                 else:
-                    plt.bar(x_plot, y_plot, width=bar_width * 0.95, label=legend_list[i],color = color_list[i])
+                    bars = plt.bar(x_plot, y_plot, width=bar_width * 0.95, label=legend_list[i],color = color_list[i])
+
+
+                if lower_ is not None and higher_ is not None:
+                    lower0= lower_[i,:]
+                    lower1 = lower0[dat0 != meteva.base.IV]
+                    higher0 = higher_[i, :]
+                    higher1 = higher0[dat0 != meteva.base.IV]
+                    for cc in range(len(x_plot)):
+                        x1 = x_plot[cc]
+                        plt.vlines(x1, lower1[cc], higher1[cc], colors='k')
 
                 if len(dat0[dat0 == meteva.base.IV]) > 0:
                     x_iv = x1[dat0 == meteva.base.IV]
@@ -2975,11 +3009,11 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
                     if color_list is None:
                         if meteva.base.plot_color_dict is not None and legend_list[i] in meteva.base.plot_color_dict.keys():
                             color_set1 = meteva.base.plot_color_dict[legend_list[i]]
-                            plt.plot(x, dat0, label=legend_list[i],color=color_set1,linestyle = linestyle[i])
+                            lines, = plt.plot(x, dat0, label=legend_list[i],color=color_set1,linestyle = linestyle[i])
                         else:
-                            plt.plot(x, dat0, label=legend_list[i],linestyle = linestyle[i])
+                            lines, = plt.plot(x, dat0, label=legend_list[i],linestyle = linestyle[i])
                     else:
-                        plt.plot(x, dat0, label=legend_list[i],color = color_list[i],linestyle = linestyle[i])
+                        lines, = plt.plot(x, dat0, label=legend_list[i],color = color_list[i],linestyle = linestyle[i])
                 else:
                     dat0_all = set_plot_IV_with_out_start_end(dat0)
                     plt.plot(x, dat0_all, "--", linewidth=0.5, color="k")
@@ -2991,11 +3025,23 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
                     if color_list is None:
                         if meteva.base.plot_color_dict is not None and legend_list[i] in meteva.base.plot_color_dict.keys():
                             color_set1 = meteva.base.plot_color_dict[legend_list[i]]
-                            plt.plot(x, dat0_notiv, label=name_list_dict[legend][i],color = color_set1,marker = marker,linestyle = linestyle[i])
+                            lines, = plt.plot(x, dat0_notiv, label=name_list_dict[legend][i],color = color_set1,marker = marker,linestyle = linestyle[i])
                         else:
-                            plt.plot(x, dat0_notiv, label=name_list_dict[legend][i],marker = marker,linestyle = linestyle[i])
+                            lines, = plt.plot(x, dat0_notiv, label=name_list_dict[legend][i],marker = marker,linestyle = linestyle[i])
                     else:
-                        plt.plot(x, dat0_notiv, label=name_list_dict[legend][i],color = color_list[i],marker = marker,linestyle = linestyle[i])
+                        lines, = plt.plot(x, dat0_notiv, label=name_list_dict[legend][i],color = color_list[i],marker = marker,linestyle = linestyle[i])
+
+                last_bar_color = lines.get_color()
+                if lower_ is not None and higher_ is not None:
+                    lower0= lower_[i,:]
+                    higher0 = higher_[i, :]
+                    for cc in range(len(x)):
+                        if dat0[cc] != meteva.base.IV:
+                            x1 = x[cc]
+                            plt.vlines(x1, lower0[cc], higher0[cc], colors=last_bar_color,linewidth = 0.5)
+                            plt.plot(x1, lower0[cc], marker = ".",markersize=2,linewidth = 0,color=last_bar_color)
+                            plt.plot(x1, higher0[cc], marker=".", markersize=2, linewidth=0, color=last_bar_color)
+
                 if tag >= 0:
                     for ii in range(len(dat0)):
                         a = x[ii]
@@ -3095,6 +3141,11 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
             print("axis 参数的取值必须是name_list_dict的key")
         newshape = (keys.index(subplot),keys.index(legend),keys.index(axis))
         data = array.transpose(newshape)
+        if lower is not None:
+            lower_ = lower.transpose(newshape)
+        if higher is not None:
+            higher_ = higher.transpose(newshape)
+
         legend_num = len(name_list_dict[legend])
         if linestyle is None:
             linestyle = []
@@ -3285,19 +3336,30 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
                         if meteva.base.plot_color_dict is not None and name_list_dict[legend][i] in meteva.base.plot_color_dict.keys():
                             color_set1 = meteva.base.plot_color_dict[name_list_dict[legend][i]]
                             if k == 0:
-                                plt.bar(x_plot, y_plot, width=width * 0.95, label=name_list_dict[legend][i],color = color_set1)
+                                bars  = plt.bar(x_plot, y_plot, width=width * 0.95, label=name_list_dict[legend][i],color = color_set1)
                             else:
-                                plt.bar(x_plot, y_plot, width=width * 0.95,color = color_set1)
+                                bars  = plt.bar(x_plot, y_plot, width=width * 0.95,color = color_set1)
                         else:
                             if k ==0:
-                                plt.bar(x_plot, y_plot, width=width * 0.95, label=name_list_dict[legend][i])
+                                bars  = plt.bar(x_plot, y_plot, width=width * 0.95, label=name_list_dict[legend][i])
                             else:
-                                plt.bar(x_plot, y_plot, width=width * 0.95)
+                                bars  = plt.bar(x_plot, y_plot, width=width * 0.95)
                     else:
                         if k ==0:
-                            plt.bar(x_plot, y_plot, width=width * 0.95, label=name_list_dict[legend][i],color = color_list[i])
+                            bars  = plt.bar(x_plot, y_plot, width=width * 0.95, label=name_list_dict[legend][i],color = color_list[i])
                         else:
-                            plt.bar(x_plot, y_plot, width=width * 0.95,color = color_list[i])
+                            bars  = plt.bar(x_plot, y_plot, width=width * 0.95,color = color_list[i])
+
+                    if lower_ is not None and higher_ is not None:
+                        lower0 = lower_[k,i, :]
+                        lower1 = lower0[dat0 != meteva.base.IV]
+                        higher0 = higher_[k,i, :]
+                        higher1 = higher0[dat0 != meteva.base.IV]
+                        for cc in range(len(x_plot)):
+                            x1 = x_plot[cc]
+                            plt.vlines(x1, lower1[cc], higher1[cc], colors='k')
+
+
                     if tag >=0:
                         # add data tag
                         delta = (vmax1- vmin1)/20
@@ -3318,19 +3380,19 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
                             if meteva.base.plot_color_dict is not None and name_list_dict[legend][i] in meteva.base.plot_color_dict.keys():
                                 color_set1 = meteva.base.plot_color_dict[name_list_dict[legend][i]]
                                 if k == 0:
-                                    plt.plot(x, data[k, i, :], label=name_list_dict[legend][i],color = color_set1,marker = marker,linestyle = linestyle[i])
+                                    lines, =plt.plot(x, data[k, i, :], label=name_list_dict[legend][i],color = color_set1,marker = marker,linestyle = linestyle[i])
                                 else:
-                                    plt.plot(x, data[k, i, :],color = color_set1,marker = marker,linestyle = linestyle[i])
+                                    lines, =plt.plot(x, data[k, i, :],color = color_set1,marker = marker,linestyle = linestyle[i])
                             else:
                                 if k == 0:
-                                    plt.plot(x, data[k, i, :], label=name_list_dict[legend][i],marker = marker,linestyle = linestyle[i])
+                                    lines, =plt.plot(x, data[k, i, :], label=name_list_dict[legend][i],marker = marker,linestyle = linestyle[i])
                                 else:
-                                    plt.plot(x, data[k, i, :],marker = marker,linestyle = linestyle[i])
+                                    lines, =plt.plot(x, data[k, i, :],marker = marker,linestyle = linestyle[i])
                         else:
                             if k == 0:
-                                plt.plot(x, data[k, i, :], label=name_list_dict[legend][i],color = color_list[i],marker = marker,linestyle = linestyle[i])
+                                lines, =plt.plot(x, data[k, i, :], label=name_list_dict[legend][i],color = color_list[i],marker = marker,linestyle = linestyle[i])
                             else:
-                                plt.plot(x, data[k, i, :],color = color_list[i],marker = marker,linestyle = linestyle[i])
+                                lines, =plt.plot(x, data[k, i, :],color = color_list[i],marker = marker,linestyle = linestyle[i])
                     else:
                         dat0_all = set_plot_IV_with_out_start_end(dat0)
                         plt.plot(x, dat0_all, "--", linewidth=0.5, color="k")
@@ -3343,19 +3405,30 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
                             if meteva.base.plot_color_dict is not None and name_list_dict[legend][i] in meteva.base.plot_color_dict.keys():
                                 color_set1 = meteva.base.plot_color_dict[name_list_dict[legend][i]]
                                 if k == 0:
-                                    plt.plot(x, dat0_notiv, label=name_list_dict[legend][i], color=color_set1,marker = marker,linestyle = linestyle[i])
+                                    lines, =plt.plot(x, dat0_notiv, label=name_list_dict[legend][i], color=color_set1,marker = marker,linestyle = linestyle[i])
                                 else:
-                                    plt.plot(x, dat0_notiv, color=color_set1,marker = marker,linestyle = linestyle[i])
+                                    lines, =plt.plot(x, dat0_notiv, color=color_set1,marker = marker,linestyle = linestyle[i])
                             else:
                                 if k == 0:
-                                    plt.plot(x, dat0_notiv, label=name_list_dict[legend][i],marker = marker,linestyle = linestyle[i])
+                                    lines, =plt.plot(x, dat0_notiv, label=name_list_dict[legend][i],marker = marker,linestyle = linestyle[i])
                                 else:
-                                    plt.plot(x, dat0_notiv,marker = marker,linestyle = linestyle[i])
+                                    lines, =plt.plot(x, dat0_notiv,marker = marker,linestyle = linestyle[i])
                         else:
                             if k == 0:
-                                plt.plot(x, dat0_notiv, label=name_list_dict[legend][i],color = color_list[i],marker = marker,linestyle = linestyle[i])
+                                lines, =plt.plot(x, dat0_notiv, label=name_list_dict[legend][i],color = color_list[i],marker = marker,linestyle = linestyle[i])
                             else:
-                                plt.plot(x, dat0_notiv,color = color_list[i],marker = marker,linestyle = linestyle[i])
+                                lines, =plt.plot(x, dat0_notiv,color = color_list[i],marker = marker,linestyle = linestyle[i])
+
+                    last_bar_color = lines.get_color()
+                    if lower_ is not None and higher_ is not None:
+                        lower0 = lower_[k,i, :]
+                        higher0 = higher_[k,i, :]
+                        for cc in range(len(x)):
+                            if dat0[cc] != meteva.base.IV:
+                                x1 = x[cc]
+                                plt.vlines(x1, lower0[cc], higher0[cc], colors=last_bar_color, linewidth=0.5)
+                                plt.plot(x1, lower0[cc], marker=".", markersize=2, linewidth=0, color=last_bar_color)
+                                plt.plot(x1, higher0[cc], marker=".", markersize=2, linewidth=0, color=last_bar_color)
 
                     if tag >= 0:
                         for ii in range(len(dat0)):
@@ -4300,23 +4373,28 @@ def bar_line(array,type_list,name_list_dict = None,legend = None,axis = None,vmi
 
 def bar(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",vmin = None,vmax = None,ncol = None,grid = None,tag = -1,save_path = None,show = False
         ,dpi = 300,bar_width = None,title = "",spasify_xticks = None,sparsify_xticks = None,sup_fontsize = 10,width = None,height = None,log_y = False,sup_title = None,xlabel = None,
-        legend_col = None,color_list = None,hline = None,marker = None,return_axs=False):
+        legend_col = None,color_list = None,hline = None,marker = None,return_axs=False,
+        lower = None,higher = None):
 
     axs = plot_bar("bar",array = array,name_list_dict=name_list_dict,legend = legend,axis = axis,ylabel = ylabel,vmin= vmin,vmax = vmax,ncol =ncol,grid = grid,tag = tag,
              spasify_xticks = spasify_xticks,sparsify_xticks =sparsify_xticks,save_path = save_path,show = show,
              dpi = dpi,bar_width=bar_width,sup_fontsize= sup_fontsize,title=title,width = width,height = height,log_y = log_y,sup_title= sup_title,xlabel = xlabel,
-             legend_col = legend_col,color_list=color_list,hline = hline,marker=marker,return_axs=return_axs)
+             legend_col = legend_col,color_list=color_list,hline = hline,marker=marker,return_axs=return_axs,
+                   lower=lower, higher=higher
+                   )
     return axs
 
 
 def plot(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",vmin = None,vmax = None,ncol = None,grid = None,tag = -1,save_path = None,show = False,dpi = 300
          ,title ="",spasify_xticks = None,sparsify_xticks = None,sup_fontsize = 10,width = None,height = None,log_y = False,sup_title = None,xlabel = None,legend_col = None,color_list = None,hline = None,
-         marker = None,legend_loc ="upper center",linestyle = None,return_axs = False):
+         marker = None,legend_loc ="upper center",linestyle = None,return_axs = False, lower=None, higher=None):
 
     axs = plot_bar("line",array,name_list_dict=name_list_dict,legend = legend,axis = axis,ylabel = ylabel,vmin= vmin,vmax = vmax,ncol =ncol,grid = grid,tag=tag ,
              spasify_xticks = spasify_xticks,sparsify_xticks = sparsify_xticks,save_path = save_path,show = show,
              dpi = dpi,sup_fontsize= sup_fontsize,title=title,width = width,height = height,log_y = log_y,sup_title = sup_title,xlabel = xlabel,
-             legend_col =legend_col,color_list=color_list,hline = hline,marker = marker,legend_loc =legend_loc,linestyle=linestyle,return_axs = return_axs)
+             legend_col =legend_col,color_list=color_list,hline = hline,marker = marker,legend_loc =legend_loc,linestyle=linestyle,return_axs = return_axs,
+                   lower=lower, higher=higher
+                   )
     return  axs
 
 
