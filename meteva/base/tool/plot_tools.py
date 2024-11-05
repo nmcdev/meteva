@@ -539,7 +539,6 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap ="rainbo
                 save_path1 = save_dir + "/" + sup_title1+".png"
             else:
                 save_path1 = None
-
         plot_2d_grid_list(grd_list1,type = "contour",save_path= save_path1,title= title1,clevs=clevs,cmap=cmap,vmax = vmax,vmin = vmin,add_county_line= add_county_line,
                       add_worldmap = add_worldmap,show=show,dpi = dpi,sup_fontsize = sup_fontsize,height= height,width = width,ncol= ncol,
                       sup_title = sup_title1,clip= clip,add_minmap=add_minmap,extend=extend)
@@ -2978,7 +2977,7 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
                     bars = plt.bar(x_plot, y_plot, width=bar_width * 0.95, label=legend_list[i],color = color_list[i])
 
 
-                if lower_ is not None and higher_ is not None:
+                if lower is not None and higher is not None:
                     lower0= lower_[i,:]
                     lower1 = lower0[dat0 != meteva.base.IV]
                     higher0 = higher_[i, :]
@@ -3032,7 +3031,7 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
                         lines, = plt.plot(x, dat0_notiv, label=name_list_dict[legend][i],color = color_list[i],marker = marker,linestyle = linestyle[i])
 
                 last_bar_color = lines.get_color()
-                if lower_ is not None and higher_ is not None:
+                if lower is not None and higher is not None:
                     lower0= lower_[i,:]
                     higher0 = higher_[i, :]
                     for cc in range(len(x)):
@@ -3350,7 +3349,7 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
                         else:
                             bars  = plt.bar(x_plot, y_plot, width=width * 0.95,color = color_list[i])
 
-                    if lower_ is not None and higher_ is not None:
+                    if lower is not None and higher is not None:
                         lower0 = lower_[k,i, :]
                         lower1 = lower0[dat0 != meteva.base.IV]
                         higher0 = higher_[k,i, :]
@@ -3420,7 +3419,7 @@ def plot_bar(plot_type,array,name_list_dict = None,legend = None,axis = None,yla
                                 lines, =plt.plot(x, dat0_notiv,color = color_list[i],marker = marker,linestyle = linestyle[i])
 
                     last_bar_color = lines.get_color()
-                    if lower_ is not None and higher_ is not None:
+                    if lower is not None and higher is not None:
                         lower0 = lower_[k,i, :]
                         higher0 = higher_[k,i, :]
                         for cc in range(len(x)):
