@@ -454,8 +454,9 @@ def middle_df_grd(grd_ob, grd_fo, method, grade_list=None, compare=None, marker=
 
         ob = grd_ob.values
         fo = grd_fo.values
-
-        if method.__name__.find("_uv")>=0:
+        if method.__name__ in ["tase", "tmmsss"]:
+            mid_array = method(ob, fo, grd_weight.values)
+        elif method.__name__.find("_uv")>=0:
             mid_array = method(ob[0,...],fo[0,...], ob[1,...],fo[1,...], **method_args)
         else:
             mid_array = method(ob, fo, **method_args)
