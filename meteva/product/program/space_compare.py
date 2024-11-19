@@ -810,7 +810,7 @@ def rain_comprehensive_sg(sta_ob,grd_fo,grade_list, save_path=None,show = False,
     text += "Mean-squared error:" + "%6.2f" % mse + "\n"
     text += "Root mean-squared error:" + "%6.2f" % rmse + "\n"
     text += "Bias:" + "%6.2f" % bias_c + "\n"
-    text += "Correlation ceoefficient:" + "%6.2f" % cor + "\n"
+    text += "Correlation coefficient:" + "%6.2f" % cor + "\n"
     text += "晴雨准确率:" + "%6.2f" % pc_sun_rain + "\n\n"
 
     clevs_name = ["0"]
@@ -1150,7 +1150,7 @@ def rain_comprehensive_chinaland_sg(sta_ob,grd_fo,grade_list, save_path=None,sho
     text += "Mean-squared error:" + "%6.2f" % mse + "\n"
     text += "Root mean-squared error:" + "%6.2f" % rmse + "\n"
     text += "Bias:" + "%6.2f" % bias_c + "\n"
-    text += "Correlation ceoefficient:" + "%6.2f" % cor + "\n"
+    text += "Correlation coefficient:" + "%6.2f" % cor + "\n"
     text += "晴雨准确率:" + "%6.2f" % pc_sun_rain + "\n\n"
 
 
@@ -1591,7 +1591,7 @@ def rain_comprehensive_sl(sta_ob,m14,map_extend,grade_list,save_path=None,show =
     text += "Mean-squared error:" + "%6.2f" % mse + "\n"
     text += "Root mean-squared error:" + "%6.2f" % rmse + "\n"
     text += "Bias:" + "%6.2f" % bias_c + "\n"
-    text += "Correlation ceoefficient:" + "%6.2f" % cor + "\n"
+    text += "Correlation coefficient:" + "%6.2f" % cor + "\n"
     text += "晴雨准确率:" + "%6.2f" % pc_sun_rain + "\n\n"
 
     clevs_name = ["0"]
@@ -1998,7 +1998,7 @@ def rain_comprehensive_chinaland_sl(sta_ob,m14,grade_list, save_path=None,show =
     text += "Mean-squared error:" + "%6.2f" % mse + "\n"
     text += "Root mean-squared error:" + "%6.2f" % rmse + "\n"
     text += "Bias:" + "%6.2f" % bias_c + "\n"
-    text += "Correlation ceoefficient:" + "%6.2f" % cor + "\n"
+    text += "Correlation coefficient:" + "%6.2f" % cor + "\n"
     text += "晴雨准确率:" + "%6.2f" % pc_sun_rain + "\n\n"
 
 
@@ -2443,7 +2443,7 @@ def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None,show = False,dpi = 20
     text += "Mean-squared error:" + "%6.2f" % msee + "\n\n"
     text += "Root mean-squared error:" + "%6.2f" % rmsee + "\n\n"
     text += "Bias:" + "%6.2f" % bias_ce + "\n\n"
-    text += "Correlation ceoefficient:" + "%6.2f" % cor + "\n"
+    text += "Correlation coefficient:" + "%6.2f" % cor + "\n"
     plt.text(0, 0, text, fontsize=9)
 
     # 图片显示或保存
@@ -2694,7 +2694,7 @@ def temper_comprehensive_sg(sta_ob,grd_fo,save_path = None,show = False,dpi = 20
     text += "Mean-squared error:" + "%6.2f" % msee + "\n\n"
     text += "Root mean-squared error:" + "%6.2f" % rmsee + "\n\n"
     text += "Bias:" + "%6.2f" % bias_ce + "\n\n"
-    text += "Correlation ceoefficient:" + "%6.2f" % cor + "\n"
+    text += "Correlation coefficient:" + "%6.2f" % cor + "\n"
     plt.text(0, 0, text, fontsize=9)
 
     # 图片显示或保存
@@ -3131,7 +3131,7 @@ def temper_comprehensive_ss(sta_ob,sta_fo,map_extend = None,save_path = None,sho
     text += "Mean-squared error:" + "%6.2f" % msee + "\n\n"
     text += "Root mean-squared error:" + "%6.2f" % rmsee + "\n\n"
     text += "Bias:" + "%6.2f" % bias_ce + "\n\n"
-    text += "Correlation ceoefficient:" + "%6.2f" % cor + "\n"
+    text += "Correlation coefficient:" + "%6.2f" % cor + "\n"
     plt.text(0, 0, text, fontsize=9)
 
     # 图片显示或保存
