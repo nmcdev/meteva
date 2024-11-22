@@ -7,26 +7,49 @@ import collections
 import copy
 
 
+
 # 实现任意纬度分类的函数
 def score_df(df, method, s = None,g=None,gll_dict = None,plot = None,excel_path = None,first = True,**kwargs):
     '''
 
     :param df:
     :param method:
+    :param s:
     :param g:
+    :param gll_dict:
+    :param plot:
+    :param excel_path:
+    :param first:  first参数不是面对用户的，是程序自我递归调用时用到的参数
+    :param kwargs:
     :return:
     '''
     method_name = method.__name__
+    method_mid_list = meteva.perspact.get_middle_method(method)
+    method_mid = None
+    column_df = df.columns
+    column_list_all = []
+    for method_mid1 in method_mid_list:
+        column_list = meteva.perspact.get_middle_columns(method_mid1)
+        if set(column_list) <= set(column_df):
+            method_mid = method_mid1
+        else:
+            column_list_all.append(column_list)
+    if method_mid is None:
+        print("input pandas.DataFrame must contains columns in list of " + str(
+            column_list_all) + " for mem." + method_name + " caculation")
 
-    method_mid = meteva.perspact.get_middle_method(method)
-    column_list = meteva.perspact.get_middle_columns(method_mid)
-    score_method_with_mid = meteva.perspact.get_score_method_with_mid(method)
+        return None, None
+
+    score_method_with_mid_list = meteva.perspact.get_score_method_with_mid(method)
+    score_method_with_mid = None
+    for mid in score_method_with_mid_list:
+        mid_name = method_mid.__name__.split("_")[0]
+        if mid.__name__.find(mid_name)>0:
+            score_method_with_mid = mid
+
     df0 = meteva.base.sta_data(df)
 
-    column_df = df.columns
-    if not set(column_list) <= set(column_df):
-        print("input pandas.DataFrame must contains columns in list of "+ str(column_list) + " for mem." + method_name + " caculation")
-        return None,None
+
 
     if s is not None:
         if "member" in s.keys():
@@ -56,6 +79,8 @@ def score_df(df, method, s = None,g=None,gll_dict = None,plot = None,excel_path 
 
 
     df1 = meteva.base.sele_by_dict(df0, s)
+
+
     if len(df1.index) ==0:
         print("所选参数范围内没有检验数据")
         return None,None
@@ -75,6 +100,12 @@ def score_df(df, method, s = None,g=None,gll_dict = None,plot = None,excel_path 
             df_ob["CY"] = df1["CX"]
             df_ob["SY"] = df1["SX"]
             pass
+        if method_mid.__name__ =="tasem":
+            try:
+                df1["M"] = df1["M"] + df1["E"]
+            except:
+                print("中间数据中未包含M 列")
+
         df_ob.drop_duplicates(subset=None, keep='first', inplace=True)
         df1 = pd.concat([df_ob,df1],axis=0)
         if g is None:
@@ -116,7 +147,12 @@ def score_df(df, method, s = None,g=None,gll_dict = None,plot = None,excel_path 
                     #为了保持原有排序，不用group函数
                     groups = df1[g[gg]]
                     groups = groups.drop_duplicates(keep="first")
-                    gll = groups.values
+                    gll = groups.values.tolist()
+                    if not  isinstance(gll[0],str):
+                        if g[gg] =="level":
+                            gll.sort(reverse=True)
+                        else:
+                            gll.sort()
 
                 gll_dict[g[gg]] = gll
 
@@ -144,7 +180,6 @@ def score_df(df, method, s = None,g=None,gll_dict = None,plot = None,excel_path 
         gll0 = gll_dict[g[0]]
 
     g0 = g[0]
-
     df1_list, gll = meteva.base.group(df1, g=g0, gll=gll0)
     if len(g) == 1:
         score_list = []
@@ -153,15 +188,17 @@ def score_df(df, method, s = None,g=None,gll_dict = None,plot = None,excel_path 
         for i in range(len(df1_list)):
             if method_mid == meteva.method.tmmsss:
                 tmmsss_array = df1_list[i][column_list].values
-                mid_array = tmmsss_array[0, :]
-                for j in range(1, tmmsss_array.shape[0]):
-                    mid_array = meteva.method.tmmsss_merge(mid_array, tmmsss_array[j, :])
+                mid_array = meteva.method.tmmsss_merge_all(tmmsss_array)
+                # mid_array = tmmsss_array[0, :]
+                # for j in range(1, tmmsss_array.shape[0]):
+                #     mid_array = meteva.method.tmmsss_merge(mid_array, tmmsss_array[j, :])
 
             elif method_mid == meteva.method.tems:
                 tems_array = df1_list[i][column_list].values
-                mid_array = tems_array[0, :]
-                for j in range(1, tems_array.shape[0]):
-                    mid_array = meteva.method.tems_merge(mid_array, tems_array[j, :])
+                mid_array = meteva.method.tems_merge_all(tems_array)
+                # mid_array = tems_array[0, :]
+                # for j in range(1, tems_array.shape[0]):
+                #     mid_array = meteva.method.tems_merge(mid_array, tems_array[j, :])
             else:
                 mid_list = []
                 for column in column_list:
@@ -195,11 +232,12 @@ def score_df(df, method, s = None,g=None,gll_dict = None,plot = None,excel_path 
         if method_name.find("ob_fo_")>=0:
              score_array = score_array[...,1,0]
 
-
-        if plot =="line" or plot =="bar":
+        if plot =="line" or plot =="bar" or plot =="barh":
             meteva.base.plot_tools.plot_bar(plot,score_array,name_list_dict=gll_dict,**kwargs)
-        if plot =="mesh":
-            meteva.base.plot_tools.mesh(score_array,name_list_dict=gll_dict,**kwargs)
+        if plot =="mesh" or plot =="contour":
+            meteva.base.plot_tools.mesh_contourf(plot,score_array, name_list_dict=gll_dict, **kwargs)
+        if plot =="lineh":
+            meteva.base.plot_tools.lineh(score_array,name_list_dict=gll_dict,**kwargs)
         return  score_array,gll_dict
     else:
         if len(g) == 2:
@@ -230,10 +268,12 @@ def score_df(df, method, s = None,g=None,gll_dict = None,plot = None,excel_path 
         score_all_array = np.array(score_list_with_iv)
 
 
-        if plot =="line" or plot =="bar":
+        if plot =="line" or plot =="bar" or plot == "barh":
             meteva.base.plot_tools.plot_bar(plot, score_all_array, name_list_dict=gll_dict, **kwargs)
-        if plot =="mesh":
-            meteva.base.plot_tools.mesh( score_all_array, name_list_dict=gll_dict, **kwargs)
+        if plot =="mesh" or plot =="contour":
+            meteva.base.plot_tools.mesh_contourf(plot,score_all_array, name_list_dict=gll_dict, **kwargs)
+        if plot =="lineh":
+            meteva.base.plot_tools.lineh( score_all_array, name_list_dict=gll_dict, **kwargs)
 
         if excel_path is not None:
             meteva.base.write_array_to_excel(score_all_array,excel_path,gll_dict)
@@ -797,7 +837,7 @@ def score_ds(ds,method,s = None,g = None,gll_dict = None,plot = None,first = Tru
         return score_all_array, gll_dict
 
 
-def score_xy_df(df_mid,method,s = None,g = None,gll_dict = None,save_path = None,**kwargs):
+def score_xy_df(df_mid,method,s = None,g = None,gll_dict = None,save_path = None,plot = True,**kwargs):
 
     g_list = []
     if isinstance(g,list):
@@ -809,7 +849,9 @@ def score_xy_df(df_mid,method,s = None,g = None,gll_dict = None,save_path = None
     else:
         if g is not None:
             g_list = [g]
-    g_list.append("id")
+    #g_list.append("id")
+    g_list.append("lon")
+    g_list.append(("lat"))
 
     if s is not None:
         if "member" in s.keys():
@@ -820,143 +862,373 @@ def score_xy_df(df_mid,method,s = None,g = None,gll_dict = None,save_path = None
             s.pop("grade")
 
 
-    #print(df_mid)
-    df_mid = meteva.base.sele_by_dict(df_mid, s)
-    score_array,g_dict =score_df(df_mid,method,g = g_list,gll_dict = gll_dict)
-    grd_list = []
-
-    g_time = ["time","year","month","day","hour","minute","dtime","xun","hou",
-              "ob_time","ob_year","ob_month","ob_day","ob_hour","ob_minute","ob_xun","ob_hou"]
-
-    region_ids = g_dict["id"]
+    region_ids = df_mid["id"]
     max_id = np.max(region_ids)
     min_id = np.min(region_ids)
-    max_ = max(max_id,abs(min_id))
-    if max_ <1000000:
-        lat = np.round(region_ids  / 1000)
+    max_ = max(max_id, abs(min_id))
+    if max_ < 1000000:
+        lat = np.round(region_ids / 1000)
         lon = region_ids - lat * 1000
     else:
         lat = np.round(region_ids / 10000)
         lon = region_ids - lat * 10000
-        lon /=10
-        lat /=10
+        lon /= 10
+        lat /= 10
+    df_mid["lon"] =lon
+    df_mid["lat"] =lat
+
+    #print(df_mid)
+    df_mid = meteva.base.sele_by_dict(df_mid, s)
+    if len(df_mid.index)==0:
+        print("no middle data had been seleted")
+        return None
+    score_array,g_dict =score_df(df_mid,method,g = g_list,gll_dict = gll_dict)
+
+    g_time = ["time","year","month","day","hour","minute","dtime","xun","hou",
+              "ob_time","ob_year","ob_month","ob_day","ob_hour","ob_minute","ob_xun","ob_hou"]
+
+    # region_ids = g_dict["id"]
+    # if region_ids is not None:
+    #     region_ids = np.array(region_ids)
+    # max_id = np.max(region_ids)
+    # min_id = np.min(region_ids)
+    # max_ = max(max_id,abs(min_id))
+    # if max_ <1000000:
+    #     lat = np.round(region_ids  / 1000)
+    #     lon = region_ids - lat * 1000
+    # else:
+    #     lat = np.round(region_ids / 10000)
+    #     lon = region_ids - lat * 10000
+    #     lon /=10
+    #     lat /=10
     grd_list = []
     gnames0 = None
-    if len(g_list) == 1:
-        dict1 = {"level":df_mid["level"].values[0],"time":df_mid["time"].values[0],"dtime":df_mid["dtime"].values[0],
-            "id": region_ids, "lon": lon, "lat": lat,  "score": score_array}
-        df = pd.DataFrame(dict1)
-        score_sta = meteva.base.sta_data(df)
-        score_grd = meteva.base.trans_sta_to_grd(score_sta)
+    if len(g_list) == 2:
+        # dict1 = {"level":df_mid["level"].values[0],"time":df_mid["time"].values[0],"dtime":df_mid["dtime"].values[0],
+        #     "id": region_ids, "lon": lon, "lat": lat,  "score": score_array}
+        # df = pd.DataFrame(dict1)
+        # score_sta = meteva.base.sta_data(df)
+        # score_grd = meteva.base.trans_sta_to_grd(score_sta)
+        grd1 = xr.DataArray(score_array,coords=[("lon",g_dict["lon"]),("lat",g_dict["lat"])])
+        score_grd = meteva.base.xarray_to_griddata(grd1)
         grd_list.append(score_grd)
-        #score_grd.values[score_grd.values == meteva.base.IV] = 0
-        #meteva.base.plot_tools.contourf_2d_grid(score_grd, save_path,**kwargs)
-        #return [score_grd],None
-    elif len(g_list) == 2:
+
+    elif len(g_list) == 3:
 
         gnames0 = g_dict[g_list[0]]
         #print(gnames0)
         ng0 = len(gnames0)
-        if g_list[0] =="grade":
-            grd_list = []
-            vmin = 10e30
-            vmax = -10e30
-            for i in range(ng0):
-                name = gnames0[i]
-                value = score_array[i,:]
-                df = pd.DataFrame({"level": df_mid["level"].values[0], "time": df_mid["time"].values[0],
-                                   "dtime": df_mid["dtime"].values[0], "id": region_ids,
-                                   "lon": lon, "lat": lat, name: value})
-                score_sta = meteva.base.sta_data(df)
+        for i in range(ng0):
+            grd1 = xr.DataArray(score_array[i,:], coords=[("lon", g_dict["lon"]), ("lat", g_dict["lat"])])
+            score_grd = meteva.base.xarray_to_griddata(grd1)
+            meteva.base.set_griddata_coords(score_grd,member_list=[gnames0[i]])
+            grd_list.append(score_grd)
 
-                score_grd = meteva.base.trans_sta_to_grd(score_sta)
-                score_grd.values[score_grd.values == meteva.base.IV] = 0
-                grd_list.append(score_grd)
 
-                # vmax1 = np.max(score_grd.values)
-                # vmin1 = np.max(score_grd.values)
-                # if vmax1 > vmax: vmax = vmax1
-                # if vmin1 < vmin: vmin = vmin1
+        # if g_list[0] =="grade":
+        #     grd_list = []
+        #     vmin = 10e30
+        #     vmax = -10e30
+        #     for i in range(ng0):
+        #         name = gnames0[i]
+        #         value = score_array[i,:]
+        #         df = pd.DataFrame({"level": df_mid["level"].values[0], "time": df_mid["time"].values[0],
+        #                            "dtime": df_mid["dtime"].values[0], "id": region_ids,
+        #                            "lon": lon, "lat": lat, name: value})
+        #         score_sta = meteva.base.sta_data(df)
+        #
+        #         score_grd = meteva.base.trans_sta_to_grd(score_sta)
+        #         score_grd.values[score_grd.values == meteva.base.IV] = 0
+        #         grd_list.append(score_grd)
+        #
+        #         # vmax1 = np.max(score_grd.values)
+        #         # vmin1 = np.max(score_grd.values)
+        #         # if vmax1 > vmax: vmax = vmax1
+        #         # if vmin1 < vmin: vmin = vmin1
+        #
+        #     #meteva.base.plot_tools.plot_2d_grid_list(grd_list,save_path=save_path,vmax=vmax,vmin = vmin,**kwargs)
+        #
+        # elif g_list[0] in g_time:
+        #     for i in range(ng0):
+        #         #name = gnames0[i]
+        #         value = score_array[i, :]
+        #
+        #         dict1 = {"id": region_ids, "lon": lon, "lat": lat,  "score": value}
+        #         if "level" not in dict1:
+        #             dict1["level"] = df_mid["level"].values[0]
+        #         if "time" not in dict1:
+        #             dict1["time"] = df_mid["time"].values[0]
+        #         if "dtime" not in dict1:
+        #             dict1["dtime"] = df_mid["dtime"].values[0]
+        #         df = pd.DataFrame(dict1)
+        #         score_sta = meteva.base.sta_data(df)
+        #         score_grd = meteva.base.trans_sta_to_grd(score_sta)
+        #         grd_list.append(score_grd)
+        #         #title_list.append(g_list[0] + ":" + str(name))
+        #     #meteva.base.plot_tools.plot_2d_grid_list(grd_list, save_path,title = title_list,type="mesh")
+        # else:
+        #     for i in range(ng0):
+        #         name = gnames0[i]
+        #         value = score_array[i,:]
+        #         if g_list[0] == "member":
+        #             df = pd.DataFrame({"level":df_mid["level"].values[0],"time":df_mid["time"].values[0],"dtime":df_mid["dtime"].values[0],"id":region_ids,
+        #                                "lon": lon, "lat": lat, name: value})
+        #         else:
+        #             dict1 = {"id":region_ids,"lon":lon,"lat":lat,g_list[0]:name,"score":value}
+        #             if "level" not in dict1:
+        #                 dict1["level"] = df_mid["level"].values[0]
+        #             if "time" not in dict1:
+        #                 dict1["time"] = df_mid["time"].values[0]
+        #             if "dtime" not in dict1:
+        #                 dict1["dtime"] = df_mid["dtime"].values[0]
+        #             df = pd.DataFrame(dict1)
+        #         score_sta = meteva.base.sta_data(df)
+        #
+        #         score_grd = meteva.base.trans_sta_to_grd(score_sta)
+        #         grd_list.append(score_grd)
+        #     score_grd = meteva.base.concat(grd_list)
+        #     #title_list = score_grd.coords[g_list[0]].values.tolist()
+        #     #kwargs["title"]  = title
+        #     #score_grd.values[score_grd.values == meteva.base.IV] = 0
+        #     #meteva.base.plot_tools.plot_2d_grid_list(grd_list, save_path,title = title_list,type="mesh")
 
-            #meteva.base.plot_tools.plot_2d_grid_list(grd_list,save_path=save_path,vmax=vmax,vmin = vmin,**kwargs)
 
-        elif g_list[0] in g_time:
-            for i in range(ng0):
-                #name = gnames0[i]
-                value = score_array[i, :]
-
-                dict1 = {"id": region_ids, "lon": lon, "lat": lat,  "score": value}
-                if "level" not in dict1:
-                    dict1["level"] = df_mid["level"].values[0]
-                if "time" not in dict1:
-                    dict1["time"] = df_mid["time"].values[0]
-                if "dtime" not in dict1:
-                    dict1["dtime"] = df_mid["dtime"].values[0]
-                df = pd.DataFrame(dict1)
-                score_sta = meteva.base.sta_data(df)
-                score_grd = meteva.base.trans_sta_to_grd(score_sta)
-                grd_list.append(score_grd)
-                #title_list.append(g_list[0] + ":" + str(name))
-            #meteva.base.plot_tools.plot_2d_grid_list(grd_list, save_path,title = title_list,type="mesh")
+    if plot:
+        grd_list_plot = []
+        for i in range(len(grd_list)):
+            score_grd = grd_list[i].copy()
+            score_grd.values[score_grd.values == meteva.base.IV] = np.nan
+            grd_list_plot.append(score_grd)
+        if gnames0 is None:
+            title_list = None
         else:
-            for i in range(ng0):
-                name = gnames0[i]
-                value = score_array[i,:]
-                if g_list[0] == "member":
-                    df = pd.DataFrame({"level":df_mid["level"].values[0],"time":df_mid["time"].values[0],"dtime":df_mid["dtime"].values[0],"id":region_ids,
-                                       "lon": lon, "lat": lat, name: value})
-                else:
-                    dict1 = {"id":region_ids,"lon":lon,"lat":lat,g_list[0]:name,"score":value}
-                    if "level" not in dict1:
-                        dict1["level"] = df_mid["level"].values[0]
-                    if "time" not in dict1:
-                        dict1["time"] = df_mid["time"].values[0]
-                    if "dtime" not in dict1:
-                        dict1["dtime"] = df_mid["dtime"].values[0]
-                    df = pd.DataFrame(dict1)
-                score_sta = meteva.base.sta_data(df)
-
-                score_grd = meteva.base.trans_sta_to_grd(score_sta)
-                grd_list.append(score_grd)
-            score_grd = meteva.base.concat(grd_list)
-            #title_list = score_grd.coords[g_list[0]].values.tolist()
-            #kwargs["title"]  = title
-            #score_grd.values[score_grd.values == meteva.base.IV] = 0
-            #meteva.base.plot_tools.plot_2d_grid_list(grd_list, save_path,title = title_list,type="mesh")
-
-
-    grd_list_plot = []
-    for i in range(len(grd_list)):
-        score_grd = grd_list[i].copy()
-        score_grd.values[score_grd.values == meteva.base.IV] = 0
-        grd_list_plot.append(score_grd)
-    if gnames0 is None:
-        title_list = None
-    else:
-        title_list = []
-        for i in range(len(gnames0)):
-            title_list.append(str(gnames0[i]))
-        kwargs["title"] = title_list
-    meteva.base.plot_tools.plot_2d_grid_list(grd_list_plot, type="mesh", save_path = save_path, **kwargs)
+            title_list = []
+            for i in range(len(gnames0)):
+                title_list.append(str(gnames0[i]))
+            kwargs["title"] = title_list
+        meteva.base.plot_tools.plot_2d_grid_list(grd_list_plot, save_path = save_path, **kwargs)
 
     return grd_list,gnames0
 
 
+def score_xy_df_delta(df_mid,method,reference_member,s = None,gll_dict = None,save_path = None,cmap ="me_bwr",**kwargs):
+    '''
+    绘制多个模式预报评分相对其中某一个模式的评分的正负技巧
+    :param df_mid:
+    :param method:
+    :param reference_member:
+    :param s:
+    :param save_path:
+    :param kwargs:
+    :return:
+    '''
+    grd_list, gnames0 = score_xy_df(df_mid,method,s = s,g = "member",gll_dict=gll_dict,plot = False)
+    grd_ref = None
+    for i in range(len(gnames0)):
+        if reference_member == gnames0[i]:
+            grd_ref = copy.deepcopy(grd_list[i])
+    if grd_ref is None:
+        print(reference_member + " not exist in DataFrame of middle result")
+
+    for i in range(len(grd_list)):
+        grd_list[i].values -= grd_ref.values
+
+    grd_list_plot = []
+    for i in range(len(grd_list)):
+        score_grd = grd_list[i].copy()
+        score_grd.values[score_grd.values == meteva.base.IV] = np.nan
+        grd_list_plot.append(score_grd)
+
+    title_list = []
+    for i in range(len(gnames0)):
+        title_list.append(str(gnames0[i]))
+    kwargs["title"] = title_list
+    meteva.base.plot_tools.plot_2d_grid_list(grd_list_plot,  save_path = save_path,cmap=cmap, **kwargs)
+
+    return grd_list,gnames0
+
+
+def score_xz_df(df_mid,method,s = None,g = None,gll_dict = None,save_path = None,plot = True,**kwargs):
+    g_list = []
+    if isinstance(g,list):
+        if len(g)>1:
+            print("score_xz_df函数暂时不支持多维分类功能")
+            return
+        else:
+            g_list = g
+    else:
+        if g is not None:
+            g_list = [g]
+
+    g_list.append("lon")
+    g_list.append("level")
+    if s is not None:
+        if "member" in s.keys():
+            df_mid  = df_mid.loc[df_mid['member'].isin(s["member"])]
+            s.pop("member")
+        if "grade" in s.keys():
+            df_mid = df_mid.loc[df_mid['grade']== s["grade"]]
+            s.pop("grade")
+
+
+    #print(df_mid)
+
+    ids = df_mid["id"] #所有格点的编号
+    max_id = np.max(ids)
+    min_id = np.min(ids)
+    max_ = max(max_id, abs(min_id))
+    if max_ < 1000000:
+        lat = np.round(ids / 1000)
+        lon = ids - lat * 1000
+    else:
+        lat = np.round(ids / 10000)
+        lon = ids - lat * 10000
+        lon /= 10
+        lat /= 10
+    df_mid["lon"] = lon
+    df_mid["lat"] = lat
+    df_mid = meteva.base.sele_by_dict(df_mid, s)
+
+    score_array,g_dict =score_df(df_mid,method,g = g_list,gll_dict = gll_dict)
+
+    coords = []
+    for g1 in g_dict.keys():
+        coords.append((g1,g_dict[g1]))
+    da = xr.DataArray(score_array,coords=coords)
+    grd = meteva.base.xarray_to_griddata(da)
+    if plot:meteva.base.contourf_xz(grd, save_path=save_path,**kwargs)
+    return grd
+
+
+def score_xz_df_delta(df_mid,method,reference_member,s = None,gll_dict = None,save_path = None,cmap ="me_bwr",sup_title = "",**kwargs):
+    '''
+    绘制多个模式预报评分相对其中某一个模式的评分的正负技巧
+    :param df_mid:
+    :param method:
+    :param reference_member:
+    :param s:
+    :param save_path:
+    :param kwargs:
+    :return:
+    '''
+    grd = score_xz_df(df_mid,method,s = s,g = "member",gll_dict=gll_dict,plot = False)
+    grd_delta = copy.deepcopy(grd)
+    member = grd["member"].values
+    for i in range(member.size):
+        if reference_member==member[i]:
+            grd_delta.values[:] -= grd.values[i,:]
+
+    meteva.base.contourf_xz(grd_delta, save_path=save_path,cmap = cmap,sup_title=sup_title,**kwargs)
+    return grd_delta
+
+def score_yz_df(df_mid, method, s=None, g=None, gll_dict=None, save_path=None,plot = True,sup_title = "", **kwargs):
+    g_list = []
+    if isinstance(g, list):
+        if len(g) > 1:
+            print("score_xz_df函数暂时不支持多维分类功能")
+            return
+        else:
+            g_list = g
+    else:
+        if g is not None:
+            g_list = [g]
+
+    g_list.append("lat")
+    g_list.append("level")
+    if s is not None:
+        if "member" in s.keys():
+            df_mid = df_mid.loc[df_mid['member'].isin(s["member"])]
+            s.pop("member")
+        if "grade" in s.keys():
+            df_mid = df_mid.loc[df_mid['grade'] == s["grade"]]
+            s.pop("grade")
+
+
+    ids = df_mid["id"]  # 所有格点的编号
+    max_id = np.max(ids)
+    min_id = np.min(ids)
+    max_ = max(max_id, abs(min_id))
+    if max_ < 1000000:
+        lat = np.round(ids / 1000)
+        lon = ids - lat * 1000
+    else:
+        lat = np.round(ids / 10000)
+        lon = ids - lat * 10000
+        lon /= 10
+        lat /= 10
+    df_mid["lat"] = lat
+    df_mid["lon"] = lon
+    # print(df_mid)
+    df_mid = meteva.base.sele_by_dict(df_mid, s)
+
+    score_array, g_dict = score_df(df_mid, method, g=g_list, gll_dict=gll_dict)
+
+    coords = []
+    for g1 in g_dict.keys():
+        coords.append((g1, g_dict[g1]))
+    da = xr.DataArray(score_array, coords=coords)
+
+    grd = meteva.base.xarray_to_griddata(da)
+    if plot :meteva.base.contourf_yz(grd, save_path=save_path,sup_title=sup_title, **kwargs)
+    return grd
+
+
+def score_tdt_df(df_mid, method, s=None, g=None, gll_dict=None, save_path=None,sup_title = "", **kwargs):
+    g_list = []
+    if isinstance(g, list):
+        if len(g) > 1:
+            print("score_tdt_df函数暂时不支持多维分类功能")
+            return
+        else:
+            g_list = g
+    else:
+        if g is not None:
+            g_list = [g]
+
+    g_list.append("dtime")
+    g_list.append("time")
+
+    result = score_df(df_mid,method,s = s,g= g_list,gll_dict=gll_dict,save_path = save_path,plot="mesh",sup_title=sup_title,**kwargs)
+    return result
+
+
+def score_tdt_df_delta(df_mid, method,reference_member, s=None, gll_dict=None,cmap ="me_bwr", **kwargs):
+
+    g_list=["member","dtime","time"]
+    score_array,gll_dict = score_df(df_mid,method,s = s,g= g_list,gll_dict=gll_dict)
+    member = gll_dict["member"]
+    for i in range(len(member)):
+        if reference_member == member[i]:
+            score_array[:] -= score_array[i, :]
+    meteva.base.plot_tools.mesh_contourf("mesh", score_array, name_list_dict=gll_dict,cmap=cmap, **kwargs)
+    return score_array,gll_dict
+
+def score_yz_df_delta(df_mid,method,reference_member,s = None,gll_dict = None,save_path = None,cmap ="me_bwr",sup_title = "",**kwargs):
+    '''
+    绘制多个模式预报评分相对其中某一个模式的评分的正负技巧
+    :param df_mid:
+    :param method:
+    :param reference_member:
+    :param s:
+    :param save_path:
+    :param kwargs:
+    :return:
+    '''
+    grd = score_yz_df(df_mid,method,s = s,g = "member",gll_dict=gll_dict,plot = False)
+    grd_delta = copy.deepcopy(grd)
+    member = grd["member"].values
+    for i in range(member.size):
+        if reference_member==member[i]:
+            grd_delta.values[:] -= grd.values[i,:]
+    meteva.base.contourf_yz(grd_delta, save_path=save_path,cmap = cmap,sup_title=sup_title,**kwargs)
+    return grd_delta
+
+
 if __name__ =="__main__":
-    import pandas as pd
-    #path = r"O:\data\hdf\gongbao\wind3h_update12h_station2k\wind3h_update12h_station2k.h5"
-    path = r"H:/a.txt"
-    uv = pd.read_hdf(path)
-    uv = meteva.base.sele_by_para(uv,time_range = ["2022081408","2022081720"],dtime = [12,24,36,48])
-    uv = meteva.base.in_member_list(uv,member_list=[0,1,2,3,4,5],name_or_index="index")
-    #uv.to_hdf(r"H:\test_data\input\mps\wind.h5","df")
+    #
+    path = r"H:\task\other\202308-AImodel\mid\z500_tmmsss_ec.h5"
+    df = pd.read_hdf(path)
 
-    speed,_ = meteva.base.wind_to_speed_angle(uv)
-    df = meteva.perspact.middle_df_sta(speed,meteva.method.nasws_s)
-    score = meteva.perspact.score_df(df,meteva.method.acs,g = "member")
-    #print(score)
-    score = meteva.product.score(speed,meteva.method.acs)
-    print(score)
-    pass
-
-
+    score_xy_df_delta(df,method=meteva.method.ob_fo_std,reference_member="OBS",save_path=r"H:\task\other\202308-AImodel\mid\me_test_.png",
+                     s = {"member":["ECMWF","CMA_GFS"]},
+                      gll_dict={"member":["OBS","CMA_GFS","ECMWF"]})

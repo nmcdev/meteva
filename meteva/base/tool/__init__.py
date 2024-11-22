@@ -21,3 +21,4 @@ from .plot_tools import contourf_2d_grid,pcolormesh_2d_grid,scatter_sta,bar,plot
 from .color_tools import cmaps,def_cmap_clevs,merge_cmap_clevs,get_seprated_rgb_method1,get_seprated_rgb_method2,set_plot_color_dict_method0,set_plot_color_dict_method1,set_plot_color_dict_method2
 from .maskout import *
 from .plot_tools_adv import *
+from .plot_tools import contourf_xz,contourf_yz,lineh,contourf_xy,mesh_xy,contourf

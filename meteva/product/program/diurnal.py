@@ -9,7 +9,8 @@ import numpy as np
 
 
 def diunal_max_hour(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = None,plot = None,
-          vmax = 24,vmin = 0,bar_width = None,save_path = None,show = False,dpi = 300,title = "",excel_path = None,**kwargs):
+          vmax = 24,vmin = 0,bar_width = None,save_path = None,show = False,dpi = 300,title = "",excel_path = None,
+                    check_has_all_ob_hours = True,**kwargs):
     '''
     对于每个分组的样本，先统计日变化的曲线，再求日变化曲线的顶点
     :param sta_ob_and_fos0:
@@ -149,7 +150,7 @@ def diunal_max_hour(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_na
     for i in range(len(gll1)):
         result_all,hour_list = meteva.product.program.score(sta_ob_and_fos_list[i],method,g = "ob_hour",gll = ob_hours_list,**method_args)
         hours = np.array(hour_list)
-        if len(hour_list) == ob_hour_count:
+        if len(hour_list) == ob_hour_count or not check_has_all_ob_hours:
             gll_valid.append(gll1[i])
             result_max_index = np.argmax(result_all,axis=0)
             result_max = hours[result_max_index]
@@ -247,7 +248,7 @@ def diunal_max_hour(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_na
 
 
 def diunal_max_hour_id(sta_ob_and_fos0,method,s = None,plot = "scatter",save_dir = None,save_path = None,show = False,
-             add_county_line = False,map_extend= None,print_max=0,print_min=0,dpi = 300,title = None,sort_by = None,
+             add_county_line = False,map_extend= None,print_max=0,print_min=0,dpi = 300,title = None,sort_by = None,check_has_all_ob_hours = True,
              **kwargs):
     '''
 
@@ -269,7 +270,7 @@ def diunal_max_hour_id(sta_ob_and_fos0,method,s = None,plot = "scatter",save_dir
     :return:
     '''
     sta_ob_and_fos1 = meteva.base.sele_by_dict(sta_ob_and_fos0, s=s)
-    diunal_max_hour(sta_ob_and_fos1,method)
+    #diunal_max_hour(sta_ob_and_fos1,method)
     data_names = meteva.base.get_stadata_names(sta_ob_and_fos1)
     ensemble_score_method = [meteva.method.cr, variance_divide_by_mse]
 
@@ -348,7 +349,7 @@ def diunal_max_hour_id(sta_ob_and_fos0,method,s = None,plot = "scatter",save_dir
             save_path = [save_path]
 
 
-    result, id_list = diunal_max_hour(sta_ob_and_fos1, method, g="id", **method_args,plot = None)
+    result, id_list = diunal_max_hour(sta_ob_and_fos1, method, g="id", **method_args,plot = None,check_has_all_ob_hours=check_has_all_ob_hours)
     station = sta_ob_and_fos1.drop_duplicates(['id'], inplace=False)
     station.iloc[:, 1] = station.iloc[0, 1]
     station.iloc[:, 2] = station.iloc[0, 2]

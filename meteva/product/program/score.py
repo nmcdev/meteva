@@ -340,7 +340,7 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
 
 
 def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = None,plot = "scatter",save_dir = None,save_path = None,show = False,
-             add_county_line = False,map_extend= None,print_max=0,print_min=0,dpi = 300,title = None,sort_by = None,subplot = "member",ncol = None,
+             add_county_line = False,map_extend= None,print_max=0,print_min=0,dpi = 300,title = None,sort_by = None,subplot = "member",ncol = None,halfR = 300,
              **kwargs):
 
     if s is not None:
@@ -608,7 +608,7 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
                         elat = elat0 + dlat0
                         grid1 = meteva.base.grid([slon,elon,dlon0],[slat,elat,dlat0])
 
-                        grd = meteva.base.interp_sg_idw_delta(sta_result1,grid1,halfR=300,nearNum=8)
+                        grd = meteva.base.interp_sg_idw_delta(sta_result1,grid1,halfR=halfR,nearNum=8)
                         meteva.base.tool.plot_tools.contourf_2d_grid(grd, save_path=save_path1, show=show,
                                                             title=title1_list
                                                             , add_county_line=add_county_line,
@@ -632,7 +632,7 @@ def score_id(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list
 
 def score_tdt(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = None,
               x_y = "obtime_time",annot = 0,save_dir = None,save_path = None,show = False,
-        dpi = 300,title = None,**kwargs):
+        dpi = 300,title = None,plot = True,**kwargs):
     if s is not None:
         if g is not None:
             if g == "last_range" or g == "last_step":
@@ -879,34 +879,35 @@ def score_tdt(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_lis
                     title1_list.append(title1)
 
 
-            save_path1 = None
-            if save_path is None:
-                if save_dir is None:
-                    show = True
+            if plot:
+                save_path1 = None
+                if save_path is None:
+                    if save_dir is None:
+                        show = True
+                    else:
+                        save_path1 = []
+                        for i in range(len(title1_list)):
+                            fileName = title1_list[i].replace("\n", "").replace(":", "")
+                            save_path1.append(save_dir + "/" + fileName + ".png")
                 else:
-                    save_path1 = []
-                    for i in range(len(title1_list)):
-                        fileName = title1_list[i].replace("\n", "").replace(":", "")
-                        save_path1.append(save_dir + "/" + fileName + ".png")
-            else:
-                save_path1 = save_path[k * png_num: (k + 1) * png_num]
+                    save_path1 = save_path[k * png_num: (k + 1) * png_num]
 
-            if method.__name__.find("ob_fo") >= 0:
-                meteva.product.time_list_mesh(sta_result1,save_dir = save_dir,save_path = save_path1,show=show,dpi = dpi,title = title1_list,annot= annot,plot_error=False,**plot_args)
-            else:
-
-                #绘制图形
-                #print("start plot")
-
-                if x_y == "obtime_time":
-                    meteva.base.tool.plot_tools.mesh_obtime_time(sta_result1,save_dir=save_dir,save_path=save_path1,show = show,dpi = dpi,title = title1_list,annot = annot,**plot_args)
-                elif x_y == "obtime_dtime":
-                    meteva.base.tool.plot_tools.mesh_obtime_dtime(sta_result1, save_dir=save_dir,save_path=save_path1,show = show,dpi = dpi, title=title1_list,annot = annot,**plot_args)
-                elif x_y == "time_dtime":
-                    #print(sta_result1)
-                    meteva.base.tool.plot_tools.mesh_time_dtime(sta_result1, save_dir=save_dir,save_path=save_path1,show = show,dpi = dpi, title=title1_list,annot = annot,**plot_args)
+                if method.__name__.find("ob_fo") >= 0:
+                    meteva.product.time_list_mesh(sta_result1,save_dir = save_dir,save_path = save_path1,show=show,dpi = dpi,title = title1_list,annot= annot,plot_error=False,**plot_args)
                 else:
-                    print("目前绘图样式参数 x_y仅支持 obtime_time, obtime_dtime, time_dtime三种形式")
+
+                    #绘制图形
+                    #print("start plot")
+
+                    if x_y == "obtime_time":
+                        meteva.base.tool.plot_tools.mesh_obtime_time(sta_result1,save_dir=save_dir,save_path=save_path1,show = show,dpi = dpi,title = title1_list,annot = annot,**plot_args)
+                    elif x_y == "obtime_dtime":
+                        meteva.base.tool.plot_tools.mesh_obtime_dtime(sta_result1, save_dir=save_dir,save_path=save_path1,show = show,dpi = dpi, title=title1_list,annot = annot,**plot_args)
+                    elif x_y == "time_dtime":
+                        #print(sta_result1)
+                        meteva.base.tool.plot_tools.mesh_time_dtime(sta_result1, save_dir=save_dir,save_path=save_path1,show = show,dpi = dpi, title=title1_list,annot = annot,**plot_args)
+                    else:
+                        print("目前绘图样式参数 x_y仅支持 obtime_time, obtime_dtime, time_dtime三种形式")
         if len(sta_all_g_list) == 1:
             sta_all_g_list = sta_all_g_list[0]
 

@@ -1,14 +1,6 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import datetime
-plt.rcParams['font.sans-serif']=['SimHei'] #用来正常显示中文标签\
-plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
-#import seaborn as sns
 import meteva
-import matplotlib.patches as patches
-import math
-import pandas as pd
-import json
 from scipy.ndimage.filters import uniform_filter
 
 

@@ -12,15 +12,19 @@ method_coluns_dict = {
     "hfmc" :  ["H","F","M","C"],
     "hfmc_multi": ["H", "F", "M", "C"],
     "tase":["T", "E", "A", "S"],
+    "tase_angle": ["T", "E_angle", "A_angle", "S_angle"],
+    "tase_angle_uv": ["T", "E_angle", "A_angle", "S_angle"],
+    "tasem":["T", "E", "A", "S","M"],
     "tc_count":["T", "C"],
     "tlfo":["T","LFO"],
     "toar":["T","OAR"],
     "tmmsss": ["T", "MX","MY","SX","SY","SXY"],
     "tbask":["T","BASK"],
-    "nasws_uv": ["T", "AC", "SCORE", "SEVERER", "WEAK"],
-    "nas_uv": ["T", "AC", "SCORE"],
-    "na_uv":["T","AC"],
-    "nasws_s": ["T", "AC", "SCORE", "SEVERER", "WEAK"],
+    "nasws_uv": ["T", "ACS", "SCORE", "SEVERER", "WEAK"],
+    "nas_uv": ["T", "ACS", "SCORE"],
+    "na_uv":["T","ACZ","ACD","ACS"],
+    "nasws_s": ["T", "ACS", "SPEEDSCORE", "SEVERER", "WEAK"],
+    "na_s":["T","ACS"],
     "fss":["pob","pfo","fbs"],
     "tems":["T","E","MX","SX"],
     "cscs":["CX","SX","CY","SY"],
@@ -42,6 +46,8 @@ def get_score_method_with_mid(method):
 
     hfmc_of_sum_rain_list = [meteva.method.pc_of_sun_rain]
     tase_list = [meteva.method.me, meteva.method.mae, meteva.method.mse, meteva.method.rmse]
+    tase_angle_list = [meteva.method.me_angle, meteva.method.mae_angle, meteva.method.rmse_angle]
+    tasem_list = [meteva.method.ob_fo_mean]
     tc_list = [meteva.method.correct_rate,meteva.method.wrong_rate]
     tmmsss_list = [meteva.method.residual_error, meteva.method.residual_error_rate,meteva.method.corr,
                     meteva.method.nse,meteva.method.ob_fo_mean,meteva.method.ob_fo_sum,meteva.method.ob_fo_std]
@@ -50,7 +56,7 @@ def get_score_method_with_mid(method):
                      meteva.method.wind_severer_rate]
     nasws_uv_list = [meteva.method.acs_uv,meteva.method.scs_uv,meteva.method.wind_weaker_rate_uv,meteva.method.wind_severer_rate_uv]
     nas_uv_list = [meteva.method.acd_uv,meteva.method.scd_uv]
-    na_uv_list = [meteva.method.acz_uv]
+    na_uv_list = [meteva.method.acz_uv,meteva.method.acd_uv,meteva.method.acs_uv]
     toar_list = [meteva.method.mre]
     tlfo_list = [meteva.method.rmsf]
     fss_list = [meteva.method.fss]
@@ -58,46 +64,51 @@ def get_score_method_with_mid(method):
     hnh_list = [meteva.method.roc_auc]
     cscs_list = [meteva.method.ob_fo_precipitation_strength]
 
-    method_mid = None
+    method_mid = []
     method_name = method.__name__
 
     if method in hfmc_of_sum_rain_list:
-        method_mid = getattr(meteva.method, method_name + "_hfmc")
-    elif method in hfmc_list:
-        method_mid  = getattr(meteva.method, method_name +"_hfmc")
-    elif method in hfmc_multi_list:
-        method_mid  = getattr(meteva.method, method_name[:-6] +"_hfmc")
-    elif method in tase_list:
-        method_mid = getattr(meteva.method, method_name + "_tase")
-    elif method in tc_list:
-        method_mid = getattr(meteva.method, method_name + "_tc")
-    elif method in tmmsss_list:
-        method_mid = getattr(meteva.method, method_name + "_tmmsss")
-    elif method in toar_list:
-        method_mid = getattr(meteva.method, method_name + "_toar")
-    elif method in tlfo_list:
-        method_mid = getattr(meteva.method, method_name + "_tlfo")
-    elif method in tbask_list:
-        method_mid = getattr(meteva.product, method_name + "_tbask")
-    elif method in nasws_s_list:
-        method_mid = getattr(meteva.method, method_name + "_nasws")
-    elif method in tems_list:
-        method_mid = getattr(meteva.method, method_name + "_tems")
-    elif method in nasws_uv_list:
+        method_mid.append(getattr(meteva.method, method_name + "_hfmc"))
+    if method in hfmc_list:
+        method_mid.append(getattr(meteva.method, method_name +"_hfmc"))
+    if method in hfmc_multi_list:
+        method_mid.append(getattr(meteva.method, method_name[:-6] +"_hfmc"))
+    if method in tase_list:
+        method_mid.append(getattr(meteva.method, method_name + "_tase"))
+    if method in tase_angle_list:
+        method_name1 = method_name.split("_")[0]
+        method_mid.append(getattr(meteva.method, method_name1 + "_tase"))
+    if method in tc_list:
+        method_mid.append(getattr(meteva.method, method_name + "_tc"))
+    if method in tmmsss_list:
+        method_mid.append(getattr(meteva.method, method_name + "_tmmsss"))
+    if method in toar_list:
+        method_mid.append(getattr(meteva.method, method_name + "_toar"))
+    if method in tlfo_list:
+        method_mid.append(getattr(meteva.method, method_name + "_tlfo"))
+    if method in tbask_list:
+        method_mid.append(getattr(meteva.product, method_name + "_tbask"))
+    if method in nasws_s_list:
+        method_mid.append(getattr(meteva.method, method_name + "_nasws"))
+    if method in tems_list:
+        method_mid.append(getattr(meteva.method, method_name + "_tems"))
+    if method in nasws_uv_list:
         method_name1 = method_name.replace("_uv","_nasws")
-        method_mid = getattr(meteva.method, method_name1)
-    elif method in nas_uv_list:
+        method_mid.append(getattr(meteva.method, method_name1))
+    if method in nas_uv_list:
         method_name1 = method_name.replace("_uv","_nas")
-        method_mid = getattr(meteva.method, method_name1)
-    elif method in na_uv_list:
+        method_mid.append(getattr(meteva.method, method_name1))
+    if method in na_uv_list:
         method_name1 = method_name.replace("_uv","_na")
-        method_mid = getattr(meteva.method, method_name1)
-    elif method in fss_list:
-        method_mid = getattr(meteva.method, method_name + "_fof")
-    elif method in hnh_list:
-        method_mid = getattr(meteva.method, method_name + "_hnh")
-    elif method in cscs_list:
-        method_mid = getattr(meteva.method, method_name + "_cscs")
+        method_mid.append(getattr(meteva.method, method_name1))
+    if method in fss_list:
+        method_mid.append(getattr(meteva.method, method_name + "_fof"))
+    if method in hnh_list:
+        method_mid.append(getattr(meteva.method, method_name + "_hnh"))
+    if method in cscs_list:
+        method_mid.append(getattr(meteva.method, method_name + "_cscs"))
+    if method in tasem_list:
+        method_mid.append(getattr(meteva.method,method_name+"_tasem"))
     #print(method_mid)
     return method_mid
 
@@ -115,6 +126,8 @@ def get_middle_method(method):
 
     hfmc_of_sum_rain_list = [meteva.method.pc_of_sun_rain]
     tase_list = [meteva.method.me, meteva.method.mae, meteva.method.mse, meteva.method.rmse]
+    tase_angle_list = [meteva.method.me_angle, meteva.method.mae_angle, meteva.method.rmse_angle]
+    tasem_list = [meteva.method.ob_fo_mean]
     tc_list = [meteva.method.correct_rate,meteva.method.wrong_rate]
     tmmsss_list = [meteva.method.residual_error, meteva.method.residual_error_rate,meteva.method.corr,meteva.method.ob_fo_sum,meteva.method.ob_fo_mean,
                    meteva.method.nse,meteva.method.ob_fo_std]
@@ -124,46 +137,51 @@ def get_middle_method(method):
     nasws_s_list = [meteva.method.acs,meteva.method.scs,meteva.method.wind_weaker_rate,meteva.method.wind_severer_rate]
     nasws_uv_list = [meteva.method.acs_uv,meteva.method.scs_uv,meteva.method.wind_weaker_rate_uv,meteva.method.wind_severer_rate_uv]
     nas_uv_list = [meteva.method.acd_uv,meteva.method.scd_uv]
-    na_uv_list = [meteva.method.acz_uv]
+    na_uv_list = [meteva.method.acz_uv,meteva.method.acs_uv,meteva.method.acd_uv]
     fss_list = [meteva.method.fss]
     tems_list = [meteva.method.bs, meteva.method.bss]
     hnh_list = [meteva.method.roc_auc]
     cscs_list = [meteva.method.ob_fo_precipitation_strength]
-    method_mid = None
+    method_mid = []
+
     if method in hfmc_of_sum_rain_list:
-        method_mid = meteva.method.hfmc_of_sun_rain
-    elif method in hfmc_list:
-        method_mid  = meteva.method.hfmc
-    elif method in hfmc_multi_list:
-        method_mid = meteva.method.hfmc_multi
-    elif method in tase_list:
-        method_mid = meteva.method.tase
-    elif method in tc_list:
-        method_mid = meteva.method.tc_count
-    elif method in tmmsss_list:
-        method_mid = meteva.method.tmmsss
-    elif method in toar_list:
-        method_mid = meteva.method.toar
-    elif method in tlfo_list:
-        method_mid = meteva.method.tlfo
-    elif method in tbask_list:
-        method_mid = meteva.product.regulation.temperature.tbask
-    elif method in nasws_s_list:
-        method_mid = meteva.method.nasws_s
-    elif method in nasws_uv_list:
-        method_mid = meteva.method.nasws_uv
-    elif method in nas_uv_list:
-        method_mid = meteva.method.nas_uv
-    elif method in na_uv_list:
-        method_mid = meteva.method.na_uv
-    elif method in fss_list:
-        method_mid = meteva.method.fss
-    elif method in tems_list:
-        method_mid = meteva.method.tems
-    elif method in hnh_list:
-        method_mid = meteva.method.hnh
-    elif method in cscs_list:
-        method_mid = meteva.method.cscs
+        method_mid.append(meteva.method.hfmc_of_sun_rain)
+    if method in hfmc_list:
+        method_mid.append(meteva.method.hfmc)
+    if method in hfmc_multi_list:
+        method_mid.append(meteva.method.hfmc_multi)
+    if method in tase_list:
+        method_mid.append(meteva.method.tase)
+    if method in tase_angle_list:
+        method_mid.append(meteva.method.tase_angle)
+    if method in tc_list:
+        method_mid.append(meteva.method.tc_count)
+    if method in tmmsss_list:
+        method_mid.append(meteva.method.tmmsss)
+    if method in toar_list:
+        method_mid.append(meteva.method.toar)
+    if method in tlfo_list:
+        method_mid.append(meteva.method.tlfo)
+    if method in tbask_list:
+        method_mid.append(meteva.product.regulation.temperature.tbask)
+    if method in nasws_s_list:
+        method_mid.append(meteva.method.nasws_s)
+    if method in nasws_uv_list:
+        method_mid.append(meteva.method.nasws_uv)
+    if method in nas_uv_list:
+        method_mid.append(meteva.method.nas_uv)
+    if method in na_uv_list:
+        method_mid.append(meteva.method.na_uv)
+    if method in fss_list:
+        method_mid.append(meteva.method.fss)
+    if method in tems_list:
+        method_mid.append(meteva.method.tems)
+    if method in hnh_list:
+        method_mid.append(meteva.method.hnh)
+    if method in cscs_list:
+        method_mid.append(meteva.method.cscs)
+    if method in tasem_list:
+        method_mid.append(meteva.method.tasem)
     return method_mid
 
 def get_middle_columns(method):
@@ -174,124 +192,6 @@ def get_middle_columns(method):
     else:
         print("暂无支持")
         pass
-
-def middle_df_sta_bak2(sta_all,method,grade_list = None,compare = None,gid = None):
-    '''
-
-    :param sta_all:
-    :param method:
-    :param grade_list:
-    :param compare:
-    :param gid:
-    :return:
-    '''
-
-    need_g = False
-    if gid is not None:
-        need_g = True
-
-    mid_columns = get_middle_columns(method)
-    method_args = {}
-    if grade_list is not None:
-        method_args["grade_list"] = grade_list
-    if compare is not None:
-        method_args["compare"] = compare
-    grade_exp = None
-    names_exp = None
-    group_name = None
-    if need_g:
-        group_name = gid.columns[1]
-        groups = gid[group_name]
-        groups = groups.drop_duplicates(keep = "first")
-        names = groups.values
-        gll = []
-        for i in range(len(names)):
-            ids = gid.loc[gid[group_name] == names[i]].values[:, 0]
-            gll.append(ids.tolist())
-
-        method_args["g"] = "id"
-        method_args["gll"] = gll
-        if grade_list is not None:
-            grade_exp, names_exp = np.meshgrid(grade_list, names)
-            grade_exp = grade_exp.flatten().tolist()
-            names_exp = names_exp.flatten().tolist()
-        else:
-            names_exp = names
-
-        sta_all_gid = meteva.base.combine_expand(sta_all,gid)
-    else:
-        sta_all_gid = sta_all
-        if grade_list is not None:
-            grade_exp = grade_list
-        else:
-            pass
-
-
-    sta_list = meteva.base.split(sta_all_gid,used_coords=["level","time","dtime",group_name])
-    print(sta_list[0])
-    df_list = []
-    for k in range(len(sta_list)):
-        sta = sta_list[k]
-
-
-        not_all_iv = [True]
-        if method.__name__.find("_uv") >= 0 or method.__name__.find("distance") >= 0:
-            col_step = 2
-            valid_index = [0, 1]
-        else:
-            col_step = 1
-            valid_index = [0]
-
-        len_ = len(sta.columns)
-        for nv in range(6 + col_step, len_, col_step):
-            not_all_iv1 = np.any(sta.iloc[:, nv].values != meteva.base.IV)
-            not_all_iv.append(not_all_iv1)
-            if not_all_iv1:
-                valid_index.append(nv - 6)
-                if col_step == 2: valid_index.append(nv - 5)
-
-        sta = meteva.base.in_member_list(sta, member_list=valid_index, name_or_index="index")
-        sta1 = meteva.base.not_IV(sta)
-        print(sta1)
-        if len(sta1.index)==0:continue
-        data_names = meteva.base.get_stadata_names(sta1)
-        if method.__name__=="tbask":
-            mid_array, _ = meteva.product.score(sta1, method)
-            dict1 = {"time": sta["time"].values[0], "dtime": sta["dtime"].values[0],"T":mid_array[0],"BASK":mid_array[1]}
-            tbask_df = pd.DataFrame(dict1,index = [k])
-            df_list.append(tbask_df)
-        else:
-
-            for m in range(1, len(data_names)):
-                sta2 = meteva.base.sele_by_para(sta1, member=[data_names[0], data_names[m]])
-
-                mid_array, gll_valid = meteva.product.score(sta2, method,**method_args,drop_g_column=True)
-
-                index_names = ["time","dtime","member"]
-                dict1 = {"time":sta2["time"].values[0],"dtime":  sta2["dtime"].values[0],"member": data_names[m]}
-                if names_exp is not None:
-                    index_names.append(group_name)
-                    dict1[group_name] = names_exp
-                if grade_exp is not None:
-                    index_names.append("grade")
-                    dict1["grade"] = grade_exp
-
-                if method == meteva.method.tc_count:
-                    if grade_list is None:
-                        dat1 = mid_array[..., 0]
-                    else:
-                        dat1 = np.repeat([mid_array[..., 0]],len(grade_list))
-                    dict1[mid_columns[0]] = dat1.flatten()
-                    dict1[mid_columns[1]] = mid_array[..., 1:].flatten()
-                else:
-                    for c in range(len(mid_columns)):
-                        dict1[mid_columns[c]] = mid_array[...,c].flatten()
-
-
-                hfmc_df = pd.DataFrame(dict1)
-                df_list.append(hfmc_df)
-    df_all = pd.concat(df_list, axis=0)
-    return df_all
 
 def middle_df_sta(sta_all,method,grade_list = None,compare = None,gid = None):
     '''
@@ -318,6 +218,11 @@ def middle_df_sta(sta_all,method,grade_list = None,compare = None,gid = None):
     names_exp = None
     group_name = None
     if need_g:
+        #may be some id in gid is not in sta_all,valid group is not same as group in grid
+        sta_all_id = copy.deepcopy(sta_all[["id"]])
+        sta_all_id.drop_duplicates()
+        sta = meteva.base.combine_on_id(gid,sta_all_id,how="inner")
+        gid = sta
         group_name = gid.columns[1]
         groups = gid[group_name]
         groups = groups.drop_duplicates(keep = "first")
@@ -448,105 +353,6 @@ def middle_df_sta(sta_all,method,grade_list = None,compare = None,gid = None):
     return df_all
 
 
-def middle_df_sta_bak1(sta_all,method,grade_list = None,compare = None,gid = None):
-    '''
-
-    :param sta_all:
-    :param method:
-    :param grade_list:
-    :param compare:
-    :param gid:
-    :return:
-    '''
-
-    need_g = False
-    if gid is not None:
-        need_g = True
-
-
-    mid_columns = get_middle_columns(method)
-    method_args = {}
-    if grade_list is not None:
-        method_args["grade_list"] = grade_list
-    if compare is not None:
-        method_args["compare"] = compare
-
-
-    if need_g:
-        group_name = gid.columns[1]
-        sta_all_gid = meteva.base.combine_expand(sta_all,gid)
-        sta_list = meteva.base.split(sta_all_gid, used_coords=["level", "time", "dtime", group_name])
-    else:
-        sta_list = meteva.base.split(sta_all,used_coords=["level","time","dtime"])
-
-
-    df_list = []
-    for k in range(len(sta_list)):
-        print(str(k)+"/"+str(len(sta_list)))
-        sta = sta_list[k]
-        if need_g:
-            group_value = sta.iloc[0,-1]
-            sta = sta.iloc[:,:-1]
-
-        not_all_iv = [True]
-        if method.__name__.find("_uv") >= 0 or method.__name__.find("distance") >= 0:
-            col_step = 2
-            valid_index = [0, 1]
-        else:
-            col_step = 1
-            valid_index = [0]
-
-        len_ = len(sta.columns)
-        for nv in range(6 + col_step, len_, col_step):
-            not_all_iv1 = np.any(sta.iloc[:, nv].values != meteva.base.IV)
-            not_all_iv.append(not_all_iv1)
-            if not_all_iv1:
-                valid_index.append(nv - 6)
-                if col_step == 2: valid_index.append(nv - 5)
-
-        sta = meteva.base.in_member_list(sta, member_list=valid_index, name_or_index="index")
-        sta1 = meteva.base.not_IV(sta)
-        #print(sta1)
-        if len(sta1.index)==0:continue
-        data_names = meteva.base.get_stadata_names(sta1)
-        if method.__name__=="tbask":
-            mid_array, _ = meteva.product.score(sta1, method)
-            dict1 = {"time": sta["time"].values[0], "dtime": sta["dtime"].values[0],"T":mid_array[0],"BASK":mid_array[1]}
-            tbask_df = pd.DataFrame(dict1,index = [k])
-            df_list.append(tbask_df)
-        else:
-
-            for m in range(1, len(data_names)):
-                sta2 = meteva.base.sele_by_para(sta1, member=[data_names[0], data_names[m]])
-
-                mid_array, gll1 = meteva.product.score(sta2, method,**method_args)
-
-                index_names = ["time","dtime","member"]
-                dict1 = {"time":sta2["time"].values[0],"dtime":  sta2["dtime"].values[0],"member": data_names[m]}
-
-                if grade_list is not None:
-                    index_names.append("grade")
-                    dict1["grade"] = grade_list
-                if need_g:
-                    dict1[group_name] = group_value
-
-                #print(dict1)
-                if method == meteva.method.tc_count:
-                    if grade_list is None:
-                        dat1 = mid_array[..., 0]
-                    else:
-                        dat1 = np.repeat([mid_array[..., 0]],len(grade_list))
-                    dict1[mid_columns[0]] = dat1.flatten()
-                    dict1[mid_columns[1]] = mid_array[..., 1:].flatten()
-                else:
-                    for c in range(len(mid_columns)):
-                        dict1[mid_columns[c]] = mid_array[...,c].flatten()
-                        pass
-                hfmc_df = pd.DataFrame(dict1)
-                df_list.append(hfmc_df)
-    df_all = pd.concat(df_list, axis=0)
-    return df_all
-
 def tran_middle_df_to_ds(df_all,mid_columns = None):
     '''
 
@@ -554,7 +360,7 @@ def tran_middle_df_to_ds(df_all,mid_columns = None):
     :param mid_columns: 中间数据对应的列名称，列表形式
     :return:
     '''
-
+    print("该函数有bug，在相邻格点取值完全相同时，会产生nan")
     all_columns = df_all.columns
     if mid_columns is None:
 
@@ -608,6 +414,7 @@ def middle_ds_sta(sta_all,method,grade_list = None,compare = None,gid = None):
     ds_all = tran_middle_df_to_ds(df_all,mid_columns)
     return ds_all
 
+
 def middle_df_grd(grd_ob, grd_fo, method, grade_list=None, compare=None, marker=None, marker_name=None):
     mid_columns = get_middle_columns(method)
     level_fo = grd_fo["level"].values[0]
@@ -643,7 +450,6 @@ def middle_df_grd(grd_ob, grd_fo, method, grade_list=None, compare=None, marker=
 
     if compare is not None:
         method_args["compare"] = compare
-    df_list = []
     if marker is None:
 
         ob = grd_ob.values
@@ -675,70 +481,95 @@ def middle_df_grd(grd_ob, grd_fo, method, grade_list=None, compare=None, marker=
                 dict1[mid_columns[c]] = mid_array[..., c].flatten()
 
         mid_df = pd.DataFrame(dict1)
-        df_list.append(mid_df)
+        return mid_df
 
     else:
-        mark_set = list(set(marker.values.flatten().tolist()))
-        mark_name = marker["member"].values[0]
-        marker_name_dict = {}
-        if  marker_name  is None:
-            for mark in mark_set:
-                marker_name_dict[mark] = mark
+        if method.__name__ == "tase":
+            total_count = grd_weight.values.flatten()
+            error = ((grd_fo.values - grd_ob.values) * grd_weight.values).flatten()
+            abs_error = (np.abs(grd_ob.values - grd_fo.values) * grd_weight.values).flatten()
+            squere_error = (np.square(grd_ob.values - grd_fo.values) * grd_weight.values).flatten()
+            mean_obs = (grd_ob.values* grd_weight.values).flatten()
+            df = pd.DataFrame( {"T":total_count,"E":error,"A":abs_error,"S":squere_error,"M":mean_obs,"id":marker.values.flatten()})
+            df.dropna(inplace=True)
+            # 使用 agg 方法进行聚合计算
+            result_df = df.groupby('id').agg({
+                'T': 'sum',  # 权重和
+                'E': 'sum',  # 误差权重和
+                'A': "sum",  # 绝对误差权重和
+                "S": "sum",  # 误差平方权重和
+                "M":"sum"    #观测平均
+            }).reset_index()
+
+            # 重命名列以匹配您的期望输出
+            result_df.columns = ['id', 'T', 'E', 'A', 'S', 'M']
+            result_df.insert(0,"level",level_fo)
+            result_df.insert(1, "time", time_fo)
+            result_df.insert(2, "dtime", dtime)
+            result_df.insert(3, "member", fo_name)
+            return result_df
         else:
-            for i in range(len(marker_name.index)):
-                marker_name_dict[marker_name.iloc[i,0]] = marker_name.iloc[i,1]
-
-        for mark in mark_set:
-            if method.__name__.find("_uv")>=0:
-                index = np.where(marker.values[0,...] == mark)
-                u_ob = grd_ob.values[0, ...]
-                u_ob = u_ob[index]
-                v_ob = grd_ob.values[1, ...]
-                v_ob = v_ob[index]
-                u_fo = grd_fo.values[0, ...]
-                u_fo = u_fo[index]
-                v_fo = grd_fo.values[1, ...]
-                v_fo = v_fo[index]
-                mid_array = method(u_ob, u_fo, v_ob, v_fo, **method_args)
+            df_list = []
+            mark_set = list(set(marker.values.flatten().tolist()))
+            mark_name = marker["member"].values[0]
+            marker_name_dict = {}
+            if marker_name is None:
+                for mark in mark_set:
+                    marker_name_dict[mark] = mark
             else:
-                index = np.where(marker.values == mark)
-                ob = grd_ob.values[index]
-                fo = grd_fo.values[index]
-                if method.__name__ in ["tase","tmmsss"]:
-                    #目前暂时只支持tase和tmmsss相关的指标的带权重
-                    w = grd_weight.values[index]
-                    method_args["weight"] = w
-                mid_array = method(ob, fo, **method_args)
-                if method.__name__ == "hnh":
-                    mid_array = mid_array.flatten()
+                for i in range(len(marker_name.index)):
+                    marker_name_dict[marker_name.iloc[i, 0]] = marker_name.iloc[i, 1]
 
-            index_names = ["level","time", "dtime", "member"]
-            dict1 = {"level":level_fo,"time": time_fo, "dtime": dtime, "member": fo_name}
-            if mark in marker_name_dict.keys():
-                dict1[mark_name] = marker_name_dict[mark]
-            else:
-                dict1[mark_name] = "other"
-
-            if grade_list is not None:
-                index_names.append("grade")
-                dict1["grade"] = grade_list
-
-            if method == meteva.method.tc_count:
-                if grade_list is None:
-                    dat1 = mid_array[..., 0]
+            for mark in mark_set:
+                if method.__name__.find("_uv") >= 0:
+                    index = np.where(marker.values[0, ...] == mark)
+                    u_ob = grd_ob.values[0, ...]
+                    u_ob = u_ob[index]
+                    v_ob = grd_ob.values[1, ...]
+                    v_ob = v_ob[index]
+                    u_fo = grd_fo.values[0, ...]
+                    u_fo = u_fo[index]
+                    v_fo = grd_fo.values[1, ...]
+                    v_fo = v_fo[index]
+                    mid_array = method(u_ob, u_fo, v_ob, v_fo, **method_args)
                 else:
-                    dat1 = np.repeat([mid_array[..., 0]], len(grade_list))
-                dict1[mid_columns[0]] = dat1.flatten()
-                dict1[mid_columns[1]] = mid_array[..., 1:].flatten()
-            else:
-                for c in range(len(mid_columns)):
-                    dict1[mid_columns[c]] = mid_array[..., c].flatten()
+                    index = np.where(marker.values == mark)
+                    ob = grd_ob.values[index]
+                    fo = grd_fo.values[index]
+                    if method.__name__ in ["tase", "tmmsss"]:
+                        # 目前暂时只支持tase和tmmsss相关的指标的带权重
+                        w = grd_weight.values[index]
+                        method_args["weight"] = w
+                    mid_array = method(ob, fo, **method_args)
+                    if method.__name__ == "hnh":
+                        mid_array = mid_array.flatten()
 
+                index_names = ["level", "time", "dtime", "member"]
+                dict1 = {"level": level_fo, "time": time_fo, "dtime": dtime, "member": fo_name}
+                if mark in marker_name_dict.keys():
+                    dict1[mark_name] = marker_name_dict[mark]
+                else:
+                    dict1[mark_name] = "other"
 
-            mid_df = pd.DataFrame(dict1)
-            df_list.append(mid_df)
-    df_all = pd.concat(df_list, axis=0)
-    return df_all
+                if grade_list is not None:
+                    index_names.append("grade")
+                    dict1["grade"] = grade_list
+
+                if method == meteva.method.tc_count:
+                    if grade_list is None:
+                        dat1 = mid_array[..., 0]
+                    else:
+                        dat1 = np.repeat([mid_array[..., 0]], len(grade_list))
+                    dict1[mid_columns[0]] = dat1.flatten()
+                    dict1[mid_columns[1]] = mid_array[..., 1:].flatten()
+                else:
+                    for c in range(len(mid_columns)):
+                        dict1[mid_columns[c]] = mid_array[..., c].flatten()
+
+                mid_df = pd.DataFrame(dict1)
+                df_list.append(mid_df)
+        df_all = pd.concat(df_list, axis=0)
+        return df_all
 
 
 def middle_ds_grd(grd_ob, grd_fo, method, grade_list=None, compare=None, marker=None, marker_name=None):

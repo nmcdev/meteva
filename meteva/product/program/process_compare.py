@@ -3,8 +3,6 @@ import math
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-plt.rcParams['font.sans-serif']=['SimHei'] #用来正常显示中文标签
-plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
 import datetime
 
 
@@ -189,13 +187,13 @@ def process_compare(ob_list ,fo_list_list ,map_extend = None ,width = 12 ,dpi = 
 
         if i == 0:
             ax.set_yticks(yticks)
-            ax.set_yticklabels(yticks_label, fontsize=sup_fontsize * 0.9, family='Times New Roman')
+            ax.set_yticklabels(yticks_label, fontsize=sup_fontsize * 0.9) #, family='Times New Roman')
         else:
             ax.set_yticks(yticks)
-            ax.set_yticklabels("", fontsize=sup_fontsize * 0.9, family='Times New Roman')
+            ax.set_yticklabels("", fontsize=sup_fontsize * 0.9) #, family='Times New Roman')
 
         ax.set_xticks(xticks)
-        ax.set_xticklabels("", fontsize=sup_fontsize * 0.9, family='Times New Roman')
+        ax.set_xticklabels("", fontsize=sup_fontsize * 0.9) #, family='Times New Roman')
         im = meteva.base.add_contourf(ax, ob_list[i], add_colorbar=False, cmap=cmap, cut_colorbar=False)
         if grid: plt.grid(linestyle="--", linewidth=0.5)
         meteva.base.tool.plot_tools_adv.add_map(ax, add_county_line=add_county_line, add_worldmap=add_worldmap,
@@ -243,20 +241,20 @@ def process_compare(ob_list ,fo_list_list ,map_extend = None ,width = 12 ,dpi = 
                 ylable = meteva.base.get_path("DD\n日\nHH\n时", time0)
                 ax.set_ylabel(ylable, fontsize=sup_fontsize * 0.9, rotation="horizontal", verticalalignment="center")
                 ax.set_yticks(yticks)
-                ax.set_yticklabels(yticks_label, fontsize=sup_fontsize * 0.9, family='Times New Roman')
+                ax.set_yticklabels(yticks_label, fontsize=sup_fontsize * 0.9) #, family='Times New Roman')
             else:
                 ax.set_yticks(yticks)
-                ax.set_yticklabels("", fontsize=sup_fontsize * 0.9, family='Times New Roman')
+                ax.set_yticklabels("", fontsize=sup_fontsize * 0.9) #, family='Times New Roman')
 
             if pj == len(fo_list_list) and pi == ncol - 1:
                 ax.set_xticks(xticks)
-                ax.set_xticklabels(xticks_label, fontsize=sup_fontsize * 0.9, family='Times New Roman')
+                ax.set_xticklabels(xticks_label, fontsize=sup_fontsize * 0.9) #, family='Times New Roman')
             elif pj == len(fo_list_list):
                 ax.set_xticks(xticks[:-1])
-                ax.set_xticklabels(xticks_label[:-1], fontsize=sup_fontsize * 0.9, family='Times New Roman')
+                ax.set_xticklabels(xticks_label[:-1], fontsize=sup_fontsize * 0.9) #, family='Times New Roman')
             else:
                 ax.set_xticks(xticks)
-                ax.set_xticklabels("", fontsize=sup_fontsize * 0.9, family='Times New Roman')
+                ax.set_xticklabels("", fontsize=sup_fontsize * 0.9) #, family='Times New Roman')
 
             if grid: plt.grid(linestyle="--", linewidth=0.5)
             meteva.base.tool.plot_tools_adv.add_map(ax, add_county_line=add_county_line, add_worldmap=add_worldmap,

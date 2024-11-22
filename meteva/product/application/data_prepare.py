@@ -9,6 +9,7 @@ import os
 
 
 para_example= {
+    "base_on":"obTime",
     "begin_time":datetime.datetime.now() - datetime.timedelta(days =7),
     "end_time":datetime.datetime.now(),
     "station_file":r"H:\task\other\202009-veri_objective_method\sta_info.m3",
@@ -16,8 +17,9 @@ para_example= {
     "hdf_file_name":"last_week_data.h5",
     "interp": meteva.base.interp_gs_nearest,
     "how_fo":"outer",
+    "time_type":"BT",
     "ob_data":{
-        "dir_ob": r"Z:\data\surface\jiany_rr\r1\YYMMDDHH.000",
+        "dir_ob": r"\\10.20.22.27\rc\RAIN\rain0\YYYYMMDDHH.000",
         "hour":None,
         "read_method": meteva.base.io.read_stadata_from_micaps3,
         "read_para": {},
@@ -28,7 +30,7 @@ para_example= {
     },
     "fo_data":{
         "ECMWF": {
-            "dir_fo": r"O:\data\grid\ECMWF_HR\APCP\YYYYMMDD\YYMMDDHH.TTT.nc",
+            "dir_fo": r"S:\data\grid\ECMWF_HR\APCP\YYYYMMDD\YYMMDDHH.TTT.nc",
             "hour":[8,20,12],
             "dtime":[0,240,12],
             "read_method": meteva.base.io.read_griddata_from_nc,
@@ -41,7 +43,7 @@ para_example= {
         },
 
         "SCMOC": {
-            "dir_fo": r"O:\data\grid\NWFD_SCMOC\RAIN03\YYYYMMDD\YYMMDDHH.TTT.nc",
+            "dir_fo": r"S:\data\grid\NWFD_SCMOC\RAIN03\YYYYMMDD\YYMMDDHH.TTT.nc",
             "hour": [8, 20,12],
             "dtime":[3,240,3],
             "read_method": meteva.base.io.read_griddata_from_nc,
@@ -56,8 +58,42 @@ para_example= {
     "output_dir":r"H:\test_data\output\mpd\application"
 }
 
-
 def prepare_dataset(para,recover = True):
+
+    if "base_on" not in para.keys():
+        para["base_on"] = "obTime"
+    if "time_type" not in para.keys():
+        para["time_type"] = "BT"
+
+
+
+    if  para["base_on"] =="obTime":
+        sta_all = prepare_dataset_on_obTime(para,recover=recover)
+
+    else:
+        sta_all = meteva.product.prepare_dataset_on_foTime(para,recover = recover)
+
+    return sta_all
+
+
+
+def prepare_dataset_without_combining(para,recover = True):
+    on_obTime = "obTime"
+    if "base_on" in para.keys():
+        on_obTime = para["on_obTime"]
+
+    if "time_type" not in para.keys():
+        para["time_type"] = "BT"
+
+    if on_obTime =="obTime":
+        prepare_dataset_without_combining_on_obTime(para,recover=recover)
+
+    else:
+        meteva.product.prepare_dataset_without_combining_on_foTime(para,recover)
+
+
+
+def prepare_dataset_on_obTime(para,recover = True):
     '''
 
     :param para: 根据配置参数从站点和网格数据中读取数据插值到指定站表上，在存储成hdf格式文件，然后从hdf格式文件中读取相应的文件合并成检验要的数据集合文件
@@ -95,7 +131,7 @@ def prepare_dataset(para,recover = True):
 
         hdf_file_list = [hdf_path]
         para["ob_data"]["hdf_path"] = hdf_path
-        sta_ob = creat_ob_dataset(para)
+        sta_ob = creat_ob_dataset_on_obTime(para)
         operation = para["ob_data"]["operation"]
         operation_para = para["ob_data"]["operation_para"]
         if operation_para is None:
@@ -113,7 +149,7 @@ def prepare_dataset(para,recover = True):
                 hdf_path = para["output_dir"] + "/" + filename1 + "/fo_" + model + "/" + hdf_filename
             para["fo_data"][model]["hdf_path"] = hdf_path
             hdf_file_list.append(hdf_path)
-            sta_fo = creat_fo_dataset(model,para)
+            sta_fo = creat_fo_dataset_on_obTime(model,para)
 
             operation = para["fo_data"][model]["operation"]
             operation_para =  para["fo_data"][model]["operation_para"]
@@ -142,10 +178,12 @@ def prepare_dataset(para,recover = True):
             os.remove(output_file)
         sta_all.to_hdf(output_file, "df")
         print("success combined data to " + output_file)
+        return sta_all
     else:
-        prepare_dataset_without_combining(para,recover = recover)
+        prepare_dataset_without_combining_on_obTime(para,recover = recover)
+        return None
 
-def prepare_dataset_without_combining(para,recover = True):
+def prepare_dataset_without_combining_on_obTime(para,recover = True):
     '''
 
     :param para: 根据配置参数从站点和网格数据中读取数据插值到指定站表上，在存储成hdf格式文件，然后从hdf格式文件中读取相应的文件合并成检验要的数据集合文件
@@ -183,7 +221,7 @@ def prepare_dataset_without_combining(para,recover = True):
             hdf_path = para["output_dir"] +"/"+filename1+ "/ob_data/"+hdf_filename
 
         para["ob_data"]["hdf_path"] = hdf_path
-        creat_ob_dataset(para)
+        creat_ob_dataset_on_obTime(para)
     else:
         for ele in elements:
             para1 = copy.deepcopy(para)
@@ -194,7 +232,7 @@ def prepare_dataset_without_combining(para,recover = True):
 
             para1["ob_data"] = para["ob_data"][ele]
             para1["ob_data"]["hdf_path"] = hdf_path
-            creat_ob_dataset(para1,ele,recover = recover)
+            creat_ob_dataset_on_obTime(para1,ele,recover = recover)
 
     models = para["fo_data"].keys()
     for model in models:
@@ -203,9 +241,9 @@ def prepare_dataset_without_combining(para,recover = True):
         else:
             hdf_path = para["output_dir"] + "/" + filename1 + "/fo_" + model + "/" + hdf_filename
         para["fo_data"][model]["hdf_path"] = hdf_path
-        creat_fo_dataset(model,para)
+        creat_fo_dataset_on_obTime(model,para)
 
-def creat_fo_dataset(model,para):
+def creat_fo_dataset_on_obTime(model,para):
     station = para["station"]
     interp = para["interp"]
     end_date = para["end_date"]
@@ -303,10 +341,17 @@ def creat_fo_dataset(model,para):
             time1 =dati_s  + datetime.timedelta(hours=hour)
 
             if time1 > end_date or time1< begin_date:continue
-            if para_model["time_type"] == "BT":
+
+
+            if para["time_type"] == para_model["time_type"]:
                 file_time = time1
             else:
-                file_time = time1 - datetime.timedelta(hours = 8)
+                if para["time_type"] == "BT":
+                    #主程序是北京时，文件是世界时
+                    file_time = time1 - datetime.timedelta(hours = 8)
+                else:
+                    #主程序是世界时，文件是北京时
+                    file_time = time1 + datetime.timedelta(hours = 8)
 
 
             for dt in dtimes:
@@ -391,7 +436,7 @@ def creat_fo_dataset(model,para):
     print(hdf_path)
     return sta_all
 
-def creat_ob_dataset(para,ele = "ob",recover = True):
+def creat_ob_dataset_on_obTime(para,ele = "ob",recover = True):
     station = para["station"]
     data_name =ele
     day_num = para["day_num"] + 1
@@ -472,10 +517,16 @@ def creat_ob_dataset(para,ele = "ob",recover = True):
             if time1 > end_date or time1 < begin_date: continue
             if time1 in exist_time_list:
                 continue
-            if para["ob_data"]["time_type"] == "BT":
+
+            if para["time_type"] == para["ob_data"]["time_type"]:
                 file_time = time1
             else:
-                file_time = time1 - datetime.timedelta(hours = 8)
+                if para["time_type"] == "BT":
+                    #主程序是北京时，文件是世界时
+                    file_time = time1 - datetime.timedelta(hours = 8)
+                else:
+                    #主程序是世界时，文件是北京时
+                    file_time = time1 + datetime.timedelta(hours = 8)
 
             if dir_ob is None:
                 dat = read_method(**read_para, time=file_time)
@@ -575,5 +626,5 @@ def rename_hdf_file(old_para,new_para):
     return
 
 if __name__ == "__main__":
-    pass
-    #prepare_dataset(para_example)
+
+    prepare_dataset(para_example)

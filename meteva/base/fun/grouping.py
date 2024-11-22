@@ -22,7 +22,7 @@ def group(sta_ob_and_fos,g = None,gll = None,drop_g_column = False):
             group_list_list = group_list_list0
         valid_group = ["level","time","time_range","year","month","day","dayofyear","hour","xun",
                        "ob_time","ob_time_range","ob_year","ob_month","ob_day","ob_dayofyear","ob_hour",
-                       "dtime","dtime_range","dday","dhour","id","lon_range","lon_step","lat_range","lat_step","last_range","last_step","grid",
+                       "dtime","dtime_range","dday","dhour","id","lon","lon_range","lon_step","lat","lat_range","lat_step","last_range","last_step","grid",
                        "province_name","member","ob_day_hour","ob_year_month","day_hour","year_month"]
 
         data_names = meteva.base.get_stadata_names(sta_ob_and_fos)
@@ -298,9 +298,10 @@ def group(sta_ob_and_fos,g = None,gll = None,drop_g_column = False):
 
                     for group_list in group_list_list:
                         group_list1 = []
+
                         for time_g1 in group_list:
-                            group_list1.append(meteva.base.all_type_time_to_datetime(time_g1))
-                        sta = sta_ob_and_fos.loc[obtimes.isin(group_list1)]
+                            group_list1.append(meteva.base.all_type_time_to_time64(time_g1))
+                        sta = sta_ob_and_fos.loc[obtimes.index.isin(group_list1)]
 
                         if len(sta.index) !=0:
                             valid_group_list_list.append(group_list1)
@@ -507,6 +508,32 @@ def group(sta_ob_and_fos,g = None,gll = None,drop_g_column = False):
             else:
                 for group_list in group_list_list:
                     sta = meteva.base.in_id_list(sta_ob_and_fos,group_list)
+                    if len(sta.index) !=0:
+                        valid_group_list_list.append(group_list)
+                        sta_ob_and_fos_list.append(sta)
+        elif g =="lon":
+            if group_list_list is None:
+                grouped_dict = dict(list(sta_ob_and_fos.groupby(g)))
+                keys = grouped_dict.keys()
+                for key in keys:
+                    valid_group_list_list.append([key])
+                    sta_ob_and_fos_list.append(grouped_dict[key])
+            else:
+                for group_list in group_list_list:
+                    sta = meteva.base.in_lon_list(sta_ob_and_fos,group_list)
+                    if len(sta.index) !=0:
+                        valid_group_list_list.append(group_list)
+                        sta_ob_and_fos_list.append(sta)
+        elif g =="lat":
+            if group_list_list is None:
+                grouped_dict = dict(list(sta_ob_and_fos.groupby(g)))
+                keys = grouped_dict.keys()
+                for key in keys:
+                    valid_group_list_list.append([key])
+                    sta_ob_and_fos_list.append(grouped_dict[key])
+            else:
+                for group_list in group_list_list:
+                    sta = meteva.base.in_lat_list(sta_ob_and_fos,group_list)
                     if len(sta.index) !=0:
                         valid_group_list_list.append(group_list)
                         sta_ob_and_fos_list.append(sta)

@@ -1,7 +1,3 @@
-#import meteva.base as meb
-#import meteva.method as mem
-#import meteva.product as mpd
-#import meteva.perspact as mps
 import datetime
 import copy
 import numpy as np

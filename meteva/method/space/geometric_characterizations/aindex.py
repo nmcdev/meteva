@@ -43,6 +43,8 @@ def aindex(x, thresh=None,dx = 1,dy = 1):
     for i in range(1,num_obj+1):
         label_one = np.zeros(x.shape)
         label_one[label_array==i] = 1
+        # 如果目标面积小于4个格点，不参加计算
+        if np.sum(label_one) <4:continue
         rx = getRedDotsCoordinatesFromLeftToRight(label_one)   #所以label的格点坐标
         pts = convexHull(rx)     #求凸包络线
         polygon = Polygon(pts)          #计算包络线面积

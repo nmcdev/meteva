@@ -6,15 +6,13 @@ import pandas as pd
 import meteva
 import matplotlib.pyplot as plt
 import pkg_resources
-plt.rcParams['font.sans-serif']=['SimHei'] #用来正常显示中文标签
-plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
 import xarray as xr
 
 
 def set_jar_path(path):
     if os.path.exists(path):
         meteva.base.ws_jar_path = path
-        meteva.base.height_oy = os.path.split(path)[0] +"\\height_oy.nc"
+        meteva.base.height_oy = os.path.split(path)[0] +"/height_oy.nc"
     else:
         print(path + " not exists")
 
@@ -223,6 +221,8 @@ def jet(grd,output_dir_root,resolution = "low",smooth_times = 0,min_size = 100,j
             }
     para_json = json.dumps(para)
 
+
+
     str_json = java_class_func(meteva.base.ws_jar_path,"Jpype","ws",None,para_json)
     if str_json !="null" and len(str_json)>0:
         graphy = json.loads(str_json)
@@ -248,6 +248,10 @@ def subtropical_high(grd,output_dir_root,smooth_times = 0,min_size = 500,necessa
             "h_data": h_data
             }
     para_json = json.dumps(para)
+
+    # file1 = open(r"H:\task\develop\java\sysIdentify\para_json.txt","w")
+    # file1.write(para_json)
+    # file1.close()
 
     str_json = java_class_func(meteva.base.ws_jar_path,"Jpype","ws",None,para_json)
     if str_json !="null" and len(str_json)>0:

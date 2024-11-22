@@ -1,17 +1,21 @@
 import meteva
 import numpy as np
 import matplotlib.pyplot as plt
-plt.rcParams['font.sans-serif']=['SimHei'] #用来正常显示中文标签
-plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
 import math
 from matplotlib.colors import BoundaryNorm
+from matplotlib.collections import LineCollection
+import matplotlib.animation as animation
+import pandas as pd
+import copy
 
 
 def add_map(ax,add_county_line = False,add_worldmap = True,title = None,sup_fontsize = 12,linewidth = [0.3,0.3,0.2],color = ["k","k","k"]):
 
     if meteva.base.customized_basemap_list is None:
         if add_worldmap:
-            meteva.base.tool.plot_tools.add_china_map_2basemap(ax, name="world", edgecolor='k', lw=0.3, encoding='gbk', grid0=None)  # "国界"
+            meteva.base.tool.plot_tools.add_china_map_2basemap(ax, name="world", edgecolor='k', lw=0.3, encoding='gbk', grid0=None)  # "世界地图"
+            meteva.base.tool.plot_tools.add_china_map_2basemap(ax, name="world360", edgecolor='k', lw=0.3, encoding='gbk',
+                                                               grid0=None)  # "世界地图"
         meteva.base.tool.plot_tools.add_china_map_2basemap(ax, name="nation", edgecolor='k', lw=0.3,encoding = 'gbk')  #"国界"
         meteva.base.tool.plot_tools.add_china_map_2basemap(ax, edgecolor='k', lw=0.3,encoding = 'gbk')  #"省界"
         if add_county_line:
@@ -41,7 +45,7 @@ def add_map(ax,add_county_line = False,add_worldmap = True,title = None,sup_font
 
 
 def creat_axs(nplot,map_extend,ncol = None,height  = None,width = None,dpi = 300,sup_title = None,sup_fontsize = 12,
-              add_county_line = False,add_worldmap = True,add_minmap = None,title_list = None,add_index = None,wspace = None,grid = True,
+              add_county_line = False,add_worldmap = True,add_minmap = None,title_list = None,add_index = None,wspace = None,hspace = None,grid = True,
               xticks_inter = None,yticks_inter = None,linewidth = [0.3,0.3,0.2],color = ["k","k","k"],keep_ticks = 1,
               width_colorbar = 0.5):
 
@@ -78,10 +82,13 @@ def creat_axs(nplot,map_extend,ncol = None,height  = None,width = None,dpi = 300
         sup_height_title = sup_fontsize * 0.12
 
     height_title = sup_fontsize * 0.1
-    if keep_ticks==1:
-        height_hspace = sup_fontsize * 0.025
+    if hspace is None:
+        if keep_ticks==1:
+            height_hspace = sup_fontsize * 0.025
+        else:
+            height_hspace = sup_fontsize * 0.005
     else:
-        height_hspace = sup_fontsize * 0.005
+        height_hspace = hspace
 
     if wspace is None:
         width_wspace = height_hspace*2
@@ -161,15 +168,29 @@ def creat_axs(nplot,map_extend,ncol = None,height  = None,width = None,dpi = 300
     xticks_label_None = []
     for x in range(len(xticks)):
         v1 = xticks[x]
-        if abs(v1 - int(v1))<1e-7:
-            xticks_label.append(str(int(round(v1, 6))))
+        if v1>=0 and v1 <=180:
+            if abs(v1 - int(v1))<1e-7:
+                xticks_label.append(str(int(round(v1, 6)))+ "°E")
+            else:
+                xticks_label.append(str(round(v1, 6))+ "°E")
         else:
-            xticks_label.append(str(round(v1, 6)))
+            if v1<0:
+                v2 = -v1
+            else:
+                v2 = 360 - v1
+            if abs(v1 - int(v1))<1e-7:
+                xticks_label.append(str(int(round(v2, 6)))+ "°W")
+            else:
+                xticks_label.append(str(round(v2, 6))+ "°W")
+
+
+
         xticks_label_None.append("")
-    if xticks[-1] > 0:
-        xticks_label[-1] = "   " + xticks_label[-1] + "°E"
-    else:
-        xticks_label[-1] = "   " + xticks_label[-1] + "°W"
+
+    # if xticks[-1] > 0:
+    #     xticks_label[-1] = "   " + xticks_label[-1] + "°E"
+    # else:
+    #     xticks_label[-1] = "   " + xticks_label[-1] + "°W"
 
     vmax = elat
     vmin = slat
@@ -235,17 +256,17 @@ def creat_axs(nplot,map_extend,ncol = None,height  = None,width = None,dpi = 300
             if p >= nplot - ncol or keep_ticks:
                 # 最底行画横坐标
                 ax.set_xticks(xticks)
-                ax.set_xticklabels(xticks_label, fontsize=sup_fontsize * 0.9, family='Times New Roman')
+                ax.set_xticklabels(xticks_label, fontsize=sup_fontsize * 0.9) #, family='Times New Roman')
             else:
-                ax.set_xticklabels("", fontsize=sup_fontsize * 0.9, family='Times New Roman')
+                ax.set_xticklabels("", fontsize=sup_fontsize * 0.9) #, family='Times New Roman')
 
 
             if pi ==0 or keep_ticks:
                 # 最左侧画纵坐标
                 ax.set_yticks(yticks)
-                ax.set_yticklabels(yticks_label, fontsize=sup_fontsize * 0.9, family='Times New Roman')
+                ax.set_yticklabels(yticks_label, fontsize=sup_fontsize * 0.9) #, family='Times New Roman')
             else:
-                ax.set_yticklabels("", fontsize=sup_fontsize * 0.9, family='Times New Roman')
+                ax.set_yticklabels("", fontsize=sup_fontsize * 0.9) #, family='Times New Roman')
         else:
             ax.set_xticks([])
             ax.set_yticks([])
@@ -300,6 +321,7 @@ def creat_axs(nplot,map_extend,ncol = None,height  = None,width = None,dpi = 300
         return ax_list
     else:
         return ax_list,min_ax_list
+
 
 
 def add_contourf(ax,grd,cmap ="rainbow",clevs= None,add_colorbar = True,cut_colorbar = True,title = None,title_fontsize = 8,clip = None,
@@ -473,6 +495,55 @@ def add_mesh(ax,grd,cmap ="rainbow",clevs= None,add_colorbar = True,title = None
 
 def add_barbs(ax,wind,color = "k",skip = None,title = None,title_fontsize = 8,length = None):
 
+    fig = plt.gcf()
+    width = fig.bbox.width / fig.dpi
+
+    if isinstance(wind, pd.DataFrame):
+        if length is None:
+            length = ax.bbox.width / fig.dpi
+        X = wind["lon"].values
+        Y = wind["lat"].values
+        u = wind.iloc[:,-2].values
+        v = wind.iloc[:,-1].values
+        im = ax.barbs(X, Y, u, v,
+                      sizes=dict(emptybarb=0.01, spacing=0.23, height=0.5, width=0.25), color=color,
+                      barb_increments=dict(half=2, full=4, flag=20), length=length, linewidth=length * length * 0.03)
+    else:
+        slon = ax.transLimits._boxin.x0
+        elon = ax.transLimits._boxin.x1
+        slat = ax.transLimits._boxin.y0
+        elat = ax.transLimits._boxin.y1
+
+        grid0 = meteva.base.get_grid_of_data(wind)
+        grid1 = meteva.base.grid([slon,elon,grid0.dlon],[slat,elat,grid0.dlat])
+        wind1 = meteva.base.interp_gg_linear(wind,grid1,outer_value=np.nan)
+
+        x = wind1['lon'].values
+        y = wind1['lat'].values
+        X, Y = np.meshgrid(x, y)
+        u = np.squeeze(wind1.values[0,...])
+        v = np.squeeze(wind1.values[1,...])
+
+
+        if skip is  not None:
+            if length is None:
+                #length = math.sqrt((width-1) * skip / x.size) * 5
+                length = math.sqrt(ax.bbox.width*skip/ fig.dpi)*1.0
+        else:
+            if length is None:
+                length = ax.bbox.width/fig.dpi
+            skip =int((length /10)**2 * x.size / (width - 1))+1
+        ax.set_title(title,fontsize =title_fontsize)
+        im = ax.barbs(X[::skip,::skip],Y[::skip,::skip] , u[::skip,::skip], v[::skip,::skip],
+                 sizes=dict(emptybarb=0.01, spacing=0.23, height=0.5,width = 0.25),color = color,
+                 barb_increments=dict(half=2, full=4, flag=20),length = length,linewidth = length * length  * 0.03)
+
+
+    return im
+
+
+def add_streamplot(ax,wind,color = "k",title = None,title_fontsize = 8,density= 1,linewidth = 1):
+
     slon = ax.transLimits._boxin.x0
     elon = ax.transLimits._boxin.x1
     slat = ax.transLimits._boxin.y0
@@ -491,20 +562,98 @@ def add_barbs(ax,wind,color = "k",skip = None,title = None,title_fontsize = 8,le
     fig = plt.gcf()
     width = fig.bbox.width/fig.dpi
 
-    if skip is  not None:
-        if length is None:
-            length = math.sqrt((width-1) * skip / x.size) * 8
-    else:
-        if length is None:
-            length = ax.bbox.width/fig.dpi
-        skip =int((length /10)**2 * x.size / (width - 1))+1
     ax.set_title(title,fontsize =title_fontsize)
-    im = ax.barbs(X[::skip,::skip],Y[::skip,::skip] , u[::skip,::skip], v[::skip,::skip],
-             sizes=dict(emptybarb=0.01, spacing=0.23, height=0.5,width = 0.25),color = color,
-             barb_increments=dict(half=2, full=4, flag=20),length = length,linewidth = length * length  * 0.03)
-
+    im = ax.streamplot(X,Y , u, v, color = color,density = density,linewidth=linewidth,arrowstyle = "->")
 
     return im
+
+def add_meteor(ax,grd_wind,skip = 5,meteor_length = 1,meteor_width = 1,cmap = "viridis"):
+    L = 20
+    grid0 = meteva.base.get_grid_of_data(grd_wind)
+    grid1 = meteva.base.grid([grid0.slon, grid0.elon, grid0.dlon * skip], [grid0.slat, grid0.elat, grid0.dlat * skip])
+    grd_station = meteva.base.grid_data(grid1)
+    station = meteva.base.trans_grd_to_sta(grd_station)
+    N = len(station.index)
+    point_list  = [copy.deepcopy(station[["lon","lat"]].values)]
+    #积分出轨迹
+    for i in range(L):
+        sta_uv = meteva.base.interp_gs_linear(grd_wind,station)
+
+        station.iloc[:,4] += sta_uv.iloc[:,6] * meteor_length * 0.01
+        station.iloc[:, 5] += sta_uv.iloc[:, 7] * meteor_length * 0.01
+        point_list.append(copy.deepcopy(station[["lon", "lat"]].values))
+
+    points = np.array(point_list)
+    points_s = points[:-1,:,:].reshape(-1,2)
+    points_e = points[1:,:,:].reshape(-1,2)
+    cc = np.repeat(np.arange(1,L),N).T.flatten()
+    segs = np.stack([points_s, points_e], axis=1)
+    lc = LineCollection(segs, cmap=cmap, capstyle='round')
+    lc.set_array(cc)
+    lc.set_linewidth(cc*meteor_width*0.05)
+    image = ax.add_collection(lc)
+
+    return image
+
+
+def add_animation(ax,grd_wind,skip = 5,meteor_length = 1,meteor_width = 1,cmap = "viridis"):
+    grid0 = meteva.base.get_grid_of_data(grd_wind)
+    grid1 = meteva.base.grid([grid0.slon, grid0.elon, grid0.dlon * skip], [grid0.slat, grid0.elat, grid0.dlat * skip])
+    grd_station = meteva.base.grid_data(grid1)
+    station = meteva.base.trans_grd_to_sta(grd_station)
+    N = len(station.index)
+    point_list = [copy.deepcopy(station[["lon", "lat"]].values)]
+    L_all = 50
+    # 积分出轨迹
+    for i in range(L_all):
+        sta_uv = meteva.base.interp_gs_linear(grd_wind, station)
+        station.iloc[:, 4] += sta_uv.iloc[:, 6] * meteor_length * 0.02
+        station.iloc[:, 5] += sta_uv.iloc[:, 7] * meteor_length * 0.02
+        point_list.append(copy.deepcopy(station[["lon", "lat"]].values))
+    points = np.array(point_list)
+    points[-1,:,:] = np.nan
+
+    L_show = 10
+
+    for i in range(N):
+        split_index = np.random.randint(1, L_all -1)
+        part1 = points[:split_index,i,:]
+        part2 = points[split_index:,i,:]
+        new_arr = np.concatenate((part2, part1))
+        points[:,i,:] = new_arr
+
+    points = np.concatenate((points,points[0:L_show+1,:,:]))
+
+
+    arr = points[:L_show+1 , :, :]
+    nan_rows = np.isnan(arr).any(axis=(0, 2))     # 找到包含 nan 的行的索引
+    new_arr = arr[:,~nan_rows,:]     # 删除包含 nan 的行
+    #print(new_arr[:,0,0])
+    points_s = new_arr[:-1 , :, :].reshape(-1, 2)
+    points_e = new_arr[ 1:, :, :].reshape(-1, 2)
+    segs = np.stack([points_s, points_e], axis=1)
+    lc = LineCollection(segs, cmap=cmap, capstyle='round')
+    ax.add_collection(lc)
+
+
+    def update(frame):
+        arr = points[frame:frame+L_show + 1, :, :]
+        nan_rows = np.isnan(arr).any(axis=(0, 2))  # 找到包含 nan 的行的索引
+        new_arr = arr[:, ~nan_rows, :]  # 删除包含 nan 的行
+        points_s = new_arr[:-1, :, :].reshape(-1, 2)
+        points_e = new_arr[1:, :, :].reshape(-1, 2)
+
+        segs = np.stack([points_s, points_e], axis=1)
+        lc.set_segments(segs)
+        N1 = new_arr.shape[1]
+        cc = np.repeat(np.arange(1, L_show), N1).T.flatten()
+        lc.set_array(cc)
+        lc.set_linewidth(cc * meteor_width * 0.1)
+        return  [lc]
+
+    fig = ax.figure
+    ani = animation.FuncAnimation(fig, update, frames=L_all, interval=50, blit=True, repeat=True)
+    return ani
 
 
 def add_scatter(ax,sta0,cmap = "rainbow",clevs = None,point_size = None,fix_size = True,threshold = 2,min_spot_value = 0,mean_value = 2,
@@ -700,112 +849,6 @@ def add_closed_line(ax,graphy,color = "k",linewidth=2,fontsize = 10,title = None
     return
 
 
-def add_shear_line(ax,graphy,linewidth = 1,title = None,title_fontsize = 8):
-    if graphy is None:
-        return
-    slon = ax.transLimits._boxin.x0
-    elon = ax.transLimits._boxin.x1
-    slat = ax.transLimits._boxin.y0
-    elat = ax.transLimits._boxin.y1
-
-    rlon = elon - slon
-    rlat = elat - slat
-    fig = plt.gcf()
-    map_width = ax.bbox.width / fig.dpi
-
-    line_width = rlon *  0.015/ map_width
-
-    features = graphy["features"]
-    for value in features.values():
-        line = value["axes"]
-        line_type = line["line_type"]
-        point = np.array(line["point"])
-        dp = np.zeros(point.shape)
-        dp[:-1,:] = point[1:,:] - point[:-1,:]
-        dp[-1,:] = dp[-2,:]
-        length = (dp[:,0]**2 + dp[:,1] **2)**0.5
-        dx = -dp[:,1] * line_width/ length
-        dy = dp[:,0] * line_width/length
-
-
-        if line_type =="c":
-            ax.plot(point[:,0] - dx ,point[:,1] - dy,"b",linewidth = linewidth)
-            ax.plot(point[:, 0] + dx, point[:, 1] + dy, "b",linewidth =  linewidth)
-        else:
-            ax.plot(point[:, 0] - dx, point[:, 1] - dy, "r",linewidth =  linewidth)
-            ax.plot(point[:, 0] + dx, point[:, 1] + dy, "r",linewidth =  linewidth)
-    ax.set_xlim(slon,elon)
-    ax.set_ylim(slat,elat)
-    ax.set_title(title,fontsize =title_fontsize)
-    return
-
-def add_trough_axes(ax,graphy,color = "r",linewidths = None,title = None,title_fontsize = 8):
-    if graphy is None:
-        return
-    slon = ax.transLimits._boxin.x0
-    elon = ax.transLimits._boxin.x1
-    slat = ax.transLimits._boxin.y0
-    elat = ax.transLimits._boxin.y1
-
-    rlon = elon - slon
-    rlat = elat - slat
-    fig = plt.gcf()
-    map_width = ax.bbox.width / fig.dpi
-
-    if linewidths is None:
-        linewidths = rlon *  0.015/ map_width
-
-    features = graphy["features"]
-    for value in features.values():
-        line = value["axes"]
-        point = np.array(line["point"])
-        if point.size>2:
-            ax.plot(point[:, 0], point[:, 1],color, linewidth=linewidths)
-
-    ax.set_xlim(slon,elon)
-    ax.set_ylim(slat,elat)
-    ax.set_title(title,fontsize =title_fontsize)
-    return
-
-def add_jet_axes(ax,graphy,title = None,title_fontsize = 8,color ="yellow" ):
-    if graphy is None:
-        return
-    slon = ax.transLimits._boxin.x0
-    elon = ax.transLimits._boxin.x1
-    slat = ax.transLimits._boxin.y0
-    elat = ax.transLimits._boxin.y1
-
-    rlon = elon - slon
-    rlat = elat - slat
-    fig = plt.gcf()
-    map_width = ax.bbox.width / fig.dpi
-
-    line_width = rlon *  0.015/ map_width
-
-    features = graphy["features"]
-    for value in features.values():
-        line = value["axes"]
-        point = np.array(line["point"])
-        npoint = len(line["point"])
-        if npoint>2:
-            ns = npoint -1
-            dx = 0
-            dy = 0
-            while ns >0:
-                ns -= 1
-                dx = point[npoint-1,0] - point[ns,0]
-                dy = point[npoint-1,1] - point[ns,1]
-                dis = (dx**2 + dy**2)**0.5
-                if dis > 0.3:
-                    break
-
-            ax.arrow(point[ns-1,0],point[ns-1,1],dx*0.01,dy*0.01,head_width=1,head_length = 1,fc = color,ec = color)
-            ax.plot(point[:ns, 0], point[:ns, 1], color, linewidth=2.5)
-
-    ax.set_xlim(slon,elon)
-    ax.set_ylim(slat,elat)
-    ax.set_title(title,fontsize =title_fontsize)
-    return
 
 def add_cyclone_trace(ax,sta_cyclone_trace,size = 0.3,linewidth = 1,title = None,title_fontsize = 8):
 
@@ -837,11 +880,11 @@ def add_cyclone_trace(ax,sta_cyclone_trace,size = 0.3,linewidth = 1,title = None
             lat_list = []
             for a in range(0,360,5):
                 if a> 70 and a<135:
-                    lon1 = lon[0] + r_o *2.5 * math.cos(70 * math.pi/180)
-                    lat1 = lat[0] + r_o *2.5 * math.sin(70 * math.pi/180)
+                    lon1 = lon[0] + r_o *2 * math.cos(70 * math.pi/180)
+                    lat1 = lat[0] + r_o *2 * math.sin(70 * math.pi/180)
                 elif a >250 and a < 315:
-                    lon1 = lon[0] + r_o * 2.5 * math.cos(250 * math.pi / 180)
-                    lat1 = lat[0] + r_o * 2.5 * math.sin(250 * math.pi / 180)
+                    lon1 = lon[0] + r_o * 2 * math.cos(250 * math.pi / 180)
+                    lat1 = lat[0] + r_o * 2 * math.sin(250 * math.pi / 180)
                 else:
                     theta = math.pi * a / 180
                     lon1 = lon[0] + r_o * math.cos(theta)
@@ -862,8 +905,7 @@ def add_cyclone_trace(ax,sta_cyclone_trace,size = 0.3,linewidth = 1,title = None
     ax.set_title(title,fontsize =title_fontsize)
     return
 
-
-def add_lines(ax,graphy,cent = None,color = "k",linestyle = "-",linewidths = None,title = None,title_fontsize = 8):
+def add_solid_lines(ax,graphy,color = "r",linewidth = None,title = None,title_fontsize = 8):
     if graphy is None:
         return
     slon = ax.transLimits._boxin.x0
@@ -876,30 +918,250 @@ def add_lines(ax,graphy,cent = None,color = "k",linestyle = "-",linewidths = Non
     fig = plt.gcf()
     map_width = ax.bbox.width / fig.dpi
 
-    if linewidths is None:
-        linewidths = rlon *  0.015/ map_width
+    if linewidth is None:
+        linewidth = rlon *  0.015/ map_width
 
+    line_list = []
     if isinstance(graphy,dict):
         features = graphy["features"]
         for value in features.values():
             line = value["axes"]
-            point = np.array(line["point"])
-            ax.plot(point[:, 0], point[:, 1], color, linewidth=linewidths,linestyle=linestyle)
+            line_list.append(line["point"])
     else:
-        df_list = meteva.base.split(graphy,used_coords=["level","time","dtime","id"])
-        for df in df_list:
-            lon = df["lon"].values
-            lat = df["lat"].values
-            ax.plot(lon,lat, color, linewidth=linewidths,linestyle = linestyle)
+        line_list = graphy
 
-            if cent is not None:
-                id = df["id"].values[0]
-                level = df["level"].values[0]
-                time = df["time"].values[0]
-                dtime = df["dtime"].values[0]
-                cent1 = meteva.base.sele_by_para(cent,level = level,time = time,dtime = dtime,id = id)
+    for line in line_list:
+        point = np.array(line)
+        if point.size>2:
+            ax.plot(point[:, 0], point[:, 1],color, linewidth=linewidth)
+
+    ax.set_xlim(slon,elon)
+    ax.set_ylim(slat,elat)
+    ax.set_title(title,fontsize =title_fontsize)
+    return
+
+def add_double_solid_lines(ax,graphy,color = None,linewidth = 1,line_inter = 2,title = None,title_fontsize = 8):
+    if graphy is None:
+        return
+
+    slon = ax.transLimits._boxin.x0
+    elon = ax.transLimits._boxin.x1
+    slat = ax.transLimits._boxin.y0
+    elat = ax.transLimits._boxin.y1
+
+    rlon = elon - slon
+    rlat = elat - slat
+    fig = plt.gcf()
+    map_width = ax.bbox.width / fig.dpi
+
+    line_inter = rlon *  line_inter * 0.01/ map_width
+
+    line_list = []
+    if isinstance(graphy,dict):
+        features = graphy["features"]
+        for value in features.values():
+            line = value["axes"]
+            line_type = "c"
+            if "line_type" in line.keys():
+                line_type = line["line_type"]
+            if color is None:
+                if line_type == "c":
+                    color = "b"
+                else:
+                    color = "r"
+            line_list.append(line["point"])
+    else:
+        line_list = graphy
+
+    for line in line_list:
+        point = np.array(line)
+        dp = np.zeros(point.shape)
+        dp[:-1,:] = point[1:,:] - point[:-1,:]
+        dp[-1,:] = dp[-2,:]
+        length = (dp[:,0]**2 + dp[:,1] **2)**0.5
+        dx = -dp[:,1] * line_inter/ length
+        dy = dp[:,0] * line_inter/length
+
+        ax.plot(point[:,0] - dx ,point[:,1] - dy,color,linewidth = linewidth)
+        ax.plot(point[:, 0] + dx, point[:, 1] + dy, color,linewidth =  linewidth)
+
+    ax.set_xlim(slon,elon)
+    ax.set_ylim(slat,elat)
+    ax.set_title(title,fontsize =title_fontsize)
+    return
 
 
+
+def add_curved_arrows(ax,graphy,color = "red",linewidth = None,head_width = 1,head_length = 1,title = None,title_fontsize = 8):
+    if graphy is None:
+        return
+    slon = ax.transLimits._boxin.x0
+    elon = ax.transLimits._boxin.x1
+    slat = ax.transLimits._boxin.y0
+    elat = ax.transLimits._boxin.y1
+
+    rlon = elon - slon
+    rlat = elat - slat
+    fig = plt.gcf()
+    map_width = ax.bbox.width / fig.dpi
+    if linewidth is None:
+        linewidth = rlon *  0.15/ map_width
+
+    line_list = []
+    if isinstance(graphy, dict):
+        features = graphy["features"]
+        for value in features.values():
+            line = value["axes"]
+            line_list.append(line["point"])
+    else:
+        line_list = graphy
+
+    for line in line_list:
+        point = np.array(line)
+        npoint = len(line)
+        if npoint>4:
+            ns = npoint -1
+            dx = 0
+            dy = 0
+            while ns >0:
+                ns -= 1
+                dx = point[npoint-1,0] - point[ns,0]
+                dy = point[npoint-1,1] - point[ns,1]
+                dis = (dx**2 + dy**2)**0.5
+                if dis > 0.3:
+                    break
+
+            ax.arrow(point[ns-1,0],point[ns-1,1],dx*0.01,dy*0.01,head_width=head_width,head_length = head_length,fc = color,ec = color)
+            ax.plot(point[:ns, 0], point[:ns, 1], color, linewidth=linewidth)
+
+    ax.set_xlim(slon,elon)
+    ax.set_ylim(slat,elat)
+    ax.set_title(title,fontsize =title_fontsize)
+    return
+
+def add_cold_fronts(ax,graphy,color = "b",linewidth = None,
+                   triangle_step = 10,triangle_size = 1,title = None,title_fontsize = 8):
+    if graphy is None:
+        return
+    slon = ax.transLimits._boxin.x0
+    elon = ax.transLimits._boxin.x1
+    slat = ax.transLimits._boxin.y0
+    elat = ax.transLimits._boxin.y1
+
+    rlon = elon - slon
+    rlat = elat - slat
+    fig = plt.gcf()
+    map_width = ax.bbox.width / fig.dpi
+
+    if linewidth is None:
+        linewidth = rlon *  0.015/ map_width
+
+    line_list = []
+    if isinstance(graphy, dict):
+        features = graphy["features"]
+        for value in features.values():
+            line = value["axes"]
+            line_list.append(line["point"])
+    else:
+        line_list = graphy
+
+    for line in line_list:
+        point = np.array(line)
+        if point.size>4:
+            ax.plot(point[:, 0], point[:, 1],color, linewidth=linewidth)
+
+        npoint = len(point)
+
+        start = int(triangle_step/2)
+        for i in range(start,npoint,triangle_step):
+            point0 = point[i,:]
+            for j in range(i,npoint-3):
+                point1_ = point[j]
+                dis1 = np.sqrt(np.sum(np.power(point1_ - point0,2)))
+                if dis1 > triangle_size:
+                    rate = triangle_size/dis1
+                    delta = rate*(point1_ - point0)
+                    point1 = point0 + delta
+                    point_mid = (point0+point1)/2
+                    delta_rotate90 = meteva.base.tool.math_tools.rotate_vector(delta/2,90)
+                    point2 = point_mid + delta_rotate90
+                    vertices = np.array([point0, point1,point2])
+                    triangle = plt.Polygon(vertices, closed=True, fill=True, color=color)
+                    ax.add_patch(triangle)
+                    break
+
+    ax.set_xlim(slon,elon)
+    ax.set_ylim(slat,elat)
+    ax.set_title(title,fontsize =title_fontsize)
+    return
+
+
+
+
+def add_warm_fronts(ax,graphy,color = "r",linewidth = None,
+                   semicircle_step = 10,semicircle_size = 1,title = None,title_fontsize = 8):
+    if graphy is None:
+        return
+    slon = ax.transLimits._boxin.x0
+    elon = ax.transLimits._boxin.x1
+    slat = ax.transLimits._boxin.y0
+    elat = ax.transLimits._boxin.y1
+
+    rlon = elon - slon
+    rlat = elat - slat
+    fig = plt.gcf()
+    map_width = ax.bbox.width / fig.dpi
+
+    if linewidth is None:
+        linewidth = rlon *  0.015/ map_width
+
+    line_list = []
+    if isinstance(graphy, dict):
+        features = graphy["features"]
+        for value in features.values():
+            line = value["axes"]
+            line_list.append(line["point"])
+    else:
+        line_list = graphy
+
+    for line in line_list:
+        point = np.array(line)
+        if point.size>4:
+            ax.plot(point[:, 0], point[:, 1],color, linewidth=linewidth)
+
+        npoint = len(point)
+
+        start = int(semicircle_step/2)
+        for i in range(start,npoint,semicircle_step):
+            point0 = point[i,:]
+            for j in range(i,npoint-3):
+                point1_ = point[j]
+                dis1 = np.sqrt(np.sum(np.power(point1_ - point0,2)))
+                if dis1 > semicircle_size:
+                    rate = semicircle_size/dis1
+                    delta = rate*(point1_ - point0)
+                    point1 = point0 + delta
+                    point_mid = (point0+point1)/2
+
+                    # 计算从 point2 到半圆起点的角度（假设 point2 在 x 轴正方向为 0 度）
+                    angle_to_point2 = np.arctan2(delta[1], delta[0])
+
+                    # 半圆的角度范围（从 point2 开始，逆时针到相反方向 point2 的位置）
+                    start_angle = angle_to_point2
+                    end_angle = start_angle + np.pi
+
+                    # 生成角度数据
+                    theta = np.linspace(start_angle, end_angle, 100)
+
+                    # 计算半圆上点的坐标
+                    x = point_mid[0] + semicircle_size * np.cos(theta)/2
+                    y = point_mid[1] + semicircle_size * np.sin(theta)/2
+
+                    vertices = np.array([x,y]).T
+                    semicircle = plt.Polygon(vertices, closed=True, fill=True, color=color)
+                    ax.add_patch(semicircle)
+
+                    break
 
     ax.set_xlim(slon,elon)
     ax.set_ylim(slat,elat)

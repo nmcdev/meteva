@@ -24,3 +24,12 @@ from .pphindcast.pphindcast2d import Practically_Perfect_Hindcast
 from .s1.S1 import *
 from .geo_box_plot.GeoBoxPlot import Geo_Box_Plot
 from . import cra
+from . import image_moments
+from .image_moments import imomenter_matrix
+from . import gbeta
+from .gbeta import *
+from . import qq_plot
+from .qq_plot import *
+from . import zhumetic
+from .zhumetic import metrV
+from .spectrum.spectrum import  *
