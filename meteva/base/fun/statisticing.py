@@ -259,6 +259,7 @@ def max_of_sta(sta,used_coords = ["member"],span = None, contain_start = False,k
             begin_dtime = dtimes[0]+dhour_unit * (step - 1)
             rain_ac = meteva.base.between_dtime_range(rain_ac,begin_dtime,dtimes[-1])  # 删除时效小于range的部分
             dtimes =np.array(list(set(rain_ac.loc[:, "dtime"].values.tolist())))
+            dtimes.sort()
             if not keep_all:
                 dh = ((dtimes - dtimes[-1]) / dhour_unit).astype(np.int32)
                 new_dtimes = dtimes[dh % step == 0]
