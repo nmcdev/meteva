@@ -623,7 +623,7 @@ def plot_2d_grid_list(grd_list,type = "contour",save_path = None,title = None,cl
     # elif extend == "both":
     #     if type=="contour":
     #         norm = BoundaryNorm(clevs1, ncolors=cmap1.N + 1)
-    #     else:
+    #     else
     #         norm = BoundaryNorm(clevs1, ncolors=cmap1.N + 1,extend=extend)
     # else:
     #     norm = BoundaryNorm(clevs1, ncolors=cmap1.N)
@@ -4369,7 +4369,6 @@ def bar_line(array,type_list,name_list_dict = None,legend = None,axis = None,vmi
 
 
 
-
 def bar(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",vmin = None,vmax = None,ncol = None,grid = None,tag = -1,save_path = None,show = False
         ,dpi = 300,bar_width = None,title = "",spasify_xticks = None,sparsify_xticks = None,sup_fontsize = 10,width = None,height = None,log_y = False,sup_title = None,xlabel = None,
         legend_col = None,color_list = None,hline = None,marker = None,return_axs=False,
@@ -4394,7 +4393,8 @@ def plot(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",
              legend_col =legend_col,color_list=color_list,hline = hline,marker = marker,legend_loc =legend_loc,linestyle=linestyle,return_axs = return_axs,
                    lower=lower, higher=higher
                    )
-    return  axs
+    if return_axs:
+        return axs
 
 
 def myheatmap(ax_one,data_0,cmap,clevs,annot=1,fontsize=10):
