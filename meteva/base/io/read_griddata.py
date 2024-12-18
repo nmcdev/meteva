@@ -1656,8 +1656,15 @@ def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim
                     index_level = [0]
                 else:
                     # 有多层的变量，level参数为None时，读取全部层次
-                    valid_levels = levels_all
-                    index_level = np.arange(nlevel).tolist()
+
+
+                    if len(levels_all) == nlevel:
+                        valid_levels = levels_all
+                        index_level = np.arange(nlevel).tolist()
+                    else:
+                        valid_levels = levels_all[:nlevel]
+                        index_level = np.arange(nlevel).tolist()
+
 
             nlevel_valid = len(index_level)
             if nlevel_valid == 0:
@@ -1680,7 +1687,6 @@ def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim
                         dtime1 = ctl["dtime_list"][t]
                         if dtime1 in dtime_list:
                             t_index_list.append(t)
-
 
                 else:
                     times_all = pd.date_range(ctl["gtime"][0], ctl["gtime"][1], freq=ctl["gtime"][2]).tolist()
@@ -1772,7 +1778,6 @@ def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim
                         #暂时不支持读取任意时段，所以该分支默认就是所有存在的实际数据
                         time1 = meteva.base.all_type_time_to_datetime(times_all[final_t_index[-1]])
                         final_gtime = [ctl["gtime"][0],time1,ctl["gtime"][2]]
-
 
                 data = np.array(data_list)
 
