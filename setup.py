@@ -48,7 +48,7 @@ setup(
                       'scikit-learn>=0.21.2',
                       'matplotlib>=3.2.2',
                       "httplib2>=0.12.0",
-                      "protobuf<=3.20.0",
+                      "protobuf>=3.17.0",
                       "pyshp>=2.1.0",
                       "tables>=3.4.4",
                       "urllib3>=1.21.1",
