@@ -279,17 +279,19 @@ def read_micaps14(filename,time = None,dtime = 0,data_name = None):
         # get the start position
         idx = txt.index('STATION_SITUATION')
 
+        # fix the bug https://github.com/nmcdev/meteva/issues/188
         # find data subscript
         end_idx = idx + 1
-        while end_idx < len(txt):
+        while end_idx < len(txt) and not 'WEATHER_REGION' in txt[end_idx]:
             if txt[end_idx].isdigit():
                 end_idx += 1
             else:
                 try:
                     f = float(txt[end_idx])
-                    end_idx += 1
                 except:
-                    break
+                    pass
+                finally:
+                    end_idx += 1
 
         if end_idx > idx + 1:
             stations = np.array(txt[(idx+1):(end_idx)])
