@@ -22,13 +22,19 @@ def read_micaps14(filename,time = None,dtime = 0,data_name = None):
         txt = None
         try:
             with open(filename, 'r', encoding=encoding) as f:
-                txt = f.read().replace('\n', ' ').split()
+                txt = f.read()
         except Exception:
             pass
     if txt is None:
         print("Micaps 14 file error: " + filename)
         return None
 
+    # fix the bug https://github.com/nmcdev/meteva/issues/186
+    txtlines=txt.split('\n')
+    txtline1s=txtlines[0].split()
+    txtlines[0]=' '.join([txtline1s[0],txtline1s[1],'_'.join(txtline1s[2:])])
+    txt=' '.join(txtlines).split()
+    
     # head information
     _ = txt[2]
 
