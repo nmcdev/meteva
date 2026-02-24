@@ -2,7 +2,7 @@ import os
 import meteva
 import time
 from meteva.base.io.GDS_data_service import GDSDataService
-from meteva.base.io import DataBlock_pb2
+#from meteva.base.io import DataBlock_pb2
 
 
 
@@ -295,6 +295,7 @@ def copy_wind_m11_to_nc(input_root_dir,output_root_dir,effectiveNum = 3,recover=
 
 
 def download_gds_files_to_local(ip, port, gds_dir, local_dir,recover= False):
+    from meteva.base.io import DataBlock_pb2
     print(gds_dir)
     filelist = meteva.base.tool.path_tools.get_gds_file_list_in_one_dir(ip, port, gds_dir)
     for file in filelist:
