@@ -172,7 +172,12 @@ def rigider(grd_fo, grd_ob, init=None, func_type="regular", translate=True, rota
                 else:
                     r_center = np.tile(np.array([hold1["centroid"]["x"], hold1["centroid"]["y"]]), big_n).reshape(big_n, 2,
                                                                                                               order='C')
-                p1 = rigid_transform.rigid_transform(theta=np.array([init2[0],init2[1], res2["x"]]), p0=p0, n=big_n,
+
+                if isinstance(res2["x"],float):
+                    res2_x = res2["x"]
+                else:
+                    res2_x = res2["x"][0]
+                p1 = rigid_transform.rigid_transform(theta=np.array([init2[0],init2[1], res2_x]), p0=p0, n=big_n,
                                                      cen=r_center)
 
 
