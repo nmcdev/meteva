@@ -107,10 +107,11 @@ def interp_gs_nearest(grd,sta,used_coords = "xy"):
 
 
 #格点到站点的插值,线性
-def interp_gs_linear(grd,sta,used_coords = "xy"):
+def interp_gs_linear(grd,sta,used_coords = "xy",reset_lon_range = True):
 
-    grd = reset_lon_range(grd,sta)
-    grd = reset_global_griddata(grd)
+    if reset_lon_range:
+        grd = reset_lon_range(grd,sta)
+        grd = reset_global_griddata(grd)
 
     #print("**0")
     levels = copy.deepcopy(grd["level"].values)
