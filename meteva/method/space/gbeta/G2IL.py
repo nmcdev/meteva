@@ -11,7 +11,7 @@ import copy
 import numpy as np
 import pandas as pd
 #import statsmodels.api as sm
-
+from sklearn.preprocessing import Binarizer
 import meteva.base
 from  meteva.method.space.gbeta import Gbeta_score
 import matplotlib.pyplot as plt
@@ -23,7 +23,7 @@ def ubalancer(x, alpha, beta):
     return res
 
 def G2IL_score(ob, fo, threshold, beta = None, alpha = 0):
-    from sklearn.preprocessing import Binarizer
+
     out = {}
     binarizer=Binarizer(threshold=threshold)
     Z = binarizer.transform(ob)

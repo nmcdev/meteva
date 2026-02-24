@@ -17,10 +17,10 @@ from  meteva.method.space.gbeta import Gbeta_score
 import matplotlib.pyplot as plt
 
 from meteva.method.space.qq_plot import get_qqplot_2samples_data
-
+from sklearn.preprocessing import Binarizer
 
 def GbetaIL_score(ob, fo, threshold, beta= None, alpha = 0,  w = 0.5):
-    from sklearn.preprocessing import Binarizer
+
 
     out = {}
     binarizer=Binarizer(threshold=threshold)

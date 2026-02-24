@@ -12,11 +12,11 @@ import matplotlib.pyplot as plt
 
 from scipy.spatial import cKDTree
 from meteva.method.space.mode.deltametric import cv2_distanceTransform
-
+from sklearn.preprocessing import Binarizer
 
 
 def Gbeta_score(ob, fo, threshold, beta = None, alpha = 0):
-    from sklearn.preprocessing import Binarizer
+
     out = {}
   
     binarizer=Binarizer(threshold=threshold)
