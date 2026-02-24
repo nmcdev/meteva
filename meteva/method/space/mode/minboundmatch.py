@@ -18,7 +18,7 @@ def minsepfun(Id, dm0, dm1, indX, indXhat,nlat,nlon):
         a = Id[i, 0]    #从id数组的第一列取值
         b = Id[i, 1]    #从id数组的第二列取值
        # print(a, b)
-        Obsdata_mask = np.mat(dm0[a])    #需要掩膜的原始数据
+        Obsdata_mask = np.asmatrix(dm0[a])    #需要掩膜的原始数据
         #print("labels_{}".format(b))
         Obs_mask = np.ones((nlat,nlon))
         Obs_mask[indXhat[b]] = 0
@@ -27,7 +27,7 @@ def minsepfun(Id, dm0, dm1, indX, indXhat,nlat,nlon):
         Obs = np.min(Obs_masked)
         Obs_value.append(Obs)
 
-        Fcstdata_mask = np.mat(dm1[b])
+        Fcstdata_mask = np.asmatrix(dm1[b])
         Fcst_mask = np.ones((nlat,nlon))
         Fcst_mask[indX[a]] = 0
         #Fcst_mask = indX["labels_{}".format(a)] < 1
