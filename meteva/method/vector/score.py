@@ -601,7 +601,7 @@ def wind_weaker_rate_uv(u_ob, u_fo, v_ob, v_fo, min_s = 0,max_s = 300,unit = 1):
     return rw
 
 
-def na_ds(d_ob,d_fo,s_ob,s_fo):
+def na_ds(d_ob,d_fo,s_ob,s_fo, ignore_breeze = False):
     '''
     计算风预报综合检验所需的中间量。
         将输入的观测和预报风向（0-360度）和风速（m/s），转换成计算风预报综合准确率所需要的中间量，
@@ -630,6 +630,7 @@ def na_ds(d_ob,d_fo,s_ob,s_fo):
     new_Fo_s = s_fo.reshape(new_Fo_shape)
 
 
+
     ob_d = meteva.base.tool.math_tools.tran_direction_to_8angle(d_ob)
     ob_s = meteva.base.tool.math_tools.tran_speed_to_14grade(s_ob)
     for line in range(new_Fo_shape[0]):
@@ -644,7 +645,10 @@ def na_ds(d_ob,d_fo,s_ob,s_fo):
 
 
         #风向准确
-        index = np.where(fo_d == ob_d)
+        if ignore_breeze:
+            index = np.where((fo_d == ob_d)|((s_ob<5.5)&(new_Fo_s[line,:]<5.5)))
+        else:
+            index = np.where(fo_d == ob_d)
         nasd_array[2] = len(index[0])
 
         #风速准确
@@ -661,7 +665,7 @@ def na_ds(d_ob,d_fo,s_ob,s_fo):
     return nrag_array
 
 
-def na_uv(u_ob,u_fo,v_ob,v_fo):
+def na_uv(u_ob,u_fo,v_ob,v_fo, ignore_breeze = False):
 
     '''
     将输入的观测和预报u,v分量（m/s)，转换成计算风向预报准确率，风向预报评分所需要的中间量
@@ -675,7 +679,7 @@ def na_uv(u_ob,u_fo,v_ob,v_fo):
     '''
     s_ob,d_ob = meteva.base.math_tools.u_v_to_s_d(u_ob,v_ob)
     s_fo,d_fo = meteva.base.math_tools.u_v_to_s_d(u_fo,v_fo)
-    return na_ds(d_ob,d_fo,s_ob,s_fo)
+    return na_ds(d_ob,d_fo,s_ob,s_fo, ignore_breeze = ignore_breeze)
 
 
 def acz_na(na_array):
