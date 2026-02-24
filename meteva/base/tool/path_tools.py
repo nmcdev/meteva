@@ -3,7 +3,7 @@
 import datetime as datetime
 import os as os
 import numpy as np
-from ..io import DataBlock_pb2
+#from ..io import DataBlock_pb2
 from ..io.GDS_data_service import GDSDataService
 import meteva
 import re
@@ -252,6 +252,7 @@ def get_path_of_grd_nc_longname(root_dir,time,dhour,nc_Fname,fhour_add):
 
 
 def get_gds_file_list_in_one_dir(dir):
+    from ..io import DataBlock_pb2
     dir = dir.replace("mdfs:///", "")
 
     ip,port = meteva.base.gds_ip_port
@@ -287,6 +288,7 @@ def exist_in_gds(path):
         return False
 
 def get_gds_all_dir(path,all_path,service = None):
+    from ..io import DataBlock_pb2
     # 初始化GDS客户端
 
     if service is None:
