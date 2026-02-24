@@ -780,6 +780,32 @@ def max_abs_error(Ob,Fo):
     return error_array
 
 
+def mxie(Ob,Fo):
+    mxe = max_error(Ob,Fo)
+    mie = min_error(Ob, Fo)
+    result = np.array([mxe,mie])
+    return result
+
+
+def max_error_mxie(mxie_array):
+    '''
+    max_error 求两组数据最大误差
+    :param tase_array:包含最大误差和最小误差的多维数组，其中最后一维长度为2，
+    :return: 负无穷到正无穷的实数，最优值为0
+    '''
+    max_error = mxie_array[..., 0]
+    return max_error
+
+def min_error_mxie(mxie_array):
+    '''
+    max_error 求两组数据最小误差
+    :param tase_array:包含最大误差和最小误差的多维数组，其中最后一维长度为2，
+    :return: 负无穷到正无穷的实数，最优值为0
+    '''
+    min_error = mxie_array[..., 1]
+    return min_error
+
+
 def me(Ob, Fo,weight = None):
     '''
     me 求两组数据的误差平均值
@@ -1573,10 +1599,10 @@ def nse(Ob, Fo):
         else:
             nse = 1 - np.mean(np.power(Ob - new_Fo[line, :], 2)) / qdob
         nse_array_list.append(nse)
+    nse_array = np.array(nse_array_list)
     if len(nse_array_list) == 1:
-        return nse_array_list[0]
+        return nse_array
     else:
-        nse_array = np.array(nse_array_list)
         shape = list(Fo_shape[:ind])
         nse_array = nse_array.reshape(shape)
         return nse_array
@@ -1927,6 +1953,7 @@ def iepi(ob0,fo):
     if score.size == 1:
         score = score.item()
     return score
+
 
 
 
