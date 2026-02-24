@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import math
 from matplotlib.colors import BoundaryNorm
 from meteva.base import IV
-
+from matplotlib.ticker import MultipleLocator
 from matplotlib.collections import LineCollection
 import matplotlib.patches as patches
 import datetime
@@ -69,7 +69,7 @@ def readshapefile(shapefile, default_encoding='utf-8'):
     coords = []; attributes = []
 
     shptype = shf.shapes()[0].shapeType
-    bbox = shf.bbox.tolist()
+    bbox = list(shf.bbox)
     info = (shf.numRecords,shptype,bbox[0:2]+[0.,0.],bbox[2:]+[0.,0.])
     npoly = 0
     for shprec in shf.shapeRecords():
@@ -208,7 +208,7 @@ def contourf_xz(grd,subplot = "member",sup_title = None,title = None,save_path =
                             save_dir = None,
                             clevs = None,cmap = "rainbow",show = False,dpi =300,
                       sup_fontsize = 12,width = None,height = None,
-                    ncol = None,extend = None,    **kwargs):
+                    ncol = None,extend = None, plot_all_colorbar_ticks = True,  **kwargs):
 
     lats = grd["lat"].values
     if lats.size>1:
@@ -314,14 +314,14 @@ def contourf_xz(grd,subplot = "member",sup_title = None,title = None,save_path =
                      sup_title = sup_title1,title= title1,
                       clevs = clevs,cmap = cmap,show = show,dpi =dpi,
                     width = width,height = height,sup_fontsize = sup_fontsize,
-                    ncol = ncol,extend = extend,**kwargs)
+                    ncol = ncol,extend = extend,plot_all_colorbar_ticks = plot_all_colorbar_ticks,**kwargs)
 
 
 def contourf_yz(grd,subplot = "member",sup_title = None,title = None,save_path = None,
                 save_dir = None,
                 clevs=None, cmap="rainbow", show=False, dpi=300,
                 sup_fontsize=12, width=None, height=None,
-                ncol=None, extend=None,
+                ncol=None, extend=None,plot_all_colorbar_ticks = True,
                 **kwargs):
 
     lons = grd["lon"].values
@@ -426,22 +426,24 @@ def contourf_yz(grd,subplot = "member",sup_title = None,title = None,save_path =
         mesh_contourf("contourf",data_array,name_list_dict,axis_x="lat",axis_y="level",save_path = save_path1,
                      sup_title = sup_title1,  clevs = clevs,cmap = cmap,show = show,dpi =dpi,
                     width = width,height = height,sup_fontsize = sup_fontsize,
-                    ncol = ncol,extend = extend,
+                    ncol = ncol,extend = extend,plot_all_colorbar_ticks = plot_all_colorbar_ticks,
         title= title1,**kwargs)
 
 
 
 def contourf_xy(grd,save_path = None,title = None,clevs= None,cmap ="rainbow",add_county_line = False,add_worldmap =False,show = False,dpi = 300,
                      sup_fontsize = 10,height = None,width = None,subplot = None,ncol = None,sup_title = None,clip= None,add_minmap= None,extend = None,
-                save_dir = None):
+                save_dir = None,xticks_inter = None,yticks_inter = None,cut_colorbar = False,plot_all_colorbar_ticks = True):
     contourf_2d_grid(grd,save_path = save_path,title = title,clevs= clevs,cmap =cmap,add_county_line = add_county_line,
                      add_worldmap =add_worldmap,show = show,dpi = dpi,
                      sup_fontsize = sup_fontsize,height = height,width = width,subplot = subplot,ncol = ncol,
-                     sup_title = sup_title,clip= clip,add_minmap= add_minmap,extend = extend,save_dir = save_dir)
+                     sup_title = sup_title,clip= clip,add_minmap= add_minmap,extend = extend,save_dir = save_dir,
+                     xticks_inter= xticks_inter,yticks_inter= yticks_inter,cut_colorbar =cut_colorbar,
+                     plot_all_colorbar_ticks = plot_all_colorbar_ticks)
 
 def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap ="rainbow",add_county_line = False,add_worldmap =False,show = False,dpi = 300,
                      sup_fontsize = 10,height = None,width = None,subplot = None,ncol = None,sup_title = None,clip= None,add_minmap= None,extend = None,
-                     save_dir = None):
+                     save_dir = None, xticks_inter = None,yticks_inter = None,cut_colorbar = False,plot_all_colorbar_ticks = True):
 
     vmin = 10e30
     vmax = -10e30
@@ -541,12 +543,15 @@ def contourf_2d_grid(grd,save_path = None,title = None,clevs= None,cmap ="rainbo
                 save_path1 = None
         plot_2d_grid_list(grd_list1,type = "contour",save_path= save_path1,title= title1,clevs=clevs,cmap=cmap,vmax = vmax,vmin = vmin,add_county_line= add_county_line,
                       add_worldmap = add_worldmap,show=show,dpi = dpi,sup_fontsize = sup_fontsize,height= height,width = width,ncol= ncol,
-                      sup_title = sup_title1,clip= clip,add_minmap=add_minmap,extend=extend)
+                      sup_title = sup_title1,clip= clip,add_minmap=add_minmap,extend=extend,xticks_inter = xticks_inter,
+                          yticks_inter = yticks_inter,cut_colorbar = cut_colorbar,plot_all_colorbar_ticks = plot_all_colorbar_ticks)
 
 
 
 def plot_2d_grid_list(grd_list,type = "contour",save_path = None,title = None,clevs= None,cmap ="rainbow",add_county_line = False,add_worldmap =False,show = False,dpi = 300,
-                     sup_fontsize = 10,height = None,width = None,ncol = None,vmax = None,vmin = None, sup_title = None,clip= None,add_minmap = None,extend = None,grid = False):
+                     sup_fontsize = 10,height = None,width = None,ncol = None,vmax = None,vmin = None, sup_title = None,clip= None,
+                      add_minmap = None,extend = None,grid = False,xticks_inter = None,yticks_inter = None,cut_colorbar = False,
+                      plot_all_colorbar_ticks = True):
 
 
     if save_path is None:
@@ -616,7 +621,7 @@ def plot_2d_grid_list(grd_list,type = "contour",save_path = None,title = None,cl
             if vmin > vmin1:
                 vmin = vmin1
     if extend is None: extend = "neither"
-    cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap, clevs=clevs, vmin=vmin, vmax=vmax,extend=extend)
+    cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap, clevs=clevs, vmin=vmin, vmax=vmax,extend=extend,cut_colorbar = cut_colorbar)
     # norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
     # if extend is None:
     #     norm = BoundaryNorm(clevs1, ncolors=cmap1.N - 1)
@@ -630,21 +635,24 @@ def plot_2d_grid_list(grd_list,type = "contour",save_path = None,title = None,cl
     norm = BoundaryNorm(clevs1, ncolors=cmap1.N)
     vmax = elon
     vmin = slon
-    r = rlon
-    if r <= 1:
-        inte = 0.1
-    elif r <= 5 and r > 1:
-        inte = 1
-    elif r <= 10 and r > 5:
-        inte = 2
-    elif r < 20 and r >= 10:
-        inte = 4
-    elif r <= 30 and r >= 20:
-        inte = 5
-    elif r < 180:
-        inte = 20
+    if xticks_inter is None:
+        r = rlon
+        if r <= 1:
+            inte = 0.1
+        elif r <= 5 and r > 1:
+            inte = 1
+        elif r <= 10 and r > 5:
+            inte = 2
+        elif r < 20 and r >= 10:
+            inte = 4
+        elif r <= 30 and r >= 20:
+            inte = 5
+        elif r < 180:
+            inte = 20
+        else:
+            inte = 30
     else:
-        inte = 30
+        inte = xticks_inter
 
     vmin = inte * (math.ceil(vmin / inte))
     vmax = inte * ((int)(vmax / inte) + 1)
@@ -663,21 +671,24 @@ def plot_2d_grid_list(grd_list,type = "contour",save_path = None,title = None,cl
 
     vmax = elat
     vmin = slat
-    r = rlat
-    if r <= 1:
-        inte = 0.1
-    elif r <= 5 and r > 1:
-        inte = 1
-    elif r <= 10 and r > 5:
-        inte = 2
-    elif r < 20 and r >= 10:
-        inte = 4
-    elif r <= 30 and r >= 20:
-        inte = 5
-    elif r < 80:
-        inte = 20
+    if yticks_inter is None:
+        r = rlat
+        if r <= 1:
+            inte = 0.1
+        elif r <= 5 and r > 1:
+            inte = 1
+        elif r <= 10 and r > 5:
+            inte = 2
+        elif r < 20 and r >= 10:
+            inte = 4
+        elif r <= 30 and r >= 20:
+            inte = 5
+        elif r < 80:
+            inte = 20
+        else:
+            inte = 30
     else:
-        inte = 30
+        inte = yticks_inter
 
     vmin = inte * (math.ceil(vmin / inte))
     vmax = inte * ((int)(vmax / inte) + 1)
@@ -821,6 +832,9 @@ def plot_2d_grid_list(grd_list,type = "contour",save_path = None,title = None,cl
 
     colorbar_position = fig.add_axes([left_low, height_bottem_xticsk / height,0.02, height_all_plot/height])  # 位置[左,下,宽,高]
     cb = plt.colorbar(im, cax=colorbar_position)
+    if plot_all_colorbar_ticks and clevs is not None:
+        cb.ax.yaxis.set_major_locator(MultipleLocator(1))  # 根据数据范围调整间隔
+        cb.set_ticks(clevs)  # 重新设置所有刻度
     cb.ax.tick_params(labelsize=sup_fontsize *0.8)  #设置色标刻度字体大小。
 
     y_sup_title = (height_bottem_xticsk + (nrow) * (height_map + height_hspace)) / height
@@ -845,7 +859,8 @@ def plot_2d_grid_list(grd_list,type = "contour",save_path = None,title = None,cl
 
 
 def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = "rainbow",add_county_line = False,add_worldmap=False,show = False,dpi = 300,
-                       sup_fontsize = 10,height = None,width = None,extend = None):
+                       sup_fontsize = 10,height = None,width = None,extend = None,cut_colorbar = False,
+                       plot_all_colorbar_ticks = True):
 
     if save_path is None:
         show = True
@@ -905,15 +920,16 @@ def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = "rai
     vmax = np.nanmax(grd.values)
     vmin = np.nanmin(grd.values)
     if extend is None: extend = "neither"
-    cmap1,clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap,clevs=clevs,vmin=vmin,vmax = vmax,extend=extend)
+    cmap1,clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap,clevs=clevs,vmin=vmin,vmax = vmax,extend=extend,cut_colorbar = cut_colorbar)
 
     norm = BoundaryNorm(clevs1, ncolors=cmap1.N)
     im = ax.pcolormesh(x, y, np.squeeze(grd.values), cmap=cmap1,norm=norm)
     #im = ax.contourf(x,y,np.squeeze(grd.values))
     left_low = (width + 0.1 - right_plots_width) / width
     colorbar_position = fig.add_axes([left_low, legend_hight / height, 0.02, 1-title_hight/height])  # 位置[左,下,宽,高]
-    plt.colorbar(im,cax= colorbar_position,extend = extend)
-
+    cb = plt.colorbar(im,cax= colorbar_position,extend = extend)
+    if plot_all_colorbar_ticks and clevs1 is not None:
+        cb.set_ticks(clevs1)
 
     vmax = x[-1]
     vmin = x[0]
@@ -987,11 +1003,11 @@ def pcolormesh_2d_grid(grd,save_path = None,title = None,clevs= None,cmap = "rai
 
 
 def mesh_xy(grd,save_path = None,title = None,clevs= None,cmap = "rainbow",add_county_line = False,add_worldmap=False,show = False,dpi = 300,
-                       sup_fontsize = 10,height = None,width = None,extend = None):
+                       sup_fontsize = 10,height = None,width = None,extend = None,plot_all_colorbar_ticks = True):
 
     pcolormesh_2d_grid(grd,save_path=save_path,title=title,clevs= clevs,cmap=cmap,add_county_line=add_county_line,
                        add_worldmap=add_worldmap,show = show,dpi=dpi,sup_fontsize=sup_fontsize,height=height,width = width,
-                       extend=extend)
+                       extend=extend,plot_all_colorbar_ticks = plot_all_colorbar_ticks)
 
 
 
@@ -1004,7 +1020,8 @@ def scatter_sta(sta0,value_column=None,
                 sup_fontsize = 10,
                 height = None,width = None,
                 min_spot_value = 0,grid = False,subplot = None,ncol = None,point_size = None,sup_title = None,add_minmap = None,
-                extend = None,title_in_ax = False):
+                extend = None,title_in_ax = False,cut_colorbar = False,
+                plot_all_colorbar_ticks = True):
 
     sta = sta0
     if save_path is None and save_dir is None:
@@ -1078,7 +1095,7 @@ def scatter_sta(sta0,value_column=None,
     vmax_v = np.max(sta_without_iv[plot_data_names].values)
     vmin_v = np.min(sta_without_iv[plot_data_names].values)
     if extend is None: extend = "neither"
-    cmap1,clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap,clevs=clevs,vmin=vmin_v,vmax = vmax_v,extend=extend)
+    cmap1,clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap,clevs=clevs,vmin=vmin_v,vmax = vmax_v,extend=extend,cut_colorbar = cut_colorbar)
     #clevs1, cmap1 = meteva.base.tool.color_tools.def_cmap_clevs(clevs=clevs, cmap=cmap, vmin = None, vmax=None)
     #meteva.base.tool.color_tools.show_cmap_clev(cmap1,clevs1)
 
@@ -1255,7 +1272,9 @@ def scatter_sta(sta0,value_column=None,
                           " value:"+str(sta_one_member.iloc[index,6]))
 
             colorbar_position = fig.add_axes([left_low, legend_hight / height, 0.02, 1-title_hight/height])  # 位置[左,下,宽,高]
-            plt.colorbar(im, cax=colorbar_position,extend=extend)
+            cb = plt.colorbar(im, cax=colorbar_position,extend=extend)
+            if plot_all_colorbar_ticks and clevs1 is not None:
+                cb.set_ticks(clevs1)
 
 
             ax.set_xticks(xticks)
@@ -1425,7 +1444,8 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
                 sup_fontsize = 10,
                 height = None,width = None,
                 min_spot_value = 0,grid = False,ncol = None,point_size = None,sup_title = None,add_minmap = None,print_max = 0,print_min = 0,
-                    extend = None, title_in_ax = False):
+                    extend = None, title_in_ax = False,cut_colorbar = False,
+                     plot_all_colorbar_ticks = True):
 
     sta0 = sta0_list[0]
     if isinstance(map_extend, list):
@@ -1516,7 +1536,7 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
 
     map_area = height_map *width_map
     if extend is None: extend = "neither"
-    cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap, clevs=clevs, vmin=vmin, vmax=vmax,extend=extend)
+    cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap, clevs=clevs, vmin=vmin, vmax=vmax,extend=extend,cut_colorbar = cut_colorbar)
     # if extend is None:
     #     norm = BoundaryNorm(clevs1, ncolors=cmap1.N-1)
     # elif extend == "both":
@@ -1756,6 +1776,8 @@ def scatter_sta_list(sta0_list,map_extend = None,add_county_line = False,add_wor
     colorbar_position = fig.add_axes([left_low, height_bottem_xticsk / height,0.02, height_all_plot/height])  # 位置[左,下,宽,高]
 
     cb = plt.colorbar(im, cax=colorbar_position,extend = extend)
+    if plot_all_colorbar_ticks and clevs1 is not None:
+        cb.set_ticks(clevs1)
     cb.ax.tick_params(labelsize=sup_fontsize *0.8)  #设置色标刻度字体大小。
 
 
@@ -1997,6 +2019,7 @@ def lineh(array,name_list_dict = None,legend = None,axis = None,xlabel = "Value"
         yticks = x[sparsify_yticks - 1::sparsify_yticks]
         plt.yticks(yticks, yticks_labels, fontsize=sup_fontsize*0.8)
         plt.yticks(fontsize=sup_fontsize * 0.8)
+        plt.xticks(fontsize=sup_fontsize * 0.8)
         if ylabel is None: ylabel = axis
         plt.xlabel(xlabel, fontsize=sup_fontsize * 0.9)
         plt.ylabel(ylabel, fontsize=sup_fontsize * 0.9)
@@ -2185,7 +2208,7 @@ def lineh(array,name_list_dict = None,legend = None,axis = None,xlabel = "Value"
         if legend_col is None:legend_col=1
         plt.legend(fontsize=sup_fontsize * 0.8, ncol=legend_col, loc=legend_loc)
         plt.yticks(yticks, yticks_labels, fontsize=sup_fontsize*0.8)
-
+        plt.xticks(fontsize=sup_fontsize * 0.8)
         plt.xlabel(xlabel, fontsize=sup_fontsize * 0.9)
         plt.ylabel(ylabel, fontsize=sup_fontsize * 0.9)
         if isinstance(title, list):
@@ -4397,7 +4420,8 @@ def plot(array,name_list_dict = None,legend = None,axis = None,ylabel = "Value",
         return axs
 
 
-def myheatmap(ax_one,data_0,cmap,clevs,annot=1,fontsize=10):
+def myheatmap(ax_one,data_0,cmap,clevs,annot=1,fontsize=10,extend = None,
+              plot_all_colorbar_ticks = True):
 
     data_k = data_0.copy()
     nx = data_k.shape[1]
@@ -4405,8 +4429,13 @@ def myheatmap(ax_one,data_0,cmap,clevs,annot=1,fontsize=10):
     x = np.arange(nx+1)-0.5
     y = np.arange(ny+1)-0.5
 
+
     data_k[data_k==meteva.base.IV] = np.nan
-    norm = BoundaryNorm(clevs, ncolors=cmap.N - 1)
+    if extend is None:
+        norm = BoundaryNorm(clevs, ncolors=cmap.N - 1)
+    else:
+        norm = BoundaryNorm(clevs, ncolors=cmap.N)
+
     im = ax_one.pcolormesh(x, y, data_k, cmap=cmap, norm=norm)
     im.update_scalarmappable()
     if annot is not None  and annot>=0:
@@ -4428,24 +4457,34 @@ def myheatmap(ax_one,data_0,cmap,clevs,annot=1,fontsize=10):
                     ax_one.text(i, j, fmt_tag % data_ijk, ha="center", va="center",
                              fontsize=fontsize, c=text_color)
     fig = plt.gcf()
-    fig.colorbar(im, ax=ax_one)
+    cbar = fig.colorbar(im, ax=ax_one,extend = extend)
+    if plot_all_colorbar_ticks and clevs is not None:
+        cbar.set_ticks(clevs)
+
+
 
 def mesh(array,name_list_dict = None,axis_x = None,axis_y = None,cmap = "rainbow",clevs = None,ncol = None,annot =None,save_path = None,show = False,dpi = 300,
-         spasify_xticks = None,sup_fontsize = 10,title ="",sup_title = None,width = None,height = None,rect = None,rect_color = "r"):
+         spasify_xticks = None,sup_fontsize = 10,title ="",sup_title = None,width = None,height = None,rect = None,rect_color = "r",
+         title_loc = "center",extend = None,plot_all_colorbar_ticks = True):
 
     mesh_contourf("mesh",array,name_list_dict=name_list_dict,axis_x=axis_x,axis_y=axis_y,cmap=cmap,clevs=clevs,
                  ncol=ncol,annot=annot,save_path=save_path,show=show,dpi=dpi,spasify_xticks=spasify_xticks,
-                 sup_fontsize=sup_fontsize,title=title,sup_title = sup_title,width=width,height=height,rect=rect,rect_color=rect_color)
+                 sup_fontsize=sup_fontsize,title=title,sup_title = sup_title,width=width,height=height,rect=rect,
+                  rect_color=rect_color,title_loc = title_loc,extend = extend,plot_all_colorbar_ticks = plot_all_colorbar_ticks)
 
 def contourf(array,name_list_dict = None,axis_x = None,axis_y = None,cmap = "rainbow",clevs = None,ncol = None,annot =None,save_path = None,show = False,dpi = 300,
-         spasify_xticks = None,sup_fontsize = 10,title ="",sup_title = None,width = None,height = None,rect = None,rect_color = "r"):
+         spasify_xticks = None,sup_fontsize = 10,title ="",sup_title = None,width = None,height = None,rect = None,rect_color = "r",
+             extend = None,plot_all_colorbar_ticks = True):
 
     mesh_contourf("contourf",array,name_list_dict=name_list_dict,axis_x=axis_x,axis_y=axis_y,cmap=cmap,clevs=clevs,
                  ncol=ncol,annot=annot,save_path=save_path,show=show,dpi=dpi,spasify_xticks=spasify_xticks,
-                 sup_fontsize=sup_fontsize,title=title,sup_title = sup_title,width=width,height=height,rect=rect,rect_color=rect_color)
+                 sup_fontsize=sup_fontsize,title=title,sup_title = sup_title,width=width,height=height,rect=rect,rect_color=rect_color,
+                  extend = extend,plot_all_colorbar_ticks = plot_all_colorbar_ticks)
 
 def mesh_contourf(type,array,name_list_dict = None,axis_x = None,axis_y = None,cmap = "rainbow",clevs = None,ncol = None,annot =None,save_path = None,show = False,dpi = 300,
-         spasify_xticks = None,xticks_inter = None,sup_fontsize = 10,title ="",sup_title =None,width = None,height = None,rect = None,rect_color = "r",extend = None):
+         spasify_xticks = None,xticks_inter = None,sup_fontsize = 10,title ="",sup_title =None,width = None,height = None,rect = None,rect_color = "r",extend = None,
+                  title_loc = "center",cut_colorbar = True,
+                  plot_all_colorbar_ticks = True):
 
     shape = array.shape
     index = np.where(array!=meteva.base.IV)
@@ -4704,7 +4743,7 @@ def mesh_contourf(type,array,name_list_dict = None,axis_x = None,axis_y = None,c
             data_copy[np.isnan(data_copy)] = meteva.base.IV
             vmin = np.min(data_copy[data_copy != meteva.base.IV])
             vmax = np.max(data_copy[data_copy != meteva.base.IV])
-            cmap,clevs = meteva.base.color_tools.def_cmap_clevs(cmap=cmap, clevs=clevs, vmin=vmin, vmax=vmax)
+            cmap,clevs = meteva.base.color_tools.def_cmap_clevs(cmap=cmap, clevs=clevs, vmin=vmin, vmax=vmax,cut_colorbar=cut_colorbar)
 
         for k in range(subplot_num):
             data_k = data[k, :, :]
@@ -4722,17 +4761,19 @@ def mesh_contourf(type,array,name_list_dict = None,axis_x = None,axis_y = None,c
             else:
                 cmap0 = cmap
                 clevs0 = clevs
-            cmap1,clevs1= meteva.base.color_tools.def_cmap_clevs(cmap = cmap0,clevs=clevs0,vmin=vmin,vmax = vmax)
+            cmap1,clevs1= meteva.base.color_tools.def_cmap_clevs(cmap = cmap0,clevs=clevs0,vmin=vmin,vmax = vmax,extend=extend,cut_colorbar=cut_colorbar)
             ax_one = plt.subplot(nrow, ncol, k + 1)
             if type == "mesh":
-                myheatmap(ax_one,data_k,cmap1,clevs1,annot,sup_fontsize)
+                myheatmap(ax_one,data_k,cmap1,clevs1,annot,sup_fontsize*0.8,extend = extend)
             else:
                 cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap, clevs=clevs, vmin=vmin,
-                                                                            vmax=vmax, extend=extend)
+                                                                            vmax=vmax, extend=extend,cut_colorbar=cut_colorbar)
                 norm = BoundaryNorm(clevs1, ncolors=cmap1.N)
                 im = ax_one.contourf(data_k, levels=clevs1, cmap=cmap1, norm=norm,
                                  extend=extend)
-                fig.colorbar(im, ax=ax_one)
+                cb = fig.colorbar(im, ax=ax_one)
+                if plot_all_colorbar_ticks and clevs1 is not None:
+                    cb.set_ticks(clevs1)
 
             ki = k % ncol
             kj = int(k / ncol)
@@ -4771,7 +4812,7 @@ def mesh_contourf(type,array,name_list_dict = None,axis_x = None,axis_y = None,c
                     title1 = title  + str(name_list_dict[subplot][k])
                 else:
                     title1 = title
-            plt.title(title1, fontsize=sup_fontsize)
+            plt.title(title1, fontsize=sup_fontsize,loc = title_loc)
 
             #提取第1个绘图框的
             if sup_title is not None:
@@ -4801,7 +4842,8 @@ def mesh_contourf(type,array,name_list_dict = None,axis_x = None,axis_y = None,c
 
 def mesh_obtime_time(sta0,save_dir = None,save_path = None,
                    clevs = None,cmap = None,show = False,xtimetype = "mid",dpi = 300,annot =None,
-                     sup_fontsize = 10,title = "预报准确性和稳定性对比图",width = None,height = None,multiple = 1):
+                     sup_fontsize = 10,title = "预报准确性和稳定性对比图",width = None,height = None,multiple = 1,
+                     extend = None,cut_colorbar = False,plot_all_colorbar_ticks = True):
 
     sta = sta0.copy()
     sta.iloc[:,6:] *= multiple
@@ -4915,7 +4957,7 @@ def mesh_obtime_time(sta0,save_dir = None,save_path = None,
 
     if cmap is None:
         cmap = "bwr"
-    cmap_part,clevs_part = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap,clevs=clevs,vmin=vmin,vmax = vmax)
+    cmap_part,clevs_part = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap,clevs=clevs,vmin=vmin,vmax = vmax,extend=extend,cut_colorbar = cut_colorbar)
 
     #if cmap is None:
     #    cmap = "bwr"
@@ -4967,7 +5009,7 @@ def mesh_obtime_time(sta0,save_dir = None,save_path = None,
 
             #sns.heatmap(dat.T, ax=ax2, mask=mask, cmap=cmap_part, vmin=vmin, vmax=vmax, center=None, robust=False, annot=annot,fmt=fmt
             #, annot_kws = {'size': annot_size})
-            myheatmap(ax2,dat.T,cmap_part,clevs_part,annot_f,annot_size)
+            myheatmap(ax2,dat.T,cmap_part,clevs_part,annot_f,annot_size,extend = extend,plot_all_colorbar_ticks = plot_all_colorbar_ticks)
             ax2.set_xlabel('实况时间',fontsize = sup_fontsize*0.9)
             ax2.set_ylabel('起报时间',fontsize = sup_fontsize*0.9)
             ax2.set_xticks(x_plot)
@@ -5008,8 +5050,10 @@ def mesh_obtime_time(sta0,save_dir = None,save_path = None,
 
 
 def mesh_obtime_dtime(sta0,save_dir = None,save_path = None,
-                   clevs = None,cmap = None,show = False,xtimetype = "mid",dpi = 300,annot =None,title = "预报准确性和稳定性对比图",
-                      sup_fontsize = 10,width = None,height = None,multiple = 1):
+                   clevs = None,cmap = None,show = False,xtimetype = "mid",dpi = 300,annot =None,
+                      title = "预报准确性和稳定性对比图",
+                      sup_fontsize = 10,width = None,height = None,multiple = 1,extend = None,cut_colorbar = False,
+                      plot_all_colorbar_ticks = True):
 
     sta = sta0.copy()
     sta.iloc[:,6:] *= multiple
@@ -5090,7 +5134,7 @@ def mesh_obtime_dtime(sta0,save_dir = None,save_path = None,
     vmax = np.max(dat[dat != meteva.base.IV])
     if cmap is None:
         cmap = "bwr"
-    cmap_part,clevs_part = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap,clevs=clevs,vmin=vmin,vmax = vmax)
+    cmap_part,clevs_part = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap,clevs=clevs,vmin=vmin,vmax = vmax,extend = extend,cut_colorbar = cut_colorbar)
 
     #if cmap is None:
     #    cmap = "bwr"
@@ -5141,7 +5185,7 @@ def mesh_obtime_dtime(sta0,save_dir = None,save_path = None,
             #sns.heatmap(dat.T, ax=ax2, mask=mask, cmap=cmap_part, vmin=vmin, vmax=vmax, center=None, robust=False, annot=annot,fmt=fmt
             #, annot_kws = {'size': annot_size})
 
-            myheatmap(ax2,dat.T,cmap_part,clevs_part,annot_f,annot_size)
+            myheatmap(ax2,dat.T,cmap_part,clevs_part,annot_f,annot_size,extend = extend,plot_all_colorbar_ticks = plot_all_colorbar_ticks)
             ax2.set_xlabel('实况时间',fontsize = sup_fontsize*0.9)
             ax2.set_ylabel('预报时效',fontsize = sup_fontsize*0.9)
             ax2.set_xticks(x_plot)
@@ -5181,8 +5225,10 @@ def mesh_obtime_dtime(sta0,save_dir = None,save_path = None,
     return
 
 def mesh_time_dtime(sta0,save_dir = None,save_path = None,
-                   clevs = None,cmap = None,show = False,xtimetype = "mid",dpi = 300,annot =None,sup_fontsize = 10,title = "预报准确性对比图",
-                    width = None,height = None,add_min_xticks = False,multiple = 1):
+                   clevs = None,cmap = None,show = False,xtimetype = "mid",dpi = 300,annot =None,
+                    sup_fontsize = 10,title = "预报准确性对比图",width = None,height = None,
+                    add_min_xticks = False,multiple = 1,extend = None,cut_colorbar = False,
+                    plot_all_colorbar_ticks = True ):
 
     sta = sta0.copy()
     sta.iloc[:,6:] *= multiple
@@ -5276,7 +5322,7 @@ def mesh_time_dtime(sta0,save_dir = None,save_path = None,
         cmap = "bwr"
 
 
-    cmap_part,clevs_part = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap,clevs=clevs,vmin=vmin,vmax = vmax)
+    cmap_part,clevs_part = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap,clevs=clevs,vmin=vmin,vmax = vmax,extend = extend,cut_colorbar = cut_colorbar)
     vmax = clevs_part[-1]
     vmin = 2 * clevs_part[0] - clevs_part[1]
 
@@ -5330,7 +5376,7 @@ def mesh_time_dtime(sta0,save_dir = None,save_path = None,
 
 #            sns.heatmap(dat.T, ax=ax2, mask=mask, cmap=cmap_part, vmin=vmin, vmax=vmax, center=None, robust=False, annot=annot,fmt=fmt
 #           , annot_kws = {'size': annot_size})
-            myheatmap(ax2,dat.T,cmap_part,clevs_part,annot_f,annot_size)
+            myheatmap(ax2,dat.T,cmap_part,clevs_part,annot_f,annot_size,extend = extend,plot_all_colorbar_ticks = plot_all_colorbar_ticks)
 
             ax2.set_xlabel('起报时间',fontsize = sup_fontsize * 0.9)
             ax2.set_ylabel('预报时效',fontsize = sup_fontsize * 0.9)
@@ -5390,7 +5436,8 @@ def barbs_grid_wind(grid_wind,width = None,height = None,sup_fontsize = 12,dpi =
 
 
 def add_scatter(ax,map_extend,sta0,cmap = None,clevs = None,point_size = None,fix_size = True,title = None,threshold = 2,min_spot_value = 0,mean_value = 2,
-                grid = False,add_colorbar = True,alpha = None):
+                grid = False,add_colorbar = True,alpha = None,extend = None,cut_colorbar = False,
+                plot_all_colorbar_ticks = True):
     sta = sta0
     if isinstance(map_extend, list):
         slon = map_extend[0]
@@ -5417,7 +5464,7 @@ def add_scatter(ax,map_extend,sta0,cmap = None,clevs = None,point_size = None,fi
     vmax_v = np.max(sta_without_iv.iloc[:,-1].values)
     vmin_v = np.min(sta_without_iv.iloc[:,-1].values)
 
-    cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap, clevs=clevs, vmin=vmin_v, vmax=vmax_v)
+    cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap, clevs=clevs, vmin=vmin_v, vmax=vmax_v,extend= extend,cut_colorbar = cut_colorbar)
 
     norm = BoundaryNorm(clevs1, ncolors=cmap1.N - 1)
     fig = plt.gcf()
@@ -5466,7 +5513,9 @@ def add_scatter(ax,map_extend,sta0,cmap = None,clevs = None,point_size = None,fi
 
         if (add_colorbar):
             colorbar_position = fig.add_axes(location)  # 位置[左,下,宽,高]
-            plt.colorbar(im, cax=colorbar_position)
+            cb = plt.colorbar(im, cax=colorbar_position)
+            if plot_all_colorbar_ticks and clevs1 is not None:
+                cb.set_ticks(clevs1)
     return im
 
 
