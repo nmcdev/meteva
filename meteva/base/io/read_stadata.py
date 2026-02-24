@@ -7,7 +7,7 @@ import meteva
 import traceback
 import re
 import copy
-from . import DataBlock_pb2
+#from . import DataBlock_pb2
 from .GDS_data_service import GDSDataService
 import struct
 from collections import OrderedDict
@@ -651,6 +651,7 @@ def read_stadata_from_gds(filename,element_id = None,station = None, level=None,
     :param data_name:
     :return:
     '''
+    from . import DataBlock_pb2
     directory, filename = os.path.split(filename)
     # connect to data service
     if meteva.base.gds_ip_port is None:
@@ -702,7 +703,7 @@ def read_stadata_from_gds(filename,element_id = None,station = None, level=None,
                     filename1 = os.path.split(filename)[1].split(".")
                     dtime = int(filename1[1])
                 id_type = head_info['id_type'][0]
-                ind = 288
+                ind = np.int32(288)  # 288
                 # read the number of stations
                 station_number = np.frombuffer(
                     byteArray[ind:(ind+4)], dtype='i4')[0]
@@ -926,7 +927,7 @@ def read_stadata_from_gdsfile(filename,element_id = None,station = None, level=N
                 filename1 = os.path.split(filename)[1].split(".")
                 dtime = int(filename1[1])
             id_type = head_info['id_type'][0]
-            ind = 288
+            ind = np.int32(288) #288
             # read the number of stations
             station_number = np.frombuffer(
                 byteArray[ind:(ind+4)], dtype='i4')[0]
@@ -1110,7 +1111,7 @@ def read_stadata_from_gdsfile(filename,element_id = None,station = None, level=N
 
 
 def read_stawind_from_gds(filename,station = None, level=None,time=None, dtime=None,data_name = "",dtime_units = "hour",show = True):
-
+    from . import DataBlock_pb2
     if meteva.base.gds_ip_port is None:
         print("请先使用set_config 配置gds的ip和port")
         return
@@ -1156,7 +1157,7 @@ def read_stawind_from_gds(filename,station = None, level=None,time=None, dtime=N
                 if dtime is None:
                     filename1 = os.path.split(filename)[1].split(".")
                     dtime = int(filename1[1])
-                ind = 288
+                ind = np.int32(288)  # 288
                 # read the number of stations
                 station_number = np.frombuffer(
                     byteArray[ind:(ind+4)], dtype='i4')[0]
@@ -1343,7 +1344,7 @@ def read_stawind_from_gdsfile(filename,station = None, level=None,time=None, dti
             if dtime is None:
                 filename1 = os.path.split(filename)[1].split(".")
                 dtime = int(filename1[1])
-            ind = 288
+            ind = np.int32(288) #288
             # read the number of stations
             station_number = np.frombuffer(
                 byteArray[ind:(ind+4)], dtype='i4')[0]
@@ -1498,6 +1499,7 @@ def read_stadata_from_gds_griddata(filename,station,level = None,time =None,dtim
     # ip 为字符串形式，示例 “10.20.30.40”
     # port 为整数形式
     # filename 为字符串形式 示例 "ECMWF_HR/TCDC/19083108.000"
+    from . import DataBlock_pb2
     if meteva.base.gds_ip_port is None:
         print("请先使用set_config 配置gds的ip和port")
         return
@@ -1584,6 +1586,7 @@ def print_gds_file_values_names(filename):
     # ip 为字符串形式，示例 “10.20.30.40”
     # port 为整数形式
     # filename 为字符串形式 示例 "ECMWF_HR/TCDC/19083108.000"
+    from . import DataBlock_pb2
     value_id_list= []
     if os.path.exists(filename):
         file = open(filename, "rb")
@@ -1619,8 +1622,7 @@ def print_gds_file_values_names(filename):
                 exstr = traceback.format_exc()
                 print(exstr)
 
-
-    ind = 288
+    ind = np.int32(288)  # 288
     # read the number of stations
     station_number = np.frombuffer(
         byteArray[ind:(ind + 4)], dtype='i4')[0]
