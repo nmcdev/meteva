@@ -23,15 +23,17 @@ def load_feature_summary(filename):
     for id in label_list_matched:
         feature1[id] = feature[str(id)]
 
-    feature1["unmatched"] = feature["unmatched"]
-    miss_labels = feature["unmatched"]['ob']
-    for id in miss_labels:
-        feature1[id] = feature[str(id)]
+    feature1["unmatched"] = {"fo":[],"ob":[]}
+    if "unmatched" in feature.keys():
+        feature1["unmatched"] = feature["unmatched"]
+        miss_labels = feature["unmatched"]['ob']
+        for id in miss_labels:
+            feature1[id] = feature[str(id)]
 
 
-    false_alarm_labels = feature["unmatched"]["fo"]
-    for id in false_alarm_labels:
-        feature1[id] = feature[str(id)]
+        false_alarm_labels = feature["unmatched"]["fo"]
+        for id in false_alarm_labels:
+            feature1[id] = feature[str(id)]
 
     return feature1
 
