@@ -147,12 +147,22 @@ def trans_contours_to_sta(m14,station,grade_list):
     return sta_fo
 
 
+def trans_contours_to_grd(m14,grid,grade_list):
+
+    grd = meteva.base.grid_data(grid)
+    station = trans_grd_to_sta(grd)
+    sta = trans_contours_to_sta(m14,station,grade_list)
+    grd1 = trans_sta_to_grd(sta)
+
+    return grd1
+
 
 def move_fo_time(data,dtime,keep_minus_dtime = True):
     if isinstance(data, pd.DataFrame):
         sta1 = data.copy()
         sta1["time"] = data["time"] + dtime* np.timedelta64(1, 'h')
-        sta1["dtime"] = data["dtime"] - dtime
+        sta1["dtime"] = data["dtime"] - (dtime+0.0)
+        sta1["dtime"] = sta1["dtime"].astype('int32')
         if not keep_minus_dtime: sta1 = meteva.base.between_dtime_range(sta1,0,10000)
         return sta1
     else:
@@ -169,7 +179,7 @@ def add_dtime_0(data):
         sta1 = data.copy()
         dtime_list = list(set(sta1["dtime"].values.tolist()))
         dtime_list.sort()
-        sta1_0 = meteva.base.sele_by_para(sta1,dtime_list[0])
+        sta1_0 = meteva.base.sele_by_para(sta1,dtime = dtime_list[0])
         sta1_0["dtime"] = 0
         sta1_0.iloc[:,6:] = 0
         sta_add = meteva.base.concat([sta1_0,sta1])
@@ -208,3 +218,57 @@ def tran_ut_Administrative_local_time(sta,id_zone):
     sta_com = sta_com.iloc[:,:-1]
     sta_com.attrs = copy.deepcopy(sta.attrs)
     return sta_com
+
+
+def normalize_units_to_reference(a, unit=1.225e9):
+    """
+    根据输入参数 a 和单位系数计算 b 值（b = a * unit）
+    :param a: 输入数据（DataFrame 或网格数据）
+    :param unit: 转换系数，默认 1.225e9
+    :return: 转换后的数据（结构同输入），包含元数据属性
+    """
+    # 输入校验
+    if a is None:
+        raise ValueError("输入参数 'a' 不能为空")
+
+    if isinstance(a, pd.DataFrame):
+        # DataFrame 分支处理
+        sta2 = meteva.base.not_IV(a.copy())
+        A = sta2.iloc[:, -1].values  # 取最后一列数据
+
+        # 数值类型校验
+        if not np.issubdtype(A.dtype, np.number):
+            raise TypeError("输入参数 'a' 必须为数值类型")
+
+        # 核心计算
+        B = A * unit
+
+        # 构造结果
+        sta = sta2.copy()
+        sta.iloc[:, -1] = B  # 替换原数据列
+        sta.attrs = copy.deepcopy(sta.attrs)
+        sta.attrs["var_name"] = "pm25"
+        sta.attrs["var_cn_name"] = "颗粒物"
+        sta.attrs["var_units"] = "ug/m3"
+        return sta
+
+    else:
+        # 网格数据分支处理
+        grid0 = meteva.base.get_grid_of_data(a)
+        A = a.values
+
+        # 数值类型校验
+        if not np.issubdtype(A.dtype, np.number):
+            raise TypeError("输入参数 'a' 必须为数值类型")
+
+        # 核心计算
+        B = A * unit
+
+        # 构造结果
+        grd = meteva.base.grid_data(grid0, B)
+        grd.attrs = {
+            "var_name": "pm25",
+            "var_cn_name": "颗粒物",
+            "var_units": "ug/m3"
+        }
+        return grd
