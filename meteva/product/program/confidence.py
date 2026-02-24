@@ -143,7 +143,16 @@ def plot_confidence(result_tdt ,B = 10000 ,c = 0.95
         plt.xlabel(xlabel, fontsize=sup_fontsize * 0.8)
         plt.ylabel(ylabel_delta, fontsize=sup_fontsize * 0.8)
 
-
+    if save_path is None:
+        show = True
+    else:
+        meteva.base.tool.path_tools.creat_path(save_path)
+        plt.savefig(save_path,bbox_inches='tight')
+        print("检验结果已以图片形式保存至" + save_path)
+    if show:
+        plt.show()
+    plt.close()
+    return None
 
 def score_compare(sta_ob_and_fos0,method,grade_list = None,compare = ">=",s = None,B = 1000 ,c = 0.95
                     ,ncol = 1 ,title_list = None ,vmax = None ,vmin = None ,vmax_delta = None,
