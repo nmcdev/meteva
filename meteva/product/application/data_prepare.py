@@ -5,7 +5,7 @@ import copy
 import time
 import pandas as pd
 import os
-
+import traceback
 
 
 para_example= {
@@ -14,7 +14,7 @@ para_example= {
     "end_time":datetime.datetime.now(),
     "station_file":r"H:\task\other\202009-veri_objective_method\sta_info.m3",
     "defalut_value":0,
-    "hdf_file_name":"last_week_data.h5",
+    "hdf_file_name":"last_week_data.parquet",
     "interp": meteva.base.interp_gs_nearest,
     "how_fo":"outer",
     "time_type":"BT",
@@ -176,7 +176,12 @@ def prepare_dataset_on_obTime(para,recover = True):
         meteva.base.creat_path(output_file)
         if os.path.exists(output_file):
             os.remove(output_file)
-        sta_all.to_hdf(output_file, "df")
+
+        file_type = output_file.split(".")[1]
+        if file_type=="parquet":
+            sta_all.to_parquet(output_file)
+        else:
+            sta_all.to_hdf(output_file, "df")
         print("success combined data to " + output_file)
         return sta_all
     else:
@@ -396,7 +401,7 @@ def creat_fo_dataset_on_obTime(model,para):
                     if file_exit:
                     #if os.path.exists(path) or path is None:
                         try:
-                            dat = read_method(path,**read_para)
+                            dat = read_method(path,time = file_time,dtime =dt,**read_para)
                             if dat is not None:
                                 if not isinstance(dat, pd.DataFrame):
                                     dat = interp(dat, station)
@@ -418,6 +423,8 @@ def creat_fo_dataset_on_obTime(model,para):
                             else:
                                 print("fail read data from " + path)
                         except:
+                            exstr = traceback.format_exc()
+                            print(exstr)
                             print("fail read data from " + path)
                     else:
                         print(path +" does not exist")
@@ -432,7 +439,13 @@ def creat_fo_dataset_on_obTime(model,para):
     meteva.base.creat_path(hdf_path)
     if os.path.exists(hdf_path):
         os.remove(hdf_path)
-    sta_all.to_hdf(hdf_path, "df")
+
+    file_type = hdf_path.split(".")[1]
+    if file_type=="parquet":
+        sta_all.to_parquet(hdf_path)
+    else:
+        sta_all.to_hdf(hdf_path, "df")
+
     print(hdf_path)
     return sta_all
 
@@ -555,7 +568,7 @@ def creat_ob_dataset_on_obTime(para,ele = "ob",recover = True):
                         file_exit = True
                 if file_exit:
                     try:
-                        dat = read_method(path,**read_para)
+                        dat = read_method(path,time = file_time,**read_para)
                         if dat is not None:
                             dat = meteva.base.fun.comp.put_stadata_on_station(dat,station)
                             if not isinstance(dat,pd.DataFrame):
@@ -572,6 +585,8 @@ def creat_ob_dataset_on_obTime(para,ele = "ob",recover = True):
                         else:
                             print("fail read data from " + path)
                     except:
+                        exstr = traceback.format_exc()
+                        print(exstr)
                         print("fail read data from " + path)
                 else:
                     print(path +  "does not exist")
@@ -583,7 +598,11 @@ def creat_ob_dataset_on_obTime(para,ele = "ob",recover = True):
     meteva.base.creat_path(hdf_path)
     if os.path.exists(hdf_path):
         os.remove(hdf_path)
-    sta_all.to_hdf(hdf_path, "df")
+    file_type = hdf_path.split(".")[1]
+    if file_type=="parquet":
+        sta_all.to_parquet(hdf_path)
+    else:
+        sta_all.to_hdf(hdf_path, "df")
     #print(hdf_path)
 
     return sta_all
