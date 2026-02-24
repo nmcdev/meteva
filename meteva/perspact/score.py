@@ -44,7 +44,7 @@ def score_df(df, method, s = None,g=None,gll_dict = None,plot = None,excel_path 
     score_method_with_mid = None
     for mid in score_method_with_mid_list:
         mid_name = method_mid.__name__.split("_")[0]
-        if mid.__name__.find(mid_name)>0:
+        if mid.__name__.find(mid_name)>=0:
             score_method_with_mid = mid
 
     df0 = meteva.base.sta_data(df)
@@ -96,13 +96,15 @@ def score_df(df, method, s = None,g=None,gll_dict = None,plot = None,excel_path 
         if method_mid.__name__ =="tmmsss":
             df_ob["T"] = df1["T"]
             df_ob["MY"] = df1["MX"]
+            df_ob["SY"] = df1["SX"]
         if method_mid.__name__ == "cscs":
             df_ob["CY"] = df1["CX"]
             df_ob["SY"] = df1["SX"]
             pass
         if method_mid.__name__ =="tasem":
             try:
-                df1["M"] = df1["M"] + df1["E"]
+                #df1["M"] = df1["M"] + df1["E"]
+                df_ob["E"] = 0
             except:
                 print("中间数据中未包含M 列")
 
@@ -202,8 +204,9 @@ def score_df(df, method, s = None,g=None,gll_dict = None,plot = None,excel_path 
             else:
                 mid_list = []
                 for column in column_list:
-                    mid = np.sum(df1_list[i][column])
-                    mid_list.append(mid)
+                    if column in df1_list[i].columns:
+                        mid = np.sum(df1_list[i][column])
+                        mid_list.append(mid)
                 mid_array = np.array(mid_list)
                 if method_mid == meteva.method.hnh:
                     mid_array = mid_array.reshape(10,2)
@@ -701,9 +704,9 @@ def score_ds(ds,method,s = None,g = None,gll_dict = None,plot = None,first = Tru
         df1 = meteva.perspact.tran_middle_ds_to_df(ds)
         return score_df(df1,method,s = s,g = g,gll_dict=gll_dict,plot=plot,first = first,**kwargs)
 
-    method_mid = meteva.perspact.get_middle_method(method)
+    method_mid = meteva.perspact.get_middle_method(method)[0]
     value_list = meteva.perspact.get_middle_columns(method_mid)
-    score_method_with_mid = meteva.perspact.get_score_method_with_mid(method)
+    score_method_with_mid = meteva.perspact.get_score_method_with_mid(method)[0]
 
     for value in value_list:
         if not value in ds:
