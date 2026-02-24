@@ -8,18 +8,18 @@ import numpy as np
 import  time
 
 para = {
-    "mid_method":meteva.method.tase,
+    "mid_method":meteva.method.tasem,
     "grade_list": None,
     "compare":None,
-    "middle_result_path": r"H:\test_data\output\mps\tase_z.h5",
+    "middle_result_path": r"H:\test_data\output\mps\tase_z.parquet",
     "begin_time": datetime.datetime(2018,8,1,0),
     "end_time": datetime.datetime(2018,8,2,0),
     "time_type":"UT",
     "time_step":12,     #起报时间间隔
     "grid" :  meteva.base.grid([70,140,0.25],[10,60,0.25]),  # 检验区域
-    "level_list":  [ 850, 700, 500],
-    "step":5,  #masker间隔（单位：°）
-    "recover":False,
+    "level_list":  [  500],
+    "step":None,  #masker间隔（单位：°）
+    "recover":True,
     "cpu":1,
     "ob_data": {
         "CRA40":{
@@ -33,7 +33,7 @@ para = {
     "fo_data": {
         "Fu":{
             "dirm": r"\\10.28.16.234\data2\AI\fuxi\Z\LLL\YYYYMMDDHH\YYYYMMDDHH.TTT.nc",
-            "dtime": [12, 240, 12],
+            "dtime": [12, 24, 12],
             "read_method": meteva.base.read_griddata_from_nc,
             "read_para": {},
             "time_type": "UT",  # 预报数据时间类型是北京时，即08时起报
@@ -49,7 +49,7 @@ para = {
 
         "pa": {
             "dirm":   r"\\10.28.16.234\data2\AI\Pangu_ERA5\Z\LLL\YYYYMMDDHH\YYYYMMDDHH.TTT.nc",
-            "dtime": [12, 240, 12],
+            "dtime": [12, 24, 12],
             "read_method": meteva.base.read_griddata_from_nc,
             "read_para": {},
             "time_type": "UT",#预报数据时间类型是北京时，即08时起报
@@ -73,6 +73,8 @@ para = {
 
 
 def task_of_one_p(para,middle_result_path,v_df,mid0 = None,zs = None):
+
+    mid_file_type = para["middle_result_path"].split(".")[1]
 
     time_cost_dict = {"total_cost":0,"veri_cost":0}
     time_cost_total0 = time.time()
@@ -191,7 +193,7 @@ def task_of_one_p(para,middle_result_path,v_df,mid0 = None,zs = None):
 
                     mid_list.append(df_mid)
                 else:
-                    print("faild to read " + path1)
+                    print("faild to read ",time1 , " " ,dh)
 
                 save_k += 1
                 # 当收集了超过500个时效的数据时就输出一次
@@ -207,7 +209,11 @@ def task_of_one_p(para,middle_result_path,v_df,mid0 = None,zs = None):
     # 先删除文件在重新输出文件，避免文件大小膨胀
     if os.path.exists(middle_result_path):
         os.remove(middle_result_path)
-    mid_all.to_hdf(middle_result_path, "df")  # 将结果输出到文件
+    if mid_file_type=="parquet":
+        mid_all.to_parquet(middle_result_path)  # 将结果输出到文件
+    else:
+        mid_all.to_hdf(middle_result_path, "df")  # 将结果输出到文件
+
     print("中间量统计程序运行完毕")
     print("中间结果已输出至" + middle_result_path)
     time_cost_dict["total_cost"] = time.time() - time_cost_total0
@@ -331,21 +337,30 @@ def middle_of_score(para):
         #采用多进程统计中间量
         meteva.base.multi_run(cpu,task_of_one_p,para=para,middle_result_path=middle_result_path_list,v_df = v_df_list,zs = zs)
 
+
         #将中间量的结果进行合并
+        mid_file_type = para["middle_result_path"].split(".")[1]
         df_list = [mid0]
         file_list = os.listdir(middle_result_dir_sep)
         for file1 in file_list:
             path = middle_result_dir_sep + "/" + file1
-            df = pd.read_hdf(path)
+            if mid_file_type =="parquet":
+                df = pd.read_parquet(path)
+            else:
+                df = pd.read_hdf(path)
             df_list.append(df)
             os.remove(path)
+
 
         mid_all = meteva.base.concat(df_list)
         mid_all.sort_values(by=["time","dtime","level","member"],inplace=True)
         # 先删除文件在重新输出文件，避免文件大小膨胀
         if os.path.exists(middle_result_path):
             os.remove(middle_result_path)
-        mid_all.to_hdf(middle_result_path, "df")  # 将结果输出到文件
+        if mid_file_type =="parquet":
+            mid_all.to_parquet(middle_result_path)
+        else:
+            mid_all.to_hdf(middle_result_path, "df")  # 将结果输出到文件
         print("中间量拼接程序运行完毕")
         print("拼接后的中间结果已输出至"+middle_result_path)
 
@@ -357,4 +372,6 @@ def middle_of_score(para):
 if __name__ == "__main__":
 
 
-    pass
+    middle_of_score(para)
+    df = pd.read_parquet(para["middle_result_path"])
+    print(df)
