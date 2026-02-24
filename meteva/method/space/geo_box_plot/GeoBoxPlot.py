@@ -47,7 +47,7 @@ def Geo_Box_Plot(frequency_ob,frequency_fo,grade_list,member_list = None):
         #print(c)
         fst_array= np.append(fst_array, c)
         #print(d)
-    out = plt.boxplot(np.array([obs_array,fst_array]), labels=xticks)
+    out = plt.boxplot([obs_array,fst_array], labels=xticks)
 
 
 
