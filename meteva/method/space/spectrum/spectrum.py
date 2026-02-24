@@ -139,36 +139,25 @@ def spectrum_fft2(para,show = None,save_path = None,title = None):
 
 if __name__ == "__main__":
     para = {
-        "grid": meteva.base.grid([70,140,0.25],[10,60,0.25]),  # 检验区域
-        "begin_time": datetime.datetime(2024, 9, 1, 8),  # 时段开始时刻(基于起报时间)
-        "end_time": datetime.datetime(2024, 9, 3, 20),  # 时段结束时刻（基于起报时间）
+        "grid": meteva.base.grid([0,359.75,0.25],[-89.875,89.875,0.25]),  # 检验区域
+        "begin_time": datetime.datetime(2018, 9, 1, 0),  # 时段开始时刻(基于起报时间)
+        "end_time": datetime.datetime(2018, 9, 1, 0),  # 时段结束时刻（基于起报时间）
         "time_step": 12,  # 起报时间间隔
-        "dtime": 120,  # 预报时效
+        "dtime": 12,  # 预报时效
         "time_type": "BT",  # 最终检验结果呈现时，采用北京时还是世界时，UT代表世界时，BT代表北京时
         "ob_data": {
-            "dir_ob": r"\\10.40.23.69\u02\data\model\ecmwf\YYYYMMDDHH\gh\500\YYYYMMDDHH.TTT",  # 实况场数据路径
+            "dir_ob": r"\\10.28.16.234\data2\AI\Fengwu_ERA5\U\200\YYYYMMDDHH\YYYYMMDDHH.012.nc",  # 实况场数据路径
             "hour": None,
-            "read_method": meteva.base.io.read_griddata_from_micaps4,  # 读取数据的函数
+            "read_method": meb.read_griddata_from_nc,  # 读取数据的函数
             "operation": None,  # 预报数据读取后处理函数
             "operation_para": {},  # 预报数据读取后处理参数，用于对单位进行变换的操作
             "read_para": {},  # 读取数据的函数参数
             "time_type": "BT",  # 数据文件中的时间类型，UT代表世界时
         },
         "fo_data": {
-            "ECMWF": {
-                "dir_fo": r"\\10.40.23.69\u02\data\model\ecmwf\YYYYMMDDHH\gh\500\YYYYMMDDHH.TTT",  # 数据路径
-                "read_method": meteva.base.io.read_griddata_from_micaps4,  # 读取数据的函数
-                "read_para": {},  # 读取数据的函数参数
-                "reasonable_value": [0, 1000],  # 合理的预报值的取值范围，超出范围观测将被过滤掉
-                "operation": None,  # 预报数据读取后处理函数
-                "operation_para": {},  # 预报数据读取后处理参数，用于对单位进行变换的操作
-                "time_type": "BT",  # 预报数据时间类型是北京时，即08时起报
-                "move_fo_time": 0  # 是否对预报的时效进行平移，12 表示将1月1日08时的36小时预报转换成1月1日20时的24小时预报后参与对比
-            },
-
             "CMA_GFS": {
-                "dir_fo": r"\\10.40.23.69\u02\data\model\cma_gfs\YYYYMMDDHH\gh\500\YYYYMMDDHH.TTT",  # 数据路径
-                "read_method": meteva.base.io.read_griddata_from_micaps4,  # 读取数据的函数
+                "dir_fo": r"\\10.28.16.234\data2\AI\Fengwu_ERA5\U\200\YYYYMMDDHH\YYYYMMDDHH.TTT.nc",  # 数据路径
+                "read_method": meb.read_griddata_from_nc,  # 读取数据的函数
                 "read_para": {},  # 读取数据的函数参数
                 "reasonable_value": [0, 1000],  # 合理的预报值的取值范围，超出范围观测将被过滤掉
                 "operation": None,  # 预报数据读取后处理函数，用于对单位进行变换的操作
@@ -179,6 +168,5 @@ if __name__ == "__main__":
         },
         "output_dir": None  # 观测站点合并数据的输出路径，设置为None时不输出收集数据的中间结果
     }
-
 
     spectrum_fft2(para,save_path=r"H:\test_data\output\method\space\spectrum\test.png")
