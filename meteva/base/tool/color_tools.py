@@ -117,6 +117,21 @@ def cmap_clevs_environment():
     cmap = colors.ListedColormap(colors_list, 'indexed')
     return cmap, clevs1
 
+
+def cmap_clevs_haze():
+    clevs1 =[-1,0,1,2,3]
+    nclev = len(clevs1)
+    colors_list = np.array([[255,255,255],[222,203,0],[173,113,0],[123,0,33]])/256
+    cmap = colors.ListedColormap(colors_list, 'indexed')
+    return cmap, clevs1
+
+def cmap_clevs_fog():
+    clevs1 =[-1,0,1,2,3,4,5]
+    nclev = len(clevs1)
+    colors_list = np.array([[255,255,255],[198,255,231],[99,255,255],[0,207,206],[0,154,156],[0,84,77]])/256
+    cmap = colors.ListedColormap(colors_list, 'indexed')
+    return cmap, clevs1
+
 def get_cmap_and_clevs_from_file(path):
     clev_cmap = np.loadtxt(path)
     clevs = clev_cmap[:, 0]
@@ -369,6 +384,28 @@ def cmap_clevs_me_new(vmin,vmax):
     return cmap,clevs
 
 
+def cmap_me_bwr1():
+
+    cmap = np.array([
+            (0, 24, 128),         # #08306b
+            (8, 48, 158),         # #08306b
+            (23, 100, 180),      # #1764ab
+            (74, 152, 201),      # #4a98c9
+            (107, 174, 214),      # #6baed6
+            (208, 225, 242),     # #d0e1f2
+            (255, 255, 255),     # #ffffff
+            (255, 255, 255),     # #ffffff
+            (254, 171, 73),      # #feab49
+            (252, 91, 46),       # #fc5b2e
+            (212, 16, 32),       # #d41020
+            (180, 9, 30),         # #ca0923
+            (158, 0, 25),        # #800026
+            (128, 0, 0),        # #800026
+    ])/255
+    cmap = cmap.tolist()
+    cmap = colors.ListedColormap(cmap, 'indexed')
+    return  cmap
+
 def cmap_clevs_mae(vmax):
 
     dif = (vmax) / 10.0
@@ -407,6 +444,8 @@ def cmap_clevs_mae(vmax):
     clevs = np.arange(vmin, vmax, inte)
     cmap = colors.ListedColormap(rgb_colors, 'indexed')
     return cmap, clevs
+
+
 
 
 def cmap_clevs_me_bwr(vmin,vmax):
@@ -565,7 +604,6 @@ def cmap_clevs_mr():
         colors_list.append(colors0(i))
     cmap = colors.ListedColormap(colors_list, 'indexed')
     return cmap,clevs
-
 
 def cmap_clevs_error(vmin,vmax):
 
@@ -774,7 +812,7 @@ def get_cmap_and_clevs_by_element_name(element_name):
     cmap,clevs = get_cmap_and_clevs_from_file(path)
     return cmap,clevs
 
-def get_part_cmap_and_clevs(cmap_all,clev_all,vmax,vmin,cut_accurate = False):
+def get_part_cmap_and_clevs(cmap_all,clev_all,vmax,vmin,cut_accurate = False,extend = "max"):
 
 
     if cut_accurate:
@@ -805,6 +843,12 @@ def get_part_cmap_and_clevs(cmap_all,clev_all,vmax,vmin,cut_accurate = False):
 
 
     clevs_part = clev_all[start_i:end_i]
+    if extend == "both":
+        if end_i == len(cmap_all.colors):
+            start_i -= 1
+        else:
+            end_i += 1
+
     if hasattr(cmap_all,"colors"):
         cmap_colors = cmap_all.colors
         cmap_colors_part = cmap_colors[start_i:end_i]
@@ -927,6 +971,9 @@ def get_cmap_and_clevs_by_name(cmap_name,vmin,vmax):
         cmap,clevs = cmap_clevs_me(vmin,vmax)
     elif cmap_name == "me_bwr":
         cmap,clevs = cmap_clevs_me_bwr(vmin,vmax)
+    elif cmap_name == "me_bwr1":
+        cmap = cmap_me_bwr1()
+        clevs = None
     elif cmap_name == "me_w0":
         cmap,clevs = cmap_clevs_me_w0(vmin,vmax)
     elif cmap_name == "ts":
@@ -943,6 +990,10 @@ def get_cmap_and_clevs_by_name(cmap_name,vmin,vmax):
         cmap, clevs = cmap_clevs_temper_error_br(vmax)
     elif cmap_name =="environment":
         cmap,clevs = cmap_clevs_environment()
+    elif cmap_name == "haze":
+        cmap,clevs = cmap_clevs_haze()
+    elif cmap_name == "fog":
+        cmap,clevs = cmap_clevs_fog()
     elif cmap_name =="radar":
         cmap,clevs = cmap_clevs_radar()
     elif cmap_name =="mae":
@@ -981,20 +1032,27 @@ class cmaps:
     me = "me"
     temper_error_br ="temper_error_br"
     environment = "environment"
+    haze = "haze"
+    fog = "fog"
     radar = "radar"
     me_bwr = "me_bwr"
     me_w0 = "me_w0"
     mae = "mae"
     hour = "hour"
+    me_bwr1 = "me_bwr"
 
 
-def coordinate_cmap_to_clevs(cmap,clevs):
+def coordinate_cmap_to_clevs(cmap,clevs,extend = "max"):
     if hasattr(cmap, "colors"):
         colors0 = np.array(cmap.colors)
         colors_list = []
+        if extend == "both":
+            colors_list.append(colors0[0,:].tolist())
         ncmap = len(colors0)
         nclev = len(clevs)
-        if(ncmap == nclev + 1 or ncmap== nclev-1):
+        if ncmap == nclev + 1 and extend == "both":
+            return cmap, clevs
+        if ncmap == nclev and extend !="both":
             return cmap,clevs
         if nclev <2:
             print("clevs' size must bigger than 1")
@@ -1008,6 +1066,7 @@ def coordinate_cmap_to_clevs(cmap,clevs):
             dj = j - j0
             color1 = (colors0[j0, :] * (1 - dj) + colors0[j1, :] * dj)
             colors_list.append(color1.tolist())
+
         cmap_co = colors.ListedColormap(colors_list, 'indexed')
         return cmap_co,clevs
     else:
@@ -1016,7 +1075,7 @@ def coordinate_cmap_to_clevs(cmap,clevs):
 
 
 
-def def_cmap_clevs(cmap = "rainbow",clevs = None,vmin = None,vmax = None,cut_colorbar = True,extend = None):
+def def_cmap_clevs(cmap = "rainbow",clevs = None,vmin = None,vmax = None,cut_colorbar = False,extend = None):
     #  # 判断是meteva自定义的颜色类型，这从meteva资源文件或函数里生成cmap1 和clevs1
     clevs1 = None
     cmap1 = None
@@ -1100,13 +1159,13 @@ def def_cmap_clevs(cmap = "rainbow",clevs = None,vmin = None,vmax = None,cut_col
 
 
     #将cmap2 和clev2 协调
-    cmap3,clevs3 = coordinate_cmap_to_clevs(cmap2,clevs2)
+    cmap3,clevs3 = coordinate_cmap_to_clevs(cmap2,clevs2,extend)
 
 
     # 从cmap3 和cmap3中提取部分colorbar
 
     if vmin is not None and vmax is not None and cut_colorbar:
-        cmap4,clevs4 = get_part_cmap_and_clevs(cmap3, clevs3, vmax, vmin)
+        cmap4,clevs4 = get_part_cmap_and_clevs(cmap3, clevs3, vmax, vmin,extend=extend)
     else:
         cmap4,clevs4  = cmap3,clevs3
 
@@ -1115,16 +1174,12 @@ def def_cmap_clevs(cmap = "rainbow",clevs = None,vmin = None,vmax = None,cut_col
 
         if len(colors_list)  == len(clevs4) +1:
             cmap5 = colors.ListedColormap(colors_list[1:-1])
-            cmap5.set_under(colors_list[0])
-            cmap5.set_over(colors_list[-1])
         elif len(colors_list) == len(clevs4):
             cmap5 = colors.ListedColormap(colors_list[:-1])
-            cmap5.set_under([1, 1, 1])
-            cmap5.set_over(colors_list[-1])
         else:
             cmap5 = colors.ListedColormap(colors_list)
-            cmap5.set_under([1, 1, 1])
-            cmap5.set_over([0, 0, 0])
+        cmap5.set_under(colors_list[0])
+        cmap5.set_over(colors_list[-1])
 
     elif extend == "min":
         cmap5 = colors.ListedColormap(colors_list[1:])

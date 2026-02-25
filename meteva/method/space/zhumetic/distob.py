@@ -6,7 +6,7 @@ Created on Mon May  1 19:01:40 2023
 @author: tangbuxing
 """
 import numpy as np
-import meteva.method as mem
+import meteva
 
 #import locperf
 
@@ -21,7 +21,7 @@ def distob(X, Y, distfun = "distmapfun"):
     elif nX == 0 or nY == 0:
         return np.max(np.shape(np.matrix(X)))
     else:
-        out = mem.mode.locperf.locperf(X = X, Y = Y, which_stats = "med")["medMiss"]
+        out = meteva.method.mode.locperf.locperf(X = X, Y = Y, which_stats = "med")["medMiss"]
         
     return out
 

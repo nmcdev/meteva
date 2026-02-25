@@ -144,7 +144,7 @@ def get_time_str_one_by_one(time1,time0 = None,row = 1):
                     time_str = time2.strftime('%H{h}:%M{mi}\n%m{m}-%d{d}\n%Y{y}').format(y='', m='', d='', h='',
                                                                                         mi='')
                 else:
-                    time_str = time2.strftime('%H{h}:%M{mi}\n%m{m}-%d{d}').format(m='', d='', h=':',
+                    time_str = time2.strftime('%H{h}:%M{mi}\n%m{m}-%d{d}').format(m='', d='', h='',
                                                                                         mi='')
         else:
             if time0 is None:
@@ -566,7 +566,7 @@ def get_x_ticks(ticks,width,row = 2):
         dhs_set = set(dhs.tolist())
         dh_max = (times[-1] - times[0]) / np.timedelta64(1, 'h')
         # 判断是否为有规律的
-        if(dhs.size / len(dhs_set) >3):
+        if(dhs.size / (len(dhs_set)+1e-10) >3):
             #有规律
             dhs_units = np.array(list(dhs_set))
             dhs_units.sort()

@@ -325,7 +325,7 @@ def creat_axs(nplot,map_extend,ncol = None,height  = None,width = None,dpi = 300
 
 
 def add_contourf(ax,grd,cmap ="rainbow",clevs= None,add_colorbar = True,cut_colorbar = True,title = None,title_fontsize = 8,clip = None,
-                 extend = None,colorbar_location = None,alpha=1):
+                 extend = None,colorbar_location = None,alpha=1,title_loc = "center"):
     slon = ax.transLimits._boxin.x0
     elon = ax.transLimits._boxin.x1
     slat = ax.transLimits._boxin.y0
@@ -353,7 +353,7 @@ def add_contourf(ax,grd,cmap ="rainbow",clevs= None,add_colorbar = True,cut_colo
     width = fig.bbox.width/fig.dpi
     height = fig.bbox.height/fig.dpi
 
-    ax.set_title(title,fontsize =title_fontsize)
+    ax.set_title(title,fontsize =title_fontsize,loc = title_loc)
     if add_colorbar:
         if colorbar_location is None:
             location = [ax.bbox.x1 / fig.dpi / width + 0.005, ax.bbox.y0 / fig.dpi / height, 0.01,
@@ -505,6 +505,7 @@ def add_barbs(ax,wind,color = "k",skip = None,title = None,title_fontsize = 8,le
         Y = wind["lat"].values
         u = wind.iloc[:,-2].values
         v = wind.iloc[:,-1].values
+        ax.set_title(title, fontsize=title_fontsize)
         im = ax.barbs(X, Y, u, v,
                       sizes=dict(emptybarb=0.01, spacing=0.23, height=0.5, width=0.25), color=color,
                       barb_increments=dict(half=2, full=4, flag=20), length=length, linewidth=length * length * 0.03)
@@ -745,45 +746,55 @@ def add_scatter_text(ax,sta0,color = "k",cmap = None,clevs = None,tag = 2,
     y0 = ax.transLimits._boxin.y0
     y1 = ax.transLimits._boxin.y1
     sta = meteva.base.sele_by_para(sta0,lon=[x0,x1],lat=[y0,y1])
-    sta_without_iv = meteva.base.sele.not_IV(sta)
-    data_names = meteva.base.get_stadata_names(sta_without_iv)
-    sta_without_iv = sta_without_iv.sort_values(by=data_names[-1], ascending=True)
-
-    vmax_v = np.max(sta_without_iv.iloc[:,-1].values)
-    vmin_v = np.min(sta_without_iv.iloc[:,-1].values)
-    clevs1 = None
-    cmap1 = None
-    if cmap is not None:
-        cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap, clevs=clevs, vmin=vmin_v, vmax=vmax_v)
     fig = plt.gcf()
-    fmt_tag = "%." + str(tag) + "f"
-
-    if cmap1 is None:
-        nsta = len(sta_without_iv.index)
+    if isinstance(sta.iloc[0,-1],str):
+        nsta = len(sta.index)
         for i in range(nsta):
-            x = sta_without_iv.iloc[i,4]
-            y = sta_without_iv.iloc[i,5]
-            v = sta_without_iv.iloc[i,-1]
-            if isinstance(v,str):
-                ax.text(x, y, v, ha="center", va="center", fontsize=font_size, color=color, clip_on=True,alpha = alpha, zorder=1000)
-            else:
-                ax.text(x, y, fmt_tag % v, ha="center", va="center",fontsize=font_size,color = color, clip_on=True,alpha = alpha, zorder=1000)
+            x = sta.iloc[i, 4]
+            y = sta.iloc[i, 5]
+            v = sta.iloc[i, -1]
+            ax.text(x, y, v, ha="center", va="center", fontsize=font_size, color=color, clip_on=True, alpha=alpha,
+                        zorder=1000)
+
     else:
-        x = sta_without_iv.iloc[:, 4].values
-        y = sta_without_iv.iloc[:, 5].values
-        v = sta_without_iv.iloc[:, -1].values
-        for k in range(len(clevs1)-1):
-            index = np.where((v>=clevs1[k])&(v<clevs1[k+1]))
-            if len(index[0])>0:
-                x1 = x[index]
-                y1 = y[index]
-                v1 = v[index]
-                color = cmap1(k)
-                for j in range(x1.size):
-                    if isinstance(v1[j],str):
-                        ax.text(x1[j], y1[j], v1[j], ha="center", va="center", fontsize=font_size, c=color, clip_on=True,alpha = alpha, zorder=1000)
-                    else:
-                        ax.text(x1[j], y1[j], fmt_tag % v1[j], ha="center", va="center", fontsize=font_size,  c=color, clip_on=True,alpha = alpha, zorder=1000)
+
+        sta_without_iv = meteva.base.sele.not_IV(sta)
+        data_names = meteva.base.get_stadata_names(sta_without_iv)
+        sta_without_iv = sta_without_iv.sort_values(by=data_names[-1], ascending=True)
+
+        vmax_v = np.max(sta_without_iv.iloc[:,-1].values)
+        vmin_v = np.min(sta_without_iv.iloc[:,-1].values)
+        clevs1 = None
+        cmap1 = None
+        if cmap is not None:
+            cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap, clevs=clevs, vmin=vmin_v, vmax=vmax_v)
+
+        fmt_tag = "%." + str(tag) + "f"
+
+        if cmap1 is None:
+            nsta = len(sta_without_iv.index)
+            for i in range(nsta):
+                x = sta_without_iv.iloc[i,4]
+                y = sta_without_iv.iloc[i,5]
+                v = sta_without_iv.iloc[i,-1]
+                ax.text(x, y, fmt_tag % v, ha="center", va="center",fontsize=font_size,color = color, clip_on=True,alpha = alpha, zorder=1000)
+
+        else:
+            x = sta_without_iv.iloc[:, 4].values
+            y = sta_without_iv.iloc[:, 5].values
+            v = sta_without_iv.iloc[:, -1].values
+            for k in range(len(clevs1)-1):
+                index = np.where((v>=clevs1[k])&(v<clevs1[k+1]))
+                if len(index[0])>0:
+                    x1 = x[index]
+                    y1 = y[index]
+                    v1 = v[index]
+                    color = cmap1(k)
+                    for j in range(x1.size):
+                        if isinstance(v1[j],str):
+                            ax.text(x1[j], y1[j], v1[j], ha="center", va="center", fontsize=font_size, c=color, clip_on=True,alpha = alpha, zorder=1000)
+                        else:
+                            ax.text(x1[j], y1[j], fmt_tag % v1[j], ha="center", va="center", fontsize=font_size,  c=color, clip_on=True,alpha = alpha, zorder=1000)
 
     ax.set_title(title,fontsize =title_fontsize)
     return
@@ -933,7 +944,7 @@ def add_solid_lines(ax,graphy,color = "r",linewidth = None,title = None,title_fo
     for line in line_list:
         point = np.array(line)
         if point.size>2:
-            ax.plot(point[:, 0], point[:, 1],color, linewidth=linewidth)
+            ax.plot(point[:, 0], point[:, 1],color = color, linewidth=linewidth)
 
     ax.set_xlim(slon,elon)
     ax.set_ylim(slat,elat)
@@ -1031,7 +1042,8 @@ def add_curved_arrows(ax,graphy,color = "red",linewidth = None,head_width = 1,he
                 if dis > 0.3:
                     break
 
-            ax.arrow(point[ns-1,0],point[ns-1,1],dx*0.01,dy*0.01,head_width=head_width,head_length = head_length,fc = color,ec = color)
+            ax.arrow(point[ns-1,0],point[ns-1,1],dx*0.01,dy*0.01,head_width=head_width,head_length = head_length,
+                     fc = color,ec = color)
             ax.plot(point[:ns, 0], point[:ns, 1], color, linewidth=linewidth)
 
     ax.set_xlim(slon,elon)

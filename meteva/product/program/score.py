@@ -7,7 +7,7 @@ import numpy as np
 
 def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = None,plot = None,
           vmax = None,vmin = None,bar_width = None,save_path = None,show = False,dpi = 300,title = "",
-          excel_path = None,drop_g_column = False,spasify_xticks = None,keep_ob_IV = False,**kwargs):
+          excel_path = None,drop_g_column = False,spasify_xticks = None,keep_ob_IV = False,return_axs = False,**kwargs):
 
 
     if s is not None:
@@ -251,6 +251,7 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
             result_list.append(result1)
         result = np.array(result_list)
 
+    axs = None
     if plot is not None or excel_path is not None:
 
         name_list_dict = {}
@@ -327,15 +328,19 @@ def score(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = 
 
         if plot is not None:
             if plot =="bar":
-                meteva.base.plot_tools.bar(result_plot,name_list_dict,legend=legend,axis = axis,vmin =vmin,vmax = vmax,bar_width=bar_width,save_path=save_path,show=show,dpi =dpi,title = title,spasify_xticks=spasify_xticks,**plot_args)
+                axs = meteva.base.plot_tools.bar(result_plot,name_list_dict,legend=legend,axis = axis,vmin =vmin,vmax = vmax,bar_width=bar_width,save_path=save_path,show=show,dpi =dpi,title = title,spasify_xticks=spasify_xticks,**plot_args)
             else:
-                meteva.base.plot_tools.plot(result_plot,name_list_dict,legend=legend,axis = axis,vmin =vmin,vmax = vmax,save_path=save_path,show=show,dpi = dpi,title= title,spasify_xticks=spasify_xticks,**plot_args)
+                axs = meteva.base.plot_tools.plot(result_plot,name_list_dict,legend=legend,axis = axis,vmin =vmin,vmax = vmax,save_path=save_path,show=show,dpi = dpi,title= title,spasify_xticks=spasify_xticks,**plot_args)
         if excel_path is not None:
             meteva.base.write_array_to_excel(result_plot,excel_path,name_list_dict,index= axis,columns=legend)
 
     if result.size != 1:
         result = result.squeeze()
-    return result,group_list_list1
+
+    if return_axs:
+        return result, group_list_list1,axs
+    else:
+        return result,group_list_list1
 
 
 
@@ -919,7 +924,6 @@ def score_tdt(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_lis
     return result_all, gll1
 
 
-def score_obhour_dtime(sta_ob_and_fos0,method,s = None,g = None,gll = None,group_name_list = None,
-              x_y = "obtime_time",annot = 0,save_dir = None,save_path = None,show = False,
-        dpi = 300,title = None,**kwargs):
-    pass
+
+
+

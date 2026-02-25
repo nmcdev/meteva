@@ -301,8 +301,8 @@ def speed_angle_to_wind(speed,angle = None):
         #angle = sta["angle"].values.astype(np.float32)
         speed = sta["speed"].values.astype(np.float32)
         angle = sta["angle"].values.astype(np.float32)
-        u = -speed * np.sin(angle  * 3.14 / 180)
-        v = -speed * np.cos(angle * 3.14 / 180)
+        u = -speed * np.sin(angle  * math.pi / 180)
+        v = -speed * np.cos(angle *  math.pi / 180)
         sta["u"] = u
         sta["v"] = v
         sta = sta.drop(["speed", "angle"], axis=1)
@@ -318,8 +318,10 @@ def speed_angle_to_wind(speed,angle = None):
                                                   dtime_list=grid0.dtimes,level_list=grid0.levels,member_list=["u","v"])
         wind = meteva.base.grid_data(grid1)
         wind.name = "wind"
-        wind.values[0, :, :, :, :, :] = speed_v[:, :] * np.cos(angle_v[:, :] * math.pi /180)
-        wind.values[1, :, :, :, :, :] = speed_v[:, :] * np.sin(angle_v[:, :] * math.pi /180)
+        #wind.values[0, :, :, :, :, :] = speed_v[:, :] * np.cos(angle_v[:, :] * math.pi /180)
+        #wind.values[1, :, :, :, :, :] = speed_v[:, :] * np.sin(angle_v[:, :] * math.pi /180)
+        wind.values[0, :, :, :, :, :] = -speed_v[:, :] * np.sin(angle_v[:, :] * math.pi /180)
+        wind.values[1, :, :, :, :, :] = -speed_v[:, :] * np.cos(angle_v[:, :] * math.pi /180)
         return wind
 
 def t_dtp_to_rh(temp,dtp):
@@ -355,7 +357,7 @@ def t_dtp_to_rh(temp,dtp):
         e0 = 6.11 * np.exp(17.15 * T/(235 + T))
         e1 = 6.11 * np.exp(17.15 * D / (235 + D))
 
-        rh = e1/e0
+        rh = 100 * e1/e0
         grd = meteva.base.grid_data(grid0,rh)
 
         return grd
@@ -386,7 +388,7 @@ def t_rh_p_to_q(temp,rh,pressure,rh_unit = "%",check = False):
         e0 = 6.11 * np.exp(5420 * (1.0 / 273.15 - 1 / (T + 273.15))) * 622
 
         if rh_unit == "%":
-            R = R.astype(np.float)
+            R = R.astype(np.float64)
             R = R/100
         else:
             pass
@@ -530,3 +532,158 @@ def t_q_to_rh_on_isobar(temp,q,unit = "%"):
         if unit=="%":
             rh.values *= 100
     return rh
+
+
+def t_to_theta_on_isobar(temp,unit_p = "hPa"):
+    '''
+    根据温度、比湿,以及温度场的气压坐标值计算相对湿度
+    :param temp:
+    :param q:
+    :return:
+    '''
+
+
+    if isinstance(temp, pd.DataFrame):
+        pressure = copy.deepcopy(temp)
+        if unit_p.lower()=="hpa":
+            pressure.iloc[:, -1] =100 * temp["level"].values[:]
+        else:
+            pressure.iloc[:, -1] = temp["level"].values[:]
+
+        theta = copy.deepcopy(temp)
+
+        theta.iloc[:,-1] = temp.iloc[:,-1] * np.power(100000/pressure.iloc[:,-1],287/1005)
+
+    else:
+
+        pressure = copy.deepcopy(temp)
+        levels = pressure["level"].values
+        for i in range(levels.size):
+            if unit_p.lower() == "hpa":
+                pressure.values[:, i, :, :, :, :] = levels[i]*100
+            else:
+                pressure.values[:,i,:,:,:,:] = levels[i]
+        theta = copy.deepcopy(temp)
+        theta.values = temp.values * np.power(100000/pressure.values,287/1005)
+
+    return theta
+
+
+def gradient(grd):
+    lats = grd["lat"].values
+    lons = grd["lon"].values
+    xx, yy = np.meshgrid(lons, lats)
+    dx = np.cos(yy * math.pi / 180)
+    gx = np.zeros(grd.values.shape)
+    gx[:, :, :, :, :, 1:-1] = (grd.values[:, :, :, :, :, 2:] - grd.values[:, :, :, :, :, :-2]) / 2
+    gx[:, :, :, :, :, 0] = grd.values[:, :, :, :, :, 1] - grd.values[:, :, :, :, :, 0]
+    gx[:, :, :, :, :, -1] = grd.values[:, :, :, :, :, -1] - grd.values[:, :, :, :, :, -2]
+    gx /= (dx * meteva.base.dis_1_degree * 1000)
+
+    gy = np.zeros(grd.values.shape)
+    gy[:, :, :, :, 1:-1, :] = (grd.values[:, :, :, :, 2:, :] - grd.values[:, :, :, :, :-2, :]) / 2
+    gy[:, :, :, :, 0, :] = grd.values[:, :, :, :, 1, :] - grd.values[:, :, :, :, 0, :]
+    gy[:, :, :, :, -1, :] = grd.values[:, :, :, :, -1, :] - grd.values[:, :, :, :, -2, :]
+    gy /= (meteva.base.dis_1_degree * 1000)
+
+    grid0 = meteva.base.get_grid_of_data(grd)
+    gx_ = meteva.base.grid_data(grid0,gx)
+    gy_ = meteva.base.grid_data(grid0,gy)
+    grad = meteva.base.u_v_to_wind(gx_,gy_)
+
+    return grad
+
+
+def uv_to_div(u, v):
+    lats = u["lat"].values
+    lons = u["lon"].values
+    xx, yy = np.meshgrid(lons, lats)
+    dx = np.cos(yy * math.pi / 180)
+    grid0 = meteva.base.get_grid_of_data(u)
+    if(grid0.dlon * grid0.nlon>= 360):
+        gx = np.zeros(u.values.shape)
+        gx[:, :, :, :, :, 1:-1] = (u.values[:, :, :, :, :, 2:] - u.values[:, :, :, :, :, :-2]) / 2
+        gx[:, :, :, :, :, 0] = (u.values[:, :, :, :, :, 1] - u.values[:, :, :, :, :, -1])/2
+        gx[:, :, :, :, :, -1] = (u.values[:, :, :, :, :, 0] - u.values[:, :, :, :, :, -2])/2
+        gx /= (grid0.dlon * dx * meteva.base.dis_1_degree * 1000)
+    else:
+        gx = np.zeros(u.values.shape)
+        gx[:, :, :, :, :, 1:-1] = (u.values[:, :, :, :, :, 2:] - u.values[:, :, :, :, :, :-2]) / 2
+        gx[:, :, :, :, :, 0] = u.values[:, :, :, :, :, 1] - u.values[:, :, :, :, :, 0]
+        gx[:, :, :, :, :, -1] = u.values[:, :, :, :, :, -1] - u.values[:, :, :, :, :, -2]
+        gx /= (grid0.dlon * dx * meteva.base.dis_1_degree * 1000)
+
+    gy = np.zeros(v.values.shape)
+    gy[:, :, :, :, 1:-1, :] = (v.values[:, :, :, :, 2:, :] - v.values[:, :, :, :, :-2, :]) / 2
+    gy[:, :, :, :, 0, :] = v.values[:, :, :, :, 1, :] - v.values[:, :, :, :, 0, :]
+    gy[:, :, :, :, -1, :] = v.values[:, :, :, :, -1, :] - v.values[:, :, :, :, -2, :]
+    gy /= (grid0.dlat * meteva.base.dis_1_degree * 1000)
+
+    div = gx + gy
+
+    div_grd = meteva.base.grid_data(grid0, div)
+
+    return div_grd
+
+
+def uv_to_vor(u, v):
+    lats = u["lat"].values
+    lons = u["lon"].values
+    xx, yy = np.meshgrid(lons, lats)
+    dx = np.cos(yy * math.pi / 180)
+    grid0 = meteva.base.get_grid_of_data(u)
+    if (grid0.dlon * grid0.nlon >= 360):
+        gx = np.zeros(u.values.shape)
+        gx[:, :, :, :, :, 1:-1] = (v.values[:, :, :, :, :, 2:] - v.values[:, :, :, :, :, :-2]) / 2
+        gx[:, :, :, :, :, 0] = (v.values[:, :, :, :, :, 1] - v.values[:, :, :, :, :, -1]) / 2
+        gx[:, :, :, :, :, -1] = (v.values[:, :, :, :, :, 0] - v.values[:, :, :, :, :, -2]) / 2
+        gx /= (grid0.dlon * dx * meteva.base.dis_1_degree * 1000)
+    else:
+        gx = np.zeros(u.values.shape)
+        gx[:, :, :, :, :, 1:-1] = (v.values[:, :, :, :, :, 2:] - v.values[:, :, :, :, :, :-2]) / 2
+        gx[:, :, :, :, :, 0] = v.values[:, :, :, :, :, 1] - v.values[:, :, :, :, :, 0]
+        gx[:, :, :, :, :, -1] = v.values[:, :, :, :, :, -1] - v.values[:, :, :, :, :, -2]
+        gx /= (grid0.dlon * dx * meteva.base.dis_1_degree * 1000)
+
+    gy = np.zeros(v.values.shape)
+    gy[:, :, :, :, 1:-1, :] = (u.values[:, :, :, :, 2:, :] - u.values[:, :, :, :, :-2, :]) / 2
+    gy[:, :, :, :, 0, :] = u.values[:, :, :, :, 1, :] - u.values[:, :, :, :, 0, :]
+    gy[:, :, :, :, -1, :] = u.values[:, :, :, :, -1, :] - u.values[:, :, :, :, -2, :]
+    gy /= (grid0.dlat * meteva.base.dis_1_degree * 1000)
+
+    vor = gx  - gy
+    vor_grd = meteva.base.grid_data(grid0, vor)
+    return vor_grd
+
+
+
+def t_to_ro(t,unit_p = "Pa"):
+    '''
+    根据输入的等压面网格温度数据，计算相对湿度
+    输入数据t是grid_data 格式，其中的level 是气压,默认单位是pa，如果它的单位是hPa，需设置 unit_p = "hPa"
+    '''
+    p = t["level"].values.reshape(1,-1,1,1,1,1)
+    if unit_p == "hPa":
+        p = p *100
+    ro = p * 28.97 / (8.314 * t.values * 1000)
+    grid0 = meteva.base.get_grid_of_data(t)
+    ro_grd = meteva.base.grid_data(grid0, ro)
+    return ro_grd
+
+
+def uvtq_to_mfd(u, v, t, q,unit_p = "Pa"):
+    '''
+    根据风、温、湿计算水汽通量散度
+    输入数据t是grid_data 格式，其中的level 是气压,默认单位是pa，如果它的单位是hPa，需设置 unit_p = "hPa"
+    '''
+    ro = t_to_ro(t,unit_p = unit_p)
+    uqro = u.copy()
+    uqro.values *= (q.values * ro.values)
+    vqro = v.copy()
+    vqro.values *= (q.values * ro.values)
+
+    div = uv_to_div(uqro, vqro)
+    div.values *= 1000000
+    return div
+
+

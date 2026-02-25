@@ -9,13 +9,14 @@ import numpy as np
 import pandas as pd
 
 import matplotlib.pyplot as plt
-from sklearn.preprocessing import Binarizer
+
 from scipy.spatial import cKDTree
 from meteva.method.space.mode.deltametric import cv2_distanceTransform
-
+from sklearn.preprocessing import Binarizer
 
 
 def Gbeta_score(ob, fo, threshold, beta = None, alpha = 0):
+
     out = {}
   
     binarizer=Binarizer(threshold=threshold)

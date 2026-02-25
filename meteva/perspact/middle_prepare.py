@@ -28,6 +28,7 @@ method_coluns_dict = {
     "fss":["pob","pfo","fbs"],
     "tems":["T","E","MX","SX"],
     "cscs":["CX","SX","CY","SY"],
+    "mxie":["MXE","MIE"],
     "hnh": np.arange(20).tolist()
 
 }
@@ -63,6 +64,7 @@ def get_score_method_with_mid(method):
     tems_list = [meteva.method.bs,meteva.method.bss]
     hnh_list = [meteva.method.roc_auc]
     cscs_list = [meteva.method.ob_fo_precipitation_strength]
+    mxie_list = [meteva.method.max_error,meteva.method.min_error]
 
     method_mid = []
     method_name = method.__name__
@@ -109,6 +111,8 @@ def get_score_method_with_mid(method):
         method_mid.append(getattr(meteva.method, method_name + "_cscs"))
     if method in tasem_list:
         method_mid.append(getattr(meteva.method,method_name+"_tasem"))
+    if method in mxie_list:
+        method_mid.append(getattr(meteva.method, method_name + "_mxie"))
     #print(method_mid)
     return method_mid
 
@@ -142,6 +146,8 @@ def get_middle_method(method):
     tems_list = [meteva.method.bs, meteva.method.bss]
     hnh_list = [meteva.method.roc_auc]
     cscs_list = [meteva.method.ob_fo_precipitation_strength]
+    mxie_list = [meteva.method.max_error,meteva.method.min_error]
+
     method_mid = []
 
     if method in hfmc_of_sum_rain_list:
@@ -182,6 +188,9 @@ def get_middle_method(method):
         method_mid.append(meteva.method.cscs)
     if method in tasem_list:
         method_mid.append(meteva.method.tasem)
+    if method in mxie_list:
+        method_mid.append(meteva.method.mxie)
+
     return method_mid
 
 def get_middle_columns(method):
@@ -454,8 +463,10 @@ def middle_df_grd(grd_ob, grd_fo, method, grade_list=None, compare=None, marker=
 
         ob = grd_ob.values
         fo = grd_fo.values
-
-        if method.__name__.find("_uv")>=0:
+        if method.__name__ in ["tase", "tmmsss","tasem"]:
+            mid_array = method(ob, fo, grd_weight.values)
+            #mid_array = method(ob, fo)
+        elif method.__name__.find("_uv")>=0:
             mid_array = method(ob[0,...],fo[0,...], ob[1,...],fo[1,...], **method_args)
         else:
             mid_array = method(ob, fo, **method_args)
@@ -609,45 +620,34 @@ def get_grid_marker(grid,step = 10):
     return marker
 
 if __name__ =="__main__":
-    pass
-    # import pandas as pd
-    # path = r"O:\data\hdf\gongbao\rain24h_update12h_station2k\rain24h_update12h_station2k.h5"
-    #
-    # # #path = r"H:/a.h5"
-    # sta_all = pd.read_hdf(path)
-    # sta_all = meteva.base.sele_by_para(sta_all, time_range=["2023123108", "2024010208"], dtime_range=[24, 72])
-    # print(sta_all)
-    # import meteva.product as mpd
-    # import meteva.method as mem
-    # result = mpd.score(sta_all,mem.ob_fo_precipitation_strength,g = "dtime",plot = "bar",tag = 3,save_path = r"H:\task\a.png")
-    # print(result)
-    # dfmid = meteva.perspact.middle_df_sta(sta_all,mem.cscs)
-    # print(dfmid)
-    # result = meteva.perspact.score_df(dfmid,mem.ob_fo_precipitation_strength,g = ["member","dtime"],plot = "bar",tag = 3,save_path = r"H:\task\b.png")
-    # print(result)
-    # print()
+    import meteva.base as meb
+    import meteva.method as mem
+    path_ec = r"H:\test_data\input\mem\acc\ECMWF\z500\22050108.012.nc"
+    grd_ec = meb.read_griddata_from_nc(path_ec)  # 读取预报场数据
+    path_ec0 = r"H:\test_data\input\mem\acc\ECMWF\z500\22050120.000.nc"
+    grd_ec0 = meb.read_griddata_from_nc(path_ec0)  # 读取实况场数据，以模式的零场来代表实况
+    result = meteva.method.mae(grd_ec0.values,grd_ec.values)
+    print(result)
+    result = meteva.method.ob_fo_mean(grd_ec0.values,grd_ec.values)
+    print(result)
 
 
-    # sta_all = meteva.base.sele_by_para(sta_all,time_range = ["2023062008","2023062408"],dtime_range = [24,72])
-    #
-    # print(sta_all.iloc[:,6].values)
-    # sta_all1 = sta_all.copy()
-    # sta_all1.iloc[:,6] = 0
-    # sta_all1.iloc[sta_all.iloc[:,6].values >=10 , 6] = 1
-    # sta_all1.iloc[:, 7:] = sta_all.iloc[:, 7:].values /50
-    # values = sta_all1.iloc[:,7:].values
-    # values[values>1] = 1
-    # sta_all1.iloc[:,7:] = values
-    # sta_all1.to_hdf(r"H:\test_data\input\mps\rain24_10m_probability.h5","df")
+    df = middle_df_grd(grd_ec0,grd_ec,mem.tasem)
+    df1 = df.copy()
+    df1["member"] = "ec1"
+    df2 = meb.concat([df,df1])
+    print(df2)
+    result = meteva.perspact.score_df(df2,mem.mae,g = ["member"])
+    print(result)
 
-    #method = get_middle_columns(meteva.method.nasws_uv)
-    #print(method)
+    result = meteva.perspact.score_df(df2,mem.ob_fo_mean,g = ["member"])
+    print(result)
 
-    # sta_all1 = pd.read_hdf(r"H:\test_data\input\mps\rain24_10m_probability.h5")
-    # df = middle_df_sta(sta_all1,meteva.method.hfmc_multi,grade_list=[0.3,0.5])
-    # print(df)
-    # score = meteva.perspact.score_df(df,meteva.method.ts_multi,g = ["member","grade"],plot="line",
-    #                                   save_path=r"H:\test_data\output\mps\ts.png")
-    # print(score)
-    # score = meteva.product.score(sta_all1,meteva.method.ts_multi,grade_list=[0.3,0.5])
-    # print(score)
+    df = middle_df_grd(grd_ec0,grd_ec,mem.tase)
+    df1 = df.copy()
+    df1["member"] = "ec1"
+    df2 = meb.concat([df,df1])
+    print(df2)
+    result = meteva.perspact.score_df(df2,mem.mae,g = ["member"])
+    print(result)
+

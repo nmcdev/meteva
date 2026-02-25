@@ -27,59 +27,59 @@ def write_stadata_to_micaps3(sta0,save_path = "a.txt",creat_dir = False, type = 
             else:
                 meteva.base.tool.path_tools.creat_path(save_path)
 
-        br = open(save_path,'w')
-        end = len(save_path)
-        start = max(0, end-16)
-        nsta =len(sta.index)
-        time = sta['time'].iloc[0]
-        if isinstance(time,np.datetime64) or isinstance(time,datetime.datetime):
-            time_str = meteva.base.tool.time_tools.time_to_str(time)
-            time_str = time_str[0:4] + " " +time_str[4:6] + " " + time_str[6:8] + " " + time_str[8:10] + " "
-        else:
-            time_str = "2099 01 01 0 "
-
-        if np.isnan(sta['level'].iloc[0]):
-            level = 0
-        else:
-            level = int(sta['level'].iloc[0])
-        if type<0 or level == np.NaN or level ==pd.NaT:
-            level = int(type)
-
-        if title is None:
-            str1=("diamond 3 " + save_path[start:end] + "\n"+ time_str + str(level) +" 0 0 0 0\n1 " + str(nsta) + "\n")
-        else:
-            str1 = ("diamond 3 " + title + "\n" + time_str + str(level) + " 0 0 0 0\n1 " + str(
-                nsta) + "\n")
-        br.write(str1)
-        br.close()
-        data_names = meteva.base.basicdata.get_stadata_names(sta)
-        if "alt" not in data_names:
-            data_name = meteva.base.basicdata.get_stadata_names(sta)[0]
-            df = copy.deepcopy(sta[['id','lon','lat',data_name]])
-            df['alt'] = 0
-            df = df.reindex(columns=['id', 'lon', 'lat', 'alt', data_name])
-        else:
-            colums = ['id','lon','lat','alt']
-            for name in data_names:
-                if name != "alt":
-                    colums.append(name)
-                    break
-            df = sta.loc[:,colums]
-            if len(colums) == 4:
-                df["data0"] = 0
-        effectiveNum_str = "%." + '%d'% effectiveNum + "f"
-        # ---by zhyn
-        if title is None:
-            df.to_csv(save_path,mode='a',header=None,sep = "\t",float_format=effectiveNum_str,index = None)
-        else:
-            if title.find("闪电")>=0 or title.find("light")>=0:
-                df.to_csv(save_path, mode='a', header=None, sep="  ", float_format=effectiveNum_str, index=None)
+        with open(save_path, 'w') as br:
+            end = len(save_path)
+            start = max(0, end-16)
+            nsta =len(sta.index)
+            time = sta['time'].iloc[0]
+            if isinstance(time,np.datetime64) or isinstance(time,datetime.datetime):
+                time_str = meteva.base.tool.time_tools.time_to_str(time)
+                time_str = time_str[0:4] + " " +time_str[4:6] + " " + time_str[6:8] + " " + time_str[8:10] + " "
             else:
-                df.to_csv(save_path, mode='a', header=None, sep="\t", float_format=effectiveNum_str, index=None)
-        # ---end by zhyn
-        if show:
-            print('成功输出至' + save_path)
-        return True
+                time_str = "2099 01 01 0 "
+
+            if np.isnan(sta['level'].iloc[0]):
+                level = 0
+            else:
+                level = int(sta['level'].iloc[0])
+            if type<0 or level == np.NaN or level ==pd.NaT:
+                level = int(type)
+
+            if title is None:
+                str1=("diamond 3 " + save_path[start:end] + "\n"+ time_str + str(level) +" 0 0 0 0\n1 " + str(nsta) + "\n")
+            else:
+                str1 = ("diamond 3 " + title + "\n" + time_str + str(level) + " 0 0 0 0\n1 " + str(
+                    nsta) + "\n")
+            br.write(str1)
+            #br.close()
+            data_names = meteva.base.basicdata.get_stadata_names(sta)
+            if "alt" not in data_names:
+                data_name = meteva.base.basicdata.get_stadata_names(sta)[0]
+                df = copy.deepcopy(sta[['id','lon','lat',data_name]])
+                df['alt'] = 0
+                df = df.reindex(columns=['id', 'lon', 'lat', 'alt', data_name])
+            else:
+                colums = ['id','lon','lat','alt']
+                for name in data_names:
+                    if name != "alt":
+                        colums.append(name)
+                        break
+                df = sta.loc[:,colums]
+                if len(colums) == 4:
+                    df["data0"] = 0
+            effectiveNum_str = "%." + '%d'% effectiveNum + "f"
+            # ---by zhyn
+            if title is None:
+                df.to_csv(save_path,mode='a',header=None,sep = "\t",float_format=effectiveNum_str,index = None)
+            else:
+                if title.find("闪电")>=0 or title.find("light")>=0:
+                    df.to_csv(br, mode='a', header=None, sep="  ", float_format=effectiveNum_str, index=None)
+                else:
+                    df.to_csv(br, mode='a', header=None, sep="\t", float_format=effectiveNum_str, index=None)
+            # ---end by zhyn
+            if show:
+                print('成功输出至' + save_path)
+            return True
     except:
         exstr = traceback.format_exc()
         print(exstr)
@@ -283,46 +283,46 @@ def write_stadata_to_micaps2(sta_speed,sta_angle,save_path = "a.txt",creat_dir =
             else:
                 meteva.base.tool.path_tools.creat_path(save_path)
 
-        br = open(save_path,'w')
-        end = len(save_path)
-        start = max(0, end-16)
-        sta = meteva.base.combine_on_all_coords(sta_angle,sta_speed)
-        nsta =len(sta.index)
-        time = sta['time'].iloc[0]
-        if isinstance(time,np.datetime64) or isinstance(time,datetime.datetime):
-            time_str = meteva.base.tool.time_tools.time_to_str(time)
-            time_str = time_str[0:4] + " " +time_str[4:6] + " " + time_str[6:8] + " " + time_str[8:10] + " "
-        else:
-            time_str = "2099 01 01 0 "
+        with open(save_path, 'w') as br:
+            end = len(save_path)
+            start = max(0, end-16)
+            sta = meteva.base.combine_on_all_coords(sta_angle,sta_speed)
+            nsta =len(sta.index)
+            time = sta['time'].iloc[0]
+            if isinstance(time,np.datetime64) or isinstance(time,datetime.datetime):
+                time_str = meteva.base.tool.time_tools.time_to_str(time)
+                time_str = time_str[0:4] + " " +time_str[4:6] + " " + time_str[6:8] + " " + time_str[8:10] + " "
+            else:
+                time_str = "2099 01 01 0 "
 
-        if np.isnan(sta['level'].iloc[0]):
-            level = 0
-        else:
-            level = int(sta['level'].iloc[0])
-        if type<0 or level == np.NaN or level ==pd.NaT:
-            level = int(type)
+            if np.isnan(sta['level'].iloc[0]):
+                level = 0
+            else:
+                level = int(sta['level'].iloc[0])
+            if type<0 or level == np.NaN or level ==pd.NaT:
+                level = int(type)
 
-        if title is None:
-            str1=("diamond 2 " + save_path[start:end] + "\n"+ time_str + str(level) +" " + str(nsta) + "\n")
-        else:
-            str1 = ("diamond 2 " + title + "\n" + time_str + str(level) +" "  + str(nsta) + "\n")
-        br.write(str1)
-        br.close()
+            if title is None:
+                str1=("diamond 2 " + save_path[start:end] + "\n"+ time_str + str(level) +" " + str(nsta) + "\n")
+            else:
+                str1 = ("diamond 2 " + title + "\n" + time_str + str(level) +" "  + str(nsta) + "\n")
+            br.write(str1)
+            #br.close()
 
-        df = copy.deepcopy(sta[['id','lon','lat']])
-        df['alt'] = 0
-        df["d0"] = 1
-        df["d1"] = 9999
-        df["d2"] = 9999
-        df["d3"] = 9999
-        df["angle"] = sta.iloc[:,6]
-        df["speed"] = sta.iloc[:, 7]
+            df = copy.deepcopy(sta[['id','lon','lat']])
+            df['alt'] = 0
+            df["d0"] = 1
+            df["d1"] = 9999
+            df["d2"] = 9999
+            df["d3"] = 9999
+            df["angle"] = sta.iloc[:,6]
+            df["speed"] = sta.iloc[:, 7]
 
-        effectiveNum_str = "%." + '%d'% effectiveNum + "f"
-        df.to_csv(save_path,mode='a',header=None,sep = "\t",float_format=effectiveNum_str,index = None)
-        if show:
-            print('成功输出至' + save_path)
-        return True
+            effectiveNum_str = "%." + '%d'% effectiveNum + "f"
+            df.to_csv(br,mode='a',header=None,sep = "\t",float_format=effectiveNum_str,index = None)
+            if show:
+                print('成功输出至' + save_path)
+            return True
     except:
         exstr = traceback.format_exc()
         print(exstr)

@@ -3,7 +3,7 @@ import numpy as np
 import copy
 
 
-def accumulation_strength_table(ob,fo, member_list = None,save_path=None):
+def accumulation_strength_table(ob,fo, grade_list = None,member_list = None,save_path=None):
     '''
 
     :param ob:
@@ -41,7 +41,8 @@ def accumulation_strength_table(ob,fo, member_list = None,save_path=None):
     max_ob = np.max(ob)
     max_fo = np.max(fo)
     max_value = max(max_ob,max_fo)+2
-    grade_list = np.arange(1,max_value,1).tolist()
+    if grade_list is None:
+        grade_list = np.arange(1,max_value,1).tolist()
 
     index_list = ["(0," + str(grade_list[0])+")"]
     for index in range(len(grade_list) - 1):
@@ -73,11 +74,11 @@ def accumulation_strength_table(ob,fo, member_list = None,save_path=None):
         print("累计降水量随强度变化表已以excel表格形式保存至" + save_path)
     return conf_mx
 
-def accumulation_strenght_table(ob,fo, member_list = None,save_path=None):
-   return accumulation_strength_table(ob,fo,member_list=member_list,save_path=save_path)
+def accumulation_strenght_table(ob,fo,grade_list = None, member_list = None,save_path=None):
+   return accumulation_strength_table(ob,fo,grade_list=grade_list,member_list=member_list,save_path=save_path)
 
 
-def frequency_strength_table(ob,fo, member_list = None,save_path=None):
+def frequency_strength_table(ob,fo,grade_list = None, member_list = None,save_path=None):
     '''
 
     :param ob:
@@ -116,7 +117,8 @@ def frequency_strength_table(ob,fo, member_list = None,save_path=None):
     max_ob = np.max(ob)
     max_fo = np.max(fo)
     max_value = max(max_ob,max_fo)+2
-    grade_list = np.arange(1,max_value,1).tolist()
+    if grade_list is None:
+        grade_list = np.arange(1,max_value,1).tolist()
 
     index_list = ["(0," + str(grade_list[0])+")"]
     for index in range(len(grade_list) - 1):
@@ -148,5 +150,5 @@ def frequency_strength_table(ob,fo, member_list = None,save_path=None):
         print("降水频次随强度变化表已以excel表格形式保存至" + save_path)
     return conf_mx
 
-def frequency_strenght_table(ob,fo, member_list = None,save_path=None):
-    return frequency_strength_table(ob,fo,member_list=member_list,save_path = save_path)
+def frequency_strenght_table(ob,fo, grade_list = None,member_list = None,save_path=None):
+    return frequency_strength_table(ob,fo,grade_list = grade_list,member_list=member_list,save_path = save_path)

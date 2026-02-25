@@ -231,10 +231,12 @@ def merge_dv_statistic(cmv_array1,cmv_array2):
     :param cmv_array2:
     :return:
     '''
+
+
     count_array,mean_array,var_array = meteva.base.math_tools.ss_iteration(cmv_array1[0,...],cmv_array1[1,...],cmv_array1[2,...],
                                                                            cmv_array2[0,...],cmv_array2[1,...],cmv_array2[2,...])
 
-    cmv_array = np.vstack((count_array,mean_array,var_array))
+    cmv_array = np.array([count_array,mean_array,var_array])
     return cmv_array
 
 
@@ -341,11 +343,13 @@ def vgm_sta(sta,dmax,grade_count = 10,q = 1,xlabel = "距离（km）",ylabel = "
 
     dv_array = dv(sta_list[0],dmax = dmax,q = q)
     cmv_array,dmax  = dv_statistic(dv_array,dmax = dmax,grade_count=grade_count)
-    n_sta = len(sta_list)
-    if n_sta >1:
-        dv_array1 = dv(sta_list[0], dmax=dmax, q=q)
+    n_field = len(sta_list)
+    for i in range(1,n_field):
+        #print(i)
+        dv_array1 = dv(sta_list[i], dmax=dmax, q=q)
         cmv_array1, _ = dv_statistic(dv_array1, dmax=dmax, grade_count=grade_count)
         cmv_array= merge_dv_statistic(cmv_array,cmv_array1)
+
 
     plot_dv_statistic(cmv_array,dmax,member_list=data_names,width=width,height=height,
                       xlabel = xlabel,ylabel = ylabel,
@@ -376,9 +380,9 @@ def vgm_sta_box(sta,dmax,grade_count = 10,q = 1,xlabel = "距离（km）",ylabel
     sta_list = meteva.base.split(sta)
     dv_array = dv(sta_list[0],dmax = dmax,q = q)
 
-    n_sta = len(sta_list)
-    if n_sta >1:
-        dv_array1 = dv(sta_list[0], dmax=dmax, q=q)
+    n_field = len(sta_list)
+    for i in range(1,n_field):
+        dv_array1 = dv(sta_list[i], dmax=dmax, q=q)
         dv_array = dv_merge(dv_array,dv_array1)
     plot_dv(dv_array,dmax,grade_count,member_list=data_names,width=width,height=height,
                       xlabel = xlabel,ylabel1 = ylabel1,ylabel2= ylabel2,title = title,
@@ -389,8 +393,13 @@ def vgm_sta_box(sta,dmax,grade_count = 10,q = 1,xlabel = "距离（km）",ylabel
 
 
 
+if __name__=="__main__":
 
-
+    import pandas as pd
+    import meteva.base as meb
+    sta_all = pd.read_hdf(r"C:\Users\admin\Documents\WeChat Files\wxid_54saim7nonz321\FileStorage\File\2024-12\20240401-20240801_01.h5")
+    #sta_all = meb.sele_by_para(sta_all,time = "2024111708",dtime = [24,48])
+    cmv = vgm_sta(sta_all,500,grade_count = 10,save_path=r"H:\a.png",width=10)
 
 
 

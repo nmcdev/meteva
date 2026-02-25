@@ -6,12 +6,13 @@ from meteva.base.tool.plot_tools import add_china_map_2basemap
 #from sklearn.linear_model import LinearRegression
 from meteva.base import IV
 import math
+import matplotlib.colors
 from matplotlib.colors import BoundaryNorm
 from matplotlib.patches import Polygon
 import os
 import datetime
 import scipy.stats as st
-
+import matplotlib.patheffects as path_effects
 
 def rain_24h_sg(sta_ob,grd_fo,save_path=None,show  = False,dpi = 200,add_county_line = False,sup_fontsize = 10,point_size = None):
     grade_list = [0.1, 10, 25, 50, 100, 250, 1000]
@@ -810,7 +811,7 @@ def rain_comprehensive_sg(sta_ob,grd_fo,grade_list, save_path=None,show = False,
     text += "Mean-squared error:" + "%6.2f" % mse + "\n"
     text += "Root mean-squared error:" + "%6.2f" % rmse + "\n"
     text += "Bias:" + "%6.2f" % bias_c + "\n"
-    text += "Correlation ceoefficient:" + "%6.2f" % cor + "\n"
+    text += "Correlation coefficient:" + "%6.2f" % cor + "\n"
     text += "晴雨准确率:" + "%6.2f" % pc_sun_rain + "\n\n"
 
     clevs_name = ["0"]
@@ -1150,7 +1151,7 @@ def rain_comprehensive_chinaland_sg(sta_ob,grd_fo,grade_list, save_path=None,sho
     text += "Mean-squared error:" + "%6.2f" % mse + "\n"
     text += "Root mean-squared error:" + "%6.2f" % rmse + "\n"
     text += "Bias:" + "%6.2f" % bias_c + "\n"
-    text += "Correlation ceoefficient:" + "%6.2f" % cor + "\n"
+    text += "Correlation coefficient:" + "%6.2f" % cor + "\n"
     text += "晴雨准确率:" + "%6.2f" % pc_sun_rain + "\n\n"
 
 
@@ -1591,7 +1592,7 @@ def rain_comprehensive_sl(sta_ob,m14,map_extend,grade_list,save_path=None,show =
     text += "Mean-squared error:" + "%6.2f" % mse + "\n"
     text += "Root mean-squared error:" + "%6.2f" % rmse + "\n"
     text += "Bias:" + "%6.2f" % bias_c + "\n"
-    text += "Correlation ceoefficient:" + "%6.2f" % cor + "\n"
+    text += "Correlation coefficient:" + "%6.2f" % cor + "\n"
     text += "晴雨准确率:" + "%6.2f" % pc_sun_rain + "\n\n"
 
     clevs_name = ["0"]
@@ -1998,7 +1999,7 @@ def rain_comprehensive_chinaland_sl(sta_ob,m14,grade_list, save_path=None,show =
     text += "Mean-squared error:" + "%6.2f" % mse + "\n"
     text += "Root mean-squared error:" + "%6.2f" % rmse + "\n"
     text += "Bias:" + "%6.2f" % bias_c + "\n"
-    text += "Correlation ceoefficient:" + "%6.2f" % cor + "\n"
+    text += "Correlation coefficient:" + "%6.2f" % cor + "\n"
     text += "晴雨准确率:" + "%6.2f" % pc_sun_rain + "\n\n"
 
 
@@ -2443,7 +2444,7 @@ def temper_comprehensive_gg(grd_ob,grd_fo,save_path = None,show = False,dpi = 20
     text += "Mean-squared error:" + "%6.2f" % msee + "\n\n"
     text += "Root mean-squared error:" + "%6.2f" % rmsee + "\n\n"
     text += "Bias:" + "%6.2f" % bias_ce + "\n\n"
-    text += "Correlation ceoefficient:" + "%6.2f" % cor + "\n"
+    text += "Correlation coefficient:" + "%6.2f" % cor + "\n"
     plt.text(0, 0, text, fontsize=9)
 
     # 图片显示或保存
@@ -2694,7 +2695,7 @@ def temper_comprehensive_sg(sta_ob,grd_fo,save_path = None,show = False,dpi = 20
     text += "Mean-squared error:" + "%6.2f" % msee + "\n\n"
     text += "Root mean-squared error:" + "%6.2f" % rmsee + "\n\n"
     text += "Bias:" + "%6.2f" % bias_ce + "\n\n"
-    text += "Correlation ceoefficient:" + "%6.2f" % cor + "\n"
+    text += "Correlation coefficient:" + "%6.2f" % cor + "\n"
     plt.text(0, 0, text, fontsize=9)
 
     # 图片显示或保存
@@ -3131,7 +3132,7 @@ def temper_comprehensive_ss(sta_ob,sta_fo,map_extend = None,save_path = None,sho
     text += "Mean-squared error:" + "%6.2f" % msee + "\n\n"
     text += "Root mean-squared error:" + "%6.2f" % rmsee + "\n\n"
     text += "Bias:" + "%6.2f" % bias_ce + "\n\n"
-    text += "Correlation ceoefficient:" + "%6.2f" % cor + "\n"
+    text += "Correlation coefficient:" + "%6.2f" % cor + "\n"
     plt.text(0, 0, text, fontsize=9)
 
     # 图片显示或保存
@@ -3329,6 +3330,472 @@ def temper_ss(sta_ob, sta_fo, map_extend=None, save_path=None, show=False, dpi=2
         plt.show()
     plt.close()
 
+
+
+def compare_sg(sta_ob,grd_fo,grade_list,cmap_sta = None,cmap_grid= None,extend = "both",save_path=None,show  = False,dpi = 200,add_county_line = False,x_y = "dtime_member",sup_fontsize = 10,
+            height = None,width = None,add_worldmap =False,sup_title = None,point_size = None,ts_grade = None):
+
+    '''
+    #绘制降水实况与预报对比图
+    :param grd_fo: 输入的网格数据，包含一个平面的网格场
+    :param sta_ob:  输入的站点数据，包含一个时刻的站点数据列表
+    :param filename: 图片输出路径，缺省时会以调试窗口形式弹出
+    :return: 无返回值
+    '''
+
+    grid_fo = meteva.base.get_grid_of_data(grd_fo)
+
+    levels_all = grd_fo["level"].values
+    times_all = grd_fo["time"].values
+    dtimes_all = grd_fo["dtime"].values
+    members_all = grd_fo["member"].values
+
+
+    if cmap_sta is None:
+        colors_sta = ['#FFFFFF',"#000000","#00FFDD", '#00FF00', '#FFFF00', '#FF9900', '#FE1B00', '#FF0000']
+        cmap_sta = matplotlib.colors.ListedColormap(colors_sta, 'indexed')
+    cmap_sta1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap_sta, clevs=grade_list, extend = extend)
+    norm_sta1 = BoundaryNorm(clevs1, ncolors=cmap_sta1.N)
+
+    if cmap_grid is None:
+        colors_grid = ["#FFFFFF", "#B4D3E9", "#6FB0D7", "#3787C0", "#105BA4", "#07306B", "#01109B","#000000"]
+        cmap_grid = matplotlib.colors.ListedColormap(colors_grid, 'indexed')
+    cmap_grid1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=cmap_grid, clevs=grade_list, extend = extend)
+    norm_grid1 = BoundaryNorm(clevs1, ncolors=cmap_grid1.N)
+
+
+    sta_ob_plot = meteva.base.sele_by_para(sta_ob, gxy=grid_fo)
+
+    dat_ob = sta_ob_plot.values[:, -1]
+    #dat_ob[dat_ob > 2000] = 0
+
+    x_ob = sta_ob_plot.loc[:, "lon"].values
+    y_ob = sta_ob_plot.loc[:, "lat"].values
+
+    clevs = [0]
+    clevs.extend(grade_list)
+    clevs_name = ["<="]
+    for g0 in range(len(grade_list) - 2):
+        if grade_list[g0] == math.floor(grade_list[g0]):
+            gs0 = str(int(grade_list[g0]))
+        else:
+            gs0 = '%.1f' % (grade_list[g0])
+
+        if grade_list[g0 + 1] == math.floor(grade_list[g0 + 1]):
+            gs1 = str(int(grade_list[g0 + 1]))
+        else:
+            gs1 = '%.0f' % (grade_list[g0 + 1])
+        clevs_name.append(gs0 + "-" + gs1)
+    clevs_name.append(">=" + str(int(grade_list[len(grade_list) - 2])))
+
+
+    valid_time = 0
+    if "valid_time" in grd_fo.attrs.keys():
+        valid_time = grd_fo.attrs["valid_time"]
+    if ts_grade is None:ts_grade = grade_list[0]
+
+    if len(levels_all) * len(times_all) * len(dtimes_all) * len(members_all) == 1:
+
+        # 通过经纬度范围设置画幅
+        hight = 5.6
+        title_hight = 0.3
+        legend_hight = 0.6
+        left_plots_width = 0
+        right_plots_width = 0
+        width = (hight - title_hight - legend_hight) * grid_fo.nlon / grid_fo.nlat + left_plots_width + right_plots_width
+        map_width = width - left_plots_width - right_plots_width
+
+        if point_size is None:
+            sta_id1 = sta_ob_plot.drop_duplicates(['id'])
+            sta_dis = meteva.base.sta_dis_ensemble_near_by_sta(sta_id1, nearNum=2)
+            dis_values = sta_dis["data1"].values
+            dis_values.sort()
+            dis1 = dis_values[int(len(dis_values) * 0.02) + 1]
+            point_size = (map_width * dis1 / (grid_fo.elon - grid_fo.slon)) ** 2
+            if (point_size > 50): point_size = 50
+            if (point_size < 0.1): point_size = 0.1
+
+        fig = plt.figure(figsize=(width, hight),dpi=dpi)
+        # 设置画幅的布局方式，
+        rect1 = [left_plots_width / width, 0.12, (width - right_plots_width - left_plots_width) / width, 0.84]  # 左下宽高,中央对比图
+        ylabelwidth = 0.52 / width
+        rect2 = [ylabelwidth, 0.08, left_plots_width / width - ylabelwidth - 0.005, 0.40]  # 左下宽高，散点回归图
+        ylabelwidth = 0.65 / width
+        rect3 = [ylabelwidth, 0.60, left_plots_width / width - ylabelwidth - 0.005, 0.18]  # 左下宽高，频谱统计柱状图
+        rect4 = [0.01, 0.79, left_plots_width / width - 0.045, 0.15]  # 左下宽高，左侧文字
+        rect5 = [(width - right_plots_width) / width + 0.005, -0.035, right_plots_width / width - 0.01, 0.90]  # 左下宽高，右侧文字
+        width_ob_fo_str = 0.3
+        if (map_width < 3.5):
+            width_bar = 2.1  # 根据中间地图的宽度，来确定预报colorbar的尺寸
+            sta_legend_size = 5  # 根据中间地图的宽度，来确定观测legend的size
+        else:
+            sta_legend_size = 7
+            width_bar = 2.9
+
+        rect6 = [(left_plots_width + 0.5 * map_width - 0.5 * width_bar + 0.5 * width_ob_fo_str) / width, 0.00,
+                 width_bar / width, 0.02]  # 预报colorbar
+        rect7 = [(left_plots_width + 0.5 * map_width - 0.5 * width_bar - 0.5 * width_ob_fo_str) / width, 0.00,
+                 width_ob_fo_str / width, 0.3]  # 观测文字
+
+
+        ax = plt.axes(rect1)
+        # 设置地图背景
+        add_china_map_2basemap(ax, name='province', edgecolor='k', lw=0.3,encoding = 'gbk')  #"省界"
+        if add_county_line:
+            add_china_map_2basemap(ax, name="county", edgecolor='k', lw=0.2, encoding='gbk')  # "省界"
+        ax.set_xlim((grid_fo.slon, grid_fo.elon))
+        ax.set_ylim((grid_fo.slat, grid_fo.elat))
+
+        # 绘制格点预报场
+        x = np.arange(grid_fo.nlon) * grid_fo.dlon + grid_fo.slon
+        y = np.arange(grid_fo.nlat) * grid_fo.dlat + grid_fo.slat
+
+        dat = grd_fo.values.squeeze()
+
+        plt.rcParams['xtick.direction'] = 'in'
+        plt.rcParams['ytick.direction'] = 'in'
+        plot_grid = ax.contourf(x, y, dat, levels=grade_list, cmap=cmap_grid1,norm = norm_grid1,extend = extend)  # 填色图
+        time_str = meteva.base.tool.time_tools.time_to_str(grid_fo.gtime[0])
+        dati_str = time_str[0:4] + "年" + time_str[4:6] + "月" + time_str[6:8] + "日" + time_str[8:10] + "时"
+        if type(grid_fo.members[0]) == str:
+            model_name = grid_fo.members[0]
+        else:
+            model_name = str(grid_fo.members[0])
+
+        var_name = ""
+        if sta_ob.attrs is not None:
+            if "var_cn_name" in sta_ob.attrs.keys():
+                var_name = sta_ob.attrs["var_cn_name"]
+                if var_name=="":
+                    var_name = sta_ob.attrs["var_name"]
+        title = model_name + " " + dati_str + "起报" + str(grid_fo.dtimes[0]) + "H时效"+var_name+"预报和观测"
+
+        if map_width < 3:
+            #title = model_name + " " + dati_str + "起报" + str(grid_fo.dtimes[0]) + "H时效预报和观测"
+            ax.set_title(title, fontsize=7)
+        elif map_width < 4:
+            #title = model_name + " " + dati_str + "起报" + str(grid_fo.dtimes[0]) + "H时效预报和观测"
+            ax.set_title(title, fontsize=10)
+        else:
+            #title = model_name + " " + dati_str + "起报" + str(grid_fo.dtimes[0]) + "H时效预报和观测"
+            ax.set_title(title, fontsize=11)
+
+        colorbar_position_grid = fig.add_axes(rect6)  # 位置[左,下,宽,高]
+        cb = plt.colorbar(plot_grid, cax=colorbar_position_grid, orientation='horizontal')
+        cb.ax.tick_params(labelsize=8)  # 设置色标刻度字体大小。
+        # plt.text(0, 0, "预报(mm)", fontsize=8)
+
+        # 绘制填色站点值
+        x = sta_ob_plot.loc[:, "lon"].values
+        y = sta_ob_plot.loc[:, "lat"].values
+        colors = sta_ob_plot.iloc[:, -1].values
+
+        im = ax.scatter(x, y, c=colors, cmap=cmap_sta1, norm=norm_sta1, s=point_size, edgecolors="face")
+
+        ax.legend(facecolor='whitesmoke', loc="lower center", ncol=4, edgecolor='whitesmoke',
+                  prop={'size': sta_legend_size},
+                  bbox_to_anchor=(0.5 + 0.5 * width_ob_fo_str / map_width, -0.12))
+        ax7 = plt.axes(rect7)
+        ax7.axes.set_axis_off()
+        plt.text(0, 0.00, "观测\n\n预报", fontsize=7)
+
+        # 图片显示或保存
+        if(save_path is not None):
+            plt.savefig(save_path, dpi=dpi,bbox_inches='tight')
+        else:
+            show = True
+        if show:
+            plt.show()
+        plt.close()
+        return
+    else:
+        ob_time_list = []
+        ob_times = list(set(sta_ob_plot["time"].values))
+        ob_times.sort()
+        for ii in range(len(ob_times)):
+            ob_time_list.append(meteva.base.all_type_time_to_datetime(ob_times[ii]))
+
+        dtimes_valid = []
+        fo_time_valid = []
+        ob_time_valid = []
+        for dtime1 in dtimes_all:
+            for time1 in times_all:
+                fo_time = meteva.base.all_type_time_to_datetime(time1)
+                ob_time1 = fo_time + datetime.timedelta(hours=int(dtime1))
+                if ob_time1 in ob_time_list:
+                    dtimes_valid.append(dtime1)
+                    fo_time_valid.append(fo_time)
+                    ob_time_valid.append(ob_time1)
+                    break
+        if len(set(ob_time_valid))>1 and len(set(fo_time_valid))>1:
+            print("参数x_y=dtime_member时，暂时不能支持多个起报时间和多个观测时间对应情况下的检验")
+            return
+
+        if sup_title is None:
+            if len(set(ob_time_valid))==1:
+                sup_title = meteva.base.get_path("YY年MM月DD日HH时的观测和不同时效预报对比",ob_time_valid[0])
+            elif len(set(fo_time_valid))==1:
+                sup_title = meteva.base.get_path("YY年MM月DD日HH时的起报的不时效预报和观测对比", fo_time_valid[0])
+        if x_y == "dtime_member":
+            x = grd_fo['lon'].values
+            slon = x[0]
+            elon = x[-1]
+            y = grd_fo['lat'].values
+            slat = y[0]
+            elat = y[-1]
+            rlon = x[-1] - x[0]
+            rlat = y[-1] - y[0]
+
+            height_title = sup_fontsize * 0.1
+            height_bottem_xticsk = sup_fontsize * 0.05
+            height_hspace = sup_fontsize * 0.01
+
+            width_wspace = height_hspace
+            width_colorbar = 0.0
+            width_left_yticks = sup_fontsize * 0.03
+            ncol = len(dtimes_valid)
+            nrow = len(members_all)
+            nplot = ncol * nrow
+
+
+            if width is None and height is None:
+                width = 8
+
+            if width is None:
+                height_all_plot = height - height_title - height_bottem_xticsk - (nrow - 1) * height_hspace
+                height_map = height_all_plot / nrow
+                width_map = height_map * rlon / rlat
+                width_all_plot = width_map * ncol + (ncol - 1) * width_wspace
+                width = width_all_plot + width_colorbar + width_left_yticks
+            else:
+                width_all_plot = width - width_colorbar - width_left_yticks - (ncol - 1) * width_wspace
+                width_map = width_all_plot / ncol
+                height_map = width_map * rlat / rlon
+                height_all_plot = height_map * nrow + (nrow - 1) * height_hspace
+                height = height_all_plot + height_title + height_bottem_xticsk
+
+
+
+            vmax = elon
+            vmin = slon
+            r = rlon
+            if r <= 1:
+                inte = 0.1
+            elif r <= 5 and r > 1:
+                inte = 1
+            elif r <= 10 and r > 5:
+                inte = 2
+            elif r < 20 and r >= 10:
+                inte = 4
+            elif r <= 30 and r >= 20:
+                inte = 5
+            elif r < 180:
+                inte = 10
+            else:
+                inte = 20
+
+            vmin = inte * (math.ceil(vmin / inte))
+            vmax = inte * ((int)(vmax / inte) + 1)
+
+            xticks = np.arange(vmin, vmax, inte)
+            xticks_label = []
+            xticks_label_None = []
+            for i in range(len(xticks)):
+                xticks_label.append(str(round(xticks[i], 6)))
+                xticks_label_None.append("")
+            if xticks[-1] > 0:
+                xticks_label[-1] = "   " + xticks_label[-1] + "°E"
+            else:
+                xticks_label[-1] = "   " + xticks_label[-1] + "°W"
+
+            vmax = elat
+            vmin = slat
+
+
+            r = rlat
+            if r <= 1:
+                inte = 0.1
+            elif r <= 5 and r > 1:
+                inte = 1
+            elif r <= 10 and r > 5:
+                inte = 2
+            elif r < 20 and r >= 10:
+                inte = 4
+            elif r <= 30 and r >= 20:
+                inte = 5
+            else:
+                inte = 10
+
+            vmin = inte * (math.ceil(vmin / inte))
+            vmax = inte * ((int)(vmax / inte) + 1)
+            yticks = np.arange(vmin, vmax, inte)
+            yticks_label = []
+            yticks_label_None = []
+            for j in range(len(yticks)):
+                if yticks[j] >= 0:
+                    yticks_label.append(str(round(yticks[j], 6)) + "°N")
+                else:
+                    yticks_label.append(str(round(-yticks[j], 6)) + "°S")
+                yticks_label_None.append("")
+
+
+            fig = plt.figure(figsize=(width, height), dpi=dpi)
+
+
+            # cmap1, clevs1 = meteva.base.tool.color_tools.def_cmap_clevs(cmap=colors_sta, clevs=clevs, vmin=vmin, vmax=vmax)
+            # norm = BoundaryNorm(clevs, cmap1.N - 1)
+
+            ax_up_right = None
+            ylabel_seted = 0
+            #print(ncol)
+            #print(nrow)
+
+
+            for pi in range(ncol):
+                #print(str(pi) + " ---")
+                if len(ob_time_valid) == 1:
+                    dtime1 = dtimes_valid[ncol - pi - 1]
+                    ob_time = ob_time_valid[0]
+                    fo_time1 = None
+                    for time1 in fo_time_valid:
+                        fo_time = meteva.base.all_type_time_to_datetime(time1)
+                        ob_time1 = fo_time + datetime.timedelta(hours=int(dtime1))
+                        if ob_time1== ob_time:
+                            fo_time1 = time1
+                            break
+                    if fo_time1 is None: continue
+                else:
+                    dtime1 = int(dtimes_valid[pi])
+                    fo_time1 = fo_time_valid[pi]
+                    ob_time1 = fo_time1 + datetime.timedelta(hours = dtime1)
+                    sta_ob_plot1 = meteva.base.sele_by_para(sta_ob_plot,time = ob_time1)
+                    x_ob = sta_ob_plot1.loc[:, "lon"].values
+                    y_ob = sta_ob_plot1.loc[:, "lat"].values
+                    dat_ob = sta_ob_plot1.values[:, -1]
+
+                grd1 = meteva.base.in_time_list(grd_fo,[fo_time1])
+                grd1 = meteva.base.in_dtime_list(grd1,[dtime1])
+
+                for pj in range(nrow):
+                    member1 = members_all[pj]
+                    grd2 = meteva.base.in_member_list(grd1,[member1])
+
+
+                    dat = grd2.values.squeeze()
+                    rect1 = [(width_left_yticks + pi * (width_map + width_wspace)) / width,
+                             (height_bottem_xticsk + (nrow - 1 - pj) * (height_map + height_hspace)) / height,
+                             width_map / width,
+                             height_map / height]
+                    ax = plt.axes(rect1)
+
+                    if pi ==ncol-1 and pj == 0:
+                        ax_up_right = ax
+
+                    if slon < 70 or elon > 140 or slat < 10 or elat > 60:
+                        add_worldmap = True
+                    if add_worldmap:
+                        add_china_map_2basemap(ax, name="world", edgecolor='k', lw=0.3, encoding='gbk', grid0=None)  # "国界"
+
+                    add_china_map_2basemap(ax, name="nation", edgecolor='k', lw=0.3, encoding='gbk', grid0=None)  # "省界"
+                    add_china_map_2basemap(ax, edgecolor='k', lw=0.3, encoding='gbk')  # "省界"
+                    if add_county_line:
+                        add_china_map_2basemap(ax, name="county", edgecolor='k', lw=0.2, encoding='gbk', grid0=None)  # "县界"
+                    ax.set_xlim((slon, elon))
+                    ax.set_ylim((slat, elat))
+
+                    if pj ==0:
+                        if valid_time == 0:
+                            ax.set_title(dtime1)
+                        else:
+                            dtime_str = str(dtime1 - valid_time) + "-"+ str(dtime1)
+                            ax.set_title(dtime_str)
+
+                    knext_row = pi + (pj + 1) * ncol
+                    if knext_row >= nplot:
+                        ax.set_xticks(xticks)
+                        ax.set_xticklabels(xticks_label, fontsize=sup_fontsize * 0.8) #, family='Times New Roman')
+                    else:
+                        ax.set_xticks(xticks)
+                        ax.set_xticklabels(xticks_label_None, fontsize=sup_fontsize * 0.8) #, family='Times New Roman')
+
+                    if ylabel_seted == 0:
+                        ax.set_yticks(yticks)
+                        ax.set_yticklabels(yticks_label, fontsize=sup_fontsize * 0.8) #, family='Times New Roman')
+                        plt.ylabel(member1)
+                    else:
+                        ax.set_yticks(yticks)
+                        ax.set_yticklabels(yticks_label_None, fontsize=sup_fontsize * 0.8) #, family='Times New Roman')
+
+
+                    if dat[0,0] == meteva.base.IV:continue
+                    im1 = ax.contourf(x, y,dat, levels=clevs1, cmap=cmap_grid1,norm = norm_grid1,extend = extend)
+                    im2 = ax.scatter(x_ob, y_ob, c=dat_ob, cmap=cmap_sta1, norm=norm_sta1,s = point_size)
+                    grd2_to_sta = meteva.base.interp_gs_nearest(grd2, sta_ob_plot)
+                    ts = meteva.method.ts(sta_ob_plot.values[:, -1], grd2_to_sta.values[:, -1], grade_list=[ts_grade])
+
+                    bias = meteva.method.bias(sta_ob_plot.values[:, -1], grd2_to_sta.values[:, -1],
+                                              grade_list=[ts_grade])
+                    score_str = "TS=" + "%.3f" % ts +"   BIAS=" +"%.3f" % bias
+
+                    xt = slon + 0.01*(elon - slon)
+                    yt = slat + 0.01*(elat - slat)
+
+                    plt.text(xt, yt, score_str, color = "#FF0000", fontsize=sup_fontsize*0.8, zorder=100,
+                             path_effects=[path_effects.withStroke(linewidth=2, foreground='white')])
+
+
+
+                ylabel_seted = 1
+
+            height_colorbar =0.95 * (ax_up_right.bbox.y1 - ax.bbox.y0) / fig.dpi / height/2
+
+            location = [ax.bbox.x1 / fig.dpi / width + 0.005, ax.bbox.y0 / fig.dpi / height, 0.01,
+                        height_colorbar]
+
+            colorbar_position = fig.add_axes(location)  # 位置[左,下,宽,高]
+            colorbar_fo = plt.colorbar(im1, cax=colorbar_position)
+            colorbar_fo.set_label('预报', fontsize=sup_fontsize * 0.9)
+
+            #cb.ax.tick_params(labelsize=sup_fontsize * 0.8)  # 设置色标刻度字体大小。
+
+            y_sup_title = (height_bottem_xticsk + (nrow) * (height_map + height_hspace)+sup_fontsize*0.03) / height
+
+            location = [ax.bbox.x1 / fig.dpi / width + 0.005, ax_up_right.bbox.y1 / fig.dpi / height - height_colorbar, 0.01,
+                       height_colorbar]
+            colorbar_position = fig.add_axes(location)  # 位置[左,下,宽,高]
+            colorbar_ob = plt.colorbar(im2, cax=colorbar_position,extend =extend)
+            colorbar_ob.set_label('观测', fontsize=sup_fontsize * 0.9)
+
+
+            plt.suptitle(sup_title, y=y_sup_title, fontsize=sup_fontsize * 1.2)
+
+            if save_path is None:
+                show = True
+
+            if save_path is not None:
+                meteva.base.tool.path_tools.creat_path(save_path)
+                file1, extension = os.path.splitext(save_path)
+                if (len(extension) == 0):
+                    print("save_path中没包含后缀，如.png等,未能输出至指定路径")
+                    return
+                extension = extension[1:]
+                plt.savefig(save_path, format=extension, bbox_inches='tight')
+                print("图片已保存至" + save_path)
+            if show:
+                plt.show()
+            plt.close()
+        else:
+            pass
+
+
+
+if __name__ =="__main__":
+    import meteva
+    grd_m = meteva.base.read_griddata_from_nc(r"H:\test_data\input\meb\grd_sele_test.nc")
+    rain24_ob = meteva.base.read_stadata_from_micaps3(r"H:\test_data\input\mpd\rain24h_21072108.000")
+    compare_sg(rain24_ob,grd_m, grade_list = [0.1,1,3,5,10,20,50],cmap_sta = "rain_3h",
+       point_size=3,show = False,ts_grade=50,
+               save_path="h:/a.png")
 
 
 

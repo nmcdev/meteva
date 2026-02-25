@@ -33,3 +33,5 @@ from .qq_plot import *
 from . import zhumetic
 from .zhumetic import metrV
 from .spectrum.spectrum import  *
+from .spectrum.Spherical_Harmonic import *
+

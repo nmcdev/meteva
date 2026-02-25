@@ -9,7 +9,7 @@ import pandas as pd
 import traceback
 import meteva
 import struct
-from . import DataBlock_pb2
+#from . import DataBlock_pb2
 from .GDS_data_service import GDSDataService
 import bz2
 from .CMADaasAccess import CMADaasAccess
@@ -230,8 +230,12 @@ def read_griddata_from_nc(filename,grid = None,
 
 
         meteva.base.reset(da1)
-        if time is not None and len(da1.coords["time"])==1:
-            meteva.base.set_griddata_coords(da1,gtime=[time])
+        if time is not None:
+            if len(da1.coords["time"])==1:
+                meteva.base.set_griddata_coords(da1,gtime=[time])
+            else:
+                da1 = meteva.base.in_time_list(da1,time_list=[time])
+
         if data_name is not None and len(da1.coords["member"])==1:
             meteva.base.set_griddata_coords(da1,member_list=[data_name])
 
@@ -457,6 +461,7 @@ def read_griddata_from_gds(filename,grid = None,level = None,time = None,dtime =
     # ip 为字符串形式，示例 “10.20.30.40”
     # port 为整数形式
     # filename 为字符串形式 示例 "ECMWF_HR/TCDC/19083108.000"
+    from . import DataBlock_pb2
     if meteva.base.gds_ip_port is None:
         print("请先使用set_config 配置gds的ip和port")
         return
@@ -501,6 +506,7 @@ def read_gridwind_from_gds(filename,grid = None,level = None,time = None,dtime =
     # ip 为字符串形式，示例 “10.20.30.40”
     # port 为整数形式
     # filename 为字符串形式 示例 "ECMWF_HR/TCDC/19083108.000"
+    from . import DataBlock_pb2
     if meteva.base.gds_ip_port is None:
         print("请先使用set_config 配置gds的ip和port")
         return
@@ -839,6 +845,7 @@ def read_AWX_from_gds(filename,grid = None,level = None,time = None,dtime = None
     # ip 为字符串形式，示例 “10.20.30.40”
     # port 为整数形式
     # filename 为字符串形式 示例 "ECMWF_HR/TCDC/19083108.000"
+    from . import DataBlock_pb2
     if meteva.base.gds_ip_port is None:
         print("请先使用set_config 配置gds的ip和port")
         return
@@ -892,7 +899,7 @@ def read_AWX_from_gds(filename,grid = None,level = None,time = None,dtime = None
                 # print( data_lenght)
                 # print(grd.nlon * grd.nlat)
                 # headrest = np.frombuffer(byteArray[:head_lenght], dtype='int8')
-                data_awx = np.frombuffer(byteArray[head_lenght:(head_lenght + data_lenght)], dtype='int8')
+                data_awx = np.frombuffer(byteArray[head_lenght:(head_lenght + data_lenght)], dtype='int8').astype(dtype="int16")
 
                 if colorlen <= 0:
                     calib = np.frombuffer(byteArray[104:(104 + 2048)], dtype='int16').astype(dtype="float32")
@@ -978,7 +985,7 @@ def decode_griddata_from_AWX_byteArray(byteArray,grid = None,level = None,time =
     # print( data_lenght)
     # print(grd.nlon * grd.nlat)
     # headrest = np.frombuffer(byteArray[:head_lenght], dtype='int8')
-    data_awx = np.frombuffer(byteArray[head_lenght:(head_lenght + data_lenght)], dtype='int8')
+    data_awx = np.frombuffer(byteArray[head_lenght:(head_lenght + data_lenght)], dtype='int8').astype(dtype='int16')
 
     if colorlen <= 0:
         calib = np.frombuffer(byteArray[104:(104 + 2048)], dtype='int16').astype(dtype="float32")
@@ -1114,7 +1121,7 @@ def decode_griddata_from_radar_byteArray(byteArray,grid = None,level = None,time
 
     #spthead = _unpack_from_buf(buf, pos, PT_HEADER)
     pos += struct.calcsize('<' + ''.join([i[1] for i in PT_HEADER]))
-    datbuf = np.frombuffer(byteArray[pos:pos + spthead['levelbytes']], dtype='h')
+    datbuf = np.frombuffer(byteArray[pos:pos + spthead['levelbytes']], dtype='h').astype(dtype='int32')
 
     nlon = spthead["cols"] #列数
     nlat = spthead["rows"] #行数
@@ -1201,6 +1208,7 @@ def read_radar_latlon_from_gds(filename,grid = None,level = None,time = None,dti
     # ip 为字符串形式，示例 “10.20.30.40”
     # port 为整数形式
     # filename 为字符串形式 示例 "ECMWF_HR/TCDC/19083108.000"
+    from . import DataBlock_pb2
     if meteva.base.gds_ip_port is None:
         print("请先使用set_config 配置gds的ip和port")
         return
@@ -1446,6 +1454,7 @@ def read_griddata_from_radar_mosaic_v3_gds(filename, grid=None, level=None, time
     # ip 为字符串形式，示例 “10.20.30.40”
     # port 为整数形式
     # filename 为字符串形式 示例 "ECMWF_HR/TCDC/19083108.000"
+    from . import DataBlock_pb2
     if meteva.base.gds_ip_port is None:
         print("请先使用set_config 配置gds的ip和port")
         return
@@ -1656,8 +1665,15 @@ def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim
                     index_level = [0]
                 else:
                     # 有多层的变量，level参数为None时，读取全部层次
-                    valid_levels = levels_all
-                    index_level = np.arange(nlevel).tolist()
+
+
+                    if len(levels_all) == nlevel:
+                        valid_levels = levels_all
+                        index_level = np.arange(nlevel).tolist()
+                    else:
+                        valid_levels = levels_all[:nlevel]
+                        index_level = np.arange(nlevel).tolist()
+
 
             nlevel_valid = len(index_level)
             if nlevel_valid == 0:
@@ -1680,7 +1696,6 @@ def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim
                         dtime1 = ctl["dtime_list"][t]
                         if dtime1 in dtime_list:
                             t_index_list.append(t)
-
 
                 else:
                     times_all = pd.date_range(ctl["gtime"][0], ctl["gtime"][1], freq=ctl["gtime"][2]).tolist()
@@ -1773,12 +1788,13 @@ def read_griddata_from_ctl(ctl_path,data_path = None,value_name = None,dtime_dim
                         time1 = meteva.base.all_type_time_to_datetime(times_all[final_t_index[-1]])
                         final_gtime = [ctl["gtime"][0],time1,ctl["gtime"][2]]
 
-
                 data = np.array(data_list)
 
                 data = data.reshape(ctl["nensemble"], len(final_t_index), nlevel_valid, ctl["nlat"], ctl["nlon"])
                 data = data.transpose(0, 2, 1, 3, 4)
 
+                if not isinstance(valid_levels,list):
+                    valid_levels = [valid_levels]
                 grid1 = meteva.base.grid(ctl["glon"], ctl["glat"], gtime=final_gtime, dtime_list=final_dtime,
                                              level_list=valid_levels, member_list=ctl["edef"])
 
@@ -2027,6 +2043,7 @@ def read_griddata_from_swan_d131_gds(filename, grid=None, level=None, time=None,
     # ip 为字符串形式，示例 “10.20.30.40”
     # port 为整数形式
     # filename 为字符串形式 示例 "ECMWF_HR/TCDC/19083108.000"
+    from . import DataBlock_pb2
     if meteva.base.gds_ip_port is None:
         print("请先使用set_config 配置gds的ip和port")
         return

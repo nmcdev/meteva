@@ -111,7 +111,7 @@ def scatter_regress(ob, fo,member_list = None, rtype="linear",vmax = None,vmin =
         sta_xy["time"] = datetime.datetime(2020,1,1,0)
         sta_xy["data0"] = 1
         grd_count = meteva.base.near.add_stavalue_to_nearest_grid(sta_xy,grid = grid_count)
-        sta_count = meteva.base.interp_gs_linear(grd_count,sta_xy)
+        sta_count = meteva.base.interp_gs_linear(grd_count,sta_xy,reset_lon_range=False)
         colors = sta_count["data0"]
         sort_index = colors.argsort()
         fo_s = fo[sort_index]

@@ -29,7 +29,7 @@ para_example= {
     "end_time":datetime.datetime(2024,9,3,20),
     "time_type":"BT",  # 最终检验结果呈现时，采用北京时还是世界时，UT代表世界时，BT代表北京时
     "time_step": 12,  # 起报时间间隔
-    "middle_result_path": r"H:\test_data\output\mps\na.h5",  #检验中间量数据的存储路径
+    "middle_result_path": r"H:\test_data\output\mps\na.parquet",  #检验中间量数据的存储路径
     "station_file":meteva.base.station_国家站,  #检验站点表的存储路径
     "defalut_value":meteva.base.IV,
     "interp": meteva.base.interp_gs_nearest,
@@ -186,7 +186,14 @@ def middle_of_score_surface(para):
     # 先删除文件在重新输出文件，避免文件大小膨胀
     if os.path.exists(middle_result_path):
         os.remove(middle_result_path)
-    mid_all.to_hdf(middle_result_path, "df")  # 将结果输出到文件
+
+    mid_file_type = para["middle_result_path"].split(".")[1]
+
+    if mid_file_type == "parquet":
+        mid_all.to_parquet(middle_result_path)
+    else:
+        mid_all.to_hdf(middle_result_path, "df")  # 将结果输出到文件
+
     print("中间量拼接程序运行完毕")
     print("拼接后的中间结果已输出至"+middle_result_path)
 
@@ -198,8 +205,8 @@ def middle_of_score_surface(para):
 if __name__ == "__main__":
 
     middle_of_score_surface(para_example)
-    path = r"H:\test_data\output\mps\na.h5"
-    df = pd.read_hdf(path)
+    path = r"H:\test_data\output\mps\na.parquet"
+    df = pd.read_parquet(path)
     print(df)
     print()
 

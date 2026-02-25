@@ -257,8 +257,8 @@ def xarray_to_griddata(xr0,
     if dtime_dim is None:
         if "dtime" in ds0.coords or "dtime" in list(ds0.dims):
             dtime_dim = "dtime"
-        elif "valid_time" in ds0.coords or "valid_time" in list(ds0.dims):
-            dtime_dim = "valid_time"
+        # elif "valid_time" in ds0.coords or "valid_time" in list(ds0.dims):
+        #     dtime_dim = "valid_time"
     if dtime_dim in ds0.coords or dtime_dim in list(ds0.dims):
         if dtime_dim in ds0.coords:
             dts = ds0.coords[dtime_dim]

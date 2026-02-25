@@ -65,8 +65,13 @@ def shp2clip(originfig, ax, shpfile, region):
             path = Path(vertices, codes)
             # extents = path.get_extents()
             patch = PathPatch(path, transform=ax.transData, facecolor='none', edgecolor='black')
-    for contour in originfig.collections:
-        contour.set_clip_path(patch)
+    try:
+        for contour in originfig.collections:
+            contour.set_clip_path(patch)
+    except:
+        for contour in originfig.axes.collections:
+            contour.set_clip_path(patch)
+
     return path, patch
 
 
@@ -97,8 +102,13 @@ def shp2clip_pro_id(originfig, ax, shpfile, num_list):
             path = Path(vertices, codes)
             # extents = path.get_extents()
             patch = PathPatch(path, transform=ax.transData, facecolor='none', edgecolor='black')
-    for contour in originfig.collections:
-        contour.set_clip_path(patch)
+
+    try:
+        for contour in originfig.collections:
+            contour.set_clip_path(patch)
+    except:
+        for contour in originfig.axes.collections:
+            contour.set_clip_path(patch)
     return path, patch
 
 
@@ -120,8 +130,12 @@ def shp2clip_by_lines(originfig, ax, line_list):
     path = Path(vertices, codes)
         # extents = path.get_extents()
     patch = PathPatch(path, transform=ax.transData, facecolor='none', edgecolor='black')
-    for contour in originfig.collections:
-        contour.set_clip_path(patch)
+    try:
+        for contour in originfig.collections:
+            contour.set_clip_path(patch)
+    except:
+        for contour in originfig.axes.collections:
+            contour.set_clip_path(patch)
     return path, patch
 
 
@@ -183,7 +197,11 @@ def shp2clip_by_shpfile(originfig, ax, shpfile):
             path = Path(vertices, codes)
             # extents = path.get_extents()
             patch = PathPatch(path, transform=ax.transData, facecolor='none', edgecolor='black')
-    for contour in originfig.collections:
-        contour.set_clip_path(patch)
+    try:
+        for contour in originfig.collections:
+            contour.set_clip_path(patch)
+    except:
+        for contour in originfig.axes.collections:
+            contour.set_clip_path(patch)
     return path, patch
 

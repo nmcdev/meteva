@@ -80,16 +80,16 @@ def cr(ob,fo,grade_list=[1e-30],compair = ">="):
 def crps(Ob, Fo):
     '''
 
-    :param Ob:
-    :param Fo:
-    :return:
+    :param Ob:实况数据，numpy数组
+    :param Fo:预报数据，numpy数组， shape 比Ob多一维，比如 Ob.shape = (100), Fo.shape = (51,100),如果 Ob.shape = (100,100), Fo.shape = (51,100,100)
+    :return: 返回crps评分
     '''
     n = Ob.size
     shape0 = Fo.shape
     m = shape0[0]
     ob0 = Ob.flatten()
     fo0 = Fo.reshape((m, n))
-    fo0 = np.sort(fo0)
+    fo0 = np.sort(fo0,axis=0)
     minv = min(np.min(ob0), np.min(fo0))
     maxv = max(np.max(ob0), np.max(fo0))
 

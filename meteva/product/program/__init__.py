@@ -1,6 +1,6 @@
 from .time_compare import time_list_mesh_error,time_list_mesh_temp,time_list_mesh_tcdc,time_list_mesh_vis,time_list_mesh_rain01h,time_list_mesh_rain03h,time_list_mesh_wind,time_list_mesh,time_list_mesh_rh,time_list_line,time_list_line_error
 from .space_compare import rain_24h_sg,rain_24h_comprehensive_sg,rain_24h_comprehensive_chinaland_sg,temper_comprehensive_gg,temper_gg,temper_comprehensive_sg,temper_comprehensive_ss
-from .space_compare import temper_sg,temper_ss
+from .space_compare import temper_sg,temper_ss,compare_sg
 from .space_compare import rain_sg,rain_comprehensive_sg,rain_comprehensive_chinaland_sg,rain_comprehensive_chinaland_sl,rain_comprehensive_sl
 from .score import score,score_id,score_tdt
 from .table import table
@@ -13,3 +13,4 @@ from .sample_statistic import sample_tdt,sample_id
 from .diurnal import diunal_max_hour_id,diunal_max_hour
 from .typhoon import tran_typhoon_report
 from .process_compare import process_compare
+from .confidence import *
