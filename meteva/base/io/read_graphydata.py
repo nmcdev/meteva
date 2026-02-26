@@ -22,13 +22,19 @@ def read_micaps14(filename,time = None,dtime = 0,data_name = None):
         txt = None
         try:
             with open(filename, 'r', encoding=encoding) as f:
-                txt = f.read().replace('\n', ' ').split()
+                txt = f.read()
         except Exception:
             pass
     if txt is None:
         print("Micaps 14 file error: " + filename)
         return None
 
+    # fix the bug https://github.com/nmcdev/meteva/issues/186
+    txtlines=txt.split('\n')
+    txtline1s=txtlines[0].split()
+    txtlines[0]=' '.join([txtline1s[0],txtline1s[1],'_'.join(txtline1s[2:])])
+    txt=' '.join(txtlines).split()
+    
     # head information
     _ = txt[2]
 
@@ -273,17 +279,19 @@ def read_micaps14(filename,time = None,dtime = 0,data_name = None):
         # get the start position
         idx = txt.index('STATION_SITUATION')
 
+        # fix the bug https://github.com/nmcdev/meteva/issues/188
         # find data subscript
         end_idx = idx + 1
-        while end_idx < len(txt):
+        while end_idx < len(txt) and not 'WEATHER_REGION' in txt[end_idx]:
             if txt[end_idx].isdigit():
                 end_idx += 1
             else:
                 try:
                     f = float(txt[end_idx])
-                    end_idx += 1
                 except:
-                    break
+                    pass
+                finally:
+                    end_idx += 1
 
         if end_idx > idx + 1:
             stations = np.array(txt[(idx+1):(end_idx)])
