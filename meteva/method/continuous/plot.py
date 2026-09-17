@@ -404,7 +404,7 @@ def box_plot_continue(ob, fo,  member_list=None,vmax = None,vmin = None, save_pa
     elif markersize > 20:
         markersize = 20
     colors_list= []
-    colors = cm.get_cmap('rainbow', 128)
+    colors = plt.get_cmap('rainbow', 128)
     for i in range(len(xticks)):
         color_grade = i / len(xticks)
         colors_list.append(colors(color_grade))
@@ -510,7 +510,7 @@ def box_plot_continue(ob, fo,  member_list=None,vmax = None,vmin = None, save_pa
     elif markersize > 20:
         markersize = 20
     colors_list= []
-    colors = cm.get_cmap('rainbow', 128)
+    colors = plt.get_cmap('rainbow', 128)
     for i in range(len(xticks)):
         color_grade = i / len(xticks)
         colors_list.append(colors(color_grade))

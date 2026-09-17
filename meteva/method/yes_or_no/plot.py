@@ -284,7 +284,7 @@ def performance_hfmc(hfmc_array,axis_list_list,suplot_lengend = [1,0],save_dir =
             sy = y2[index] - 0.02
             plt.text(sx, sy, "ts=" + str(ts))
 
-        colors = cm.get_cmap('rainbow', 128)
+        colors = plt.get_cmap('rainbow', 128)
         for i in range(sr.shape[0]):
             color_grade = (i +0.5) /len(legend_list)
             plt.plot(sr[i,s], pod[i,s], 'o', color=colors(color_grade),markersize=12,label = legend_list[i])

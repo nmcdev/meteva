@@ -6,11 +6,16 @@
 from os import path
 from setuptools import find_packages, setup
 from codecs import open
+import re
 name = "meteva"
 author ="liucouhua,daikan,wangbaoli,tangbuxing"
-version =__import__(name).__version__
 
 here = path.abspath(path.dirname(__file__))
+
+# 从 __init__.py 读取版本，避免循环导入
+with open(path.join(here, 'meteva', '__init__.py'), encoding='utf-8') as f:
+    version = re.search(r'__version__ = ["\']([^"\']+)["\']', f.read()).group(1)
+
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 

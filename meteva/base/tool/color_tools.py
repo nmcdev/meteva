@@ -95,14 +95,14 @@ def clev_cmap_cloud_total_error():
 def cmap_clevs_temper_2m_error():
     clevs1 = [-20,-12,-8,-6,-4,-2,-1]
     nclev = len(clevs1)
-    colors0 = cm.get_cmap("winter", nclev)
+    colors0 = plt.get_cmap("winter", nclev)
     colors_list = []
     for i in range(nclev):
         colors_list.append(colors0(i))
 
     clevs2 = [0,1,2,4,6,8,12,20]
     nclev = len(clevs2)
-    colors0 = cm.get_cmap("autumn", nclev)
+    colors0 = plt.get_cmap("autumn", nclev)
     for i in range(nclev):
         colors_list.append(colors0(nclev - 1 - i))
     clevs1.extend(clevs2)
@@ -254,14 +254,14 @@ def cmap_clevs_me(vmin,vmax):
     vmax = inte * ((int)(vmax / inte) + 2)
     clevs1 = np.arange(vmin, -1e-6, inte)
     nclev = len(clevs1)
-    colors0 = cm.get_cmap("winter", nclev)
+    colors0 = plt.get_cmap("winter", nclev)
     colors_list = []
     for i in range(nclev):
         colors_list.append(colors0(i))
 
     clevs2 = np.arange(0, vmax, inte)
     nclev = len(clevs2)
-    colors0 = cm.get_cmap("autumn", nclev)
+    colors0 = plt.get_cmap("autumn", nclev)
     for i in range(nclev):
         colors_list.append(colors0(nclev -1 - i))
     clevs = np.arange(vmin, vmax, inte)
@@ -360,7 +360,7 @@ def cmap_clevs_me_new(vmin,vmax):
     vmax = inte * ((int)(vmax / inte) + 2)
     clevs1 = np.arange(vmin, -1e-6, inte)
     nclev = len(clevs1)
-    colors0 = cm.get_cmap("winter", nclev)
+    colors0 = plt.get_cmap("winter", nclev)
     colors_list = []
     for i in range(nclev):
         if i == nclev - 1:
@@ -371,7 +371,7 @@ def cmap_clevs_me_new(vmin,vmax):
 
     clevs2 = np.arange(0, vmax, inte)
     nclev = len(clevs2)
-    colors0 = cm.get_cmap("autumn", nclev)
+    colors0 = plt.get_cmap("autumn", nclev)
     for i in range(nclev):
         if i ==0:
             c1 = np.array(list(colors0(nclev -1 - i)))/5 +4/5
@@ -531,7 +531,7 @@ def cmap_clevs_mode(vmax):
 def cmap_clevs_ts():
     clevs = np.arange(0,1.01,0.1)
     nclev = len(clevs)
-    colors0 = cm.get_cmap("jet", nclev)
+    colors0 = plt.get_cmap("jet", nclev)
     colors_list = []
     for i in range(nclev):
         clev = clevs[i]
@@ -588,7 +588,7 @@ def cmap_clevs_radar():
 def cmap_clevs_far():
     clevs = np.arange(0,1.01,0.1)
     nclev = len(clevs)
-    colors0 = cm.get_cmap("jet", nclev)
+    colors0 = plt.get_cmap("jet", nclev)
     colors_list = []
     for i in range(nclev):
         colors_list.append(colors0(i))
@@ -598,7 +598,7 @@ def cmap_clevs_far():
 def cmap_clevs_mr():
     clevs = np.arange(0,1.01,0.1)
     nclev = len(clevs)
-    colors0 = cm.get_cmap("jet", nclev)
+    colors0 = plt.get_cmap("jet", nclev)
     colors_list = []
     for i in range(nclev):
         colors_list.append(colors0(i))
@@ -628,7 +628,7 @@ def cmap_clevs_error(vmin,vmax):
     vmax = inte * ((int)(vmax / inte) + 2)
     clevs = np.arange(vmin, vmax, inte)
     nclev = len(clevs)
-    colors0 = cm.get_cmap("bwr", nclev)
+    colors0 = plt.get_cmap("bwr", nclev)
     colors_list = []
     for i in range(nclev):
         colors_list.append(colors0(i))
@@ -944,15 +944,15 @@ def show_cmap_clev(cmap,clev = None,extend = None,width = 10,height = 0.3,save_p
 def get_color_list(legend_num):
     colors_list = []
     if legend_num<=10:
-        colors = cm.get_cmap("tab10")
+        colors = plt.get_cmap("tab10")
         for i in range(legend_num):
             colors_list.append(colors(i))
     elif legend_num <=20:
-        colors = cm.get_cmap("tab20")
+        colors = plt.get_cmap("tab20")
         for i in range(legend_num):
             colors_list.append(colors(i))
     else:
-        colors = cm.get_cmap('gist_rainbow', 128)
+        colors = plt.get_cmap('gist_rainbow', 128)
         for i in range(legend_num):
             color_grade = i / legend_num
             colors_list.append(colors(color_grade))
@@ -1147,7 +1147,7 @@ def def_cmap_clevs(cmap = "rainbow",clevs = None,vmin = None,vmax = None,cut_col
             nclev = len(clevs2)
             if extend =="both":
                 nclev += 1
-            colors0 = cm.get_cmap(cmap, nclev)
+            colors0 = plt.get_cmap(cmap, nclev)
             colors_list = []
             for i in range(nclev):
                 colors_list.append(colors0(i))
@@ -1310,7 +1310,7 @@ def set_plot_color_dict_method0(member_list):
         print("tab20颜色方案只能支持member_list长度小于等于20的情况")
         return
 
-    cm0 = cm.get_cmap("tab20")
+    cm0 = plt.get_cmap("tab20")
     color_list0 = []
     for i in range(20):
         color_list0.append(cm0(i))
